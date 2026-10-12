@@ -616,7 +616,7 @@ and the AC eval both teach it); d1-hot's fixture lacked the org row the new sign
 socket failures under the shared Mini's spikes (patientFetch; s40's paced form creation). To S8's ledger: the
 account lockout, the per-seat grants epoch, and the squat's residual (`PLATFORM.md` §3).
 
-## Sprint 17 · OpenAI's scan (branch `sprint-17`, opened 2026-10-12; the owner's MCQs of the day)
+## Sprint 17 · OpenAI's scan (branch `sprint-17`, opened 2026-10-12; the owner's MCQs of the day) — SHIPPED 2026-10-13
 
 The spec: the OpenAI portal's automated scan of the live server flagged three tools — `preview` "claims capabilities that
 do not match its behavior", `preview` and `file` "execute operations that are not individually exposed", `save_file`
@@ -635,7 +635,11 @@ spell it out in the schema, keep the one write door (preview, then file). And th
 - [x] **17.2 · The reviewer domain.** `make-reviewer-org.mjs`'s default is `review.sharingu.xyz` (a domain we own; no
   mail is ever sent); `listing/SUBMISSION.md`'s reviewer access names it. Its selftest 35/35. Smoke 327/327, the gate
   green.
-- [ ] **The sprint end.** Smoke and the gate; one PR; the ship; the site's `scan-flags` merged; the owner's Rescan.
+- [x] **The sprint end.** Smoke 327/327 and the gate; merged as ryuk-labs/sharingu#3 (1f6944fe3); shipped with the
+  owner's standing OK: `53f824f0` → `2468689c-308c-40e3-99ef-626d19dcd362` at 100%, no migration (live stays at 080).
+  Proofs: the cross-org suite 10,332 calls, 0 rows across; the walk 13/13 on the preview and on live; verify-live 28/28;
+  live's tools/list: preview's and file's items an anyOf of the four forms, save_file open-world. The site's `scan-flags`
+  merged (73acc01, verify 236/236). Next: the owner's Rescan in the OpenAI portal (an appeal if a flag stays).
 
 ## Sprint 16 · The stores' re-read (branch `sprint-16`, opened 2026-10-12; the owner's MCQ of the day) — SHIPPED 2026-10-12
 
