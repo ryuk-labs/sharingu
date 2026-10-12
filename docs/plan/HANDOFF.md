@@ -1,7 +1,8 @@
 # HANDOFF — where sharingu stands (rewritten at every stop; git holds the history)
 
-**As of 2026-10-12: sprint 15 is LIVE (the repo move: ryuk-labs/sharingu, a fresh history; the plugin's dist repo
-ryuk-labs/sharingu-plugin); the reviewer world is refreshed and its eight cases pass on live. Next: the owner's M4.**
+**As of 2026-10-12: sprint 16 is LIVE (the graders destructive, the ChatGPT kit); the reviewer world is rebuilt on
+@review.sharingu.xyz and its eight cases pass on live; the OpenAI draft is uploaded and its domain token live. Next:
+sprint 17 (the OpenAI scan's three flags), then the owner's M4.**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
 and must not trust its own memory over this file. Read, in order: `README.md` (the model, how we work) → this file →
@@ -66,11 +67,12 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
 
 ## State (2026-10-12)
 
-- **Live: sprint 15.** Worker `16560e8d-8a29-4e91-a8bd-bad4a7429b14` (tag `b07cba466`) at 100% on
-  https://agent.sharingu.xyz and https://agent.ryuklabs.io; D1 `ryuklabs-agent-r` at migrate-080 (no migration in 14 or
-  15). Undo: `sh engine/tools/ship.sh rollback 64aad029-1ff5-4ebb-8d7f-187ae9e2087c` (code). The 080 Time Travel bookmark
+- **Live: sprint 16.** Worker `53f824f0-f259-47ef-8509-c958b4568382` (tag `239f3f606`) at 100% on
+  https://agent.sharingu.xyz and https://agent.ryuklabs.io; D1 `ryuklabs-agent-r` at migrate-080 (no migration in 14–16).
+  Undo: `sh engine/tools/ship.sh rollback 16560e8d-8a29-4e91-a8bd-bad4a7429b14` (code). The 080 Time Travel bookmark
   `00000ff3-00000000-00005101-2e32cfba286f19c2f08dd49dfd1c265d` (data; it restores EVERY org). Proofs: cross-org 10,332
-  calls, 0 rows across; the walk 13/13 on the preview and on live; verify-live 28/28.
+  calls, 0 rows across; the walk 13/13 on the preview and on live; verify-live 28/28. The OpenAI domain-verification
+  token is stored (`operator.mjs set-openai-challenge`): `/.well-known/openai-apps-challenge` answers it on both domains.
 - **The repo:** `ryuk-labs/sharingu` (private) from 2026-10-12, one root commit (6e6918541: the tree of the old repo's
   `main` at 22ed264d0, sprint 14 shipped); `main` = that commit plus sprint 15 (ryuk-labs/sharingu#1, b07cba466). The old
   repo `ryukdev/sharingu` is the `archive` remote (everything before; archived on GitHub, private).
@@ -78,10 +80,11 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   changed later on github.com, org People). The plugin's dist repo moved to `ryuk-labs/sharingu-plugin` (a transfer:
   the old path redirects). `engine/.runs/` is machine-local (gitignored): the ship
   logs, the video recorder (`engine/.runs/b12-videos/`: `record.mjs`, `compose-take.sh`, `sweep-take.sh`, `join.sh`).
-- **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at 3f6a162, the install line naming
-  ryuk-labs/sharingu-plugin. Its tools page matches the engine's contract (`npm run check:mcp-tools`).
-- **The plugin:** this tree 0.1.12 (`claude plugin validate --strict ./plugin` passes); the public dist repo 0.1.12 (6de6c0e, in sync).
-- **The live reviewer world:** org 3 at `/sharingu-review`, seven active seats (admin, member, dev, bd, marketing,
+- **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at abbde89, the install line naming
+  ryuk-labs/sharingu-plugin and the tools page's two graders destructive. Its tools page matches the engine's contract (`npm run check:mcp-tools`).
+- **The plugin:** this tree 0.1.12 (`claude plugin validate --strict ./plugin` passes); the public dist repo 0.1.13 (575be16, in sync).
+- **The live reviewer world:** org 3 at `/sharingu-review` (rebuilt 2026-10-12 on `@review.sharingu.xyz`: the OpenAI
+  portal's reviewer credentials and its connection use these), seven active seats (admin, member, dev, bd, marketing,
   tester, partner), the sharingu and Sample projects; its sharingu data from sprint 14's code (refreshed 2026-10-12). The codes
   live only in `~/.sharingu/reviewer-credentials.txt` (mode 600).
 - **The listing kit:** `listing/SUBMISSION.md` (every form's fields, the release notes, allowed link URIs),

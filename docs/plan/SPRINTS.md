@@ -616,7 +616,7 @@ and the AC eval both teach it); d1-hot's fixture lacked the org row the new sign
 socket failures under the shared Mini's spikes (patientFetch; s40's paced form creation). To S8's ledger: the
 account lockout, the per-seat grants epoch, and the squat's residual (`PLATFORM.md` §3).
 
-## Sprint 16 · The stores' re-read (branch `sprint-16`, opened 2026-10-12; the owner's MCQ of the day)
+## Sprint 16 · The stores' re-read (branch `sprint-16`, opened 2026-10-12; the owner's MCQ of the day) — SHIPPED 2026-10-12
 
 The spec: the stores' pages re-read on 2026-10-12 against the kit (the Claude connector and plugin pages loaded with
 their checklists and review criteria; OpenAI's help article and announcement answered 403, so OpenAI's developer docs
@@ -636,8 +636,16 @@ were read instead) and the owner's MCQ: the two tools that change a check's grad
   129/129, plugin-sync 48/48, `claude plugin validate --strict` passes; the test ZIP 25 files, every field in its limit.
   Smoke 327/327, the gate green (a first run was killed from outside at load 36 and a second overlapped its leftovers:
   429s and a doubled org 2; the clean third run green).
-- [ ] **The sprint end.** Smoke and the gate; one PR; the ship with the owner's OK (the door's hints change); the
-  site's branch merged; the dist repo synced to 0.1.13.
+- [x] **The sprint end.** Smoke 327/327 and the gate; merged as ryuk-labs/sharingu#2 (239f3f606); shipped with the
+  owner's OK: `16560e8d` → `53f824f0-f259-47ef-8509-c958b4568382` at 100%, no migration (live stays at 080). Proofs: the
+  cross-org suite 10,332 calls, 0 rows across; the walk 13/13 on the preview and on live; verify-live 28/28; live's
+  tools/list: 35 tools, 11 destructive, the two graders among them. The site's `annotations-graders` merged (abbde89,
+  verify 236/236); the dist repo synced to 0.1.13 (575be16, sync-check green). After it, by the owner's MCQ: the reviewer
+  world rebuilt on a domain we own (`@review.sharingu.xyz`; `.invalid` read as fishy to a reviewer). A rename was
+  refused by migrate-070's `people_email_fixed` (a seat keeps its account's email; nothing changed), so org 3 was
+  exported (`.runs/reviewer-org/export-invalid-20261012`), deleted, its 7 accounts removed, and the world rebuilt with
+  `--domain review.sharingu.xyz` (a fresh measure first: 17,028 rows); seven new codes in the private file; the eight
+  cases 8/8 on live. The OpenAI domain token stored on live (both domains answer it).
 
 ## Sprint 15 · The repo move (branch `sprint-15`, opened 2026-10-12; the owner's MCQs of the day) — SHIPPED 2026-10-12
 
