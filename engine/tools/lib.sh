@@ -272,7 +272,7 @@ suite_d1_json() {
 suite_can_d1() {
   if [ "$SUITE_TARGET" = "local" ]; then [ -n "${MINT_LOCAL_CFG:-}" ]; else [ -n "$CF_TOKEN" ] && [ -n "$CF_ACCOUNT" ]; fi
 }
-UA="${AGENT_R_UA:-sharingu-agent-r-tools/1.0 (+https://github.com/ryukdev/sharingu)}"  # every HTTP call this harness makes to Cloudflare or the worker names itself
+UA="${AGENT_R_UA:-sharingu-agent-r-tools/1.0 (+https://github.com/ryuk-labs/sharingu)}"  # every HTTP call this harness makes to Cloudflare or the worker names itself
 
 # self_clean — the suites bank test artifacts + fire eval events every run. Remove them so prod D1
 # never accumulates test junk (owner ruling S-016). Same statement for both suites; tenant-aware.

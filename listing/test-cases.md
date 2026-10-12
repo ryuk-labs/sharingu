@@ -28,8 +28,9 @@ header and no key go in the client's configuration. **The org in a browser:** `h
 signed in with the same email and code. The tools named below are listed with who may call them on the docs page,
 https://www.sharingu.xyz/mcp-tools.html.
 
-Each walk is what the product's own suites prove; `tools/smoke/s51-listing.mjs` walks all eight, each as the account its
-heading names, in every smoke run, on a fresh reviewer org built with the sample alone: there the sharingu project is
+Each walk is what the product's own suites prove; `tools/listing-walk.mjs` walks all eight, each as the account its
+heading names: on live after a refresh (`--url <worker> --codes <the refresh's codes file>`; it files P3's and P5's notes and
+P4's accepted goal, as a reviewer would) and, through smoke case `s51`, in every smoke run, on a fresh reviewer org built with the sample alone: there the sharingu project is
 empty, so P2's sharingu reads are walked as answering, not as its tree (the full world, ~18,130 rows written with the sample by the importer's measure of 2026-10-10, is the tool's local proof).
 
 ## Positive cases

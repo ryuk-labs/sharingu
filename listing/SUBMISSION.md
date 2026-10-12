@@ -75,7 +75,7 @@ the call that fills it), then `preview` and `file`.
 
 ## Claude · the plugin (claude.ai/directory/manage → Submit new → Plugin bundle)
 
-1. **Source:** repository ryukdev/sharingu-plugin, plugin path `plugin`, branch `main` (public; GitHub connected on
+1. **Source:** repository ryuk-labs/sharingu-plugin, plugin path `plugin`, branch `main` (public; GitHub connected on
    claude.ai with push access). **Validate**; it reads the manifest (`plugin/.claude-plugin/plugin.json`), the README (≥ 40 words) and the license
    (`Proprietary`, the `LICENSE` file).
 2. **Listing details:** read from the manifest and the README (the generator owns both; a change is a new version).

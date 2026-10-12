@@ -26,7 +26,7 @@ set -e
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 . "$ROOT/tools/lib-teardown-backoff.sh"
-UA="sharingu-agent-r-cloudkit/1.0 (+https://github.com/ryukdev/sharingu)"
+UA="sharingu-agent-r-cloudkit/1.0 (+https://github.com/ryuk-labs/sharingu)"
 
 SLUG=""; DRY=0
 for a in "$@"; do

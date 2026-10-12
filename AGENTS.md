@@ -54,6 +54,7 @@ sh tools/verify-live.sh               # after every ship with --live: our tools 
 sh tools/cf-budget.sh                 # before anything live: the Cloudflare budget guard (it reads the account's plan)
 node tools/make-listing-docs.mjs --check   # the listing's docs page against the contract (gate); generate: no flag (the contract), or --url <worker> --creds <file>
 node tools/make-reviewer-org.mjs --url <worker> --local <persist dir> --config <cfg>   # the stores' reviewer org (sprint 9; M4: --live --config wrangler.jsonc --confirm-live ryuklabs-agent-r; codes printed once)
+node tools/listing-walk.mjs --url <worker> --codes <the refresh's codes file>   # listing/test-cases.md's eight cases, each as its account (smoke s51 walks the same code)
 sh tools/ship-plan.sh ryuklabs        # read-only: this ship's order — migrations, preflights, checks, rollback (--no-import: no import hook)
 sh tools/migrate.sh migrate-0NN.sql   # one migration on live, a Time Travel bookmark first
 sh tools/ship.sh ryuklabs             # the ONE deploy command, resumable by its run record (SHIP_PREVIEW_HOOK: a step on the preview)
@@ -88,3 +89,8 @@ A contract change: edit `contracts/door.declared.json` or the registries in `eng
 
 The old build machinery (the `orchestrator/` lane, the land door, the lane workflow, the hooks, the board skills) was
 deleted on 2026-09-30 by the owner's ruling; git is the archive. The "brain" repos are one-time import sources.
+
+The repo is ryuk-labs/sharingu from 2026-10-12, started from one commit. Everything before lives in ryukdev/sharingu
+(private, archived), fetched into this checkout as the `archive` remote and never pushed to. The gate's history checks
+(`tools/check-docs.py`'s commit ids, `tools/mcp-orgs-selftest.mjs`, `tools/migrate-dryrun-fts-selftest.sh`) read old
+commits from it: a fresh clone without that remote cannot run them.

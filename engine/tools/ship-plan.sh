@@ -37,7 +37,7 @@
 #                    restore rehearsed on live, sprint 7's done-when on live, sprint 8's raise of the suites' org onto `suite`,
 #                    sprint 9's site redeploy — the site is live — and its "repo goes public", dead by the proprietary ruling:
 #                    SPRINTS.md, HANDOFF.md), so they leave the plan. Sprint 10's is THE OWNER'S, printed in order and never run
-#                    here: the plugin's distribution repo (ryukdev/sharingu-plugin) synced from this tree and pushed, after the
+#                    here: the plugin's distribution repo (ryuk-labs/sharingu-plugin) synced from this tree and pushed, after the
 #                    walk (live's Control · Connect, which this code ships, names that repo); then the reviewer world on live at
 #                    M4 (carried from sprint 9), the last step
 # --no-live-read skips the wrangler reads (the version, the schema, the projects say "unknown" and why; HANDOFF.md's record is
@@ -281,7 +281,7 @@ step "the live walk of the member path" "node tools/live-walk.mjs --url $LIVE_UR
 # distribution repo (the proprietary ruling): live's Control · Connect, which this code ships, names it, so the repo is synced
 # from THIS tree after the code and the walk; tools/make-plugin-skills.mjs --sync mirrors the plugin into a clone, --sync-check
 # reds a clone that differs
-DIST_REPO=ryukdev/sharingu-plugin
+DIST_REPO=ryuk-labs/sharingu-plugin
 step "THE OWNER'S, after the walk: the plugin's distribution repo $DIST_REPO synced from this tree (live's Control · Connect, shipped by this code, names it) — read the diff, then commit and push in the clone" \
   "git clone https://github.com/$DIST_REPO <clone> (or git -C <clone> pull), node tools/make-plugin-skills.mjs --sync <clone>, read git -C <clone> diff, commit and push in the clone; then node tools/make-plugin-skills.mjs --sync-check <clone> (exit 0) and, on a clean machine, claude plugin marketplace add $DIST_REPO then claude plugin install sharingu@sharingu answers" \
   "git -C <clone> revert <the sync commit>, then push (the distribution repo only; the engine and live are untouched)"

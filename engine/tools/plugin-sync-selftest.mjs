@@ -1,5 +1,5 @@
 // tools/plugin-sync-selftest.mjs — the dist repo's sync (sprint 10, 10.2): tools/make-plugin-skills.mjs --sync / --sync-check
-// mirror this tree's plugin into a local clone of DIST_REPO (ryukdev/sharingu-plugin). Temp dirs only; a fake clone is
+// mirror this tree's plugin into a local clone of DIST_REPO (ryuk-labs/sharingu-plugin). Temp dirs only; a fake clone is
 // `git init` + an origin remote (no network, no commit). "Nothing written" is the clone's whole tree, .git included, hashed
 // before and after.
 //   Y1 · a sync into an empty clone adds plugin/, the marketplace file and LICENSE, byte for byte; --sync-check then 0; a
@@ -121,8 +121,8 @@ const refused = (label, dir, o = {}) => {
   const b = snapshot(dir); const x = sync(dir, o);
   ok(x.code === 2 && /refused, nothing written/.test(said(x)) && snapshot(dir) === b, `${label} (${said(x)})`);
 };
-refused("another origin (the engine's private repo)", clone("other", "https://github.com/ryukdev/sharingu.git"));
-refused("a look-alike origin", clone("lookalike", "https://github.com/ryukdev/sharingu-plugin-old.git"));
+refused("another origin (the engine's private repo)", clone("other", "https://github.com/ryuk-labs/sharingu.git"));
+refused("a look-alike origin", clone("lookalike", "https://github.com/ryuk-labs/sharingu-plugin-old.git"));
 refused("no origin remote", clone("noorigin", null));
 const plain = join(tmp, "plain"); put(join(plain, "README.md"), "not a clone\n");
 refused("not a git clone", plain);
@@ -152,7 +152,7 @@ ok(c.code === 0 && /in sync/.test(c.out), `--sync-check ${c.code}: ${c.out}`);
 put(join(C, "plugin", "skills", "fill-a-project", "SKILL.md"), "hand-edited\n");
 c = cli("--sync-check", C);
 ok(c.code === 1 && /changed  plugin\/skills\/fill-a-project\/SKILL\.md/.test(c.out), `a change: --sync-check ${c.code}: ${c.out.split("\n")[0]}`);
-c = cli("--sync", clone("cli-other", "git@github.com:ryukdev/sharingu.git"));
+c = cli("--sync", clone("cli-other", "git@github.com:ryuk-labs/sharingu.git"));
 ok(c.code === 2 && /refused/.test(c.out), `another origin: --sync ${c.code}: ${c.out}`);
 c = cli("--sync");
 ok(c.code === 2 && /no clone named/.test(c.out), `no clone named: --sync ${c.code}: ${c.out}`);

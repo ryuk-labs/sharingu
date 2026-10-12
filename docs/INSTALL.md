@@ -31,7 +31,7 @@ in the door's first-run guide:
    - **Add to Claude** (Claude Desktop and claude.ai): Claude's install link for a custom connector opens its "Add custom
      connector" dialog with sharingu and the `/mcp` URL filled in; confirm it, press Connect and sign in.
    - **Add to ChatGPT:** on https://chatgpt.com/plugins choose Add custom MCP server, paste the `/mcp` URL and sign in.
-   - **Claude Code, the plugin:** `claude plugin marketplace add ryukdev/sharingu-plugin`, then
+   - **Claude Code, the plugin:** `claude plugin marketplace add ryuk-labs/sharingu-plugin`, then
      `claude plugin install sharingu@sharingu` (the plugin's public distribution repository; the engine's stays private).
      Run `/mcp`, pick `sharingu` and sign in (`plugin/README.md`). It carries the skills of steps 3 and 4.
 
@@ -101,7 +101,7 @@ and whether you may: `GET /capabilities`.
 The engine's repository is private (proprietary, © Ryuk Labs). Nothing local reaches Cloudflare.
 
 ```bash
-git clone https://github.com/ryukdev/sharingu.git && cd sharingu/engine && npm install
+git clone https://github.com/ryuk-labs/sharingu.git && cd sharingu/engine && npm install
 sh tools/dev-local.sh up     # the local app; prints its URL
 sh tools/smoke.sh            # the per-slice proof
 ```
