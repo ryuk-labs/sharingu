@@ -49,9 +49,9 @@ sprint that touches `contracts/door.json` or the code), take a fresh one first o
 **2b · Ship sprint 15 — DONE 2026-10-12** (`16560e8d` at 100%; the site's install line live; ryukdev/sharingu
 archived, private).
 
-**3 · The owner's, then M4.** In this order: (a) sync the public plugin repo `ryuk-labs/sharingu-plugin` to 0.1.12 (it
-is at 0.1.9; Claude's directory reads its `main`): the commands are step 10 of `sh tools/ship-plan.sh ryuklabs
---no-import`; (b) connect `https://agent.sharingu.xyz/mcp` as a custom connector in Claude, run P1–P3, and check the
+**3 · The owner's, then M4.** In this order: (a) DONE 2026-10-12: the public plugin repo `ryuk-labs/sharingu-plugin` synced
+to 0.1.12 (6de6c0e; `--sync-check` green, 28 files; installs as 0.1.12 on a clean config; the recipe is step 6 of
+`sh tools/ship-plan.sh ryuklabs --no-import`); (b) connect `https://agent.sharingu.xyz/mcp` as a custom connector in Claude, run P1–P3, and check the
 Activity row of P1's filing reads "from Claude" (if it reads "another client", stop: the label needs a fix first);
 (c) for ChatGPT: store the portal's domain token (`node tools/operator.mjs set-openai-challenge --token <it> --live
 --config wrangler.jsonc --confirm-live ryuklabs-agent-r`), record the ChatGPT demo video and put its URL in
@@ -80,7 +80,7 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   logs, the video recorder (`engine/.runs/b12-videos/`: `record.mjs`, `compose-take.sh`, `sweep-take.sh`, `join.sh`).
 - **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at 3f6a162, the install line naming
   ryuk-labs/sharingu-plugin. Its tools page matches the engine's contract (`npm run check:mcp-tools`).
-- **The plugin:** this tree 0.1.12 (`claude plugin validate --strict ./plugin` passes); the public dist repo 0.1.9.
+- **The plugin:** this tree 0.1.12 (`claude plugin validate --strict ./plugin` passes); the public dist repo 0.1.12 (6de6c0e, in sync).
 - **The live reviewer world:** org 3 at `/sharingu-review`, seven active seats (admin, member, dev, bd, marketing,
   tester, partner), the sharingu and Sample projects; its sharingu data from sprint 14's code (refreshed 2026-10-12). The codes
   live only in `~/.sharingu/reviewer-credentials.txt` (mode 600).
