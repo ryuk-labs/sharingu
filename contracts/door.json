@@ -465,7 +465,7 @@
    "annotations": {
     "title": "Regrade from the pages",
     "readOnlyHint": false,
-    "destructiveHint": false,
+    "destructiveHint": true,
     "idempotentHint": false,
     "openWorldHint": false
    },
@@ -579,7 +579,7 @@
    "annotations": {
     "title": "Grade a check",
     "readOnlyHint": false,
-    "destructiveHint": false,
+    "destructiveHint": true,
     "idempotentHint": false,
     "openWorldHint": false
    },
@@ -2909,7 +2909,7 @@
     "annotations": {
      "title": "Regrade from the pages",
      "readOnlyHint": false,
-     "destructiveHint": false,
+     "destructiveHint": true,
      "idempotentHint": false,
      "openWorldHint": false
     },
@@ -3017,7 +3017,7 @@
     "annotations": {
      "title": "Grade a check",
      "readOnlyHint": false,
-     "destructiveHint": false,
+     "destructiveHint": true,
      "idempotentHint": false,
      "openWorldHint": false
     },

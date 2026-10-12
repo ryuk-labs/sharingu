@@ -616,6 +616,29 @@ and the AC eval both teach it); d1-hot's fixture lacked the org row the new sign
 socket failures under the shared Mini's spikes (patientFetch; s40's paced form creation). To S8's ledger: the
 account lockout, the per-seat grants epoch, and the squat's residual (`PLATFORM.md` §3).
 
+## Sprint 16 · The stores' re-read (branch `sprint-16`, opened 2026-10-12; the owner's MCQ of the day)
+
+The spec: the stores' pages re-read on 2026-10-12 against the kit (the Claude connector and plugin pages loaded with
+their checklists and review criteria; OpenAI's help article and announcement answered 403, so OpenAI's developer docs
+were read instead) and the owner's MCQ: the two tools that change a check's grade are destructive.
+
+- [x] **16.1 · The graders are destructive.** `submit_grade` and `regrade` carry `destructive:true` in `MCP_TOOLS`
+  (the rule beside it: a write that can replace, remove or overrule what is held, a check's grade included, is
+  destructive; one that only adds is not). 18 read-only and 17 writes, 11 of them destructive; `ask`, `preview`,
+  `publish`, `publish_version`, `save_file` and `wrap_up` only add. The contract, `listing/docs.html` and the site's tools
+  page (branch `annotations-graders`) follow; annotations selftest 406/406 (the real worker's tools/list = the contract).
+- [x] **16.2 · The kit's gaps.** OpenAI's annotation justifications are generated from the contract into
+  `listing/SUBMISSION.md` (the portal takes them, the ZIP has no field for them; `--check` reds a drift); the release
+  notes ride the manifest (`publication.release_notes`, one source); the ZIP's own copy of `plugin/.mcp.json` declares the DCR auth
+  block (`plugin/.mcp.json` untouched); `listing/test-cases.md` gives ChatGPT's connect path and words P4 for a client
+  with or without a confirm prompt; SUBMISSION adds the strict validate step, the auto-publish toggle (OFF for the first
+  submission), the verified identity (Ryuk Labs) and the demo on desktop and mobile. Plugin 0.1.13. plugin-codex
+  129/129, plugin-sync 48/48, `claude plugin validate --strict` passes; the test ZIP 25 files, every field in its limit.
+  Smoke 327/327, the gate green (a first run was killed from outside at load 36 and a second overlapped its leftovers:
+  429s and a doubled org 2; the clean third run green).
+- [ ] **The sprint end.** Smoke and the gate; one PR; the ship with the owner's OK (the door's hints change); the
+  site's branch merged; the dist repo synced to 0.1.13.
+
 ## Sprint 15 · The repo move (branch `sprint-15`, opened 2026-10-12; the owner's MCQs of the day) — SHIPPED 2026-10-12
 
 The spec: the owner's rulings of 2026-10-12. Rein reads the engine's code, so the engine moves to the ryuk-labs org with
