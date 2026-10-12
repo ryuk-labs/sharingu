@@ -1,0 +1,495 @@
+[
+ {
+  "kind": "question",
+  "op": "upsert",
+  "data": {
+   "qid": "Q-saruspay-aim-measure",
+   "question": "Which number says SarusPay is on its way to \"live in production\" (the aim's measure)?",
+   "why": "The aim is the board's north star, \"SarusPay live in production\" (serve/goal.json). No source names a number for it. The board already counts its go-live checklist (\"0 of 61 done\", lib/GOLIVE.md, by party: Veil 24 · SarusPay 20 · Interlace 8 · RyukLabs 9), and the goal tree is that checklist. Option A is the recommendation: the board counts it already and every party's work moves it.",
+   "area": "aim",
+   "severity": "normal",
+   "status": "open",
+   "whoOwes": "owner",
+   "waitingOn": "owner",
+   "options": [
+    {
+     "what": "Go-live checklist items done, of 61",
+     "tradeoff": "lib/GOLIVE.md counts it per party (\"N of 61 done\"); the goal tree is the same list. Measures readiness, not use after launch."
+    },
+    {
+     "what": "Pilot testers through the production smoke test (pass, rejection, resubmission), of 3",
+     "tradeoff": "lib/GOLIVE.md sarus-pilot-testers (\"Production smoke test of real KYC, cards and money\") and rl-runbook's pilot sign-off. Moves only at the very end."
+    },
+    {
+     "what": "Questions answered by Interlace, of the 23 waiting",
+     "tradeoff": "capsules/economics.md \"23 waiting on Interlace\" and goal il-questions (blockers first). Tracks the outside dependency only."
+    }
+   ],
+   "source": [
+    {
+     "kind": "file",
+     "ref": "saruspay brain: serve/goal.json",
+     "label": "northStar: SarusPay live in production"
+    },
+    {
+     "kind": "file",
+     "ref": "saruspay brain: serve/lib/GOLIVE.md",
+     "label": "0 of 61 done, by party"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "doc",
+  "op": "upsert",
+  "data": {
+   "path": "start-here.md",
+   "title": "SarusPay — start here",
+   "body": "# SarusPay — start here\n\n*Written for a newcomer from the project's own sources (the SarusPay board's PROJECT-README, the brain's BOOT.md and the board's GOLIVE.md), as of 2026-10-01. A proposal: the owner confirms or rewrites it.*\n\n## What it is\nSarusPay is a dollar account and an issued card, open in Türkiye and the UAE. It is not a bank: cards are issued by a licensed partner. It is built on Interlace's card-issuing API through Veil.\n\nWho is who:\n- **Interlace** issues the cards.\n- **Veil** is the Interlace Distributor and owns the engine and the operator console.\n- **SarusPay** is Veil's master merchant (a tenant); its users are sub-merchants.\n- **RyukLabs** builds everything. Stack (ruling Q0E1CB70C): Vercel Pro, Supabase, Resend, Firebase Cloud Messaging, Sentry, EU Frankfurt.\n\n**The aim:** SarusPay live in production. Its measure is an open question for the owner.\n\n## Where its truth lives here\n- **Goals** — the go-live checklists, one per party (Veil, SarusPay, Interlace, RyukLabs): what each must provide or set up so RyukLabs can build, test and go live.\n- **Decisions** — the board's rulings. Rulings bind; the newest wins. The open questions wait on Interlace (their questionnaire is `lib/OUTREACH.md`); a provisional ruling (the retail fees) waits on SarusPay to confirm.\n- **Map** — the three apps (mobile, web, the ops console) with their screens, the API doors, the tables, the journeys and state machines, and the board's checks.\n- **Docs** — `lib/GOLIVE.md`, `lib/OUTREACH.md`, the research under `lib/research/` and the vendored Interlace reference under `lib/reference/interlace/`.\n\n## What to do first\n1. Read the go-live checklist on Goals: every item names who supplies it.\n2. Chase what others owe: the Interlace questions (blockers first), and SarusPay's confirmation of the provisional retail fees.\n3. If something is not here, the knowledge is incomplete: file a question, never invent an answer.\n",
+   "asOf": "2026-10-01",
+   "confidence": "proposal",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "saruspay brain: source/PROJECT-README.md",
+     "label": "what SarusPay is"
+    },
+    {
+     "kind": "file",
+     "ref": "saruspay brain: BOOT.md",
+     "label": "who is who, the stack, rulings bind"
+    },
+    {
+     "kind": "file",
+     "ref": "saruspay brain: serve/lib/GOLIVE.md",
+     "label": "the go-live checklists by party"
+    },
+    {
+     "kind": "file",
+     "ref": "saruspay brain: serve/capsules/economics.md",
+     "label": "what \"open\" means: waiting on Interlace, provisional rulings"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-vercel",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-supabase",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-resend",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-sentry",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-slack",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-github",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-domain",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-access",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-resend-webhook",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-sentry-slack",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-onboard-sarus",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-interlace-creds",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-webhooks",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "sarus-duns",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "sarus-apple",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "sarus-google",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "sarus-firebase",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "sarus-domain",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "sarus-fcm-credential",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "sarus-wallet-entitlement",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "rl-access",
+   "dimensions": [
+    "vendor"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "il-kyc-outcomes",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "il-test-funds",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "il-simulate",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "il-3ds",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "il-bins",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "il-pilot-rules",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "il-prod-access",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "il-questions",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "veil-outreach",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "sarus-kyb",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "sarus-pricing",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "sarus-volume",
+   "dimensions": [
+    "ba"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "sarus-brand",
+   "dimensions": [
+    "design"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "rl-projects",
+   "dimensions": [
+    "code"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "rl-migrations",
+   "dimensions": [
+    "code"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "rl-seed",
+   "dimensions": [
+    "code"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "rl-tests",
+   "dimensions": [
+    "code"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "rl-cron",
+   "dimensions": [
+    "code"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "rl-secrets-generate",
+   "dimensions": [
+    "code"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "rl-vercel-projects",
+   "dimensions": [
+    "code"
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "rl-runbook",
+   "dimensions": [
+    "leader"
+   ]
+  }
+ }
+]

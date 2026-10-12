@@ -1,0 +1,585 @@
+{
+ "engine": "frozen HEAD e6dfa6683",
+ "answers": {
+  "two-project org (alpha, beta)": {
+   "owner · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "refused project_required",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "owner · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "owner · project beta": {
+    "read · MCP state": "project beta",
+    "read · GET /state": "project beta",
+    "read · GET /goals": "project beta",
+    "write · MCP submit_transmission": "filed into beta",
+    "extract · MCP search": "project beta",
+    "extract · GET /search": "project beta"
+   },
+   "admin, no seat · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "refused project_required",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "admin, no seat · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "admin, no seat · project beta": {
+    "read · MCP state": "project beta",
+    "read · GET /state": "project beta",
+    "read · GET /goals": "project beta",
+    "write · MCP submit_transmission": "filed into beta",
+    "extract · MCP search": "project beta",
+    "extract · GET /search": "project beta"
+   },
+   "seated member (alpha) · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "seated member (alpha) · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "seated member (alpha) · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "member of another project (beta) · no project": {
+    "read · MCP state": "project beta",
+    "read · GET /state": "project beta",
+    "read · GET /goals": "project beta",
+    "write · MCP submit_transmission": "filed into beta",
+    "extract · MCP search": "project beta",
+    "extract · GET /search": "project beta"
+   },
+   "member of another project (beta) · project alpha": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "member of another project (beta) · project beta": {
+    "read · MCP state": "project beta",
+    "read · GET /state": "project beta",
+    "read · GET /goals": "project beta",
+    "write · MCP submit_transmission": "filed into beta",
+    "extract · MCP search": "project beta",
+    "extract · GET /search": "project beta"
+   },
+   "member on both, session stamped beta · no project": {
+    "read · MCP state": "project beta",
+    "read · GET /state": "project beta",
+    "read · GET /goals": "project beta",
+    "write · MCP submit_transmission": "filed into beta",
+    "extract · MCP search": "project beta",
+    "extract · GET /search": "project beta"
+   },
+   "member on both, session stamped beta · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member on both, session stamped beta · project beta": {
+    "read · MCP state": "project beta",
+    "read · GET /state": "project beta",
+    "read · GET /goals": "project beta",
+    "write · MCP submit_transmission": "filed into beta",
+    "extract · MCP search": "project beta",
+    "extract · GET /search": "project beta"
+   },
+   "member on both, no stamp · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "refused project_required",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member on both, no stamp · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member on both, no stamp · project beta": {
+    "read · MCP state": "project beta",
+    "read · GET /state": "project beta",
+    "read · GET /goals": "project beta",
+    "write · MCP submit_transmission": "filed into beta",
+    "extract · MCP search": "project beta",
+    "extract · GET /search": "project beta"
+   },
+   "seatless member · no project": {
+    "read · MCP state": "project null",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project null",
+    "write · MCP submit_transmission": "refused project_required",
+    "extract · MCP search": "refused project_required",
+    "extract · GET /search": "422 project_required"
+   },
+   "seatless member · project alpha": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "seatless member · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "Partner with a seat (alpha) · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "Partner with a seat (alpha) · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "Partner with a seat (alpha) · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "Partner without a seat · no project": {
+    "read · MCP state": "project null",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project null",
+    "write · MCP submit_transmission": "refused project_required",
+    "extract · MCP search": "refused project_required",
+    "extract · GET /search": "422 project_required"
+   },
+   "Partner without a seat · project alpha": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "Partner without a seat · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "read-only credential (seated member) · no project": {
+    "read · MCP state": "http 401",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "http 401",
+    "extract · MCP search": "http 401",
+    "extract · GET /search": "project alpha"
+   },
+   "read-only credential (seated member) · project alpha": {
+    "read · MCP state": "http 401",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "http 401",
+    "extract · MCP search": "http 401",
+    "extract · GET /search": "project alpha"
+   },
+   "read-only credential (seated member) · project beta": {
+    "read · MCP state": "http 401",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "http 401",
+    "extract · MCP search": "http 401",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "owner, session stamped beta · no project": {
+    "read · MCP state": "project beta",
+    "read · GET /state": "project beta",
+    "read · GET /goals": "project beta",
+    "write · MCP submit_transmission": "filed into beta",
+    "extract · MCP search": "project beta",
+    "extract · GET /search": "project beta"
+   },
+   "owner, session stamped beta · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "owner, session stamped beta · project beta": {
+    "read · MCP state": "project beta",
+    "read · GET /state": "project beta",
+    "read · GET /goals": "project beta",
+    "write · MCP submit_transmission": "filed into beta",
+    "extract · MCP search": "project beta",
+    "extract · GET /search": "project beta"
+   },
+   "member, session stamped where they hold no seat · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member, session stamped where they hold no seat · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member, session stamped where they hold no seat · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   }
+  },
+  "one-project org (alpha)": {
+   "owner · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "owner · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "owner · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "admin, no seat · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "admin, no seat · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "admin, no seat · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "seated member (alpha) · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "seated member (alpha) · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "seated member (alpha) · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "member of another project (beta) · no project": {
+    "read · MCP state": "project null",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member of another project (beta) · project alpha": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "member of another project (beta) · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "member on both, session stamped beta · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member on both, session stamped beta · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member on both, session stamped beta · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "member on both, no stamp · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member on both, no stamp · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member on both, no stamp · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "seatless member · no project": {
+    "read · MCP state": "project null",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "seatless member · project alpha": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "seatless member · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "Partner with a seat (alpha) · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "Partner with a seat (alpha) · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "Partner with a seat (alpha) · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "Partner without a seat · no project": {
+    "read · MCP state": "project null",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project null",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "refused project_required",
+    "extract · GET /search": "422 project_required"
+   },
+   "Partner without a seat · project alpha": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "Partner without a seat · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "read-only credential (seated member) · no project": {
+    "read · MCP state": "http 401",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "http 401",
+    "extract · MCP search": "http 401",
+    "extract · GET /search": "project alpha"
+   },
+   "read-only credential (seated member) · project alpha": {
+    "read · MCP state": "http 401",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "http 401",
+    "extract · MCP search": "http 401",
+    "extract · GET /search": "project alpha"
+   },
+   "read-only credential (seated member) · project beta": {
+    "read · MCP state": "http 401",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "http 401",
+    "extract · MCP search": "http 401",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "owner, session stamped beta · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "owner, session stamped beta · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "owner, session stamped beta · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   },
+   "member, session stamped where they hold no seat · no project": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project null",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member, session stamped where they hold no seat · project alpha": {
+    "read · MCP state": "project alpha",
+    "read · GET /state": "project alpha",
+    "read · GET /goals": "project alpha",
+    "write · MCP submit_transmission": "filed into alpha",
+    "extract · MCP search": "project alpha",
+    "extract · GET /search": "project alpha"
+   },
+   "member, session stamped where they hold no seat · project beta": {
+    "read · MCP state": "refused project_forbidden",
+    "read · GET /state": "403 project_forbidden",
+    "read · GET /goals": "403 project_forbidden",
+    "write · MCP submit_transmission": "refused project_forbidden",
+    "extract · MCP search": "refused project_forbidden",
+    "extract · GET /search": "403 project_forbidden"
+   }
+  }
+ }
+}

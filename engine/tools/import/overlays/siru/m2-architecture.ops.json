@@ -1,0 +1,613 @@
+{
+ "project": "siru",
+ "clientRef": "m2-arch-siru-2026-10-05",
+ "ops": [
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "architecture:main",
+    "type": "architecture",
+    "name": "Architecture",
+    "data": {
+     "summary": "SIRU as built (read from its code through viz-lyze and the as-built ledger): five NestJS services behind one edge gateway, three React Native apps and a Next.js ops dashboard. siru-auth-service is the gateway and the JWT issuer: it verifies the token once, strips the client's Authorization header, injects X-User-Id and X-User-Role, and routes /api/c to siru-user-service and /api/m to siru-provider-service. siru-user-service holds the buyer and merchant domain, chat and the Ask SIRU assistant (Claude Haiku 4.5, OpenAI for speech only); siru-provider-service holds stores, catalog, the order state machine and the whole money stack on Cashfree. siru-slot-service (bookings, its own database) and siru-admin-service (ops) sit off the gateway. One Postgres holds the public and provider schemas; S3 holds private media. Events are in-process and lossy, schema is boot-time DDL, and the target platform (a governed AI service, durable events, the Node and National tiers) is not built yet.",
+     "diagram": {
+      "groups": [
+       {
+        "id": "apps",
+        "label": "The apps",
+        "order": 1
+       },
+       {
+        "id": "edge",
+        "label": "The edge: siru-auth-service",
+        "order": 2
+       },
+       {
+        "id": "services",
+        "label": "The NestJS services",
+        "order": 3
+       },
+       {
+        "id": "data",
+        "label": "Postgres and S3",
+        "order": 4
+       },
+       {
+        "id": "outside",
+        "label": "Outside services",
+        "order": 5
+       }
+      ],
+      "seam": {
+       "group": "edge",
+       "label": "The seam: one JWT check at the edge, identity passed on as headers"
+      },
+      "nodes": [
+       {
+        "id": "buyer",
+        "group": "apps",
+        "kind": "client",
+        "title": "Buyer app",
+        "sub": "siru-app-rn: Ask SIRU, cart, orders, chat"
+       },
+       {
+        "id": "merchant",
+        "group": "apps",
+        "kind": "client",
+        "title": "Merchant app",
+        "sub": "siru-merchant-app-rn: onboarding, catalog, orders"
+       },
+       {
+        "id": "nodeos",
+        "group": "apps",
+        "kind": "client",
+        "title": "Node OS console and till",
+        "sub": "siru-nodeos-ui and siru-pos"
+       },
+       {
+        "id": "adminui",
+        "group": "apps",
+        "kind": "client",
+        "title": "Ops dashboard",
+        "sub": "siru-admin, Next.js"
+       },
+       {
+        "id": "gateway",
+        "group": "edge",
+        "kind": "service",
+        "title": "Edge gateway",
+        "sub": "siru-auth-service: JWT, OTP, push",
+        "about": "Handles /api/auth itself (OTP, Google, password; a 15-minute access token and a rotating 7-day refresh token) and proxies the rest: /api/c and part of /api/m to siru-user-service, the /api/m catch-all to siru-provider-service. It is also the single push dispatcher.",
+        "service": "asbuilt-service-siru-auth-service"
+       },
+       {
+        "id": "user",
+        "group": "services",
+        "kind": "service",
+        "title": "siru-user-service",
+        "sub": "buyer and merchant domain, chat, the assistant",
+        "about": "Merchants, KYC docs, addresses, cart, the home feed, chat and stories over Socket.io, clinical grounding, and the Ask SIRU assistant (a tool loop of up to 8 rounds, replies buffered and sanitised).",
+        "service": "asbuilt-service-siru-user-service"
+       },
+       {
+        "id": "provider",
+        "group": "services",
+        "kind": "service",
+        "title": "siru-provider-service",
+        "sub": "stores, catalog, orders, money",
+        "about": "Store ops, catalog, the order state machine with its auto-reject timer, and the full money stack: Cashfree checkout, Easy Split, settlement and SIRU-coin token wallets. The network-mesh brain is on a branch.",
+        "service": "asbuilt-service-siru-provider-service"
+       },
+       {
+        "id": "slot",
+        "group": "services",
+        "kind": "service",
+        "title": "siru-slot-service",
+        "sub": "bookings, slots computed on the fly",
+        "service": "asbuilt-service-siru-slot-service"
+       },
+       {
+        "id": "admin",
+        "group": "services",
+        "kind": "service",
+        "title": "siru-admin-service",
+        "sub": "ops: KYC review, payments, settlements",
+        "service": "asbuilt-service-siru-admin-service"
+       },
+       {
+        "id": "node",
+        "group": "services",
+        "kind": "service",
+        "title": "siru-node-service",
+        "sub": "Node OS: stock, POS, inbound",
+        "about": "The Node OS backend: schema-walled modules for stock (M1), the till (M2) and inbound (M5); M5 is built, M1 and M2 are stubs. siru-pos reaches it through the gateway.",
+        "service": "asbuilt-service-siru-node-service"
+       },
+       {
+        "id": "postgres",
+        "group": "data",
+        "kind": "data",
+        "title": "Postgres",
+        "sub": "public and provider schemas, one instance"
+       },
+       {
+        "id": "bookingdb",
+        "group": "data",
+        "kind": "data",
+        "title": "Booking database",
+        "sub": "isolated, four tables, row locks"
+       },
+       {
+        "id": "s3",
+        "group": "data",
+        "kind": "data",
+        "title": "S3",
+        "sub": "private media: KYC, catalog, prescriptions",
+        "service": "asbuilt-integration-s3-object-store"
+       },
+       {
+        "id": "cashfree",
+        "group": "outside",
+        "kind": "external",
+        "title": "Cashfree",
+        "sub": "hosted checkout, Easy Split, settlement",
+        "service": "asbuilt-integration-cashfree-payments"
+       },
+       {
+        "id": "msg91",
+        "group": "outside",
+        "kind": "external",
+        "title": "MSG91",
+        "sub": "OTP by SMS",
+        "service": "asbuilt-integration-msg91-sms-otp"
+       },
+       {
+        "id": "fcm",
+        "group": "outside",
+        "kind": "external",
+        "title": "FCM",
+        "sub": "push to the apps",
+        "service": "asbuilt-integration-fcm-push"
+       },
+       {
+        "id": "anthropic",
+        "group": "outside",
+        "kind": "external",
+        "title": "Anthropic",
+        "sub": "Claude Haiku 4.5, the assistant",
+        "service": "asbuilt-integration-anthropic-claude"
+       },
+       {
+        "id": "openai",
+        "group": "outside",
+        "kind": "external",
+        "title": "OpenAI",
+        "sub": "speech only",
+        "service": "asbuilt-integration-openai-speech"
+       }
+      ],
+      "edges": [
+       {
+        "from": "buyer",
+        "to": "gateway",
+        "label": "Bearer JWT: /api/c and /api/m/services",
+        "main": true
+       },
+       {
+        "from": "merchant",
+        "to": "gateway",
+        "label": "/api/m",
+        "main": true
+       },
+       {
+        "from": "nodeos",
+        "to": "gateway",
+        "label": "Node OS routes"
+       },
+       {
+        "from": "adminui",
+        "to": "admin",
+        "label": "direct, off the gateway, its own login",
+        "main": true
+       },
+       {
+        "from": "buyer",
+        "to": "slot",
+        "label": "bookings, called directly"
+       },
+       {
+        "from": "gateway",
+        "to": "user",
+        "label": "X-User-Id and X-User-Role injected",
+        "main": true
+       },
+       {
+        "from": "gateway",
+        "to": "provider",
+        "label": "the /api/m catch-all",
+        "main": true
+       },
+       {
+        "from": "gateway",
+        "to": "node",
+        "label": "the Node OS backend"
+       },
+       {
+        "from": "gateway",
+        "to": "msg91",
+        "label": "the OTP, after the rate check"
+       },
+       {
+        "from": "gateway",
+        "to": "fcm",
+        "label": "the single push dispatcher",
+        "main": true
+       },
+       {
+        "from": "gateway",
+        "to": "postgres",
+        "label": "users, refresh tokens, OTP hashes"
+       },
+       {
+        "from": "user",
+        "to": "postgres",
+        "label": "the public schema",
+        "main": true
+       },
+       {
+        "from": "user",
+        "to": "anthropic",
+        "label": "the assistant's tool loop",
+        "main": true
+       },
+       {
+        "from": "user",
+        "to": "openai",
+        "label": "speech to text and back"
+       },
+       {
+        "from": "user",
+        "to": "s3",
+        "label": "KYC docs, status images, prescriptions"
+       },
+       {
+        "from": "user",
+        "to": "slot",
+        "label": "doctor booking, with the internal API key"
+       },
+       {
+        "from": "user",
+        "to": "buyer",
+        "label": "replies over SSE and Socket.io"
+       },
+       {
+        "from": "provider",
+        "to": "postgres",
+        "label": "the provider schema: orders, payments, splits",
+        "main": true
+       },
+       {
+        "from": "provider",
+        "to": "cashfree",
+        "label": "hosted checkout, nightly settlement",
+        "main": true
+       },
+       {
+        "from": "cashfree",
+        "to": "provider",
+        "label": "HMAC-verified webhooks",
+        "main": true
+       },
+       {
+        "from": "provider",
+        "to": "user",
+        "label": "the order card into the buyer and store chat"
+       },
+       {
+        "from": "slot",
+        "to": "bookingdb",
+        "label": "its own database",
+        "main": true
+       },
+       {
+        "from": "admin",
+        "to": "postgres",
+        "label": "raw SQL over the provider schema"
+       },
+       {
+        "from": "admin",
+        "to": "s3",
+        "label": "KYC documents for review"
+       }
+      ],
+      "paths": [
+       {
+        "name": "An online order, end to end",
+        "steps": [
+         {
+          "from": "buyer",
+          "to": "gateway",
+          "says": "The buyer taps Pay; the app calls order placement with its JWT"
+         },
+         {
+          "from": "gateway",
+          "to": "provider",
+          "says": "One JWT check at the edge; X-User-Id injected, Authorization stripped"
+         },
+         {
+          "from": "provider",
+          "to": "postgres",
+          "says": "The order and its item snapshots are written; the auto-reject timer is armed"
+         },
+         {
+          "from": "provider",
+          "to": "cashfree",
+          "says": "Cashfree's hosted checkout opens in a WebView"
+         },
+         {
+          "from": "cashfree",
+          "to": "provider",
+          "says": "An HMAC-verified webhook confirms; the split runs during capture"
+         },
+         {
+          "from": "provider",
+          "to": "user",
+          "says": "The order card lands in the buyer and store chat"
+         },
+         {
+          "from": "gateway",
+          "to": "fcm",
+          "says": "The merchant is pushed"
+         },
+         {
+          "from": "merchant",
+          "to": "gateway",
+          "says": "The merchant accepts and the order state machine moves on"
+         }
+        ]
+       },
+       {
+        "name": "OTP sign-in, request to JWT",
+        "steps": [
+         {
+          "from": "buyer",
+          "to": "gateway",
+          "says": "The app sends a phone number; auth routes are handled at the edge"
+         },
+         {
+          "from": "gateway",
+          "to": "msg91",
+          "says": "After the rate check (3 per 10 minutes) MSG91 sends the OTP"
+         },
+         {
+          "from": "gateway",
+          "to": "postgres",
+          "says": "A bcrypt hash is stored and older codes are superseded"
+         },
+         {
+          "from": "buyer",
+          "to": "gateway",
+          "says": "Verify: a 15-minute access token and a 7-day refresh token"
+         }
+        ]
+       },
+       {
+        "name": "Ask SIRU answers",
+        "steps": [
+         {
+          "from": "buyer",
+          "to": "gateway",
+          "says": "The buyer asks Ask SIRU"
+         },
+         {
+          "from": "gateway",
+          "to": "user",
+          "says": "The assistant route reaches siru-user-service"
+         },
+         {
+          "from": "user",
+          "to": "postgres",
+          "says": "Clinical grounding tables are matched against the message and the cart"
+         },
+         {
+          "from": "user",
+          "to": "anthropic",
+          "says": "Claude Haiku runs the tool loop, up to 8 rounds"
+         },
+         {
+          "from": "user",
+          "to": "buyer",
+          "says": "The reply is sanitised, then streamed back as text and cards"
+         }
+        ]
+       }
+      ]
+     },
+     "crossing": [
+      {
+       "rule": "The edge verifies the JWT once, strips the client's Authorization header and injects X-User-Id and X-User-Role; the role is decided by the URL surface, not by the token.",
+       "nodes": [
+        "gateway",
+        "user",
+        "provider",
+        "node"
+       ]
+      },
+      {
+       "rule": "Between services the internal API key is the single trust boundary: whoever holds it can set X-User-Id and is trusted as that user.",
+       "nodes": [
+        "gateway",
+        "user",
+        "provider",
+        "slot"
+       ]
+      },
+      {
+       "rule": "siru-slot-service and siru-admin-service sit off the gateway: the apps call them directly, and the admin service has its own email and password login.",
+       "nodes": [
+        "slot",
+        "admin",
+        "adminui",
+        "buyer"
+       ]
+      },
+      {
+       "rule": "Money is in paise integers; Cashfree's webhooks are HMAC-verified and the split runs during capture, with a nightly settlement per merchant.",
+       "nodes": [
+        "provider",
+        "cashfree"
+       ]
+      },
+      {
+       "rule": "A prescription-only item is hard-blocked at order placement in siru-provider-service; the assistant's Rx gate is only the user experience.",
+       "nodes": [
+        "provider",
+        "user",
+        "anthropic"
+       ]
+      },
+      {
+       "rule": "A prescription image goes to private S3, is read once by the vision model and deleted; the ruling to keep it through pharmacist verification is not in the code yet.",
+       "nodes": [
+        "user",
+        "s3",
+        "anthropic"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "service:asbuilt-service-siru-auth-service",
+    "type": "service",
+    "name": "siru-auth-service",
+    "data": {
+     "kind": "service",
+     "owner": "RyukLabs",
+     "cost": "",
+     "uses": [
+      "The edge gateway and JWT issuer: OTP, Google and password sign-in, refresh rotation",
+      "Proxies /api/c and /api/m to the services behind it, injecting X-User-Id and X-User-Role",
+      "The single push dispatcher (FCM)"
+     ]
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "service:asbuilt-service-siru-user-service",
+    "type": "service",
+    "name": "siru-user-service",
+    "data": {
+     "kind": "service",
+     "owner": "RyukLabs",
+     "cost": "",
+     "uses": [
+      "Buyer and merchant domain: merchants, KYC docs, addresses, cart, the home feed",
+      "Chat and stories over Socket.io",
+      "The Ask SIRU assistant and its clinical grounding"
+     ]
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "service:asbuilt-service-siru-provider-service",
+    "type": "service",
+    "name": "siru-provider-service",
+    "data": {
+     "kind": "service",
+     "owner": "RyukLabs",
+     "cost": "",
+     "uses": [
+      "Store ops, catalog and the order state machine",
+      "The money stack: Cashfree checkout, Easy Split, settlement, SIRU-coin token wallets",
+      "The network-mesh brain, on a branch"
+     ]
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "service:asbuilt-service-siru-slot-service",
+    "type": "service",
+    "name": "siru-slot-service",
+    "data": {
+     "kind": "service",
+     "owner": "RyukLabs",
+     "cost": "",
+     "uses": [
+      "The universal booking engine for restaurants, clinics and salons; slots computed on the fly",
+      "Its own database, row-lock concurrency; off the gateway",
+      "Powers the assistant's doctor booking"
+     ]
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "service:asbuilt-service-siru-node-service",
+    "type": "service",
+    "name": "siru-node-service",
+    "data": {
+     "kind": "service",
+     "owner": "RyukLabs",
+     "cost": "",
+     "uses": [
+      "The Node OS backend: stock (M1), the till (M2) and inbound (M5) as schema-walled modules",
+      "M5 is built; M1 and M2 are stubs",
+      "Pairs with siru-nodeos-ui and siru-pos, reached through the gateway"
+     ]
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "service:asbuilt-integration-anthropic-claude",
+    "type": "service",
+    "name": "Anthropic (Claude)",
+    "data": {
+     "kind": "integration",
+     "owner": "RyukLabs",
+     "cost": "",
+     "uses": [
+      "The assistant's tool-loop model: Claude Haiku 4.5, vision-capable",
+      "Escalates to a larger model only when a prescription image is attached"
+     ]
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "service:asbuilt-integration-s3-object-store",
+    "type": "service",
+    "name": "S3",
+    "data": {
+     "kind": "integration",
+     "owner": "RyukLabs",
+     "cost": "",
+     "uses": [
+      "Private media: KYC docs, catalog and store images, status images, prescriptions"
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,580 @@
+{
+ "project": "bunny",
+ "clientRef": "m2-arch-bunny-2026-10-05",
+ "ops": [
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "architecture:main",
+    "type": "architecture",
+    "name": "Architecture",
+    "data": {
+     "ruling": "Q9B627C3E",
+     "summary": "BunnyEvents is four repos under one folder: backend (Supabase: migrations, row-level security and edge functions, the contract), app (the Flutter iOS app: attendee, host and door), console (TanStack Start on Vercel: host manage, admin and public pages) and board (the decision record), with the connectors SDK outside the trust boundary. The backend owns the schema; the app and the console each generate their own types from it and no code crosses a repo, so a cross-surface change lands backend-first as an additive migration. Reads and per-user writes go from both clients straight to Supabase under row-level security; every privileged verb is a named Edge Function running as the service role, and a function starts closed until a migration grants it to its real caller. Events enter the catalog only through ingest-events; pg_cron pumps the notification outbox every five minutes and pulls the event sources daily. Ticket payments are simulated today and Stripe is in test mode. Hosted runs on one interim Supabase project while the main one is inactive; the console's production is app.bunny.events.",
+     "diagram": {
+      "groups": [
+       {
+        "id": "clients",
+        "label": "Clients: the iPhone app and the browser",
+        "order": 1
+       },
+       {
+        "id": "vercel-grp",
+        "label": "Vercel: the console",
+        "order": 2
+       },
+       {
+        "id": "supabase-grp",
+        "label": "Supabase: Auth, PostgREST and the Edge Functions",
+        "order": 3
+       },
+       {
+        "id": "data",
+        "label": "Postgres and Storage: the contract",
+        "order": 4
+       },
+       {
+        "id": "outside",
+        "label": "Outside services",
+        "order": 5
+       }
+      ],
+      "seam": {
+       "group": "supabase-grp",
+       "label": "The seam: the schema is the contract; privileged verbs are named functions"
+      },
+      "nodes": [
+       {
+        "id": "flutter",
+        "group": "clients",
+        "kind": "client",
+        "title": "Flutter app",
+        "sub": "attendee, host and door modes",
+        "about": "The iOS app (supabase-dart, go_router, Riverpod): Discover, Plans, Ask Bunny, Circle and You, and a host mode with the door."
+       },
+       {
+        "id": "consolebrowser",
+        "group": "clients",
+        "kind": "client",
+        "title": "Console browser",
+        "sub": "/manage for hosts, /admin for Bunny"
+       },
+       {
+        "id": "publicweb",
+        "group": "clients",
+        "kind": "client",
+        "title": "Public web",
+        "sub": "share links and .ics, no sign-in"
+       },
+       {
+        "id": "vercel",
+        "group": "vercel-grp",
+        "kind": "service",
+        "title": "Console (TanStack Start)",
+        "sub": "host manage, admin and public pages",
+        "about": "Generates its own TypeScript types from the schema. Production deploys only through the gated script; a push to main builds nothing.",
+        "service": "vercel"
+       },
+       {
+        "id": "authrest",
+        "group": "supabase-grp",
+        "kind": "service",
+        "title": "Auth + PostgREST",
+        "sub": "sign-in and direct reads, RLS per table",
+        "service": "supabase"
+       },
+       {
+        "id": "edgefns",
+        "group": "supabase-grp",
+        "kind": "service",
+        "title": "Privileged verbs",
+        "sub": "manager-actions, admin-actions, account-actions",
+        "about": "Every host and admin operation in one audited funnel each, executed as the service role: admin-actions checks is_app_admin and writes a moderation_actions row per act.",
+        "service": "supabase"
+       },
+       {
+        "id": "tickets",
+        "group": "supabase-grp",
+        "kind": "service",
+        "title": "Tickets and passes",
+        "sub": "create-ticket-checkout, payments-webhook, sign-week-pass, door-sync",
+        "about": "All stock and oversell safety lives in reserve_order(); free orders fulfil at once; paid orders confirm through payments-webhook (simulated). The pass is minted and verified by sign-week-pass; door-sync serves the offline entitlement bundle and the check-in queue.",
+        "service": "supabase"
+       },
+       {
+        "id": "ingestfn",
+        "group": "supabase-grp",
+        "kind": "service",
+        "title": "ingest-events and pull-events",
+        "sub": "the one write path into the catalog",
+        "about": "Service role only. Dedup is structural: an upsert on (source, source_uid). A new connector's first rows land staged until an admin approves it.",
+        "service": "supabase"
+       },
+       {
+        "id": "notify",
+        "group": "supabase-grp",
+        "kind": "service",
+        "title": "notify-worker and send-push",
+        "sub": "the outbox pump",
+        "about": "Feeders fill the outbox (reminders, intent prompts, the weekly roundup, due blasts); send-push is the one delivery rail.",
+        "service": "supabase"
+       },
+       {
+        "id": "concierge",
+        "group": "supabase-grp",
+        "kind": "service",
+        "title": "concierge and transcribe",
+        "sub": "Ask Bunny, typed or spoken",
+        "about": "Deterministic retrieval and ranking over the events catalog; the model only words the reply, validated server-side, with a spend breaker. A voice note is transcribed first and feeds the same turn.",
+        "service": "supabase"
+       },
+       {
+        "id": "cron",
+        "group": "data",
+        "kind": "data",
+        "title": "pg_cron",
+        "sub": "the outbox every 5 minutes, sources daily",
+        "service": "supabase"
+       },
+       {
+        "id": "postgres",
+        "group": "data",
+        "kind": "data",
+        "title": "Postgres",
+        "sub": "events, users, orders, tickets, the outbox",
+        "about": "Every table has row-level security, proved against a two- and three-user matrix before ship. Migrations are additive only.",
+        "service": "supabase"
+       },
+       {
+        "id": "storage",
+        "group": "data",
+        "kind": "data",
+        "title": "Storage",
+        "sub": "avatars, event photos, re-hosted covers",
+        "service": "supabase"
+       },
+       {
+        "id": "stripe",
+        "group": "outside",
+        "kind": "external",
+        "title": "Stripe",
+        "sub": "checkout, test mode",
+        "service": "stripe"
+       },
+       {
+        "id": "ingest",
+        "group": "outside",
+        "kind": "external",
+        "title": "Event sources",
+        "sub": "Luma, Ticketmaster, NYC Open Data, connectors",
+        "service": "ingest"
+       },
+       {
+        "id": "apns",
+        "group": "outside",
+        "kind": "external",
+        "title": "APNs",
+        "sub": "push to iPhones",
+        "service": "apple"
+       },
+       {
+        "id": "anthropic",
+        "group": "outside",
+        "kind": "external",
+        "title": "Anthropic",
+        "sub": "Ask Bunny's wording (Claude Haiku)",
+        "service": "anthropic"
+       },
+       {
+        "id": "openai",
+        "group": "outside",
+        "kind": "external",
+        "title": "OpenAI",
+        "sub": "voice notes (Whisper)",
+        "service": "openai"
+       }
+      ],
+      "edges": [
+       {
+        "from": "flutter",
+        "to": "authrest",
+        "label": "reads and per-user writes, under RLS",
+        "main": true
+       },
+       {
+        "from": "flutter",
+        "to": "edgefns",
+        "label": "host verbs; export or delete my account"
+       },
+       {
+        "from": "flutter",
+        "to": "tickets",
+        "label": "reserve, confirm, the pass, the door",
+        "main": true
+       },
+       {
+        "from": "flutter",
+        "to": "concierge",
+        "label": "Ask Bunny: a question or a voice note"
+       },
+       {
+        "from": "flutter",
+        "to": "storage",
+        "label": "avatars and event photos"
+       },
+       {
+        "from": "consolebrowser",
+        "to": "vercel",
+        "label": "loads /manage and /admin",
+        "main": true
+       },
+       {
+        "from": "publicweb",
+        "to": "vercel",
+        "label": "share pages, no sign-in"
+       },
+       {
+        "from": "vercel",
+        "to": "authrest",
+        "label": "client and server Supabase calls",
+        "main": true
+       },
+       {
+        "from": "vercel",
+        "to": "edgefns",
+        "label": "admin-actions: every admin verb, audited",
+        "main": true
+       },
+       {
+        "from": "vercel",
+        "to": "tickets",
+        "label": "create-checkout-session: a plan upgrade"
+       },
+       {
+        "from": "authrest",
+        "to": "postgres",
+        "label": "row-level security on every table",
+        "main": true
+       },
+       {
+        "from": "edgefns",
+        "to": "postgres",
+        "label": "service role, one audit row per act",
+        "main": true
+       },
+       {
+        "from": "edgefns",
+        "to": "storage",
+        "label": "signed upload URLs, re-hosted images"
+       },
+       {
+        "from": "tickets",
+        "to": "postgres",
+        "label": "reserve_order() holds stock, fulfill_order() confirms",
+        "main": true
+       },
+       {
+        "from": "tickets",
+        "to": "stripe",
+        "label": "refused until the payment seam is real"
+       },
+       {
+        "from": "ingest",
+        "to": "ingestfn",
+        "label": "a connector or tools/ingest.py pushes",
+        "main": true
+       },
+       {
+        "from": "ingestfn",
+        "to": "ingest",
+        "label": "pull-events reads each enabled source"
+       },
+       {
+        "from": "ingestfn",
+        "to": "postgres",
+        "label": "upsert on (source, source_uid), provenance on every row",
+        "main": true
+       },
+       {
+        "from": "cron",
+        "to": "notify",
+        "label": "invoke_notify_worker, every 5 minutes",
+        "main": true
+       },
+       {
+        "from": "cron",
+        "to": "ingestfn",
+        "label": "invoke_pull_events, daily"
+       },
+       {
+        "from": "notify",
+        "to": "postgres",
+        "label": "drains the outbox"
+       },
+       {
+        "from": "notify",
+        "to": "apns",
+        "label": "send-push",
+        "main": true
+       },
+       {
+        "from": "concierge",
+        "to": "postgres",
+        "label": "retrieval over the events catalog",
+        "main": true
+       },
+       {
+        "from": "concierge",
+        "to": "anthropic",
+        "label": "the reply, worded and validated"
+       },
+       {
+        "from": "concierge",
+        "to": "openai",
+        "label": "transcribe a voice note"
+       }
+      ],
+      "paths": [
+       {
+        "name": "A guest gets a ticket and walks in",
+        "steps": [
+         {
+          "from": "flutter",
+          "to": "tickets",
+          "says": "The guest taps Get tickets: create-ticket-checkout reserves for the signed-in buyer"
+         },
+         {
+          "from": "tickets",
+          "to": "postgres",
+          "says": "reserve_order() holds the stock; a free order is fulfilled at once"
+         },
+         {
+          "from": "flutter",
+          "to": "tickets",
+          "says": "A paid order is confirmed through payments-webhook (simulated today)"
+         },
+         {
+          "from": "tickets",
+          "to": "postgres",
+          "says": "fulfill_order() turns the pending order into tickets"
+         },
+         {
+          "from": "flutter",
+          "to": "tickets",
+          "says": "At the door, door-sync serves the entitlement bundle and syncs the check-in"
+         }
+        ]
+       },
+       {
+        "name": "An event arrives from a source",
+        "steps": [
+         {
+          "from": "cron",
+          "to": "ingestfn",
+          "says": "pg_cron calls pull-events once a day"
+         },
+         {
+          "from": "ingestfn",
+          "to": "ingest",
+          "says": "Each enabled source's puller reads Luma, Ticketmaster or NYC Open Data"
+         },
+         {
+          "from": "ingest",
+          "to": "ingestfn",
+          "says": "or a connector pushes its events itself"
+         },
+         {
+          "from": "ingestfn",
+          "to": "postgres",
+          "says": "ingest-events upserts on (source, source_uid), provenance on every row"
+         },
+         {
+          "from": "flutter",
+          "to": "authrest",
+          "says": "Discover asks for the published events"
+         },
+         {
+          "from": "authrest",
+          "to": "postgres",
+          "says": "row-level security shows only what this person may see"
+         }
+        ]
+       },
+       {
+        "name": "A reminder reaches a phone",
+        "steps": [
+         {
+          "from": "cron",
+          "to": "notify",
+          "says": "Every five minutes pg_cron invokes notify-worker"
+         },
+         {
+          "from": "notify",
+          "to": "postgres",
+          "says": "The feeders fill the outbox and the pump drains it"
+         },
+         {
+          "from": "notify",
+          "to": "apns",
+          "says": "send-push delivers to the iPhone through APNs"
+         }
+        ]
+       }
+      ]
+     },
+     "crossing": [
+      {
+       "rule": "Reads and per-user writes go straight from both clients to Supabase under row-level security; every table's policies are proved against a two- and three-user matrix before ship.",
+       "nodes": [
+        "flutter",
+        "vercel",
+        "authrest",
+        "postgres"
+       ]
+      },
+      {
+       "rule": "Every privileged verb is a named Edge Function running as the service role, and a function starts closed: the migration that adds it grants execute to its real caller (check-fn-grants is the backstop).",
+       "nodes": [
+        "edgefns",
+        "tickets",
+        "ingestfn",
+        "notify",
+        "concierge"
+       ]
+      },
+      {
+       "rule": "An admin act passes is_app_admin and writes a moderation_actions row; the console's admin pages are a thin client of admin-actions.",
+       "nodes": [
+        "consolebrowser",
+        "vercel",
+        "edgefns"
+       ]
+      },
+      {
+       "rule": "ingest-events is the one external write door into the catalog: service role only, provenance on every row, and a new connector's first rows stay staged until approved.",
+       "nodes": [
+        "ingest",
+        "ingestfn",
+        "postgres"
+       ]
+      },
+      {
+       "rule": "Money: ticket payments are simulated and Stripe stays in test mode; checkout refuses until the payment seam is switched to real.",
+       "nodes": [
+        "tickets",
+        "stripe"
+       ]
+      },
+      {
+       "rule": "The schema is the contract: the backend owns it, the app and the console generate their own types, no code crosses a repo, and migrations are additive only.",
+       "because": [
+        "Q9B627C3E"
+       ],
+       "nodes": [
+        "postgres",
+        "flutter",
+        "vercel"
+       ]
+      },
+      {
+       "rule": "Ask Bunny needs a signed-in person; the model words a reply the server validates, and a spend breaker stops it.",
+       "nodes": [
+        "concierge",
+        "anthropic",
+        "openai"
+       ]
+      }
+     ],
+     "flows": [
+      {
+       "id": "request",
+       "title": "A client action",
+       "steps": [
+        "The Flutter app (supabase-dart) and the console browser (`src/integrations/supabase/`) both call Supabase REST/Auth directly for reads and simple per-user writes, enforced by row-level security — no server sits in between for these (app CLAUDE.md \"Stack\", console CLAUDE.md \"Stack\").",
+        "A privileged verb — hosting ops, moderation, payments, check-in — goes through a named Edge Function running as `service_role` instead: `manager-actions` for host writes, `admin-actions` for every one of the console's 11 admin verbs via `src/lib/admin-ctx.tsx`'s `act()` (console CLAUDE.md \"/admin — real identity\"), `sign-week-pass`/`door-sync` for check-in.",
+        "Functions start CLOSED — a migration adding one must explicitly `grant execute` to its real caller; the backstop is `tools/check-fn-grants.sh`, run after every `db reset` (backend CLAUDE.md \"Stack\")."
+       ]
+      },
+      {
+       "id": "ingest",
+       "title": "External event data",
+       "steps": [
+        "`tools/ingest.py`, the Luma puller (`tools/pull_luma_nyc.py`), the Ticketmaster Discovery API puller, and any approved `bunny-connectors` integration all push through the one door: the `ingest-events` edge function, service-role, provenance mandatory on every row.",
+        "A brand-new connector's first contact lands STAGED (invisible to users) until approved once in the admin panel; a re-push of the same `source_uid` upserts, and an update to a claimed (host-edited) event files an `event_feed_proposals` row instead of overwriting it (connectors CLAUDE.md)."
+       ]
+      },
+      {
+       "id": "payments",
+       "title": "A ticket purchase (TEST mode)",
+       "steps": [
+        "App or console calls `create-checkout-session` / `create-ticket-checkout`, which talks to Stripe in TEST mode (`livemode:false`).",
+        "Stripe calls back `payments-webhook`, which writes `orders`/`order_items`/`tickets` — money in this build is simulated by design, Stripe-shaped SQL (`seam_registry`/`seam_ledger` audit the autopass trail per platform-architecture research)."
+       ]
+      },
+      {
+       "id": "push-and-email",
+       "title": "Push and auth email",
+       "steps": [
+        "`send-push` / `notify-worker` deliver push through APNs to the app.",
+        "Supabase Auth's own SMTP config (Google Workspace relay) sends magic-link, invite and recovery email directly — this path does not go through an edge function."
+       ]
+      },
+      {
+       "id": "checkin",
+       "title": "Door check-in",
+       "steps": [
+        "`sign-week-pass` mints/verifies the rotating pass proof; `door-sync` handles idempotent bulk check-in sync for the app's door mode and the console's `/manage` door screens."
+       ]
+      },
+      {
+       "id": "release",
+       "title": "Cross-repo release (backend-first)",
+       "steps": [
+        "A schema or contract change always lands in `bunny-backend` first: an additive migration under `supabase/migrations/` (never edit an applied one), then `supabase db push` to the one hosted project.",
+        "`bunny-app` (Dart) and `bunny-console` (`types.ts`) each regenerate their own types from the new schema — no code crosses the repo boundary, only the schema contract (root CLAUDE.md \"Dependency direction\").",
+        "The app ships via TestFlight (`bunny-backend/tools/testflight-release.sh`, the App Store Connect credentials live only in that repo) — always kicked off from `bunny-backend`, never from `bunny-app` (app CLAUDE.md \"Ship\"). The console's production deploy is a manual ritual from `console/`; git pushes build branch PREVIEWS only (anon key only, service-role key removed from Preview), never production (QF08D993C).",
+        "`bunny-connectors` never touches schema/UI/secrets directly — it only ever speaks the frozen `ingest-events` contract, so it needs no coordinated release with the other three repos (connectors CLAUDE.md)."
+       ]
+      },
+      {
+       "id": "observability-flow",
+       "title": "Errors and product analytics",
+       "steps": [
+        "The app reports errors to Sentry project \"bunny-app\"; the console reports to the separate Sentry project \"bunny-console\" — same org, different projects, deliberately not shared.",
+        "Product analytics goes to the single PostHog project \"bunny-beta\"."
+       ]
+      }
+     ],
+     "environments": [
+      {
+       "aspect": "Supabase project",
+       "staging": "The local stack: supabase start, and db reset replays every migration and the seed",
+       "production": "One hosted project, the interim free one while the main project is inactive; no separate staging project (Q9B627C3E)"
+      },
+      {
+       "aspect": "Console (Vercel)",
+       "staging": "Branch previews from the git link, with the anon key only",
+       "production": "app.bunny.events, deployed only through the gated script; a push to main builds nothing (QF08D993C)"
+      },
+      {
+       "aspect": "Payments",
+       "staging": "Ticket payments simulated; Stripe in test mode",
+       "production": "The same: simulated ticket payments, Stripe in test mode"
+      },
+      {
+       "aspect": "Mobile distribution",
+       "staging": "flutter run on an iOS simulator",
+       "production": "TestFlight, the internal group, through the gated release script"
+      },
+      {
+       "aspect": "Event sources",
+       "staging": "Fixture and dry-run connectors",
+       "production": "Luma public pages, the Ticketmaster Discovery API and approved connectors, all through ingest-events"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+{
+  "aim": "@MK@ aim: ship the thing",
+  "measure": { "name": "@MK@ touches per unit", "value": 3.5, "period": "2026-Q1", "prior": 5, "priorPeriod": "2025-Q4", "source": "@MK@ ledger" },
+  "status": "decided",
+  "source": ["selftest"]
+}

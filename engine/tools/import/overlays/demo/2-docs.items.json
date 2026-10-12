@@ -1,0 +1,83 @@
+{
+ "note": "The demo project's docs: a start-here written from the site's own summary, and the site's guide, brand page and privacy page as published (fictional people named by their role; no contact address).",
+ "clientRef": "demo-2-docs",
+ "items": [
+  {
+   "kind": "doc",
+   "op": "upsert",
+   "data": {
+    "path": "start-here.md",
+    "title": "Start here",
+    "body": "# Start here: the sharingu demo\n\nThis project is a shareable demo of sharingu, filled only from sharingu's public website (sharingu.ryuklabs.io): its\nhome page, its guide, its brand page, its waitlist page, its privacy page and its llms.txt, and one authored walkthrough:\nthe Pilot Shop, a made-up online shop (no customer's, no vendor named), whose product and one request show what a team's\nproject holds. Nothing in it comes from a customer, a private document or a team's own records.\n\n## What sharingu is, in the site's words\n\nsharingu is a shared company brain and MCP harness for people, native AI tools and partner teams. It connects\ncontributions, evidence, human decisions, budgets and organizational goals.\n\nPeople set direction and retain decision authority. Their chosen tools do the work. sharingu retains the context for the\nnext contribution. Its contribution loop covers a goal brief, work with sources, human review and the next useful step.\n\n## The scope the site states\n\nsharingu is in private beta. The site's walkthrough records are authored scenarios, not customer results. Supported\nclient connections, channel integrations, cross-organization access and measurement collection are confirmed during\nonboarding. Logos identify tools, not partnerships. Pricing, universal automatic metering and measured ROI are not\nestablished by the walkthrough.\n\n## Where to look in this project\n\n- **Home:** the aim, in the site's own words. The site states no number that says sharingu is working, so the aim's\n  measure is an open question on Decisions.\n- **Goals:** the site's mission as the root goal, its three vision lines, the contribution loop, the cost-to-outcome\n  measures and the private beta.\n- **Map:** the eight tabs of the app as the console's screens, each with one line the site supports; and the Pilot Shop's\n  three apps with their wireframes, its API, its database, its flows, the apps it connects (Arch) and the decisions they\n  wait on (Deps): `product/pilot-shop.md`.\n- **The walkthrough:** the goal *Pilot Shop: a business buyer pays by invoice* holds one request's whole loop: proposed,\n  decided, picked up, filed done, graded and announced, each lane's cell moving on the goal.\n- **GTM:** the waitlist as a target, and the claims the site makes, each with its boundary.\n- **Decisions:** two questions a reader of the site would ask, and the Pilot Shop's two (its payment terms, its first\n  reminder). They are open: the owner rules them.\n- **Docs:** the site's guide, its brand page and its privacy page.\n",
+    "asOf": "2026-09-28",
+    "confidence": "confirmed",
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/llms.txt",
+      "label": "the site's summary and scope"
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/",
+      "label": "the home page"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "doc",
+   "op": "upsert",
+   "data": {
+    "path": "guide/how-sharingu-works.md",
+    "title": "How sharingu works: the field guide",
+    "body": "# How sharingu works: the field guide\n\nThe site's own guide (docs.html), as published. Its example workspace is fictional; a person in its examples is named\nhere by their role.\n\n## 01 The idea: make the work add up\n\nA company has goals. People and agents contribute work toward them. sharingu brings the work, its sources, its evidence\nand the decisions around it into a shared record. The useful question is not just \"what happened?\" It is \"what does\nthis establish, which goal does it serve, and what do we do next?\"\n\nThe model: goal · contribution · evidence · human decision · supported progress · context for the next contribution.\n\n## 02 One shared brain: Agent R connects the context\n\nAgent R serves your organization's console and MCP connection. It helps connect, grade and explain contributions. People\nand their tools perform the work; humans retain decision authority. This is an organizational context model. It does not\nmean every agent is hosted, scheduled or managed by sharingu.\n\n## 03 Work with a record: every claim needs its context\n\nA contribution may be a design, an engineering change, a finding or a proposal. Keep what was contributed, who supplied\nit, why it matters, the relevant references and the evidence together.\n\n- **Supported:** evidence establishes a particular claim within a stated scope.\n- **Needs a person:** a question requires human judgment.\n- **Incomplete:** something required is still missing.\n\n## 04 Human authority: a decision stays with its reasons\n\nIn the guide's fictional pilot workspace, a launch draft claims general availability; its rollout note only supports a\npilot. The founder records a decision to use pilot-only wording, and the wider claim stays unproven. A decision can\nsettle what the team should do without making every underlying claim true. Keep the ruling and the evidence separate,\nand preserve unresolved questions for the next reader.\n\n## 05 Ownership and access: shared understanding has boundaries\n\nThe product model is organization-based, with project context and personal access. Your administrator provides your\norganization URL and access key. Confirm the current beta's permissions, key handling and operational fit during\nonboarding. The site does not imply certifications or capabilities that have not been established.\n\n## 06 Context and memory: share the work that belongs in the record\n\nContribute relevant references and evidence deliberately. Do not include passwords, personal access keys or information\nyou are not authorized to share. Shared organizational memory means retained context for future work. It is not a claim\nthat models are retrained on your contributions, or that every member can access every record.\n\n## 07 Your working environment: your tools, one company brain\n\nThe deployment model is one cloud-hosted worker per organization, with bound storage and project scopes. A compatible\nclient connects with the organization's MCP URL and a person's access key. Examples of tools with MCP support include\nChatGPT, Claude and Gemini CLI; their connection options differ, and the site's links document client capabilities, not\na completed sharingu integration test or a partnership. Model access remains with your provider.\n\n## 08 A repeatable contribution process: close the loop\n\n1. **Brief:** agree on the goal, scope and evidence needed.\n2. **Contribute:** attach the work, its author, sources and unresolved questions.\n3. **Review:** let the responsible person record the decision, its reason and limits.\n4. **Carry forward:** retain the context and turn the remaining question into the next brief.\n\nThe site offers starter templates (a goal brief, a contribution record, a human decision and a next-step template). They\ndescribe a process; they do not execute agents or grant them authority.\n\n## 09 Value and measurements: connect the cost, understand the outcome\n\nUsage (what went in), cost (where it went), decisions (what moved forward) and outcomes (what changed). Each measure needs\na source, unit, time window and status: observed, reported, estimated or unknown. If a tool does not report usage, the\nrecord remains unknown rather than zero. ROI needs a measured outcome, a baseline, attribution and all relevant costs;\nuntil those are available, it is not established.\n\n## 10 People, platforms and financial ownership\n\nThe company model brings employees, partner organizations and their agents into scoped projects. A person can hold\nseveral roles: contributor, project lead, finance owner or decision maker. Slack and Telegram are collaboration surfaces\nin this product direction; available channel connections and cross-organization access are confirmed during setup.\n\n## 11 Getting started\n\n1. Request beta access or a walkthrough.\n2. During onboarding, confirm the supported client and organization setup.\n3. Receive your organization's MCP URL and your personal key from its administrator.\n4. Configure the supported client and contribute a real piece of work with its references.\n\nNever paste an access key into the website request form.\n",
+    "asOf": "2026-09-28",
+    "confidence": "confirmed",
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/docs.html",
+      "label": "the site's guide"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "doc",
+   "op": "upsert",
+   "data": {
+    "path": "gtm/brand.md",
+    "title": "The sharingu brand",
+    "body": "# The sharingu brand: sharing + you\n\nThe site's brand page (brand.html) and the identity rules in the site's design notes, as published.\n\n## The identity\n\n- **Top line:** \"your company's work, on boards nobody maintains.\"\n- **Emotional opener:** \"your company thinks out loud.\" **Through-line:** \"agents produce, humans author.\"\n- Always write sharingu in lowercase.\n- U-chan is the teammate with glasses: warm, clear, quietly playful and confident. Keep the original silhouette, thick\n  ink outline and rounded joins.\n\n## Two worlds, one orange\n\nPaper is where people read; Ink is where the machine works. Orange is the identity, used with conviction and always with\nink text; peach gives the page warmth.\n\n| Token | Value |\n|---|---|\n| Paper | #F7F5EF |\n| Paper 2 | #EFEBE2 |\n| Surface | #FFFDF8 |\n| Dark | #0F0E0D |\n| Panel | #1A1917 |\n| Orange | #FB923C |\n| Peach | #FBEEE3 |\n| Ink | #1C1917 |\n\nState: green #059669 means verified or binding; amber #B45309 means a person needs to rule; stone #79716B means\nincomplete. Every state also has a text label. Small orange text uses #C2410C for contrast.\n\n## Three voices, one family\n\n- **Manrope 800** for display headings; body copy Manrope 400 or 500 at 16 to 18 pixels.\n- **Fredoka 600**, the friendly teammate: the wordmark, signature lines, agent names and large numbers.\n- **JetBrains Mono** belongs to data: references, times, grades and code.\n\n## Motion: a heartbeat, not a light show\n\nA populated board is the signature artifact. State changes are brief; story beats give people time to read. The first\nframe is always visible, motion can be paused, and reduced-motion preferences stop automatic loops. No decorative green,\ngraph-paper grids, glow blobs, generic icon packs or 3D mascots.\n\n## Voice: inform, justify, never hype\n\nShort declaratives. Specific examples. A reason beside every claim. Fictional company names make demonstrations clearly\ndistinguishable from customer evidence. Proof, or it isn't binding. Authority is a human act: Agent R connects, grades\nand guides; humans decide. The public examples do not imply that sharingu executes or deploys a team's software.\n",
+    "asOf": "2026-09-28",
+    "confidence": "confirmed",
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/brand.html",
+      "label": "the site's brand page"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "doc",
+   "op": "upsert",
+   "data": {
+    "path": "privacy.md",
+    "title": "Website privacy",
+    "body": "# Website privacy\n\nThe site's privacy page (privacy.html, updated 28 September 2026), as published. It covers the marketing website only;\nproduct access and organization-specific data handling are confirmed during beta onboarding.\n\n## What you choose to share\n\nThe request form collects your email address and whether you want beta access or a walkthrough. Your name, organization\nand a description of your needs are optional. The details are used to respond to the request and coordinate next steps.\nDo not submit access keys, passwords or sensitive personal or company information. The form does not subscribe you to a\nseparate marketing newsletter.\n\n## Browsing the website\n\nOn the published website, Google Analytics loads only after you allow optional analytics. It measures page visits,\naccess-request links, guide links and whether a form request succeeds or fails. Names, email addresses, organization\nnames, form text and arbitrary URL parameters are not sent in these events. Advertising signals are disabled. Preview and\nlocal sites do not load Analytics. Fonts are served with the site. Hosting and verification providers may process\ntechnical request information, such as IP addresses and browser details, to deliver their services and prevent abuse.\n\n## The analytics choice\n\nOptional Google Analytics starts off. You can allow it or withdraw the choice; the choice is saved in your browser.\nBrowser privacy signals keep it disabled. The form works either way.\n\n## The services involved\n\n- Vercel hosts the website.\n- Cloudflare provides the edge network, cookieless site analytics and Turnstile spam protection.\n- Google Analytics measures optional usage after permission.\n- Google Sheets stores requests in a private intake tab through the site's own server endpoint.\n- Telegram delivers a copy of submitted answers to the team's channel for follow-up.\n\nEach provider's own policies also apply. Request information is not sold or rented, and submitted details are not used\nto create an employee or agent performance profile.\n\n## How long requests are kept\n\nRequest information is kept while it is needed to respond and coordinate access or a walkthrough. You can ask for a\nrequest to be withdrawn, or for access, correction or deletion, through the contact address on the site's privacy page.\n",
+    "asOf": "2026-09-28",
+    "confidence": "confirmed",
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/privacy.html",
+      "label": "the site's privacy page"
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,7 @@
+{
+  "note": "Old names that are a project's own HISTORY, not stale product words (sprint 3, the projects' data before the video): the audit counts them apart as \"historic, the source's own\" and raises no finding for them. A term here is matched by the audit's STALE label (tools/audit/project-audit.mjs).",
+  "siru": {
+    "terms": ["Agent R", "siru-services"],
+    "why": "siru's decision log, capsules and notes record the old engine by name as it was when each was written (its real history); the bank is read-only and its history is not rewritten"
+  }
+}

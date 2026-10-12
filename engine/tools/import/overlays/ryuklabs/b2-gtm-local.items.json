@@ -1,0 +1,696 @@
+[
+ {
+  "kind": "doc",
+  "op": "upsert",
+  "data": {
+   "path": "gtm/positioning.md",
+   "title": "Ryuk Labs — positioning",
+   "body": "# Ryuk Labs — positioning\n\n*From the team outreach master context, updated 2026-10-01 (§3).*\n\nRyuk Labs is a Dubai-based product design, engineering and applied-AI team. We work alongside founders and operators to understand a real business problem, define the useful product or workflow, build it, and help the team adopt and maintain it.\n\n## What we can contribute\n- Product and workflow research\n- Product definition and technical direction\n- UX and interface design\n- Web and mobile engineering\n- System integrations and data models\n- Applied AI with human review\n- Booking, commerce and customer-operation workflows\n- Internal operations, ownership and follow-up systems\n- Migration, staff training and rollout\n- Early demonstrations, adoption and GTM support where agreed\n\n## The strongest commercial framing\nStart with one operating problem, not a list of services. Examples:\n- Enquiries arrive through disconnected channels and lose ownership.\n- Bookings, products, stock and customer records are managed separately.\n- A promising prototype needs a maintainable product and operating workflow.\n- A founder needs senior technical direction before building a full team.\n- A regulated money flow needs a usable customer experience and reliable reconciliation.\n- Useful AI output remains inside individual chats instead of becoming team work.\n\nFor UAE businesses, make adoption practical: existing WhatsApp and social channels, English and Arabic, migration, team ownership and employee training. Scope, integrations, access, pricing and commercial terms are agreed per engagement.\n\n## Partnership shapes\n| Shape | What the other side brings | What Ryuk Labs brings | First step |\n| --- | --- | --- | --- |\n| Client project | A defined workflow, business owner and access to users | Research, product, design, engineering and delivery | Scope one paid pilot |\n| Founder/domain partnership | Domain knowledge, customer access and decision time | Technical direction and product delivery | Validate one problem together |\n| Referral/commercial partner | Relevant relationships and qualified opportunities | Senior delivery capability | Compare one live opportunity |\n| Joint delivery | Complementary capability and a named owner | Product/engineering/AI capacity | Agree responsibilities on one project |\n| Venture or portfolio support | Founders with blocked product or AI work | Clinics followed by separately scoped delivery | Support one company first |\n| Ecosystem/programme | Community, programme access or a stage | A practical clinic, workshop or pilot format | Run one useful session |\n\nDo not offer fixed equity, free builds, prices or delivery timelines without a specific decision.\n",
+   "asOf": "2026-10-01",
+   "confidence": "direction",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §3",
+     "label": "the team outreach master context, updated 2026-10-01"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "doc",
+  "op": "upsert",
+  "data": {
+   "path": "gtm/outreach.md",
+   "title": "Outreach — lanes, method and voice",
+   "body": "# Outreach — lanes, method and voice\n\n*From the team outreach master context, updated 2026-10-01 (§4, §13, §16, §18).*\n\n## Keep the four outreach lanes separate\n| Lane | Lead with | Suitable proof | Ask |\n| --- | --- | --- | --- |\n| Ryuk Labs partnership/client work | A real product, workflow or delivery gap | One relevant Ryuk Labs story | One project discussion, joint-delivery fit or introduction |\n| Personal technical-founder support | Ryuk's hands-on technical direction and founder empathy | Personal building experience | A short conversation about the founder's actual problem |\n| Sharingu company-building | The contribution thesis, early use and distribution need | Current Sharingu traction | A walkthrough |\n| Sharingu pilot | One recurring handoff between people and agents | A concrete handoff example | A scoped pilot with a small team and agreed measures |\n\nNever combine Ryuk Labs services, Sharingu, Siru country expansion and an event-pass request in one opener.\n\n*The investment side of the Sharingu lanes is left out of sharingu's data (fundraising stays in the team context pack).* The relationship goal is mutual value: we are not collecting senior profiles or sending the same sales message to everyone.\n\n## Method\nBefore writing: choose one lane and outcome; check relationship state; verify current role and a relevant detail; map the mandate to one capability and one proof point; choose one small ask.\n\nContact ladder: follow a reachable operator; interact around a concrete theme; connect; send one relevant idea; ask for a short perspective call after a response; ask who owns pilots/partnerships if fit is real; approach senior leadership with context.\n\nOperational rule: no more than five new DMs in a day. Contact one primary person per organization. Follow up once after roughly 6–8 business days with a useful detail or artifact. Stop after a decline or opt-out.\n\n## Voice\nWrite like a thoughtful builder: short sentences, plain language, one purpose, one reason, one proof point and one easy next step.\n\nAvoid \"hope this email finds you well\", \"revolutionary\", \"game-changing\", \"seamless ecosystem\", \"unlock synergies\", \"leverage\", inflated praise, manufactured urgency and fake familiarity. Do not mention a recipient's post unless it genuinely adds something and was actually reviewed; a direct relevant opening is better. The first DM does not need a question.\n\nEditorial targets: connection note under 200 characters where possible; first DM 45–80 words; first email 100–150 words; replies answer the recipient's question first.\n\n## What stays unknown\nDo not guess legal entity details, licence/registration data, incorporation, address, jurisdiction, cap table, equity, valuation, instrument, runway, current revenue/ARR, transaction volume, paying-customer count, employee breakdown, the exact definition of Siru's sign-ups, Sharingu retention/activity, unapproved client identities, exact integrations, or event outcomes.\n\n## Privacy and operating rule\nDo not publish raw transcripts, confidential client identities, production credentials, old invoices, form-response data or internal operational records. The team may draft, research and update internal status from evidence. Do not send messages, submit forms, schedule follow-ups, post content or change a contact to \"sent\" without a real action or explicit confirmation. A draft is not evidence of a send, a connection is not a reply, and a reply is not a meeting.\n",
+   "asOf": "2026-10-01",
+   "confidence": "direction",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §4, §13, §16, §18",
+     "label": "the team outreach master context, updated 2026-10-01"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "doc",
+  "op": "upsert",
+  "data": {
+   "path": "gtm/campaigns.md",
+   "title": "Campaigns and angles",
+   "body": "# Campaigns and angles\n\n*From the team outreach master context, updated 2026-10-01 (§1, §7). Relationship state and named contacts are kept out of sharingu.*\n\nThe commercial objective: turn Ryuk Labs' product, engineering and applied-AI capability into real projects, delivery partnerships, referrals and ecosystem relationships, with the UAE and UK as the main markets.\n\n## A. Event access, stages and partner activations\nThe best hook is not \"please give me a free pass.\" Offer a format that creates audience value:\n1. **Live founder clinic:** one real business problem becomes the smallest testable product or AI workflow in 25 minutes.\n2. **Human–agent handoff session:** show why completed AI output can still fail the next teammate, and how evidence, ownership and goals travel with the work.\n3. **Cross-border product panel:** the difference between exporting software and adapting workflows for India, UAE and UK markets.\n4. **Physical experience + digital layer:** Ryuk Labs and TakeOver IRL on technology, community and real-world founder experiences.\n5. **Pharmacy digitisation discussion:** what must change beyond code when localising a live Indian pharmacy product to another country.\n\nAsk in this order: useful format → correct programme/partnership owner → stage, roundtable or partner activation → access/pass needed to contribute. A pass is the outcome, not the headline. A normal pass is still a win; a VIP pass is not the opening ask. The selected events are on the Targets list.\n\n## B. UAE and UK business development\nThe strongest offer is founder-led product execution for one real opportunity, not generic outsourced development. Target venture value-creation teams, startup studios, implementation partners, innovation programmes, cross-border networks and enterprises with a named workflow. The routes are on the Targets list.\n\n## C. Siru country customisation\nDo not pitch \"copy Siru into another country.\" Pitch a repeatable product core plus country discovery across regulation, pharmacy workflow, payments/providers, language, integrations, migration, staff adoption, training, commercial ownership and distribution. The initial conversation should be market learning, operator feedback or a scoped discovery partnership. Pharmacy platforms may be partners, channels or competitors; do not disclose proprietary architecture or customer data.\n\n## D. Fintech, crypto and neobank projects\nRelevant themes: wallet funding, card payment and reconciliation; onboarding; ledger and operational workflows; embedded-finance and SME banking experiences; stablecoin payment workflows; internal compliance/review systems; product engineering for regulated digital-asset businesses. Never imply Ryuk Labs is itself a licensed bank, payment provider, broker, exchange or crypto custodian.\n\n## E. Real estate and hospitality\nThe useful angle is AI-assisted operations: enquiry intake from WhatsApp, portals and social channels; property/guest/tenant context; booking, viewing and service-request ownership; staff handoffs; multilingual operations; and management visibility without replacing working systems. Keep messages grounded in one operating workflow.\n",
+   "asOf": "2026-10-01",
+   "confidence": "direction",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §1, §7",
+     "label": "the team outreach master context, updated 2026-10-01"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "doc",
+  "op": "upsert",
+  "data": {
+   "path": "gtm/content.md",
+   "title": "Content strategy",
+   "body": "# Content strategy\n\n*From the team outreach master context, updated 2026-10-01 (§12, §15).*\n\nPublish two useful posts per week: one operating/product lesson and one founder or cross-border lesson. Leave three to five substantial comments per week; add an example, counterpoint or practical implication, never only \"great insights.\"\n\nWeekly rhythm: two evidence-led posts; three to five meaningful comments; one existing-conversation review before new outreach; one weekly status reconciliation using actual send/reply evidence.\n\n## Post themes\n1. **Siru localisation** — \"A pharmacy platform is not ready for a new country because its code runs there.\" Explain regulation, workflow, payments/providers, language, migration/integration and staff adoption; invite pharmacy operators in the UAE or UK to challenge the model.\n2. **Sharingu handoff** — \"AI can complete a task and still leave the company with more confusion.\" Show one before/after handoff: goal, affected screens/APIs, evidence, owner and next action. Avoid a feature catalogue.\n3. **The partner contract** — \"The best product partnerships start with a shared problem and clear responsibility on both sides.\" What the domain partner brings and what Ryuk Labs contributes; useful for studios, consultancies and portfolio value-creation teams.\n4. **Cross-border field note** — \"Entering the UAE or UK is a workflow-discovery exercise before it is a translation exercise.\" One concrete operational contrast between India, UAE and UK; ask operators for the local constraint outsiders usually miss.\n5. **Fintech operations** — \"The payment screen is the visible part. Reconciliation, ownership and exception handling decide whether the product works operationally.\" Use an anonymous workflow example; do not imply client identity, transaction volume or licensing.\n",
+   "asOf": "2026-10-01",
+   "confidence": "direction",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §12, §15",
+     "label": "the team outreach master context, updated 2026-10-01"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "card_kind",
+  "op": "upsert",
+  "data": {
+   "key": "claim",
+   "label": "Approved claims",
+   "tab": "gtm"
+  }
+ },
+ {
+  "kind": "card_kind",
+  "op": "upsert",
+  "data": {
+   "key": "target",
+   "label": "Targets",
+   "tab": "gtm"
+  }
+ },
+ {
+  "kind": "card_kind",
+  "op": "upsert",
+  "data": {
+   "key": "copy",
+   "label": "Copy",
+   "tab": "gtm"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "claim",
+   "id": "claim-fintech-confidential",
+   "name": "Product experience covering wallet funding, card payment and reconciliation",
+   "body": "Approved description of confidential fintech work.\n\n**Boundary:** keep the client identity private. Do not imply that Ryuk Labs holds a banking or crypto licence, processed a stated live volume, or integrated a named provider without approval.\n\nStory: https://www.ryuklabs.io/stories/fintech\n\nSource: team outreach master context §5 (2026-10-01).",
+   "status": "approved",
+   "asOf": "2026-10-01",
+   "confidence": "confirmed"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "claim",
+   "id": "claim-research-confidential",
+   "name": "Software for source/version review and decision tracking in a research context",
+   "body": "Approved description of confidential research software.\n\n**Boundary:** do not claim a drug discovery outcome, scientific efficacy, clinical result, regulatory approval or certification.\n\nStory: https://www.ryuklabs.io/stories/life-sciences\n\nSource: team outreach master context §5 (2026-10-01).",
+   "status": "approved",
+   "asOf": "2026-10-01",
+   "confidence": "confirmed"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "claim",
+   "id": "claim-partner-listing",
+   "name": "The Ryuk Labs About page lists TakeOver and Calsoft Group as partners",
+   "body": "TakeOver IRL can support a credible community, travel, event and physical-experience angle; Calsoft supports an established technology-ecosystem angle.\n\n**Boundary:** a partner listing does not by itself prove a specific jointly delivered module, endorsement, investment, certification, licence or permission to disclose confidential work. Recheck Calsoft's NSE/BSE-listed status from current official market sources before using it in a fresh outbound message.\n\nSource: team outreach master context §5 (2026-10-01).",
+   "status": "approved",
+   "asOf": "2026-10-01",
+   "confidence": "confirmed"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "claim",
+   "id": "claim-sample-data",
+   "name": "Story dashboards use sample data, not measured client outcomes",
+   "body": "The dashboards, dollar values and graphs inside interactive stories use sample data to explain workflows. They are not measured client outcomes.\n\n**Boundary:** do not revive older broad totals such as 50+ products, 2M+ users, $50M+ value or 100+ brand partners without current evidence.\n\nSource: team outreach master context §5 \"General proof rule\" (2026-10-01).",
+   "status": "rule",
+   "asOf": "2026-10-01",
+   "confidence": "confirmed"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "claim",
+   "id": "claim-not-licensed",
+   "name": "Ryuk Labs is not a licensed bank, payment provider, broker, exchange or crypto custodian",
+   "body": "Never imply otherwise in fintech, crypto or neobank outreach.\n\nSource: team outreach master context §7 D (2026-10-01).",
+   "status": "rule",
+   "asOf": "2026-10-01",
+   "confidence": "confirmed"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "claim",
+   "id": "claim-team-size",
+   "name": "The website's \"more than 25 people\" is not a verified full-time employee count",
+   "body": "It is also not the same as Sharingu's user count.\n\nSource: team outreach master context §16 (2026-10-01).",
+   "status": "rule",
+   "asOf": "2026-10-01",
+   "confidence": "confirmed"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-market-uae",
+   "name": "UAE — a main market",
+   "body": "The commercial objective names the UAE and UK as the main markets (§1). For UAE businesses, make adoption practical: existing WhatsApp and social channels, English and Arabic, migration, team ownership and employee training (§3).\n\nSource: team outreach master context (2026-10-01).",
+   "status": "target",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-market-uk",
+   "name": "UK — a main market",
+   "body": "The commercial objective names the UAE and UK as the main markets (§1).\n\nSource: team outreach master context (2026-10-01).",
+   "status": "target",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-route-portfolio",
+   "name": "Portfolio companies with a blocked roadmap or AI experiment",
+   "body": "A UAE and UK business-development route (§7 B).\n\nSource: team outreach master context (2026-10-01).",
+   "status": "target",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-route-uk-venture",
+   "name": "UK ventures needing UAE or India product execution",
+   "body": "A UAE and UK business-development route (§7 B).\n\nSource: team outreach master context (2026-10-01).",
+   "status": "target",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-route-uae-capacity",
+   "name": "UAE companies needing senior product/engineering capacity",
+   "body": "A UAE and UK business-development route (§7 B).\n\nSource: team outreach master context (2026-10-01).",
+   "status": "target",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-route-research",
+   "name": "Research-backed ideas needing a usable software layer and customer pilot",
+   "body": "A UAE and UK business-development route (§7 B).\n\nSource: team outreach master context (2026-10-01).",
+   "status": "target",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-route-retail-hospitality",
+   "name": "Retail, hospitality or real-estate workflows needing AI-assisted customer and staff operations",
+   "body": "A UAE and UK business-development route (§7 B, §7 E).\n\nSource: team outreach master context (2026-10-01).",
+   "status": "target",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-route-pharmacy",
+   "name": "Healthcare/pharmacy opportunities requiring country discovery and localisation",
+   "body": "A UAE and UK business-development route (§7 B, §7 C).\n\nSource: team outreach master context (2026-10-01).",
+   "status": "target",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-route-fintech",
+   "name": "Fintech/crypto operators needing product, ledger, reconciliation or operations workflows",
+   "body": "A UAE and UK business-development route (§7 B, §7 D).\n\nSource: team outreach master context (2026-10-01).",
+   "status": "target",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-event-web-summit-qatar",
+   "name": "Web Summit Qatar",
+   "body": "An event previously selected for a contribution format (§7 A): https://qatar.websummit.com/\n\nSource: team outreach master context (2026-10-01).",
+   "status": "selected",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-event-london-tech-week",
+   "name": "London Tech Week",
+   "body": "An event previously selected for a contribution format (§7 A): https://www.tech-week.com/\n\nSource: team outreach master context (2026-10-01).",
+   "status": "selected",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-event-global-ai-show",
+   "name": "Global AI Show",
+   "body": "An event previously selected for a contribution format (§7 A): https://www.globalaishow.com/\n\nSource: team outreach master context (2026-10-01).",
+   "status": "selected",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-event-cypher",
+   "name": "Cypher",
+   "body": "An event previously selected for a contribution format (§7 A): https://cypher.analyticsindiamag.com/tickets\n\nSource: team outreach master context (2026-10-01).",
+   "status": "selected",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "target",
+   "id": "target-event-takeover-irl",
+   "name": "TakeOver IRL",
+   "body": "An event previously selected for a contribution format (§7 A): https://takeoverirl.com/\n\nSource: team outreach master context (2026-10-01).",
+   "status": "selected",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "copy",
+   "id": "copy-partnership-dm",
+   "name": "Ryuk Labs partnership DM",
+   "body": "Hi [Name], good to connect. I run Ryuk Labs in Dubai, where we work alongside founders and operators on product, engineering and applied AI. The part of your work around [specific mandate] feels close to the problems we are solving. I can see a useful fit around one [workflow/project type] where we bring the product and delivery side. If it sits close to your priorities, I can share the short version here.\n\nSource: team outreach master context §14 (2026-10-01). Placeholders in [brackets]; adapt one lane, one purpose.",
+   "status": "ready to adapt",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "copy",
+   "id": "copy-operator-dm",
+   "name": "Reachable operator DM",
+   "body": "Hi [Name], good to connect. I’m working on [one concrete problem] through Ryuk Labs, and your role around [specific function] made the overlap clear. I’m not looking to send a broad pitch. I’d like to compare the operating reality on your side with what we have learned building [relevant proof]. Happy to share the concise context here.\n\nSource: team outreach master context §14 (2026-10-01). Placeholders in [brackets]; adapt one lane, one purpose.",
+   "status": "ready to adapt",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "copy",
+   "id": "copy-sharingu-dm",
+   "name": "Sharingu peer or pilot DM",
+   "body": "Hi [Name], good to connect. I’m building Sharingu around a problem we kept seeing in real product work: an agent can finish a task, while the next person still has to reconstruct the goal, decisions and evidence. We are shaping that work into contributions a team can carry forward. Your work around [governance/adoption/handoffs] feels closely adjacent, so I wanted to put it on your radar.\n\nSource: team outreach master context §14 (2026-10-01). Placeholders in [brackets]; adapt one lane, one purpose.",
+   "status": "ready to adapt",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "copy",
+   "id": "copy-siru-dm",
+   "name": "Siru market-learning DM",
+   "body": "Hi [Name], good to connect. We are exploring what it would really take to adapt a live pharmacy product from India to [UAE/UK], beyond translating the interface. The difficult parts are the local workflow, regulation, integrations and staff adoption. Your experience in [specific area] makes your perspective especially relevant. I’m happy to share the short market question we are working through.\n\nSource: team outreach master context §14 (2026-10-01). Placeholders in [brackets]; adapt one lane, one purpose.",
+   "status": "ready to adapt",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "copy",
+   "id": "copy-fintech-dm",
+   "name": "Fintech/crypto partnership DM",
+   "body": "Hi [Name], good to connect. Ryuk Labs works on the product and operational layer behind complex financial journeys—from customer experience through funding, payment and reconciliation. I see a practical overlap with [company]'s work around [specific area], especially where a promising opportunity still needs focused product and engineering delivery. I can share one concise collaboration angle here if useful.\n\nSource: team outreach master context §14 (2026-10-01). Placeholders in [brackets]; adapt one lane, one purpose.",
+   "status": "ready to adapt",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "copy",
+   "id": "copy-event-dm",
+   "name": "Event contribution DM",
+   "body": "Hi [Name], good to connect. I’m a founder based in Dubai and have been shaping a simple live format for [event]: one real founder problem, turned into the smallest product or AI workflow worth testing. It is practical, audience-facing and leaves the founder with a usable next step. It sits naturally between our work at Ryuk Labs and the founder/partner experience your team creates. I can send the five-line format here.\n\nSource: team outreach master context §14 (2026-10-01). Placeholders in [brackets]; adapt one lane, one purpose.",
+   "status": "ready to adapt",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "copy",
+   "id": "copy-partnership-email",
+   "name": "General partnership email",
+   "body": "**Subject:** One product opportunity to test together\n\nHi [Name],\n\nI’m Ryuk, founder of Ryuk Labs, a Dubai-based product, engineering and applied-AI team.\n\nI’m writing because [organization]'s work around [specific mandate] is close to where we are most useful: taking an uncertain business or research opportunity, shaping the workflow, and building a product or pilot that people can actually use.\n\nRather than propose a broad partnership, I would like to compare one current opportunity where additional product and engineering capacity could help. We can start with a narrow scope and clear responsibilities on both sides.\n\nIf this belongs with another person on the team, a pointer would be appreciated.\n\nRyuk\nhttps://www.ryuklabs.io/\n\nSource: team outreach master context §14 (2026-10-01). Placeholders in [brackets]; adapt one lane, one purpose.",
+   "status": "ready to adapt",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "card",
+  "op": "upsert",
+  "data": {
+   "kind": "copy",
+   "id": "copy-follow-up",
+   "name": "One useful follow-up",
+   "body": "Hi [Name] — leaving one concrete thought rather than only bringing the earlier note back. [One useful observation, small artifact or relevant example.] If this belongs with someone else on your team, I’d value the right direction.\n\nSource: team outreach master context §14 (2026-10-01). Placeholders in [brackets]; adapt one lane, one purpose.",
+   "status": "ready to adapt",
+   "asOf": "2026-10-01",
+   "confidence": "direction"
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "outreach-objective",
+   "parent": "global",
+   "title": "Turn Ryuk Labs' product, engineering and applied-AI capability into projects, delivery partnerships, referrals and ecosystem relationships (UAE and UK)",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §1",
+     "label": "the team outreach master context, 2026-10-01"
+    }
+   ],
+   "dimensions": [],
+   "sort": 20,
+   "note": "The commercial objective of the team outreach master context (2026-10-01, §1); the five parallel objectives sit under it. The relationship goal is mutual value."
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "obj-sharingu-partners",
+   "parent": "outreach-objective",
+   "title": "Find design partners, pilot teams and distribution partners for Sharingu",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §1",
+     "label": "the team outreach master context, 2026-10-01"
+    }
+   ],
+   "dimensions": [
+    "gtm"
+   ],
+   "sort": 1,
+   "note": "The source's objective also names suitable early investors; fundraising is kept out of sharingu's data."
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "obj-siru-country",
+   "parent": "outreach-objective",
+   "title": "Explore country-specific Siru opportunities with pharmacy operators, healthcare groups, regulators, fintech partners and local business owners",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §1",
+     "label": "the team outreach master context, 2026-10-01"
+    }
+   ],
+   "dimensions": [
+    "gtm"
+   ],
+   "sort": 2
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "obj-fintech-projects",
+   "parent": "outreach-objective",
+   "title": "Win fintech, crypto, neobank and enterprise workflow projects where Ryuk Labs contributes product design, engineering, AI and operational systems",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §1",
+     "label": "the team outreach master context, 2026-10-01"
+    }
+   ],
+   "dimensions": [
+    "gtm"
+   ],
+   "sort": 3
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "obj-event-access",
+   "parent": "outreach-objective",
+   "title": "Earn event access through a useful contribution: a panel, live founder clinic, roundtable, workshop or partner activation",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §1",
+     "label": "the team outreach master context, 2026-10-01"
+    }
+   ],
+   "dimensions": [
+    "gtm"
+   ],
+   "sort": 4,
+   "note": "A normal pass is still a win; a VIP pass is not the opening ask."
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "obj-reachable-network",
+   "parent": "outreach-objective",
+   "title": "Build a smaller network of reachable operators and connectors who may reply, refer projects and engage with future content",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §1",
+     "label": "the team outreach master context, 2026-10-01"
+    }
+   ],
+   "dimensions": [
+    "gtm"
+   ],
+   "sort": 5
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "outreach-proof",
+   "parent": "outreach-objective",
+   "title": "Create proof that makes outreach easier: three small artifacts",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §15",
+     "label": "the team outreach master context, 2026-10-01"
+    }
+   ],
+   "dimensions": [],
+   "sort": 6,
+   "note": "The third priority of the immediate team action plan (§15)."
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "proof-one-problem-brief",
+   "parent": "outreach-proof",
+   "title": "A one-page Ryuk Labs \"one problem to pilot\" brief",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §15",
+     "label": "the team outreach master context, 2026-10-01"
+    }
+   ],
+   "dimensions": [
+    "gtm"
+   ],
+   "sort": 1
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "proof-handoff-example",
+   "parent": "outreach-proof",
+   "title": "A visual Sharingu handoff example showing goal, evidence, ownership and next action",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §15",
+     "label": "the team outreach master context, 2026-10-01"
+    }
+   ],
+   "dimensions": [
+    "gtm"
+   ],
+   "sort": 2
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "proof-siru-checklist",
+   "parent": "outreach-proof",
+   "title": "A Siru country-localisation checklist for UAE and UK operator conversations",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §15",
+     "label": "the team outreach master context, 2026-10-01"
+    }
+   ],
+   "dimensions": [
+    "gtm"
+   ],
+   "sort": 3
+  }
+ },
+ {
+  "kind": "question",
+  "op": "upsert",
+  "data": {
+   "qid": "Q-ryuklabs-named-stories",
+   "question": "May the named public stories (Siru, FlowZo, Redacted/TOKEN2049) be filed as approved claims on the GTM tab?",
+   "why": "The team context pack approves a description and an exact boundary for each (§5), and each is a public story on ryuklabs.io; but each names a client or partner, and this fill files no client names without the owner's say. Option A is the recommendation: they are public, and the boundaries (e.g. \"keep the number as 10,000+ sign-ups until the unit is confirmed\"; \"1M+ means owner-reported registrations/applications\") are exactly what a teammate needs before writing copy.",
+   "area": "gtm",
+   "severity": "normal",
+   "status": "open",
+   "whoOwes": "owner",
+   "waitingOn": "owner",
+   "options": [
+    {
+     "what": "Yes: file the three as approved claims, each with its boundary and story link",
+     "tradeoff": "Team context pack §5; the stories are public on ryuklabs.io/stories. The names enter the org's data on Cloudflare."
+    },
+    {
+     "what": "No: keep them in the team context pack only",
+     "tradeoff": "Nothing named enters sharingu; teammates read the boundaries from the pack."
+    }
+   ],
+   "source": [
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §5",
+     "label": "approved proof and exact boundaries"
+    }
+   ]
+  }
+ }
+]

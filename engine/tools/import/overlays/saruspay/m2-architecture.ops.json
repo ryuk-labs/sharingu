@@ -1,0 +1,565 @@
+{
+ "project": "saruspay",
+ "clientRef": "m2-arch-saruspay-2026-10-05",
+ "ops": [
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "architecture:main",
+    "type": "architecture",
+    "name": "Architecture",
+    "data": {
+     "ruling": "Q0E1CB70C",
+     "summary": "Simplest setup for RyukLabs, hosted in the EU (Frankfurt, QE5069FF9): five managed services, nothing to operate. Vercel Pro runs the three Next.js apps (web app, engine API, operator console), the scheduled jobs and the secrets; Supabase holds Postgres (row-level security per tenant) and private file storage; Resend sends email; Firebase Cloud Messaging sends push to iOS and Android; Sentry reports errors and alerts to Slack. Staging and production are separate Vercel projects and separate Supabase projects, each tied to one Interlace environment (Q71D68AC5); pull-request previews are UI-only against the staging engine (Q7327AB74).",
+     "diagram": {
+      "groups": [
+       {
+        "id": "clients",
+        "label": "Clients: the SarusPay apps and the console",
+        "order": 1
+       },
+       {
+        "id": "vercel",
+        "label": "Vercel Pro: the three Next.js apps, staging and production",
+        "order": 2
+       },
+       {
+        "id": "supabase",
+        "label": "Supabase: Postgres and Storage, staging and production",
+        "order": 3
+       },
+       {
+        "id": "partner",
+        "label": "Interlace: cards, KYC, wallets",
+        "order": 4
+       },
+       {
+        "id": "ops",
+        "label": "Messages and ops alerts",
+        "order": 5
+       }
+      ],
+      "seam": {
+       "group": "vercel",
+       "label": "The seam: the engine API is the only door to the data"
+      },
+      "nodes": [
+       {
+        "id": "browser",
+        "group": "clients",
+        "kind": "client",
+        "title": "Web browser",
+        "sub": "SarusPay users"
+       },
+       {
+        "id": "mobile",
+        "group": "clients",
+        "kind": "client",
+        "title": "Mobile app",
+        "sub": "iOS and Android"
+       },
+       {
+        "id": "consolebrowser",
+        "group": "clients",
+        "kind": "client",
+        "title": "Console browser",
+        "sub": "Veil and tenant staff"
+       },
+       {
+        "id": "webapp",
+        "group": "vercel",
+        "kind": "service",
+        "title": "Web app",
+        "sub": "pages only",
+        "service": "vercel"
+       },
+       {
+        "id": "engine",
+        "group": "vercel",
+        "kind": "service",
+        "title": "Engine API",
+        "sub": "the tenant's API subdomain",
+        "about": "The one backend: user endpoints under /api/v1, operator endpoints under /api/admin, the Interlace and email webhooks under /api/webhooks. It sets app.tenant_id per transaction and is the only client of Postgres.",
+        "service": "vercel"
+       },
+       {
+        "id": "console",
+        "group": "vercel",
+        "kind": "service",
+        "title": "Operator console",
+        "sub": "Next.js, for Veil and tenant staff",
+        "service": "vercel"
+       },
+       {
+        "id": "cron",
+        "group": "vercel",
+        "kind": "service",
+        "title": "Cron jobs",
+        "sub": "every 5 minutes to daily",
+        "about": "Vercel Cron calls each job on the engine with the cron secret; each job takes its lock in job_runs and records the outcome.",
+        "service": "vercel"
+       },
+       {
+        "id": "secrets",
+        "group": "vercel",
+        "kind": "service",
+        "title": "Env secrets",
+        "sub": "encrypted variables per project",
+        "service": "vercel"
+       },
+       {
+        "id": "postgres",
+        "group": "supabase",
+        "kind": "data",
+        "title": "Postgres",
+        "sub": "row-level security per tenant",
+        "about": "Every table in the schema, with the engine's roles and grants; the Data API (PostgREST) is turned off.",
+        "service": "supabase"
+       },
+       {
+        "id": "storage",
+        "group": "supabase",
+        "kind": "data",
+        "title": "Storage",
+        "sub": "ticket attachments, signed URLs",
+        "service": "supabase"
+       },
+       {
+        "id": "interlace",
+        "group": "partner",
+        "kind": "external",
+        "title": "Interlace",
+        "sub": "API calls and webhooks",
+        "about": "Card issuing, KYC review, wallets and Infinity Accounts; a sandbox for staging and production for live.",
+        "service": "interlace"
+       },
+       {
+        "id": "resend",
+        "group": "ops",
+        "kind": "external",
+        "title": "Resend",
+        "sub": "email, bounce webhook",
+        "service": "resend"
+       },
+       {
+        "id": "firebase",
+        "group": "ops",
+        "kind": "external",
+        "title": "Firebase",
+        "sub": "push to iOS and Android",
+        "service": "firebase"
+       },
+       {
+        "id": "sentry",
+        "group": "ops",
+        "kind": "external",
+        "title": "Sentry",
+        "sub": "errors from every app",
+        "service": "sentry"
+       },
+       {
+        "id": "slack",
+        "group": "ops",
+        "kind": "external",
+        "title": "Slack",
+        "sub": "the ops alert channel",
+        "service": "slack"
+       }
+      ],
+      "edges": [
+       {
+        "from": "browser",
+        "to": "webapp",
+        "label": "loads pages",
+        "main": true
+       },
+       {
+        "from": "browser",
+        "to": "engine",
+        "label": "calls the engine directly: CORS, cookie session, CSRF",
+        "main": true
+       },
+       {
+        "from": "mobile",
+        "to": "engine",
+        "label": "calls the engine with its session token",
+        "main": true
+       },
+       {
+        "from": "mobile",
+        "to": "interlace",
+        "label": "Widget.js shows the card number in Interlace's frame"
+       },
+       {
+        "from": "consolebrowser",
+        "to": "console",
+        "label": "loads the console",
+        "main": true
+       },
+       {
+        "from": "console",
+        "to": "engine",
+        "label": "server-side calls to /api/admin",
+        "main": true
+       },
+       {
+        "from": "cron",
+        "to": "engine",
+        "label": "runs each job with the cron secret",
+        "main": true
+       },
+       {
+        "from": "secrets",
+        "to": "engine",
+        "label": "Interlace credentials, session keys, the cron secret"
+       },
+       {
+        "from": "engine",
+        "to": "postgres",
+        "label": "app.tenant_id per transaction, RLS the backstop",
+        "main": true
+       },
+       {
+        "from": "engine",
+        "to": "storage",
+        "label": "signed upload and download URLs"
+       },
+       {
+        "from": "engine",
+        "to": "interlace",
+        "label": "card, KYC and money calls, with an Idempotency-Key",
+        "main": true
+       },
+       {
+        "from": "interlace",
+        "to": "engine",
+        "label": "webhooks, signature verified",
+        "main": true
+       },
+       {
+        "from": "engine",
+        "to": "resend",
+        "label": "sign-in codes and notices",
+        "main": true
+       },
+       {
+        "from": "resend",
+        "to": "engine",
+        "label": "bounce and complaint webhooks"
+       },
+       {
+        "from": "engine",
+        "to": "firebase",
+        "label": "push: 3DS codes, deposits, card alerts",
+        "main": true
+       },
+       {
+        "from": "firebase",
+        "to": "mobile",
+        "label": "delivers to Android, and to iOS through Apple"
+       },
+       {
+        "from": "engine",
+        "to": "sentry",
+        "label": "errors, personal data scrubbed"
+       },
+       {
+        "from": "sentry",
+        "to": "slack",
+        "label": "alerts to the ops channel"
+       },
+       {
+        "from": "engine",
+        "to": "slack",
+        "label": "ops alerts: signatures, webhook backlog, ledger checks"
+       }
+      ],
+      "paths": [
+       {
+        "name": "A user signs in and is verified",
+        "steps": [
+         {
+          "from": "mobile",
+          "to": "engine",
+          "says": "The app asks for a sign-in code, bound to this device"
+         },
+         {
+          "from": "engine",
+          "to": "resend",
+          "says": "A six-digit code goes out by email"
+         },
+         {
+          "from": "mobile",
+          "to": "engine",
+          "says": "Each identity image is sent on its own, under the 4.5 MB body limit"
+         },
+         {
+          "from": "engine",
+          "to": "interlace",
+          "says": "It passes straight to Interlace; only the file id is kept, then KYC is submitted"
+         },
+         {
+          "from": "interlace",
+          "to": "engine",
+          "says": "KYC.UPDATED arrives: the signature is checked, the event stored, then processed"
+         },
+         {
+          "from": "engine",
+          "to": "postgres",
+          "says": "users.kyc_status is set and a kyc_passed notice recorded"
+         },
+         {
+          "from": "engine",
+          "to": "firebase",
+          "says": "The push goes to Firebase"
+         },
+         {
+          "from": "firebase",
+          "to": "mobile",
+          "says": "The user sees they are verified"
+         }
+        ]
+       },
+       {
+        "name": "A card is used online",
+        "steps": [
+         {
+          "from": "interlace",
+          "to": "engine",
+          "says": "CARD.3DS.OTP: the merchant asks for a code"
+         },
+         {
+          "from": "engine",
+          "to": "postgres",
+          "says": "The code is kept in threeds_otps"
+         },
+         {
+          "from": "engine",
+          "to": "firebase",
+          "says": "and pushed to the cardholder"
+         },
+         {
+          "from": "firebase",
+          "to": "mobile",
+          "says": "The user reads the code and completes the payment"
+         },
+         {
+          "from": "interlace",
+          "to": "engine",
+          "says": "CARD_TRANSACTION.CREATED follows"
+         },
+         {
+          "from": "engine",
+          "to": "postgres",
+          "says": "Ledger journals, entries and fee events are posted"
+         }
+        ]
+       },
+       {
+        "name": "A lost webhook is retried",
+        "steps": [
+         {
+          "from": "cron",
+          "to": "engine",
+          "says": "Vercel Cron runs the webhook-retry job with the cron secret"
+         },
+         {
+          "from": "engine",
+          "to": "postgres",
+          "says": "Unprocessed webhook events are re-dispatched with backoff"
+         },
+         {
+          "from": "engine",
+          "to": "slack",
+          "says": "After ten failed attempts the unprocessed-webhook ops alert fires"
+         }
+        ]
+       }
+      ]
+     },
+     "crossing": [
+      {
+       "rule": "The engine is the only door to the data: PostgREST is off, every request sets app.tenant_id, and row-level security per tenant is the backstop.",
+       "because": [
+        "Q0E1CB70C"
+       ],
+       "nodes": [
+        "engine",
+        "postgres"
+       ]
+      },
+      {
+       "rule": "Browser calls cross origins only to the engine: CORS allows the app's own origins, with a cookie session and a CSRF token.",
+       "because": [
+        "Q53F28838"
+       ],
+       "nodes": [
+        "browser",
+        "engine"
+       ]
+      },
+      {
+       "rule": "Interlace webhooks reach one receiver per deployment: the signature is checked with Veil's per-environment secret, the event stored and acknowledged within five seconds, then processed.",
+       "because": [
+        "Q71D68AC5"
+       ],
+       "nodes": [
+        "interlace",
+        "engine"
+       ]
+      },
+      {
+       "rule": "Money and card calls carry an Idempotency-Key and Veil's credentials, with the tenant's master merchant or the user's sub-merchant account.",
+       "nodes": [
+        "engine",
+        "interlace"
+       ]
+      },
+      {
+       "rule": "Card numbers never touch SarusPay: a five-minute, single-use token opens Interlace's Widget.js frame in the app.",
+       "nodes": [
+        "mobile",
+        "interlace",
+        "engine"
+       ]
+      },
+      {
+       "rule": "KYC images are never stored: each passes straight through the engine to Interlace and only its file id is kept.",
+       "because": [
+        "Q897460CB"
+       ],
+       "nodes": [
+        "mobile",
+        "engine",
+        "interlace"
+       ]
+      },
+      {
+       "rule": "Moving money, revealing a card, the PIN and devices need a trusted device; operators sign in with a password and an authenticator code.",
+       "nodes": [
+        "mobile",
+        "engine",
+        "console"
+       ]
+      },
+      {
+       "rule": "A tenant goes live, or is suspended, only when a second platform owner approves the first one's request.",
+       "nodes": [
+        "console",
+        "engine"
+       ]
+      }
+     ],
+     "flows": [
+      {
+       "id": "request",
+       "title": "A user action",
+       "steps": [
+        "The web browser loads pages from the web app (app.saruspay.com) and calls the engine API on the tenant's API subdomain (api.saruspay.com) directly over HTTPS — CORS allows only app.saruspay.com and app-staging.saruspay.com (Q53F28838), with a cookie session and CSRF token; the mobile app calls the engine API with its session token; the console calls the engine server-side.",
+        "The engine authorises the session, sets app.tenant_id for the transaction and reads or writes Supabase Postgres (RLS is the backstop).",
+        "Money or card actions call Interlace with Veil's credentials and the tenant's master merchant or the user's sub-merchant accountId, with an Idempotency-Key.",
+        "The response returns to the client; events are recorded for notifications."
+       ]
+      },
+      {
+       "id": "webhook",
+       "title": "An Interlace event",
+       "steps": [
+        "Interlace posts to POST /api/webhooks/interlace on the engine.",
+        "The engine verifies the signature with Veil's per-environment webhook secret, stores the event and resolves tenant and user by accountId.",
+        "The handler applies effects (ledger, cards, deposits) and emits notifications; a failure leaves the event unprocessed.",
+        "The webhook-retry cron job re-runs unprocessed events with backoff; repeated failures raise an ops alert."
+       ]
+      },
+      {
+       "id": "jobs",
+       "title": "Scheduled work",
+       "steps": [
+        "Vercel Cron calls GET /api/admin/jobs/{name}/run with the cron secret on each job's schedule — every 5 minutes, every 15 minutes, hourly or daily (see Build → Jobs for the list). Cron runs on production deployments, so staging is its own Vercel project whose production branch runs staging cron.",
+        "Each job takes its lock in job_runs, does its work (fee-collection retry, reminders, ledger reconciliation, ops alerts, retention purge) and records the outcome."
+       ]
+      },
+      {
+       "id": "messages",
+       "title": "Email and push",
+       "steps": [
+        "The engine sends email through Resend from the tenant's verified sender domain, or Veil's default sender until it verifies.",
+        "Push goes to Firebase Cloud Messaging, which delivers to Android directly and to iOS through Apple's push service.",
+        "Resend bounce events come back to POST /api/webhooks/email-provider."
+       ]
+      },
+      {
+       "id": "files",
+       "title": "Files",
+       "steps": [
+        "KYC images and ticket attachments upload to private Supabase Storage buckets through short-lived signed URLs.",
+        "The engine forwards KYC files to Interlace and serves attachments only through signed URLs to authorised operators."
+       ]
+      },
+      {
+       "id": "release",
+       "title": "Build and release",
+       "steps": [
+        "A pull request on GitHub deploys UI-only previews of the web app and console against the staging engine (engine previews are disabled).",
+        "Merging to main deploys the staging projects (engine, web app, console) against Interlace sandbox; merging main to release deploys the production projects.",
+        "Database changes run as Supabase migrations generated from tech/schema.sql, staging first; mobile builds go to TestFlight and Play internal testing before store release."
+       ]
+      },
+      {
+       "id": "golive",
+       "title": "A tenant goes live",
+       "steps": [
+        "In staging, tenants are created live for testing. In production, a platform owner creates the tenant (state onboarding).",
+        "The onboarding checklist is completed (11 steps; sender domain verified is ticked automatically), the tenant's Interlace master merchant accountId is entered, a signed production webhook is received, and the tenant's production Firebase service account is set.",
+        "A platform owner requests go-live and a different platform owner approves (POST /api/admin/tenants/{id}/go-live-requests). Suspending or reinstating a live tenant uses the same dual control (POST /api/admin/tenants/{id}/suspension-requests)."
+       ]
+      }
+     ],
+     "environments": [
+      {
+       "aspect": "Interlace",
+       "staging": "Sandbox (distributor 978973)",
+       "production": "Production distributor account; tenants go live through the production-only go-live gate (Q71D68AC5)"
+      },
+      {
+       "aspect": "Hosting",
+       "staging": "Staging Vercel project (Interlace sandbox) + UI-only previews (Q7327AB74)",
+       "production": "Vercel production environment"
+      },
+      {
+       "aspect": "Database and files",
+       "staging": "Supabase staging project",
+       "production": "Supabase production project"
+      },
+      {
+       "aspect": "Email",
+       "staging": "Resend, Veil default sender",
+       "production": "Resend, tenant verified sender domains"
+      },
+      {
+       "aspect": "Push",
+       "staging": "Firebase with test app ids",
+       "production": "Firebase with store app ids"
+      },
+      {
+       "aspect": "Mobile distribution",
+       "staging": "TestFlight and Play internal testing",
+       "production": "App Store and Google Play"
+      },
+      {
+       "aspect": "Test users",
+       "staging": "Synthetic users with Interlace sandbox KYC outcomes; two test tenants",
+       "production": "3 real pilot testers with real KYC and small real funds"
+      },
+      {
+       "aspect": "Funds",
+       "staging": "Testnet USDC (Ethereum Sepolia)",
+       "production": "~$50–100 USDC/USDT per pilot tester; ~$200 Veil pilot budget"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

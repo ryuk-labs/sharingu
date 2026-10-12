@@ -1,0 +1,59 @@
+{
+  // QC74D4892 (one-org-worker, 2026-09-22): this is now the ONLY org worker config in this repo —
+  // ryuklabs-agent-r, the dev/consolidation org (Q65300E50, THE THREE RINGS: ring 2). It used to be
+  // SIRU's own config (wrangler.jsonc has always been the DEFAULT wrangler picks with no -c flag);
+  // siru-agent-r, veil-agent-r, bunny-agent-r and the cross-org launcher (agent-r-frame) are retired
+  // as DEPLOYED workers — their own configs (wrangler.siru/veil/bunny/frame.jsonc) are deleted along
+  // with this rename, not kept alongside it. Their data is folded into THIS worker's own D1 project
+  // by project (a one-shot merge tool, deleted 2026-09-27); their brain repos stay (git, not this repo's concern) for later
+  // updates, per the owner's own ruling. `wrangler.tenant.template.jsonc` remains for a SELF-HOSTED
+  // install (the same platform on another Cloudflare account, `tools/new-org.sh`); a new org on THIS
+  // platform is a row of its D1, made through the door (POST /orgs, sprint 7).
+  "name": "ryuklabs-agent-r",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-01",
+  // sprint 7, 7.4 (the front door by path): AsyncLocalStorage (node:async_hooks) carries the request's org base — the
+  // /<org> every URL the worker builds starts with (src/orgpath.js) — through every await of the request, so no renderer
+  // takes it as a parameter. nodejs_als enables that one module, nothing else of Node.
+  "compatibility_flags": ["nodejs_als"],
+  // No vars: the worker's own name is the platform's and no code reads it (sprint 6, 6.3: an org's name comes from its row in
+  // D1, src/tenant.js). (LAUNCHER_URL is gone: the launcher and every line that read it are deleted, Q6FA72180 — /login is
+  // this org's own front door, reached directly.)
+  // RATE LIMITING (M-ADR-033): the org's own /login is a public door too — per-IP limit.
+  // namespace_id 1003 (unchanged — this IS the same worker, only its config file/name moved).
+  "ratelimits": [ { "name": "LOGIN_LIMIT", "namespace_id": "1003", "simple": { "limit": 20, "period": 60 } } ],
+  "observability": { "enabled": true },
+  // TWO HOSTS, ONE WORKER (QD99DA798, 2026-09-29 — narrows mission ③'s "no domain"; QC74D4892 still
+  // holds: one org worker). The *.workers.dev host stays (everything published + the evals use it, the
+  // fallback); the Custom Domain agent.ryuklabs.io (zone ryuklabs.io, same account) fronts the SAME
+  // worker. The routes list below is applied by tools/ship.sh step 8 (`wrangler triggers deploy`) — never
+  // by hand. No zone route, no wildcard, no path. The local R strips it (tools/lib-r-local.sh
+  // rl_gen_config), so a local run keeps its own 127.0.0.1 origin. src/ types no host: every public
+  // origin is the request's own (url.origin). The brand's address agent.sharingu.xyz (zone sharingu.xyz, same
+  // account; the owner's domain ruling, 2026-10-09) fronts the same worker: a domain absent from this list is
+  // DETACHED by the triggers deploy (the sprint-9 ship did it once, ~5 minutes down).
+  "workers_dev": true,
+  "routes": [ { "pattern": "agent.ryuklabs.io", "custom_domain": true }, { "pattern": "agent.sharingu.xyz", "custom_domain": true } ],
+  "kv_namespaces": [
+    { "binding": "OAUTH_KV", "id": "517c1eeb5e6a4764bc39fdd96fcf3617" }
+  ],
+  "r2_buckets": [
+    { "binding": "BRAIN", "bucket_name": "ryuklabs-brain" }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ryuklabs-agent-r",
+      "database_id": "f67907fa-28b5-45e0-b69e-980a85816333"
+    }
+  ],
+  "triggers": {
+    "crons": ["0 3 * * *", "0 15 * * *"]
+  },
+  // Machines section on /control (S-040 amend 11): the running Worker's own deploy
+  // identity, read at runtime as env.CF_VERSION_METADATA.{id,tag,timestamp} — no code
+  // constant, so it can never go stale the way a hand-typed version string would.
+  "version_metadata": {
+    "binding": "CF_VERSION_METADATA"
+  }
+}

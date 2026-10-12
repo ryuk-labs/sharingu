@@ -1,0 +1,12 @@
+{
+ "note": "Sprint 3, the projects' data before the video. capsules/siru-services.md teaches the old project key: \"door contributions stamp `siru-services`\" — the project is ryuklabs since the rename (tools/ship/rename-siru-services.sql), and the brain has no current text for it. Not imported.",
+ "items": [
+  {
+   "kind": "doc",
+   "op": "remove",
+   "data": {
+    "path": "capsules/siru-services.md"
+   }
+  }
+ ]
+}

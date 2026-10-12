@@ -1,0 +1,10 @@
+{
+  "goals": {
+    "tree": [
+      { "id": "root-@MK@", "title": "@MK@ root goal", "parent": null, "dimensions": [] },
+      { "id": "ship-@MK@", "title": "@MK@ ship", "parent": "root-@MK@", "dimensions": ["code"], "target": 2 },
+      { "id": "reach-@MK@", "title": "@MK@ reach", "parent": "root-@MK@", "dimensions": ["gtm"], "target": 7, "due": "2026-06-30" },
+      { "id": "note-@MK@", "title": "@MK@ notes", "parent": "root-@MK@", "dimensions": ["leader"], "weight": 1 }
+    ]
+  }
+}

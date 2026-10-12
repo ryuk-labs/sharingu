@@ -1,0 +1,6 @@
+# The monorepo ROOT ignore file. `.claude/` holds tracked settings and skills; everything below is machine-local.
+/.claude/runs/
+/.claude/settings.local.json
+/.claude/launch.json
+/.claude/scheduled_tasks.lock
+/.claude/worktrees/

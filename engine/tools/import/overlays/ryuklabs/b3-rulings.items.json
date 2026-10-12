@@ -1,0 +1,267 @@
+{
+ "note": "The owner's rulings of 2026-10-02 (MCQ): strip the private data (clean notes upserted, the dirty capsule removed; this file holds none of it) and no product model by design (the gap closed, and the aim declares productModel {none, why} so the Map says so; and the aim's measure is the ruled absence of Q-RL-C5-MEASURE, 2026-09-29). Git-safe.",
+ "items": [
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "revenue",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "ryuklabs ops brain: 10_TRUTH/gtm.md",
+      "label": "the stage notes (S-02, 2026-09-08), names and amounts left out"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "note": "Contracted client work, not pipeline (10_TRUTH/gtm.md). As of 2026-09-08 (S-02): four engagements — two signed and waiting on the client's side to start, one productized offer on hold, one delivered and awaiting the client's review. Client names, contract and invoice amounts are kept out of sharingu's data (owner ruling, MCQ 2026-10-02, Q-ryuklabs-private-data)."
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "pipeline",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "ryuklabs ops brain: 10_TRUTH/gtm.md",
+      "label": "the stage notes (S-02, 2026-09-08), names and amounts left out"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "note": "Target 8 calls, 2 pilots (the real goal; owner numbers 2026-09-03). As of 2026-09-08 (S-02): Niche Hunt 123 touches, 1 reply; the only real win came from a direct outbound thread. The verdict memo was due 2026-09-10 (campaign-as-designed closes, carve-outs kept); no verdict is on file in any brain. Client names, contract and invoice amounts are kept out of sharingu's data (owner ruling, MCQ 2026-10-02, Q-ryuklabs-private-data)."
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "grants",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "ryuklabs ops brain: 10_TRUTH/gtm.md",
+      "label": "the stage notes (S-02, 2026-09-08), names and amounts left out"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "note": "Acie hunts investors, hackathons and grants. As of 2026-09-08 (S-02): the grants pipeline is on hold (free-entry grants only); three drafts wait on the public repo. Funding names, amounts and terms are kept out of sharingu's data (owner ruling, MCQ 2026-10-02, Q-ryuklabs-private-data)."
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "capital-lanes",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "ryuklabs ops brain: 10_TRUTH/gtm.md",
+      "label": "the stage notes (S-02, 2026-09-08), names and amounts left out"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "note": "The capital lanes: investors, accelerators and family offices, hackathons. Stage 2026-09-08 (S-02): on hold; restarts with the new attack plan. Funding names, amounts and terms are kept out of sharingu's data (owner ruling, MCQ 2026-10-02, Q-ryuklabs-private-data)."
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "supernova-0x",
+    "title": "Supernova 0X",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "ryuklabs ops brain: 10_TRUTH/gtm.md",
+      "label": "the stage notes (S-02, 2026-09-08), names and amounts left out"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "note": "The grants pipeline's one hard wall (S-02, 2026-09-08): decide by 2026-10-15, deadline 2026-11-02. Funding names, amounts and terms are kept out of sharingu's data (owner ruling, MCQ 2026-10-02, Q-ryuklabs-private-data)."
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "flow:grants",
+    "type": "flow",
+    "name": "Grants pipeline",
+    "status": "planned",
+    "data": {
+     "desc": "Free-entry grants only. Stage 2026-09-08 (S-02): On hold. Who decides Supernova 0X is not named in any source.",
+     "audience": "grants",
+     "goalRef": "grants",
+     "steps": [
+      {
+       "state": "hunt",
+       "actor": "Acie",
+       "mode": "human",
+       "does": "hunts grants, investors and hackathons (free-entry grants only)",
+       "screen": "",
+       "door": null,
+       "source": "TM@base:61; S-02:85"
+      },
+      {
+       "state": "draft",
+       "actor": "Ryuk Labs",
+       "mode": "human",
+       "does": "holds three grant drafts, gated on the public repo",
+       "screen": "",
+       "door": null,
+       "source": "S-02:85"
+      },
+      {
+       "state": "ungate",
+       "actor": "Ryuk",
+       "mode": "human",
+       "does": "sets the launch date: the launch is the public repo drop, the date being set with Ryuk",
+       "screen": "",
+       "door": null,
+       "source": "S-02:20"
+      },
+      {
+       "state": "decide",
+       "actor": "Ryuk Labs",
+       "mode": "human",
+       "does": "decides Supernova 0X by 2026-10-15; the deadline is 2026-11-02",
+       "screen": "",
+       "door": null,
+       "source": "S-02:86"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "doc",
+   "op": "remove",
+   "data": {
+    "path": "capsules/gtm.md"
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-ryuklabs-private-data",
+    "status": "decided",
+    "choice": 0,
+    "label": "Strip them: an overlay rewrites those notes without names and amounts, and drops capsules/gtm.md from the import",
+    "rationale": "The team context pack's privacy rule (§18) says not to publish old invoices or internal operational records.",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "whoOwes": null,
+    "waitingOn": null,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "ryuklabs ops brain: 10_TRUTH/gtm.md",
+      "label": "the stage notes the import carries"
+     },
+     {
+      "kind": "file",
+      "ref": "Ryuklabs master context §18",
+      "label": "the privacy and operating rule"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "why": "The ops brain's import put client names with contract and invoice amounts in the goal \"revenue\"'s note and in the doc capsules/gtm.md, and funding details in the notes of the goals grants, capital-lanes and supernova-0x; the live import files them into the org's D1 on Cloudflare."
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-ryuklabs-model",
+    "status": "decided",
+    "choice": 0,
+    "label": "No: it stays empty by design; its gap is closed",
+    "rationale": "flows.json says the project has no app screens or doors of its own, and the meter already counts no App area for it.",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "whoOwes": null,
+    "waitingOn": null,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "ryuklabs ops brain: 02_AGENT_R/gaps.json",
+      "label": "Q-SIRU-GAP-PRODUCT-MODEL"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "why": "The audit flags a project with no top level of its model. The ops brain already asked it as an open gap: the ryuklabs project is the org's own operating work (GTM, outreach, content, grants), not a coded product, so its model ships empty — confirm that stays empty, or point at the repo that should feed it."
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "gap:Q-SIRU-GAP-PRODUCT-MODEL",
+    "type": "gap",
+    "name": "The ryuklabs project is the org's own operating work (GTM, outreach, content, grants), not a coded product — this pack ships empty screens/entities/tables/api/architecture. Confirm that stays empty (no product model belongs to this project), or point at the repo that should feed it.",
+    "status": "closed",
+    "data": {
+     "qid": "Q-SIRU-GAP-PRODUCT-MODEL",
+     "ref": "canvas.architecture",
+     "affects": [
+      "surface:wf-map-arch",
+      "surface:wf-map-data",
+      "surface:wf-map-system"
+     ],
+     "waitingOn": "ryuklabs project member",
+     "updated": "2026-09-26",
+     "rationale": "Closed by the owner's ruling (MCQ 2026-10-02, Q-ryuklabs-model): no product model belongs to this project, by design; the Map holds only its flows. (Filed first by the brain-pack export as an honest gap.)",
+     "from": "02_AGENT_R/gaps.json",
+     "closedAt": "2026-10-02",
+     "closedBy": "Ryuk",
+     "closedWith": "Q-ryuklabs-model"
+    }
+   }
+  },
+  {
+   "kind": "aim",
+   "op": "upsert",
+   "data": {
+    "productModel": {
+     "none": true,
+     "why": "Ryuklabs is the org's own operating work (go-to-market, outreach, content, grants), not a coded product: no apps, screens or doors by design; the Map holds only the flows."
+    },
+    "measure": {
+     "none": true,
+     "why": "None is published for now; Home shows its empty sentence until graded GTM filings exist."
+    }
+   }
+  }
+ ]
+}

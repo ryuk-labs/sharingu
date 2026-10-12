@@ -1,0 +1,31 @@
+-- migrate-036.sql — build0925:backfill-eval-integrity (2026-09-25). A DATA repair, no schema change.
+--
+-- THE DEFECT: POST /backfill?eval=1 (the suites' own call) selected "report IS NULL" with no eval
+-- filter, so it linked eval=0 PRODUCTION transmissions to an eval-batch-report-* artifact; the suites'
+-- self_clean (src/admin.js clean-eval + tools/lib.sh's belt) then deleted every `eval-%`-titled
+-- artifact, leaving those rows' `report` naming an artifact that no longer exists. Measured on a
+-- read-only export of ryuklabs-agent-r loaded into a local D1 (2026-09-25): 213 rows, every one
+-- eval=0, across 4 distinct dead report ids (100 · 100 · 11 · 2 — the batch shape of a 100-row
+-- backfill call). The product fix (src/core.js backfillReports: eval mode covers eval=1 rows only)
+-- and the sweep fix (clean-eval un-links before it deletes) ship in the same commit; this file
+-- repairs what already happened.
+--
+-- WHY NULL, NOT A RE-POINT: the console treats the two states differently —
+--   * a dangling id renders a live link (src/txpage.js reportLink, src/queue.js's design-lane
+--     "artifact -> /artifact/<id>") that answers 404 {"error":"not_found"} when clicked;
+--   * NULL renders no link (the queue says "no artifact linked yet"), and NULL `report` IS the
+--     backfill target (schema comment: "NULL = backfill target") — the nightly cron's own
+--     backfillReports(env, origin, false) re-covers every eval=0 NULL row with a PRODUCTION
+--     batch-report-* artifact (title never `eval-%`, so self_clean never touches it), oldest first,
+--     100 per tick, through the one seam that already exists.
+-- A migration cannot render the report HTML or write R2, so a SQL-side "re-backfill" is not
+-- possible; NULL hands the row back to the mechanism built to cover it.
+--
+-- SCOPE: every transmission row whose `report` names no row in `artifacts` — by the schema's own
+-- definition `report` is an artifact id ("NULL marks it for the backfill cron"), so a value naming
+-- no artifact is a dangling pointer whatever wrote it. `trace` is deliberately NOT touched here: it is
+-- consent-gated (ADR-102) and measured 0 dangling on ryuklabs-agent-r today. Idempotent: a replay
+-- (tools/migrate-dryrun.sh's step 2b) finds nothing left to change. No row is added or removed; no
+-- column changes.
+UPDATE transmission SET report = NULL
+  WHERE report IS NOT NULL AND NOT EXISTS (SELECT 1 FROM artifacts a WHERE a.id = transmission.report);

@@ -1,0 +1,8 @@
+{
+  "_doc": "The owner's rulings on what this ship removes from live on purpose (docs/plan/HANDOFF.md, 'Ruled by the owner', 2026-10-02). tools/ship/prune.mjs reads this file and lists every item a ruling names in its plan, with the ruling's words, beside the import's own stale items. A ruling never removes an item a write that was not an import touched (a person's own filing through the MCP is kept and listed). A ruling names a project, a kind (or kinds), and either explicit keys or stale: true (every item of those kinds the build no longer files).",
+  "rulings": [
+    { "project": "ryuklabs", "kind": "doc", "keys": ["capsules/gtm.md"], "ruling": "ryuklabs' private data (client names with amounts, funding details) is stripped, on live too (owner, 2026-10-02)" },
+    { "project": "siru", "kind": "node", "keys": ["gap:Q-one-r-per-org", "gap:Q-verifier-author"], "ruling": "two of siru's gap nodes the brain no longer files go with the ship (owner, 2026-10-02)" },
+    { "project": "sharingu", "kinds": ["render", "style", "edge", "check", "card", "card_kind", "doc", "question", "goal", "node"], "stale": true, "ruling": "the old brain's model and its old goal tree are removed from live, replaced by the code layout, with no sharingu snapshot first (owner, 2026-10-02)" }
+  ]
+}

@@ -1,0 +1,31 @@
+# .gitattributes — ordinary, boring text normalization + explicit classification, so a generated
+# JSON plane never reads as binary in a diff. Part of the native-structure batch (QC533C291).
+
+# Let git auto-detect text and normalize line endings to LF on checkin.
+* text=auto eol=lf
+
+# Generated JSON planes are TEXT, always diffable — not binary, not linguist-collapsed. `contracts/
+# door.json` in particular is GENERATED (`engine/tools/make-door-contract.py`), never hand-edited, and
+# the gate diffs it — a reviewer must be able to read that diff line by line.
+*.json text eol=lf linguist-generated=false
+contracts/door.json text eol=lf linguist-generated
+package-lock.json text eol=lf linguist-generated
+
+# Ordinary source/docs stay text
+*.md text eol=lf
+*.mjs text eol=lf
+*.js text eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Real binaries stay binary — never normalized, never diffed as text
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

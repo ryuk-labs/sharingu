@@ -1,0 +1,11 @@
+-- migrate-038.sql — UI-B3 Home (2026-09-27). EXPAND-ONLY: one CREATE INDEX IF NOT EXISTS. No table rewrite, no dropped
+-- index, no row touched. The worker version before this migration and the one after both run correctly with or
+-- without it (engine/BUILD.md §Migrations): without it, Home's approve and grant rows still read, only their counter
+-- counts scan. Applied live by the SESSION via tools/migrate.sh (a human verb), never by a dev run.
+--
+-- WHY: Home is ONE composed read (src/home.js readHomeSummary, program guardrail 7). Its S2 statement (src/hotsql.js
+-- HOME_OWNER_ROWS_SQL) draws the owner's approve and grant rows, each with the number of counters filed on it — a
+-- counter names a filing by `parent` (QB953462F) — as a correlated subquery `WHERE c.parent = t.id`. transmission had
+-- no index on parent, so every row drawn would scan the whole table. tools/d1-hot-selftest.mjs (section G) EXPLAINs
+-- that exact string against boot.sql plus this file, and fails on the pre-038 schema.
+CREATE INDEX IF NOT EXISTS idx_transmission_parent ON transmission(parent);

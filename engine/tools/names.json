@@ -1,0 +1,694 @@
+{
+  "_doc": "D5 (sprint 3): the door's names, old -> new, as data. Renamed AT ONCE, no aliases, no redirects (owner, MCQ 2026-10-01; MCP.md §5, §7). tools: every MCP tool of the head before D5 (9e97db345); verdict same | renamed | folds (into a new name: `how` says how its job is reached there) | goes (`why`: what replaces the need, or nothing) | rest-only (no tool; its REST door stays for its button). rest: every REST row that changes (a row not listed keeps its address). resources: the brain:// URIs that change. errors: refusal codes that change. tools/release-note.mjs writes the release note from this file; tools/check-vocab-selftest.mjs bans every old name it lists; tools/authority-table.mjs diffs the authority table by it. `through` (a fold into file): the call is gated by that one first (file files only what a preview of the caller checked). `readableBefore`: the same data was already served at that address's auth before the rename (the authority table compares with it).",
+  "words": {
+    "banned": [
+      "transmission",
+      "handoff",
+      "loop",
+      "heartbeat",
+      "capsule",
+      "holes",
+      "envelope"
+    ],
+    "the": "a CONTRIBUTION (verb: file), a knowledge item, a check and its grade, a question and its ruling, a version, an open item",
+    "also": "the old tool names themselves (pack_*, eagle_*, *_transmission, *_knowledge, ...) are banned as names on every face the vocabulary check scans"
+  },
+  "tools": [
+    {
+      "old": "whoami",
+      "new": "whoami",
+      "verdict": "same"
+    },
+    {
+      "old": "heartbeat",
+      "new": "updates",
+      "verdict": "renamed",
+      "how": "updates answers what changed for you since you were last here and what waits on you (open items, the owner's blockers), with the project's picture state gave and your own items thread gave"
+    },
+    {
+      "old": "state",
+      "new": "updates",
+      "verdict": "folds",
+      "how": "the project's picture (its aim, as-of, blockers, your projects, the active one) is part of updates; full:true's list is `missing`"
+    },
+    {
+      "old": "thread",
+      "new": "updates",
+      "verdict": "folds",
+      "how": "your own items (what you filed, asked, answered and reported, each with where it stands) are updates' `yours`"
+    },
+    {
+      "old": "loops",
+      "new": "updates",
+      "verdict": "folds",
+      "how": "your open items are updates' waitingOnYou.openItems"
+    },
+    {
+      "old": "open_loop",
+      "new": "open_items",
+      "verdict": "renamed",
+      "how": "open_items {title, ref?} opens one, {close: id} closes one; it answers your open items"
+    },
+    {
+      "old": "send_handoff",
+      "new": "wrap_up",
+      "verdict": "renamed",
+      "why": "kept: its open items are read by updates and Home's count, its card answers by Decisions, its summary by updates' `yours`"
+    },
+    {
+      "old": "holes",
+      "new": "missing",
+      "verdict": "renamed"
+    },
+    {
+      "old": "formats",
+      "new": "formats",
+      "verdict": "same"
+    },
+    {
+      "old": "preview",
+      "new": "preview",
+      "verdict": "same"
+    },
+    {
+      "old": "file",
+      "new": "file",
+      "verdict": "same"
+    },
+    {
+      "old": "write_knowledge",
+      "new": "file",
+      "verdict": "folds",
+      "how": "preview {project, items: [{kind, op, data}, ...]} then file {previewId, items}: the knowledge items land all or nothing",
+      "through": "preview"
+    },
+    {
+      "old": "submit_transmission",
+      "new": "file",
+      "verdict": "folds",
+      "how": "preview {project, items: [{contribution: {lane, what, why, ...}}]} then file",
+      "through": "preview"
+    },
+    {
+      "old": "record_event",
+      "new": "file",
+      "verdict": "folds",
+      "how": "a ruling, a correction or a drift is a contribution: preview then file (ruled by the plan's laws, HANDOFF D6)",
+      "through": "preview"
+    },
+    {
+      "old": "ask",
+      "new": "ask",
+      "verdict": "same"
+    },
+    {
+      "old": "respond",
+      "new": "respond",
+      "verdict": "same"
+    },
+    {
+      "old": "rule_question",
+      "new": "rule_question",
+      "verdict": "same"
+    },
+    {
+      "old": "submit_grade",
+      "new": "submit_grade",
+      "verdict": "same"
+    },
+    {
+      "old": "decide_transmission",
+      "new": "decide_contribution",
+      "verdict": "renamed"
+    },
+    {
+      "old": "pick_up",
+      "new": "pick_up",
+      "verdict": "same"
+    },
+    {
+      "old": "impact",
+      "new": "impact",
+      "verdict": "same"
+    },
+    {
+      "old": "search",
+      "new": "search",
+      "verdict": "same"
+    },
+    {
+      "old": "read",
+      "new": "read",
+      "verdict": "same"
+    },
+    {
+      "old": "changes",
+      "new": "changes",
+      "verdict": "same"
+    },
+    {
+      "old": "brief",
+      "new": "brief",
+      "verdict": "same"
+    },
+    {
+      "old": "read_knowledge",
+      "new": "read",
+      "verdict": "folds",
+      "how": "read {kind} lists a kind (a page of it, `after` for the next); read {ref} or {kind, ref} reads one item"
+    },
+    {
+      "old": "capsule",
+      "new": "brief",
+      "verdict": "folds",
+      "how": "brief with no `for` answers your own role's brief (the doc capsules/<role>.md the project holds); brief {role} names another's, under the doc's own visibility"
+    },
+    {
+      "old": "area_brief",
+      "new": "brief",
+      "verdict": "folds",
+      "how": "brief {for: <ref>}"
+    },
+    {
+      "old": "library",
+      "new": "read",
+      "verdict": "folds",
+      "how": "read {kind: \"doc\"} lists the project's docs you may read"
+    },
+    {
+      "old": "doc",
+      "new": "read",
+      "verdict": "folds",
+      "how": "read {ref: \"doc/<path>\"}; doc/start-here.md always answers (the project's own, else the built-in guide)"
+    },
+    {
+      "old": "home",
+      "new": "home",
+      "verdict": "same"
+    },
+    {
+      "old": "build",
+      "new": "build",
+      "verdict": "same"
+    },
+    {
+      "old": "transmission_queue",
+      "new": "build",
+      "verdict": "folds",
+      "how": "build lists the project's contributions as the Build tab does; read {kind: \"contribution\"} pages them all"
+    },
+    {
+      "old": "read_transmission",
+      "new": "read",
+      "verdict": "folds",
+      "how": "read {ref: \"T-YYYYMMDD-NNN\"} (with its grade and links)"
+    },
+    {
+      "old": "gtm_pipeline",
+      "new": "gtm",
+      "verdict": "renamed"
+    },
+    {
+      "old": "goals",
+      "new": "goals",
+      "verdict": "same"
+    },
+    {
+      "old": "goal",
+      "new": "goals",
+      "verdict": "folds",
+      "how": "goals {ref} answers one goal, as decisions {qid} answers one question"
+    },
+    {
+      "old": "decisions",
+      "new": "decisions",
+      "verdict": "same"
+    },
+    {
+      "old": "answers",
+      "new": "decisions",
+      "verdict": "goes",
+      "why": "every question on decisions carries its answers and its ruling; the owner's org-wide answer dump has no screen"
+    },
+    {
+      "old": "map_plane",
+      "new": "map",
+      "verdict": "folds",
+      "how": "map {plane} (arch, data, api, mcp, flows, deps; arch when left out)"
+    },
+    {
+      "old": "map_node",
+      "new": "map",
+      "verdict": "folds",
+      "how": "map {ref} (and gap) answers one node, as the Map's inspector shows it"
+    },
+    {
+      "old": "map_screens",
+      "new": "map",
+      "verdict": "folds",
+      "how": "map {plane: \"screens\"} (and surface) answers the Screens view"
+    },
+    {
+      "old": "broadcast",
+      "new": "broadcast",
+      "verdict": "same"
+    },
+    {
+      "old": "versions",
+      "new": "versions",
+      "verdict": "same"
+    },
+    {
+      "old": "bank_artifact",
+      "new": "save_file",
+      "verdict": "renamed"
+    },
+    {
+      "old": "read_artifact",
+      "new": "read_file",
+      "verdict": "renamed"
+    },
+    {
+      "old": "list_artifacts",
+      "new": "read_file",
+      "verdict": "folds",
+      "how": "read_file with no id lists the files you may read (q, group, limit)"
+    },
+    {
+      "old": "publish",
+      "new": "publish",
+      "verdict": "same"
+    },
+    {
+      "old": "equip",
+      "new": "equip",
+      "verdict": "same"
+    },
+    {
+      "old": "create_project",
+      "new": "create_project",
+      "verdict": "same"
+    },
+    {
+      "old": "publish_version",
+      "new": "publish_version",
+      "verdict": "same"
+    },
+    {
+      "old": "restore_version",
+      "new": "restore_version",
+      "verdict": "same"
+    },
+    {
+      "old": "rank",
+      "new": null,
+      "verdict": "rest-only",
+      "why": "POST /rank stays for Build's Rank button (HANDOFF D6, decided by the plan's laws)"
+    },
+    {
+      "old": "round",
+      "new": null,
+      "verdict": "rest-only",
+      "why": "POST /round stays for Decisions' Add to round button"
+    },
+    {
+      "old": "pack_kinds",
+      "new": "read",
+      "verdict": "folds",
+      "how": "read {kind: \"card_kind\"}"
+    },
+    {
+      "old": "pack_card",
+      "new": "read",
+      "verdict": "folds",
+      "how": "read {ref: \"card/<kind>/<id>\"}"
+    },
+    {
+      "old": "pack_find",
+      "new": "search",
+      "verdict": "folds",
+      "how": "search {q, kinds: [\"card\"]}"
+    },
+    {
+      "old": "pack_checks",
+      "new": "read",
+      "verdict": "folds",
+      "how": "read {kind: \"check\"}, or read {ref: \"check/<id>\"}"
+    },
+    {
+      "old": "pack_decisions",
+      "new": "decisions",
+      "verdict": "folds",
+      "how": "decisions"
+    },
+    {
+      "old": "pack_live",
+      "new": "changes",
+      "verdict": "folds",
+      "how": "changes"
+    },
+    {
+      "old": "eagle_claims",
+      "new": "read",
+      "verdict": "folds",
+      "how": "read {kind: \"card\", cardKind: \"claim\"}; impact {ref} for what a ref reaches"
+    },
+    {
+      "old": "eagle_history",
+      "new": "impact",
+      "verdict": "folds",
+      "how": "impact {refs} answers `history`: the project's contributions that named those refs, newest first (at most 50; \"screen:home\" and \"home\" read the same; a goal by its goalRef too; a non-owner only what they may open). The history is now one project's (it was the org's)."
+    },
+    {
+      "old": "eagle_timeline",
+      "new": "changes",
+      "verdict": "folds",
+      "how": "changes {since}"
+    },
+    {
+      "old": "eagle_critiques",
+      "new": null,
+      "verdict": "goes",
+      "why": "nothing files a critique any more; a challenge is a contribution, read with read and changes"
+    },
+    {
+      "old": "inbox",
+      "new": null,
+      "verdict": "goes",
+      "why": "the reports a wrap_up files show on updates' `yours` and in Activity; the owner's raw R2 list has no screen"
+    },
+    {
+      "old": "read_inbox",
+      "new": null,
+      "verdict": "goes",
+      "why": "as inbox"
+    }
+  ],
+  "rest": [
+    {
+      "old": "GET /holes",
+      "new": "GET /missing",
+      "verdict": "renamed",
+      "why": "the page says What is missing; the twin of missing"
+    },
+    {
+      "old": "GET /heartbeat",
+      "new": "GET /updates",
+      "verdict": "renamed",
+      "why": "the twin of updates"
+    },
+    {
+      "old": "GET /state",
+      "new": "GET /updates",
+      "verdict": "folds",
+      "why": "state folds into updates; both doors scope the project through the one function (Part 4 b)"
+    },
+    {
+      "old": "GET /thread",
+      "new": "GET /updates",
+      "verdict": "folds"
+    },
+    {
+      "old": "GET /loops",
+      "new": "GET /updates",
+      "verdict": "folds"
+    },
+    {
+      "old": "POST /loops",
+      "new": "POST /open-items",
+      "verdict": "renamed",
+      "why": "the twin of open_items"
+    },
+    {
+      "old": "POST /handoff",
+      "new": "POST /wrap-up",
+      "verdict": "renamed",
+      "why": "the twin of wrap_up"
+    },
+    {
+      "old": "GET /gtm/pipeline",
+      "new": "GET /gtm",
+      "verdict": "renamed",
+      "why": "the tab says GTM; the twin of gtm"
+    },
+    {
+      "old": "GET /transmission/:id",
+      "new": "GET /contribution/:id",
+      "verdict": "renamed",
+      "why": "the page says contribution"
+    },
+    {
+      "old": "POST /transmission/:id/decide",
+      "new": "POST /contribution/:id/decide",
+      "verdict": "renamed",
+      "why": "the twin of decide_contribution"
+    },
+    {
+      "old": "GET /transmission/:id/impact",
+      "new": "GET /contribution/:id/impact",
+      "verdict": "renamed"
+    },
+    {
+      "old": "POST /transmission/:id/pick-up",
+      "new": "POST /contribution/:id/pick-up",
+      "verdict": "renamed",
+      "why": "the twin of pick_up"
+    },
+    {
+      "old": "POST /pack/grade",
+      "new": "POST /grade",
+      "verdict": "renamed",
+      "why": "the twin of submit_grade"
+    },
+    {
+      "old": "POST /event",
+      "new": "POST /ask",
+      "verdict": "folds",
+      "why": "record_event folds into file; ask keeps a REST twin of its own"
+    },
+    {
+      "old": "POST /transmission",
+      "new": "POST /file",
+      "verdict": "folds",
+      "why": "preview then file",
+      "through": "POST /preview"
+    },
+    {
+      "old": "POST /transmission/batch",
+      "new": "POST /file",
+      "verdict": "folds",
+      "why": "preview then file (up to 200 items)",
+      "through": "POST /preview"
+    },
+    {
+      "old": "GET /transmission",
+      "new": "GET /build",
+      "verdict": "folds",
+      "why": "the Build tab lists the contributions; GET /read?kind=contribution pages them"
+    },
+    {
+      "old": "POST /knowledge",
+      "new": "POST /file",
+      "verdict": "folds",
+      "why": "preview then file",
+      "through": "POST /preview"
+    },
+    {
+      "old": "GET /knowledge/:kind",
+      "new": "GET /read",
+      "verdict": "folds",
+      "why": "GET /read?kind=<kind>"
+    },
+    {
+      "old": "GET /knowledge/:kind/:id",
+      "new": "GET /read",
+      "verdict": "folds",
+      "why": "GET /read?ref=<ref>"
+    },
+    {
+      "old": "GET /capsule/:role",
+      "new": "GET /brief",
+      "verdict": "folds",
+      "why": "GET /brief (your own) or GET /brief?role=<role>: the doc capsules/<role>.md under its visibility, which GET /doc/:path already served to any signed-in reader (auth reader)",
+      "readableBefore": "GET /doc/:path"
+    },
+    {
+      "old": "GET /pack/kinds",
+      "new": "GET /read",
+      "verdict": "folds"
+    },
+    {
+      "old": "GET /pack/card/:kind/:id",
+      "new": "GET /read",
+      "verdict": "folds"
+    },
+    {
+      "old": "GET /pack/find",
+      "new": "GET /search",
+      "verdict": "folds"
+    },
+    {
+      "old": "GET /pack/checks/:kind/:id",
+      "new": "GET /read",
+      "verdict": "folds"
+    },
+    {
+      "old": "GET /pack/decisions",
+      "new": "GET /decisions",
+      "verdict": "folds"
+    },
+    {
+      "old": "GET /pack/live",
+      "new": "GET /changes",
+      "verdict": "folds"
+    },
+    {
+      "old": "GET /eagle/claims",
+      "new": "GET /read",
+      "verdict": "folds"
+    },
+    {
+      "old": "GET /eagle/history",
+      "new": "GET /impact",
+      "verdict": "folds",
+      "how": "GET /impact?refs=<ref>[&eval=1] answers history:{refs, count, items, more}"
+    },
+    {
+      "old": "GET /eagle/timeline",
+      "new": "GET /changes",
+      "verdict": "folds"
+    },
+    {
+      "old": "GET /eagle/critiques",
+      "new": null,
+      "verdict": "goes"
+    },
+    {
+      "old": "GET /answers",
+      "new": "GET /decisions",
+      "verdict": "goes"
+    },
+    {
+      "old": "GET /inbox",
+      "new": null,
+      "verdict": "goes"
+    },
+    {
+      "old": "GET /inbox/:id",
+      "new": null,
+      "verdict": "goes"
+    }
+  ],
+  "resources": [
+    {
+      "old": "brain://state",
+      "new": "brain://updates",
+      "verdict": "renamed"
+    },
+    {
+      "old": "brain://holes",
+      "new": "brain://missing",
+      "verdict": "renamed"
+    },
+    {
+      "old": "brain://gtm/pipeline",
+      "new": "brain://gtm",
+      "verdict": "renamed"
+    },
+    {
+      "old": "brain://area/{ref}",
+      "new": "brain://brief/{ref}",
+      "verdict": "renamed"
+    },
+    {
+      "old": "brain://capsule/{role}",
+      "new": "brain://brief/{ref}",
+      "verdict": "folds",
+      "why": "a role's brief is brief {role}; its doc reads at brain://doc/capsules/<role>.md"
+    }
+  ],
+  "errors": [
+    {
+      "old": "unknown_capsule",
+      "new": "unknown_brief"
+    }
+  ],
+  "keep": {
+    "addresses": "POST /artifact, GET /artifact/:id and GET /artifacts keep their addresses (save_file and read_file's twins): a saved file's link is cited inside filed proof, and an address change would break proof already filed.",
+    "internal": "Not renamed (internal, never read by a client or a person): the tables transmission, loops, handoff events and their columns; file names (src/transmission.js, src/handoff.js, src/holes.js, txpage.js ...); function names; the org setting handoffRepo; R2 keys inbox/handoffs/; the brain:// scheme; the ref grammar's T-YYYYMMDD-NNN id."
+  },
+  "fields": [
+    {
+      "where": "missing (was holes) and GET /missing",
+      "old": "holes[]",
+      "new": "items[]",
+      "why": "the open items of the checklist"
+    },
+    {
+      "where": "missing: each of items[]",
+      "old": "hole",
+      "new": "piece",
+      "why": "the sprint-1 piece name an item maps onto"
+    },
+    {
+      "where": "whoami",
+      "old": "openLoops (a count)",
+      "new": "openItems"
+    },
+    {
+      "where": "updates (was heartbeat) and GET /updates",
+      "old": "waitingOnYou.openLoops",
+      "new": "waitingOnYou.openItems"
+    },
+    {
+      "where": "updates",
+      "old": "you.openLoops (state's titles list)",
+      "new": "(gone: waitingOnYou.openItems lists them with their ids)"
+    },
+    {
+      "where": "updates",
+      "old": "knowledgeAt (heartbeat)",
+      "new": "asOf (when the project's knowledge last changed)"
+    },
+    {
+      "where": "wrap_up (was send_handoff) and POST /wrap-up: receipt",
+      "old": "loopsOpened",
+      "new": "openItemsOpened"
+    },
+    {
+      "where": "wrap_up and POST /wrap-up: receipt",
+      "old": "loopIds",
+      "new": "openItemIds"
+    },
+    {
+      "where": "wrap_up: the GitHub issue it may open",
+      "old": "title \"Handoff — <name> — <date>\", label handoff",
+      "new": "title \"Wrap-up — <name> — <date>\", label wrap-up"
+    },
+    {
+      "where": "open_items (was open_loop)",
+      "old": "{opened, title, ref} / {closed}",
+      "new": "{opened, title, ref, openItems} / {closed, openItems}: the caller's open items ride every answer"
+    },
+    {
+      "where": "brief with no `for` (was capsule)",
+      "old": "the doc's markdown as a bare string",
+      "new": "{role, path, title, body}"
+    },
+    {
+      "where": "brief {role} refused (was capsule)",
+      "old": "{error: unknown_capsule, capsules: [...]}",
+      "new": "{error: unknown_brief, briefs: [...]}"
+    },
+    {
+      "where": "impact {refs}",
+      "old": "(eagle_history's {ref, count, timeline})",
+      "new": "history: {refs, count, items, more} beside the reach (one project's, newest first)"
+    },
+    {
+      "where": "read_file with no id (was list_artifacts)",
+      "old": "(list_artifacts' answer)",
+      "new": "the same list, unchanged"
+    }
+  ]
+}

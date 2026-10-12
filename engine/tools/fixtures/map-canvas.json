@@ -1,0 +1,1276 @@
+{
+ "_pinned": "trimmed from the brain's serve/lib/canvas/canvas.json (v 77243be8) for tools/wire-selftest.mjs §11 (UI-B7b): four screens with their doors, three tables, their evidence; the gaps are the fixture's own (four open across all three kinds, three retired)",
+ "v": "fx0928b7",
+ "surfaces": [
+  "r-console"
+ ],
+ "surfaceLabels": {
+  "r-console": "Agent R — served console"
+ },
+ "lanes": [
+  {
+   "id": "home",
+   "label": "Home",
+   "surface": "r-console"
+  },
+  {
+   "id": "decisions",
+   "label": "Decisions",
+   "surface": "r-console"
+  },
+  {
+   "id": "map",
+   "label": "Map",
+   "surface": "r-console"
+  }
+ ],
+ "screens": [
+  {
+   "id": "home",
+   "name": "Overview",
+   "surface": "r-console",
+   "lane": "home",
+   "status": "live",
+   "route": "/home",
+   "to": [
+    "decisions",
+    "question",
+    "versions"
+   ],
+   "from": [],
+   "apis": [
+    "GET /home"
+   ],
+   "progress": {
+    "dev": 1
+   },
+   "plannedChange": {
+    "because": [
+     "Q40CD2B46",
+     "Q205E5B03"
+    ],
+    "whatChanges": "home.js's 'needs you' section (home.js:387-399) renders briefFor()'s openLoops — up to 3 loop rows under a 'needs you' heading. loops is dropped entirely (Q40CD2B46) and its ref/coordinate pointer with it (Q205E5B03), so this section loses its data source outright. Replace with the filing-based equivalent the ruling names as the successor: 'work carried between sessions' is what a filing already records, attributed to who filed it — so 'needs you' should read from open/waiting filings against this person, not a dropped table."
+   },
+   "purpose": "Home (UI-B3): the project's name, its aim and its measure, what is moving, what needs you (decide · approve · grant, each a button), who moved the goals this month and who is here; rendered from the SAME read GET /home/summary answers, ?eval=1 includes suite rows",
+   "purposeFrom": "GET /home"
+  },
+  {
+   "id": "decisions",
+   "name": "Decisions",
+   "surface": "r-console",
+   "lane": "decisions",
+   "status": "live",
+   "route": "/decisions",
+   "to": [
+    "question",
+    "versions"
+   ],
+   "from": [
+    "question",
+    "home"
+   ],
+   "apis": [
+    "GET /decisions"
+   ],
+   "progress": {
+    "dev": 1
+   },
+   "plannedChange": {
+    "because": [
+     "Q5AAE9144",
+     "QDEEE78C5"
+    ],
+    "whatChanges": "Same no-pack-denial nav-highlight bug as Scorecard: /pack/decisions falls through the ternary's else branch to 'goals' instead of highlighting itself. Same fix, same cause (index.js:2804)."
+   },
+   "purpose": "the Decisions screen (UI-B2): the project's published questions with counts, who owes each answer, and what was filed on each since the publish (answers, the round, counters), ?status=open|in-force|superseded|countered&severity=&area=&eval=1; HTML for a browser, JSON otherwise — twin of the decisions tool",
+   "purposeFrom": "GET /decisions"
+  },
+  {
+   "id": "versions",
+   "name": "Versions",
+   "surface": "r-console",
+   "lane": "map",
+   "status": "live",
+   "route": "/versions",
+   "to": [
+    "question"
+   ],
+   "from": [
+    "home",
+    "decisions"
+   ],
+   "apis": [
+    "GET /versions"
+   ],
+   "progress": {
+    "dev": 1
+   },
+   "purpose": "Versions (UI-B5b), a Map view: why each version of the project's published pack exists (the spine a publish mints, keyed by content, each row naming its cause: ruled with the question, scanned, or restored with the filing), the current one, and what changed from the one before it; ?cause=all|ruled|scanned; HTML for a browser, JSON otherwise {project, current, viewing, versions, counts:{all, ruled, scanned}, diff:{from, to, lines, more}}, versions:[] with empty:'no_versions' before the first publish after ship; ?head=1 is the BEHIND poll {n, key, at, publishedAt} with no-store; 0 D1 statements beyond the sign-in — twin of the versions tool",
+   "purposeFrom": "GET /versions"
+  },
+  {
+   "id": "question",
+   "name": "A question",
+   "surface": "r-console",
+   "lane": "decisions",
+   "status": "live",
+   "route": "/question",
+   "to": [
+    "decisions"
+   ],
+   "from": [
+    "home",
+    "decisions",
+    "versions"
+   ],
+   "apis": [
+    "GET /question/:qid"
+   ],
+   "progress": {
+    "dev": 1
+   },
+   "purpose": "one question's card (UI-B2): why it is asked, its options, what it blocks, who owes it, the counters filed on it and the exact call that files one; 404 not_found for a qid the pack lacks — the decisions tool with a qid",
+   "purposeFrom": "GET /question/:qid"
+  }
+ ],
+ "edges": [
+  {
+   "from": "question",
+   "to": "decisions",
+   "label": "crumb → decisions",
+   "inferred": false
+  },
+  {
+   "from": "home",
+   "to": "decisions",
+   "label": "link: /decisions",
+   "inferred": false,
+   "derived": "raw-link-scan"
+  },
+  {
+   "from": "home",
+   "to": "question",
+   "label": "link: /question",
+   "inferred": false,
+   "derived": "raw-link-scan"
+  },
+  {
+   "from": "home",
+   "to": "versions",
+   "label": "link: /versions",
+   "inferred": false,
+   "derived": "raw-link-scan"
+  },
+  {
+   "from": "decisions",
+   "to": "question",
+   "label": "link: /question",
+   "inferred": false,
+   "derived": "raw-link-scan"
+  },
+  {
+   "from": "decisions",
+   "to": "versions",
+   "label": "link: /versions",
+   "inferred": false,
+   "derived": "raw-link-scan"
+  },
+  {
+   "from": "versions",
+   "to": "question",
+   "label": "link: /question",
+   "inferred": false,
+   "derived": "raw-link-scan"
+  }
+ ],
+ "flows": [],
+ "stateMatrix": {
+  "rows": [],
+  "cols": [],
+  "cells": {}
+ },
+ "entities": [
+  {
+   "id": "people",
+   "label": "people",
+   "table": "people",
+   "note": "One org member — identity, role, key_hash (never the key itself), active flag, and the self-serve profile fields (title/lane/trace_consent) added since the original 7 columns.",
+   "gap": "key_hash/pass_hash are one-way; nothing in the codebase ever reads a plaintext credential back out of this table. role is free-text (no CHECK constraint) — see GAP-role-leader-not-in-schema-enum for the one place that already drifted. CONFIRMED AND EXTENDED (Q76EFC99D): the first member of an org is automatically its admin, and admin is a role that MOVES (transferable to another member) rather than a permanent property of the founder — no schema change needed (role is already free-text), but no code path implements the auto-admin-on-first-member or transfer flow yet.",
+   "status": "confirmed",
+   "ruling": "Q76EFC99D",
+   "provisional": false,
+   "rulingImpl": [
+    {
+     "qid": "Q347E27ED",
+     "implStatus": "pending",
+     "note": "engine/boot.sql:80 people.role comment still lists 9 values (economics|product|ai-platform|logistics|internal-eng|external-ai|external-logistics|design|owner) with no 'leader', though shell.js/tenant.js/admin.js all gate on that role."
+    },
+    {
+     "qid": "Q76EFC99D",
+     "implStatus": "pending",
+     "note": "boot.sql people.role stays free-text (no schema change needed) but no code path implements auto-admin-on-first-member or an admin-transfer flow — not found in engine/src/admin.js this pass."
+    }
+   ]
+  },
+  {
+   "id": "projects",
+   "label": "projects",
+   "table": "projects",
+   "note": "The org's own project (workspace) registry — one row per soft-scoped workspace inside this org's hard-walled worker (M-ADR-094/013/027).",
+   "gap": "key is the stable slug every other table's project/project_key column points at by naming convention (no enforced FK today — see the relations[] derivation and the clean orphan-scan result below); active governs whether new work may target it, not whether history referencing it stays visible. NO DEDICATED ENTITY RULING this pass — the table IS touched by two others: QCE1F9725 (real FK constraints) and QA143C9C8 (the one-door scoping rule names `projects` DIRECT-scoped), both still pending in code.",
+   "status": "unruled",
+   "ruling": null,
+   "provisional": true,
+   "rulingImpl": [
+    {
+     "qid": "Q952CAE10",
+     "implStatus": "pending",
+     "note": "Workspace scoping is still per-query discipline, not a single required-workspace helper with a zero-raw-query check — matches QA143C9C8's own pending state (same mechanism)."
+    }
+   ]
+  },
+  {
+   "id": "transmission",
+   "label": "transmission",
+   "table": "transmission",
+   "note": "The core ledger row — one contribution (pr / screen / doc / scope / answer / ...), its grading (route: auto/owner/incomplete, status, decision), and its provenance (submitter, lane, parent for an update-not-a-create).",
+   "gap": "eval=1 rows are self-cleaned evaluation noise, excluded from every real queue by convention (NOT_MIND_TX and friends). WIDENED (QFC497F89): this is now \"the core ledger\" for a filing against any of THREE peer planes — canvas, goals or GTM — not only code contributions; PENDING in code, which still models transmission as a code-contribution row (lane/kind/touches/screens columns, no goalRef/gtm-kind columns yet).",
+   "status": "confirmed-and-widened",
+   "ruling": "QFC497F89",
+   "provisional": false,
+   "rulingImpl": [
+    {
+     "qid": "Q4FF173D7",
+     "implStatus": "pending",
+     "note": "PENDING, refreshed 2026-09-28 (main 7ee0907e9, brain0928:pre-b6): ONE of the two links now exists. Goal attribution is LIVE: a filing carries a goal id (transmission.goal_ref, engine/boot.sql:145, indexed idx_transmission_goalref :220), the door grades it against the served tree (core.js:248 verifyGoalRef) and the Goals rollup reads it; UI-B6a derives each goal row's 'fed by' count and What fed's per-lane rows from goal_ref. What is still missing is DECISION PROVENANCE: nothing records which ruling a filing flowed from, and 'flowed from' still needs a definition before a column. Until it exists Home's leaderboard credits the submitter (hotsql.js:139-142 HOME_LEADERBOARD_SQL), and UI-B6a ships credit to a person as an honest EMPTY (its brief's D4), never the submitter shown as the one credited. The goal_nodes table named below is not needed for attribution (the tree is served from the tenant manifest)."
+    },
+    {
+     "qid": "QBE2A9003",
+     "implStatus": "pending",
+     "note": "No submitter-vs-doneBy split exists in engine/boot.sql's transmission table (only `submitter`) — the 'who filed it' vs 'who did it' distinction this ruling requires is not yet a real column."
+    },
+    {
+     "qid": "QC8B94276",
+     "implStatus": "pending",
+     "note": "Nothing exists, and the ruling REDUCES what must be built rather than adding to it: no counters table, no POST /counter, no reason picker. What is needed is a relation on the existing filing spine plus a control that asks a session to produce a counter-filing. The named open edge - disagreement with no session running has no path - is not covered by this row."
+    },
+    {
+     "qid": "QDFE40096",
+     "implStatus": "live",
+     "note": "LIVE as ruled, because the ruling is to LEAVE IT AS IT IS: submitter is out of the FK set today and the comment stands. The cost is live too — one of the 22 convention relations is unenforced. Provisional, so this row flips the moment non-seat crediting is confirmed unwanted. CO-LOCATION CITED (Q544D0355): shares engine/boot.sql:transmission_refs with OWNER ruling Q3F213DB1 ('transmission_refs is the fan-out — a contribution can touch anything on the canvas, goals or GTM planes'). ORTHOGONAL: the owner ruling is about what the table is FOR, this one about one column staying out of the FK set. The citation records why they do not collide — a fan-out table is precisely one whose refs are not all enforceable as foreign keys, so keeping submitter out is consistent with the owner's purpose rather than an exception to it. This row is PROVISIONAL and flips the moment non-seat credit is wanted."
+    },
+    {
+     "qid": "QFC497F89",
+     "implStatus": "pending",
+     "note": "engine/boot.sql transmission columns are unchanged (lane/kind/touches/screens, no goalRef or GTM-plane discriminator column) — entities[] rewritten this pass to record the widened claim as ruled-but-pending."
+    },
+    {
+     "qid": "Q0B316680",
+     "implStatus": "pending",
+     "note": "PENDING. The BASE is not invented — every field is already ruled or already in the schema, and the board now carries it as filing.schema with each field's real status read from its own row: who filed it (Q0B50A78E, LIVE — person_id TEXT NOT NULL, boot.sql:43); the project scope (Q93B3F368, live); the lane, one of six (QFC497F89, live — engine/src/lanes.js); extracted meaning never a raw dump (QEA9771A2, PENDING); the group tag the schema must refuse without (QE2D90B38, CONTRADICTED — the cron's orphanArtifacts metric proves untagged rows exist in production); proof as expected/actual/proof (generalised from gtm.fields); and the goal it moves (Q9BD4565B, pending). SO THE STANDARD IS 2 OF 8 ENFORCED and the plane says so rather than presenting a schema as if it held. I FIRST WROTE 3 OF 7 HERE AND THE PLANE CORRECTED ME: `lane` reads PENDING because QFC497F89's own row is pending, and I had assumed that engine/src/lanes.js existing meant the ruling held. A field's enforcement is its RULING's status, not whether some file mentioning it is on disk — which is the same error as reading a comment as a database, made on my own note. What does NOT exist: a per-kind field schema in the engine at all — gtm.activityTemplate's own note says today's SOP table names only the kind STRING per lane, so the template is a proposed standard for one lane out of six. The generalisation test that gated those five kinds now gates the whole standard."
+    }
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "transmission",
+   "to": "people",
+   "fromTable": "transmission",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "submitter",
+   "derived": "fk"
+  },
+  {
+   "from": "transmission",
+   "to": "transmission",
+   "fromTable": "transmission",
+   "toTable": "transmission",
+   "card": "*—1",
+   "verb": "parent",
+   "derived": "fk"
+  },
+  {
+   "from": "transmission",
+   "to": "people",
+   "fromTable": "transmission",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "decided_by",
+   "derived": "fk"
+  },
+  {
+   "from": "transmission",
+   "to": "projects",
+   "fromTable": "transmission",
+   "toTable": "projects",
+   "card": "*—1",
+   "verb": "project",
+   "derived": "fk"
+  }
+ ],
+ "tables": [
+  {
+   "name": "people",
+   "scope": "org",
+   "cols": [
+    {
+     "name": "id",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "email",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "role",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "key_hash",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "active",
+     "type": "INTEGER",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "pass_hash",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "pass_salt",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "title",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "capture_mode",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "lane",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "trace_consent",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "readBy": [
+    "GET /agentic",
+    "GET /agentic/example/:name",
+    "GET /answers",
+    "GET /area/:ref",
+    "POST /artifact",
+    "GET /artifact/:id",
+    "GET /artifacts",
+    "GET /atlas-img/:key",
+    "GET /atlas.json",
+    "GET /atlas/:app",
+    "GET /audit",
+    "POST /backfill",
+    "POST /backfill-refs",
+    "POST /backup-dump",
+    "GET /boot",
+    "GET /canvas.json",
+    "GET /capabilities",
+    "GET /control",
+    "GET /control/pack",
+    "GET /doc/:path",
+    "GET /docs",
+    "GET /eagle",
+    "GET /eagle.json",
+    "GET /eagle/claims",
+    "GET /eagle/contract/:id",
+    "GET /eagle/critiques",
+    "GET /eagle/history",
+    "GET /eagle/planned",
+    "GET /eagle/timeline",
+    "POST /handoff",
+    "GET /health",
+    "GET /heartbeat",
+    "GET /holes",
+    "GET /home",
+    "GET /intake/:file",
+    "GET /library",
+    "POST /login",
+    "POST /mcp",
+    "GET /observatory",
+    "GET /orchestrator",
+    "GET /pack/file/:id",
+    "POST /pack/grade",
+    "GET /pack/spec",
+    "GET /page/:id",
+    "GET /profile",
+    "POST /profile",
+    "POST /project",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "GET /setup",
+    "GET /state",
+    "GET /thread",
+    "GET /transmission",
+    "POST /transmission",
+    "POST /transmission/batch",
+    "GET /understanding",
+    "POST /verb",
+    "POST /versions/restore",
+    "GET /view",
+    "GET /whoami",
+    "mcp:whoami",
+    "mcp:heartbeat",
+    "mcp:bank_artifact",
+    "mcp:read_artifact",
+    "mcp:send_handoff",
+    "mcp:submit_transmission",
+    "mcp:rank",
+    "mcp:restore_version",
+    "mcp:thread",
+    "mcp:submit_grade",
+    "mcp:area_brief",
+    "mcp:transmission_queue",
+    "mcp:answers",
+    "mcp:respond",
+    "mcp:round",
+    "mcp:eagle_claims",
+    "mcp:eagle_critiques",
+    "mcp:eagle_history"
+   ],
+   "writtenBy": [
+    "GET /control",
+    "POST /profile"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q347E27ED",
+     "implStatus": "pending",
+     "note": "engine/boot.sql:80 people.role comment still lists 9 values (economics|product|ai-platform|logistics|internal-eng|external-ai|external-logistics|design|owner) with no 'leader', though shell.js/tenant.js/admin.js all gate on that role."
+    },
+    {
+     "qid": "Q76EFC99D",
+     "implStatus": "pending",
+     "note": "boot.sql people.role stays free-text (no schema change needed) but no code path implements auto-admin-on-first-member or an admin-transfer flow — not found in engine/src/admin.js this pass."
+    }
+   ]
+  },
+  {
+   "name": "projects",
+   "scope": "org",
+   "cols": [
+    {
+     "name": "key",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "registry_ptr",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "atlas_map",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "active",
+     "type": "INTEGER",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "readBy": [
+    "GET /agentic",
+    "GET /area/:ref",
+    "POST /artifact",
+    "GET /artifacts",
+    "GET /atlas/:app",
+    "GET /audit",
+    "GET /build",
+    "GET /control",
+    "GET /control/pack",
+    "GET /decisions",
+    "GET /docs",
+    "GET /eagle",
+    "POST /event",
+    "POST /fragment",
+    "GET /goals",
+    "GET /goals/:ref",
+    "POST /handoff",
+    "GET /holes",
+    "GET /home",
+    "POST /mcp",
+    "GET /observatory",
+    "GET /orchestrator",
+    "GET /pack/file/:id",
+    "POST /pack/grade",
+    "GET /pack/spec",
+    "GET /page/:id",
+    "GET /profile",
+    "POST /profile",
+    "POST /project",
+    "GET /projects",
+    "GET /question/:qid",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "GET /transmission",
+    "POST /transmission",
+    "GET /transmission/:id",
+    "POST /transmission/batch",
+    "GET /understanding",
+    "POST /verb",
+    "GET /versions",
+    "GET /versions/:v",
+    "POST /versions/restore",
+    "GET /view",
+    "GET /whoami",
+    "mcp:whoami",
+    "mcp:state",
+    "mcp:doc",
+    "mcp:bank_artifact",
+    "mcp:record_event",
+    "mcp:ask",
+    "mcp:send_handoff",
+    "mcp:submit_transmission",
+    "mcp:holes",
+    "mcp:rank",
+    "mcp:restore_version",
+    "mcp:submit_grade",
+    "mcp:transmission_queue",
+    "mcp:respond",
+    "mcp:round",
+    "mcp:list_artifacts"
+   ],
+   "writtenBy": [
+    "GET /control"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q952CAE10",
+     "implStatus": "pending",
+     "note": "Workspace scoping is still per-query discipline, not a single required-workspace helper with a zero-raw-query check — matches QA143C9C8's own pending state (same mechanism)."
+    }
+   ]
+  },
+  {
+   "name": "transmission",
+   "scope": "project (optional)",
+   "cols": [
+    {
+     "name": "id",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "submitter",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "lane",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "kind",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "what",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "why",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "touches",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "screens",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "proof",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "parent",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": true,
+     "ref": "transmission.id"
+    },
+    {
+     "name": "grade",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "route",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "status",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "eval",
+     "type": "INTEGER",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "components",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "decision",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "decided_by",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "decided_at",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "decision_note",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "gaprefs",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "report",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "digest",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "trace",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "about",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "project",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": true,
+     "ref": "projects.key"
+    },
+    {
+     "name": "via",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "client_ref",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "goal_ref",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "expected",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "actual",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "outcome",
+     "type": "REAL",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "readBy": [
+    "GET /agentic",
+    "GET /answers",
+    "GET /area/:ref",
+    "GET /atlas/:app",
+    "GET /audit",
+    "POST /backfill",
+    "POST /backfill-refs",
+    "GET /build",
+    "GET /control",
+    "GET /control/pack",
+    "GET /decisions",
+    "GET /docs",
+    "GET /eagle",
+    "GET /eagle/critiques",
+    "GET /eagle/history",
+    "GET /eagle/planned",
+    "GET /eagle/timeline",
+    "GET /goals",
+    "GET /goals/:ref",
+    "POST /handoff",
+    "GET /holes",
+    "GET /home",
+    "POST /mcp",
+    "GET /mirror",
+    "GET /observatory",
+    "GET /orchestrator",
+    "GET /pack/card/:kind/:id",
+    "GET /pack/checks/:kind/:id",
+    "GET /pack/decisions",
+    "GET /pack/file/:id",
+    "GET /pack/find",
+    "POST /pack/grade",
+    "GET /pack/kinds",
+    "GET /pack/live",
+    "GET /pack/spec",
+    "GET /page/:id",
+    "GET /profile",
+    "POST /profile",
+    "GET /projects",
+    "GET /question/:qid",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "GET /thread",
+    "GET /transmission",
+    "POST /transmission",
+    "GET /transmission/:id",
+    "POST /transmission/:id/decide",
+    "POST /transmission/batch",
+    "GET /understanding",
+    "POST /verb",
+    "GET /versions",
+    "GET /versions/:v",
+    "POST /versions/restore",
+    "GET /view",
+    "mcp:send_handoff",
+    "mcp:submit_transmission",
+    "mcp:decide_transmission",
+    "mcp:rank",
+    "mcp:restore_version",
+    "mcp:thread",
+    "mcp:pack_live",
+    "mcp:submit_grade",
+    "mcp:area_brief",
+    "mcp:transmission_queue",
+    "mcp:answers",
+    "mcp:respond",
+    "mcp:round",
+    "mcp:eagle_critiques",
+    "mcp:eagle_history",
+    "mcp:eagle_timeline"
+   ],
+   "writtenBy": [
+    "POST /backfill",
+    "POST /handoff",
+    "POST /mcp",
+    "POST /pack/grade",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "POST /transmission",
+    "POST /transmission/:id/decide",
+    "POST /transmission/batch",
+    "POST /verb",
+    "POST /versions/restore",
+    "mcp:send_handoff",
+    "mcp:submit_transmission",
+    "mcp:decide_transmission",
+    "mcp:rank",
+    "mcp:restore_version",
+    "mcp:submit_grade",
+    "mcp:respond",
+    "mcp:round"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q4FF173D7",
+     "implStatus": "pending",
+     "note": "PENDING, refreshed 2026-09-28 (main 7ee0907e9, brain0928:pre-b6): ONE of the two links now exists. Goal attribution is LIVE: a filing carries a goal id (transmission.goal_ref, engine/boot.sql:145, indexed idx_transmission_goalref :220), the door grades it against the served tree (core.js:248 verifyGoalRef) and the Goals rollup reads it; UI-B6a derives each goal row's 'fed by' count and What fed's per-lane rows from goal_ref. What is still missing is DECISION PROVENANCE: nothing records which ruling a filing flowed from, and 'flowed from' still needs a definition before a column. Until it exists Home's leaderboard credits the submitter (hotsql.js:139-142 HOME_LEADERBOARD_SQL), and UI-B6a ships credit to a person as an honest EMPTY (its brief's D4), never the submitter shown as the one credited. The goal_nodes table named below is not needed for attribution (the tree is served from the tenant manifest)."
+    },
+    {
+     "qid": "QBE2A9003",
+     "implStatus": "pending",
+     "note": "No submitter-vs-doneBy split exists in engine/boot.sql's transmission table (only `submitter`) — the 'who filed it' vs 'who did it' distinction this ruling requires is not yet a real column."
+    },
+    {
+     "qid": "QC8B94276",
+     "implStatus": "pending",
+     "note": "Nothing exists, and the ruling REDUCES what must be built rather than adding to it: no counters table, no POST /counter, no reason picker. What is needed is a relation on the existing filing spine plus a control that asks a session to produce a counter-filing. The named open edge - disagreement with no session running has no path - is not covered by this row."
+    },
+    {
+     "qid": "QDFE40096",
+     "implStatus": "live",
+     "note": "LIVE as ruled, because the ruling is to LEAVE IT AS IT IS: submitter is out of the FK set today and the comment stands. The cost is live too — one of the 22 convention relations is unenforced. Provisional, so this row flips the moment non-seat crediting is confirmed unwanted. CO-LOCATION CITED (Q544D0355): shares engine/boot.sql:transmission_refs with OWNER ruling Q3F213DB1 ('transmission_refs is the fan-out — a contribution can touch anything on the canvas, goals or GTM planes'). ORTHOGONAL: the owner ruling is about what the table is FOR, this one about one column staying out of the FK set. The citation records why they do not collide — a fan-out table is precisely one whose refs are not all enforceable as foreign keys, so keeping submitter out is consistent with the owner's purpose rather than an exception to it. This row is PROVISIONAL and flips the moment non-seat credit is wanted."
+    },
+    {
+     "qid": "QFC497F89",
+     "implStatus": "pending",
+     "note": "engine/boot.sql transmission columns are unchanged (lane/kind/touches/screens, no goalRef or GTM-plane discriminator column) — entities[] rewritten this pass to record the widened claim as ruled-but-pending."
+    },
+    {
+     "qid": "Q0B316680",
+     "implStatus": "pending",
+     "note": "PENDING. The BASE is not invented — every field is already ruled or already in the schema, and the board now carries it as filing.schema with each field's real status read from its own row: who filed it (Q0B50A78E, LIVE — person_id TEXT NOT NULL, boot.sql:43); the project scope (Q93B3F368, live); the lane, one of six (QFC497F89, live — engine/src/lanes.js); extracted meaning never a raw dump (QEA9771A2, PENDING); the group tag the schema must refuse without (QE2D90B38, CONTRADICTED — the cron's orphanArtifacts metric proves untagged rows exist in production); proof as expected/actual/proof (generalised from gtm.fields); and the goal it moves (Q9BD4565B, pending). SO THE STANDARD IS 2 OF 8 ENFORCED and the plane says so rather than presenting a schema as if it held. I FIRST WROTE 3 OF 7 HERE AND THE PLANE CORRECTED ME: `lane` reads PENDING because QFC497F89's own row is pending, and I had assumed that engine/src/lanes.js existing meant the ruling held. A field's enforcement is its RULING's status, not whether some file mentioning it is on disk — which is the same error as reading a comment as a database, made on my own note. What does NOT exist: a per-kind field schema in the engine at all — gtm.activityTemplate's own note says today's SOP table names only the kind STRING per lane, so the template is a proposed standard for one lane out of six. The generalisation test that gated those five kinds now gates the whole standard."
+    }
+   ]
+  }
+ ],
+ "api": [
+  {
+   "id": "GET /decisions",
+   "group": "rest",
+   "access": "reader",
+   "screens": [
+    "decisions"
+   ],
+   "tables": {
+    "read": [
+     "projects",
+     "transmission"
+    ],
+    "write": []
+   },
+   "does": "the Decisions screen (UI-B2): the project's published questions with counts, who owes each answer, and what was filed on each since the publish (answers, the round, counters), ?status=open|in-force|superseded|countered&severity=&area=&eval=1; HTML for a browser, JSON otherwise — twin of the decisions tool",
+   "returns": "page"
+  },
+  {
+   "id": "GET /home",
+   "group": "rest",
+   "access": "reader",
+   "screens": [
+    "home"
+   ],
+   "tables": {
+    "read": [
+     "people",
+     "projects",
+     "transmission"
+    ],
+    "write": []
+   },
+   "does": "Home (UI-B3): the project's name, its aim and its measure, what is moving, what needs you (decide · approve · grant, each a button), who moved the goals this month and who is here; rendered from the SAME read GET /home/summary answers, ?eval=1 includes suite rows",
+   "returns": "page"
+  },
+  {
+   "id": "GET /question/:qid",
+   "group": "rest",
+   "access": "reader",
+   "screens": [
+    "question"
+   ],
+   "tables": {
+    "read": [
+     "projects",
+     "transmission"
+    ],
+    "write": []
+   },
+   "does": "one question's card (UI-B2): why it is asked, its options, what it blocks, who owes it, the counters filed on it and the exact call that files one; 404 not_found for a qid the pack lacks — the decisions tool with a qid",
+   "returns": "page"
+  },
+  {
+   "id": "GET /versions",
+   "group": "rest",
+   "access": "reader",
+   "screens": [
+    "home",
+    "build",
+    "goals",
+    "decisions",
+    "eagle",
+    "spec",
+    "versions",
+    "control",
+    "pack",
+    "orchestrator",
+    "observatory",
+    "projects",
+    "audit",
+    "understanding",
+    "agentic",
+    "holes",
+    "docs",
+    "view",
+    "page",
+    "area",
+    "profile"
+   ],
+   "tables": {
+    "read": [
+     "projects",
+     "transmission"
+    ],
+    "write": []
+   },
+   "does": "Versions (UI-B5b), a Map view: why each version of the project's published pack exists (the spine a publish mints, keyed by content, each row naming its cause: ruled with the question, scanned, or restored with the filing), the current one, and what changed from the one before it; ?cause=all|ruled|scanned; HTML for a browser, JSON otherwise {project, current, viewing, versions, counts:{all, ruled, scanned}, diff:{from, to, lines, more}}, versions:[] with empty:'no_versions' before the first publish after ship; ?head=1 is the BEHIND poll {n, key, at, publishedAt} with no-store; 0 D1 statements beyond the sign-in — twin of the versions tool",
+   "returns": "page"
+  }
+ ],
+ "architecture": {
+  "summary": "",
+  "diagram": "",
+  "services": []
+ },
+ "progress": {},
+ "evidence": [
+  {
+   "key": "api:rest:GET:/decisions",
+   "ref": "api:GET /decisions",
+   "lane": "r-doors",
+   "outcome": 1,
+   "what": "GET /decisions exists, auth=reader",
+   "proof": "contracts/door.json @ b52804bfb (GENERATED by engine/tools/make-door-contract.py from engine/src/index.js CAPABILITIES): {method:\"GET\",path:\"/decisions\",auth:\"reader\"}"
+  },
+  {
+   "key": "api:rest:GET:/home",
+   "ref": "api:GET /home",
+   "lane": "r-doors",
+   "outcome": 1,
+   "what": "GET /home exists, auth=reader",
+   "proof": "contracts/door.json @ b52804bfb (GENERATED by engine/tools/make-door-contract.py from engine/src/index.js CAPABILITIES): {method:\"GET\",path:\"/home\",auth:\"reader\"}"
+  },
+  {
+   "key": "api:rest:GET:/question/:qid",
+   "ref": "api:GET /question/:qid",
+   "lane": "r-doors",
+   "outcome": 1,
+   "what": "GET /question/:qid exists, auth=reader",
+   "proof": "contracts/door.json @ b52804bfb (GENERATED by engine/tools/make-door-contract.py from engine/src/index.js CAPABILITIES): {method:\"GET\",path:\"/question/:qid\",auth:\"reader\"}"
+  },
+  {
+   "key": "api:rest:GET:/versions",
+   "ref": "api:GET /versions",
+   "lane": "r-doors",
+   "outcome": 1,
+   "what": "GET /versions exists, auth=reader",
+   "proof": "contracts/door.json @ b52804bfb (GENERATED by engine/tools/make-door-contract.py from engine/src/index.js CAPABILITIES): {method:\"GET\",path:\"/versions\",auth:\"reader\"}"
+  },
+  {
+   "key": "table:people",
+   "ref": "table:people",
+   "lane": "data-plane",
+   "outcome": 1,
+   "what": "table people exists, 13 columns",
+   "proof": "engine/boot.sql @ b52804bfb: CREATE TABLE IF NOT EXISTS people"
+  },
+  {
+   "key": "table:projects",
+   "ref": "table:projects",
+   "lane": "data-plane",
+   "outcome": 1,
+   "what": "table projects exists, 6 columns",
+   "proof": "engine/boot.sql @ b52804bfb: CREATE TABLE IF NOT EXISTS projects"
+  },
+  {
+   "key": "table:transmission",
+   "ref": "table:transmission",
+   "lane": "data-plane",
+   "outcome": 1,
+   "what": "table transmission exists, 32 columns",
+   "proof": "engine/boot.sql @ b52804bfb: CREATE TABLE IF NOT EXISTS transmission"
+  },
+  {
+   "key": "screen:home",
+   "ref": "screen:home",
+   "lane": "r-console",
+   "outcome": 1,
+   "what": "Overview — lane home, route /home",
+   "proof": "engine/src/shell.js @ b52804bfb: PAGES/TABS key \"home\""
+  },
+  {
+   "key": "screen:decisions",
+   "ref": "screen:decisions",
+   "lane": "r-console",
+   "outcome": 1,
+   "what": "Decisions — lane decisions, route /decisions",
+   "proof": "engine/src/shell.js @ b52804bfb: PAGES/TABS key \"decisions\""
+  },
+  {
+   "key": "screen:versions",
+   "ref": "screen:versions",
+   "lane": "r-console",
+   "outcome": 1,
+   "what": "Versions — lane map, route /versions",
+   "proof": "engine/src/shell.js @ b52804bfb: PAGES/TABS key \"versions\""
+  },
+  {
+   "key": "screen:question",
+   "ref": "screen:question",
+   "lane": "r-console",
+   "outcome": 1,
+   "what": "A question — lane decisions, route /question",
+   "proof": "engine/src/shell.js @ b52804bfb: PAGES/TABS key \"question\""
+  }
+ ],
+ "crew": [],
+ "gaps": {
+  "missingLinks": [
+   {
+    "id": "GAP-ml-retired",
+    "what": "A link the canvas found and a ruling closed.",
+    "retired": true,
+    "retiredBy": "QA0000001"
+   },
+   {
+    "id": "GAP-ml-open",
+    "what": "Home links a page no door serves.",
+    "retired": false
+   }
+  ],
+  "ambiguities": [
+   {
+    "id": "GAP-amb-open-1",
+    "what": "Two sources disagree on the brief page — one says live, one says retired.",
+    "retired": false
+   },
+   {
+    "id": "GAP-amb-retired",
+    "what": "Settled by a live ruling.",
+    "retired": true,
+    "retiredBy": "QA0000002"
+   },
+   {
+    "id": "GAP-amb-open-2",
+    "what": "The loops tool and the thread tool both answer what is open on me.",
+    "retired": false
+   }
+  ],
+  "unknowns": [
+   {
+    "id": "GAP-unk-retired",
+    "what": "Known now.",
+    "retired": true,
+    "retiredBy": "QA0000003"
+   },
+   {
+    "id": "GAP-unk-open",
+    "what": "No single helper scopes a workspace.",
+    "retired": false
+   }
+  ]
+ }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "sharingu-agent-r",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@cloudflare/workers-oauth-provider": "latest",
+    "@modelcontextprotocol/sdk": "latest",
+    "agents": "latest"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "wrangler": "4.131.2"
+  }
+}

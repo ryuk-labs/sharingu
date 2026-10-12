@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sharingu": {
+      "type": "http",
+      "url": "https://agent.sharingu.xyz/mcp"
+    }
+  }
+}

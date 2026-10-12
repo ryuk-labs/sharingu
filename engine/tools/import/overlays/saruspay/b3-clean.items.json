@@ -1,0 +1,34 @@
+{
+ "note": "Sprint 3, the projects' data before the video. (1) lib/START-HERE.md is the old engine's served start page: it teaches the pack tools (pack_kinds, pack_find, pack_card, pack_checks, pack_decisions, pack_live) a member no longer has; the project's start-here.md is the start page. (2) lib/HANDOFF.md is how the board itself was built and kept (49 KB: the canvas, the pack seam, the old engine's tools, the build's machine paths): the board's machinery, as a board's HANDOFF.md is for bunny. (3) The Interlace API notes quote Interlace's webhook test vector, a secret value and its signature: the edit names the shape only and says where the values are.",
+ "items": [
+  {
+   "kind": "doc",
+   "op": "remove",
+   "data": {
+    "path": "lib/START-HERE.md"
+   }
+  },
+  {
+   "kind": "doc",
+   "op": "remove",
+   "data": {
+    "path": "lib/HANDOFF.md"
+   }
+  },
+  {
+   "kind": "doc",
+   "op": "edit",
+   "data": {
+    "path": "lib/reference/interlace/interlace-api-notes.md"
+   },
+   "edits": [
+    {
+     "field": "body",
+     "find": "Test vector: (`\\{\"a\":\"b\"\\}`) \\+ secret `[0-9a-fA-F]{32}` → `[A-Za-z0-9+/=]{20,}`",
+     "replace": "Test vector: $1 + the test secret in Interlace's documentation → the signature it lists",
+     "count": 1
+    }
+   ]
+  }
+ ]
+}

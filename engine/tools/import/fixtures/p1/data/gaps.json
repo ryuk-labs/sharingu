@@ -1,0 +1,3 @@
+[
+  { "qid": "GAP-@MKU@", "question": "@MK@ gap?", "ref": "goals", "affects": ["surface:wf-goals"], "waitingOn": "@MK@ member", "updated": "2026-01-05" }
+]

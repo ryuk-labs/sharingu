@@ -1,0 +1,43 @@
+{
+ "note": "The owner's ruling of 2026-10-02 (MCQ): no directory listing yet — beta uses the plugin and 'add a custom connector', where each person gives their org's address; revisited after beta, when hosting exists.",
+ "items": [
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-marketplace-address",
+    "status": "decided",
+    "choice": 2,
+    "label": "No directory listing yet",
+    "rationale": "A plugin copes with an address per org, since each person gives their org's address; a hosted front door needs hosting that does not exist yet, so it is revisited after beta.",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "whoOwes": null,
+    "waitingOn": null,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/MARKETPLACE.md",
+      "label": "the one-address decision: options A, B and C"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ on the directory listing"
+     },
+     {
+      "kind": "commit",
+      "ref": "f1be6935955a2dbe20b3e76076dce56b3e65eb9c",
+      "label": "the owner's rulings of the afternoon: GTM overlays in the repo, no listing yet, what D6 deletes"
+     },
+     {
+      "kind": "commit",
+      "ref": "36a78a5466f76a57121ea23a161f63ad90e4ecf7",
+      "label": "plan: the marketplace launch after beta — the one-address decision"
+     }
+    ],
+    "why": "Every org has its own worker and its own MCP address, while a directory listing points every user at one address."
+   }
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+{
+  "_doc": "The Codex listing's own facts (OpenAI's plugin submission, sprint 11, 11.4): what listing/SUBMISSION.md does not already say. engine/tools/make-plugin-skills.mjs reads this file, SUBMISSION.md (the long description, the four URLs, the developer) and test-cases.md (the review block), and GENERATES plugin/.codex-plugin/plugin.json; a change here moves the plugin's version. Limits: displayName and shortDescription <= 30, capabilities <= 20 x 120, defaultPrompt <= 3 x 128 with no @mention, the brand colours #RRGGBB at 2:1 or more against white and #212121. demoRecordingURL (https, reviewer-accessible) is the owner's to add.",
+  "displayName": "sharingu",
+  "shortDescription": "One company brain for your AI",
+  "category": "Productivity",
+  "capabilities": [
+    "Read a project's goals, decisions, open questions, docs and map",
+    "Search a project and read any contribution with its link",
+    "Preview every write before it is filed, then file it",
+    "Ask for your confirmation before a write lands, where the client supports it",
+    "File goals, decisions, questions, notes and docs with their why",
+    "Rule on open questions as the person who owns the decision",
+    "Show what a project still needs, each with the call that fills it",
+    "Keep each org walled: a partner sees only the project it was invited to"
+  ],
+  "defaultPrompt": [
+    "Call sharingu's whoami: who am I, and where do my writes land?",
+    "What does my sharingu project still need?",
+    "Preview a note for my sharingu project, then file it after I confirm."
+  ],
+  "brandColor": "#C2410C",
+  "brandColorDark": "#FB923C"
+}

@@ -1,0 +1,28 @@
+-- migrate-074.sql — a seat waits for its holder's yes (sprint 7's review, finding A1; docs/plan/PLATFORM.md §2 item 8, the
+-- no-widening law: "add a member by allowed email" — an org's admin seats an email, but the holder of an account that already
+-- stands elsewhere decides whether that org may receive their sign-ins, their sessions and their AI's writes).
+-- EXPAND ONLY (PLATFORM §5): one column added, nothing renamed, nothing dropped, no row written; the old code names it nowhere.
+--   1 · people.pending: 1 while a seat an org's admin added waits for its account's holder to ACCEPT it (src/accounts.js). A
+--       pending seat is NOT active (the CHECK holds pending = 1 only beside active = 0), so every reader that asks for an
+--       active seat — the sign-in, the browser's session under an address (src/core.js SESSION_AT_SQL), the account's orgs (the
+--       picker, the rail's switcher, whoami's orgs), an account grant's seat, a bearer key, Control's people, every count —
+--       already passes it by: it reaches nothing and counts nowhere until its holder accepts it. Accepting is ONE statement
+--       (active = 1, pending = 0, bound to the account of the holder's own ACCOUNT session: src/accounts.js ACCEPT_SEAT_SQL);
+--       declining clears the flag and leaves the seat inactive (an archived row, as a removed person's).
+--       WHO IS PENDING (src/admin.js add-person, the one route that seats another person's email): a seat added for an email
+--       whose account already holds a passphrase (its holder's own: they signed up) or an active or pending seat in another
+--       org. A seat for an email with NO account, or an account with no passphrase and no other seat (a brand-new person, or a
+--       person re-added to the org they were removed from), is active at once, exactly as before this file. The owner seat POST
+--       /orgs makes (the founder's own, proven by their account passphrase) and the operator's tools are never pending.
+-- EVERY LIVE ROW KEEPS WHAT IT HAS: the column's default is 0 — every existing seat is classified NOT pending, its active flag
+-- untouched (active seats stay active, archived ones archived), so every live person keeps signing in, and every session,
+-- key and grant keeps working as before.
+-- WRITE COST on live: nothing (an ADD COLUMN with a constant default rewrites no row).
+-- ORDER: BEFORE the code (the new code's add-person writes the column, the picker reads it; the old code names it nowhere: a
+-- pending seat reads there as an archived person, less authority, never more).
+-- Re-runnable: on a database that already holds this file the ALTER fails (duplicate column name: the file is skipped whole),
+-- as migrate-070's, 072's and 073's replays are.
+-- THE UNDO: the code's rollback alone (the old code never reads the column); the column can stay.
+
+-- 1 · the seat's wait for its holder's yes
+ALTER TABLE people ADD COLUMN pending INTEGER NOT NULL DEFAULT 0 CHECK (pending IN (0, 1) AND (pending = 0 OR active = 0));

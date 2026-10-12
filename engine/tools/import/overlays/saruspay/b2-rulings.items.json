@@ -1,0 +1,106 @@
+{
+ "note": "The owner's rulings of 2026-10-02 (MCQ): the aim's measure is the go-live checklist items done, of 61 (the value the source states).",
+ "items": [
+  {
+   "kind": "aim",
+   "op": "upsert",
+   "data": {
+    "measure": {
+     "name": "Go-live checklist items done, of 61",
+     "value": 0,
+     "period": "as of 2026-09-17",
+     "prior": null,
+     "priorPeriod": "",
+     "source": "GOLIVE.md, 2026-09-17"
+    },
+    "source": [
+     {
+      "kind": "file",
+      "ref": "saruspay brain: serve/goal.json",
+      "label": "northStar: SarusPay live in production"
+     },
+     {
+      "kind": "file",
+      "ref": "saruspay brain: serve/lib/GOLIVE.md",
+      "label": "\"0 of 61 done\" (generated 2026-09-17 from source/board/decisions/golive.json: 61 items, every one todo)"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "asOf": "2026-10-02"
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-saruspay-aim-measure",
+    "status": "decided",
+    "choice": 0,
+    "label": "Go-live checklist items done, of 61",
+    "rationale": "The board counts it already and every party's work moves it.",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "whoOwes": null,
+    "waitingOn": null,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "saruspay brain: serve/goal.json",
+      "label": "northStar: SarusPay live in production"
+     },
+     {
+      "kind": "file",
+      "ref": "saruspay brain: serve/lib/GOLIVE.md",
+      "label": "0 of 61 done, by party"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "why": "The aim is the board's north star, \"SarusPay live in production\" (serve/goal.json), and no source names a number for it. The board already counts its go-live checklist (0 of 61 done, lib/GOLIVE.md, by party: Veil 24 · SarusPay 20 · Interlace 8 · RyukLabs 9), and the goal tree is that checklist."
+   }
+  },
+  {
+   "kind": "doc",
+   "op": "upsert",
+   "data": {
+    "path": "start-here.md",
+    "body": "# SarusPay — start here\n\n*Written for a newcomer from the project's own sources (the SarusPay board's PROJECT-README, the brain's BOOT.md and the board's GOLIVE.md), as of 2026-10-01, with the owner's rulings of 2026-10-02. A proposal: the owner confirms or rewrites it.*\n\n## What it is\nSarusPay is a dollar account and an issued card, open in Türkiye and the UAE. It is not a bank: cards are issued by a licensed partner. It is built on Interlace's card-issuing API through Veil.\n\nWho is who:\n- **Interlace** issues the cards.\n- **Veil** is the Interlace Distributor and owns the engine and the operator console.\n- **SarusPay** is Veil's master merchant (a tenant); its users are sub-merchants.\n- **RyukLabs** builds everything. Stack (ruling Q0E1CB70C): Vercel Pro, Supabase, Resend, Firebase Cloud Messaging, Sentry, EU Frankfurt.\n\n**The aim:** SarusPay live in production, measured by the go-live checklist items done, of 61 (ruled 2026-10-02, Q-saruspay-aim-measure); GOLIVE.md counts 0 of 61 on 2026-09-17.\n\n## Where its truth lives here\n- **Goals** — the go-live checklists, one per party (Veil, SarusPay, Interlace, RyukLabs): what each must provide or set up so RyukLabs can build, test and go live.\n- **Decisions** — the board's rulings. Rulings bind; the newest wins. The open questions wait on Interlace (their questionnaire is `lib/OUTREACH.md`); a provisional ruling (the retail fees) waits on SarusPay to confirm.\n- **Map** — the three apps (mobile, web, the ops console) with their screens, the API doors, the tables, the journeys and state machines, and the board's checks.\n- **Docs** — `lib/GOLIVE.md`, `lib/OUTREACH.md`, the research under `lib/research/` and the vendored Interlace reference under `lib/reference/interlace/`.\n\n## What to do first\n1. Read the go-live checklist on Goals: every item names who supplies it.\n2. Chase what others owe: the Interlace questions (blockers first), and SarusPay's confirmation of the provisional retail fees.\n3. If something is not here, the knowledge is incomplete: file a question, never invent an answer.\n",
+    "asOf": "2026-10-02",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "saruspay brain: source/PROJECT-README.md",
+      "label": "what SarusPay is"
+     },
+     {
+      "kind": "file",
+      "ref": "saruspay brain: BOOT.md",
+      "label": "who is who, the stack, rulings bind"
+     },
+     {
+      "kind": "file",
+      "ref": "saruspay brain: serve/lib/GOLIVE.md",
+      "label": "the go-live checklists by party"
+     },
+     {
+      "kind": "file",
+      "ref": "saruspay brain: serve/capsules/economics.md",
+      "label": "what \"open\" means: waiting on Interlace, provisional rulings"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ]
+   }
+  }
+ ]
+}

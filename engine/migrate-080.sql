@@ -1,0 +1,21 @@
+-- migrate-080.sql — which AI filed it (sprint 13, slice 13.1; docs/plan/SPRINTS.md 13.1; the owner's MCQ of 2026-10-11:
+-- store which AI filed a contribution, a self-declared label, named on the privacy page; src/client.js clientFamilyOf).
+-- EXPAND ONLY (PLATFORM §5): one column added, nothing renamed, nothing dropped; the old code names none.
+--   1 · transmission.client: ONE normalised family word for the AI tool (or the surface) that filed the row, stamped at the door
+--       when the row is written — claude (claude.ai, Claude Desktop), claude-code, chatgpt, codex, web (the app's own forms),
+--       api (a key on the REST API with no client signal) or other — from what the client DECLARES of itself (the OAuth
+--       client's registered name, the MCP initialize's clientInfo): a label, never proof. The raw string is never kept.
+--       NULL: unknown — every row filed before this file, a filing outside a request (the cron); no backfill (nothing on an old
+--       row says which client filed it, so nothing is guessed).
+-- WHO WRITES IT: the worker's two ledger writes (src/core.js fileTransmission and fileTransmissionsBatch), from the request's
+-- client word (src/client.js requestClient). Activity (src/activity.js) and changes {org: true, list: true} read it.
+-- WRITE COST on live: nothing (the column NULL on every row; no index).
+-- ORDER: BEFORE the code (the new code's ledger insert names client; the old code names nothing of it).
+-- Re-runnable: on a database that already holds this file the ALTER fails (duplicate column name: the file is skipped whole,
+-- as migrate-079's replay is).
+-- THE UNDO: the code's rollback alone (the old code reads nothing of it); the column can stay. A client connected through
+-- the rollback holds a session id the old code does not read (sg1.<family>.<hex>, src/confirm.js): its confirm falls back to
+-- the capability path until it initializes again (degraded, never refused).
+
+-- 1 · the client word (the file's one statement: a replay fails here, before anything)
+ALTER TABLE transmission ADD COLUMN client TEXT;

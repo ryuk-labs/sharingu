@@ -1,0 +1,2727 @@
+{
+ "_pinned": "trimmed from the brain's serve/lib/canvas/canvas.json (v f873eb50, brain main d0294d47, after brain0928:b9-export) for tools/wire-selftest.mjs §14 (UI-B9): the flow planes' keys only (flows = WORKFLOWS[] with steps[].door, endToEnd and blockedBy; deps = {source, chains, cheapest, counts}), verbatim. The engine gate never reads outside the repo. Re-pin by copying those two keys and v from a newer export.",
+ "v": "f873eb50",
+ "flows": [
+  {
+   "id": "comments",
+   "name": "Comments pipeline",
+   "desc": "retired — the comment layer + SPA that served it are both retired; no implementation and no served door remain (engine/src/index.js carries zero comments routes)",
+   "audience": "intake",
+   "status": "retired",
+   "foldedInto": null,
+   "steps": [],
+   "endToEnd": {
+    "built": false,
+    "unjoined": 0,
+    "notLive": 0
+   },
+   "blockedBy": []
+  },
+  {
+   "id": "onboarding",
+   "name": "Onboarding",
+   "desc": "a person with Claude and the org's MCP URL + a key is working in the org — no SDLC, no machine seat",
+   "audience": "intake",
+   "status": "live",
+   "foldedInto": null,
+   "steps": [
+    {
+     "screen": "",
+     "state": "connect",
+     "actor": "human",
+     "mode": "human",
+     "does": "add the org's MCP URL + key to Claude",
+     "door": null
+    }
+   ],
+   "endToEnd": {
+    "built": false,
+    "unjoined": 1,
+    "notLive": 0
+   },
+   "blockedBy": []
+  },
+  {
+   "id": "dev-agent",
+   "name": "Dev agent",
+   "desc": "builds the change, proves it, opens it for review — and leaves it clean",
+   "audience": "build",
+   "status": "live",
+   "foldedInto": "agent:build",
+   "steps": [
+    {
+     "screen": "",
+     "state": "assign",
+     "actor": "machine",
+     "mode": "auto",
+     "does": "assigned to a machine — never claimed",
+     "door": null
+    },
+    {
+     "screen": "",
+     "state": "build",
+     "actor": "agent:build",
+     "mode": "auto",
+     "does": "build in an isolated worktree",
+     "door": null
+    },
+    {
+     "screen": "",
+     "state": "gate",
+     "actor": "agent:build",
+     "mode": "auto",
+     "does": "self-test → gate → PR",
+     "door": null
+    },
+    {
+     "screen": "",
+     "state": "stale-check",
+     "actor": "machine",
+     "mode": "auto",
+     "does": "pre-land staleness check — the base hasn't moved underneath this PR",
+     "door": null
+    },
+    {
+     "screen": "transmission-detail",
+     "state": "land",
+     "actor": "human",
+     "mode": "human",
+     "does": "land",
+     "door": "GET /transmission/:id"
+    }
+   ],
+   "endToEnd": {
+    "built": false,
+    "unjoined": 2,
+    "notLive": 1
+   },
+   "blockedBy": []
+  },
+  {
+   "id": "live-agent",
+   "name": "Live agent",
+   "desc": "comments become a plan, the plan becomes a PR, you watch it cook",
+   "audience": "build",
+   "status": "retired",
+   "foldedInto": "agent:build",
+   "steps": [
+    {
+     "screen": "",
+     "state": "gather",
+     "actor": "human",
+     "mode": "human",
+     "does": "pin comments anywhere → queue them",
+     "door": null
+    },
+    {
+     "screen": "",
+     "state": "plan",
+     "actor": "machine",
+     "mode": "auto",
+     "does": "cook the plan — visualised, Agent plan #N",
+     "door": null
+    },
+    {
+     "screen": "transmission-detail",
+     "state": "confirm",
+     "actor": "human",
+     "mode": "human",
+     "does": "comment on the plan, then confirm",
+     "door": "GET /transmission/:id"
+    },
+    {
+     "screen": "",
+     "state": "run",
+     "actor": "agent:build",
+     "mode": "auto",
+     "does": "run the plan — live AOI, chip, checkpoints",
+     "door": null
+    },
+    {
+     "screen": "transmission-detail",
+     "state": "land",
+     "actor": "human",
+     "mode": "human",
+     "does": "PR raised → land",
+     "door": "GET /transmission/:id"
+    }
+   ],
+   "endToEnd": {
+    "built": false,
+    "unjoined": 2,
+    "notLive": 2
+   },
+   "blockedBy": []
+  },
+  {
+   "id": "pr-agent",
+   "name": "PR agent",
+   "desc": "raised PRs get a reviewed verdict before the human lands",
+   "audience": "build",
+   "status": "planned",
+   "foldedInto": "agent:build",
+   "steps": [
+    {
+     "screen": "",
+     "state": "review",
+     "actor": "agent:build",
+     "mode": "auto",
+     "does": "review → verdict comment",
+     "door": null
+    },
+    {
+     "screen": "transmission-detail",
+     "state": "land",
+     "actor": "human",
+     "mode": "human",
+     "does": "land",
+     "door": "GET /transmission/:id"
+    }
+   ],
+   "endToEnd": {
+    "built": false,
+    "unjoined": 1,
+    "notLive": 1
+   },
+   "blockedBy": [
+    "Q1BE7A5DF"
+   ]
+  },
+  {
+   "id": "per-push",
+   "name": "Per-push cycle",
+   "desc": "retired — every push became a prioritised re-verify direction for the local QA pipeline, which is gone",
+   "audience": "verify",
+   "status": "retired",
+   "foldedInto": null,
+   "steps": [
+    {
+     "screen": "",
+     "state": "inspect",
+     "actor": "machine",
+     "mode": "auto",
+     "does": "code-inspect — signals only, never code bodies",
+     "door": null
+    },
+    {
+     "screen": "",
+     "state": "refresh",
+     "actor": "machine",
+     "mode": "auto",
+     "does": "atlas + recipe + briefing refresh",
+     "door": null
+    },
+    {
+     "screen": "",
+     "state": "queue",
+     "actor": "machine",
+     "mode": "auto",
+     "does": "worklist written — the QA door",
+     "door": null
+    }
+   ],
+   "endToEnd": {
+    "built": false,
+    "unjoined": 0,
+    "notLive": 0
+   },
+   "blockedBy": []
+  },
+  {
+   "id": "qa-agent",
+   "name": "QA agent",
+   "desc": "the shipped app proven screen by screen, findings filed with Agent R",
+   "audience": "verify",
+   "status": "live",
+   "foldedInto": "agent:qa",
+   "steps": [
+    {
+     "screen": "",
+     "state": "drive",
+     "actor": "agent:qa",
+     "mode": "auto",
+     "does": "drive · assert · discover on the booted device or browser",
+     "door": null
+    },
+    {
+     "screen": "",
+     "state": "findings",
+     "actor": "agent:qa",
+     "mode": "auto",
+     "does": "findings filed with the org's Agent R over MCP, evidence attached",
+     "door": null
+    }
+   ],
+   "endToEnd": {
+    "built": false,
+    "unjoined": 2,
+    "notLive": 0
+   },
+   "blockedBy": []
+  },
+  {
+   "id": "vision-agent",
+   "name": "Vision agent",
+   "desc": "every screen compared with the design, misses named exactly and filed with Agent R",
+   "audience": "verify",
+   "status": "live",
+   "foldedInto": "agent:critic",
+   "steps": [
+    {
+     "screen": "",
+     "state": "rubric",
+     "actor": "agent:critic",
+     "mode": "auto",
+     "does": "resolve the layered rubric — platform conventions + tenant brand",
+     "door": null
+    },
+    {
+     "screen": "",
+     "state": "grade",
+     "actor": "agent:critic",
+     "mode": "auto",
+     "does": "grade screens — exact token, expected vs observed",
+     "door": null
+    }
+   ],
+   "endToEnd": {
+    "built": false,
+    "unjoined": 2,
+    "notLive": 0
+   },
+   "blockedBy": []
+  },
+  {
+   "id": "plan-agent",
+   "name": "Plan agent",
+   "desc": "plans are visualised artifacts inside the build loop — not a separate agent",
+   "audience": "build",
+   "status": "retired",
+   "foldedInto": null,
+   "steps": [],
+   "endToEnd": {
+    "built": false,
+    "unjoined": 0,
+    "notLive": 0
+   },
+   "blockedBy": []
+  }
+ ],
+ "deps": {
+  "source": "sources/ruling-reconciliation.json where[]/dependsOn[] (QE599A805) + each question's affects, resolved against this model's tables, api and screens",
+  "chains": [
+   {
+    "head": {
+     "qid": "Q01E2875D",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "The rich canvas on Map is the HIGHLIGHT and the HOOK - it is the surface sharingu is shown by",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "wf-map-system",
+      "name": "Map · System",
+      "status": "planned",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "Q60A19A32"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "Q0B316680",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "ONE standard filing schema, set by sharingu and changed only when sharingu updates — no per-org extension. The generalisation test is the gate on any field entering it",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "transmission",
+      "declared": true
+     },
+     {
+      "table": "artifacts",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "POST /backfill",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /handoff",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /mcp",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /pack/grade",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /rank",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /respond",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /round",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /send",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission/:id/decide",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission/batch",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /verb",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /versions/restore",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:decide_transmission",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:rank",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:respond",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:restore_version",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:round",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:send_handoff",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:submit_grade",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:submit_transmission",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /artifact",
+      "access": "bearer",
+      "via": "writes artifacts"
+     },
+     {
+      "id": "POST /fragment",
+      "access": "bearer",
+      "via": "writes artifacts"
+     },
+     {
+      "id": "mcp:bank_artifact",
+      "access": "reader",
+      "via": "writes artifacts"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "page",
+      "name": "Sheet",
+      "status": "live",
+      "via": "POST /send"
+     }
+    ],
+    "dependsOn": [],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "Q0E5A1073",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Anyone publishes freely - publishing is an OFFER, not an imposition; equipping is the other member's choice",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "equips",
+      "declared": false
+     }
+    ],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "Q2485A7FD"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "Q1E8D4C9C",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "NO INPUTS on the framework app - agents file everything; a person's entire input surface is CHOOSING among filed options",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [],
+    "blocks": [
+     "QA20249FB"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q2485A7FD",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Broadcast is its own tab: publish a skill, agent or workflow; any user equips it; updates push to holders",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "wf-broadcast",
+      "name": "Broadcast",
+      "status": "planned",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "Q36AF8BA1"
+    ],
+    "blocks": [
+     "Q0E5A1073",
+     "Q571B3D89"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q347E27ED",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Fix boot.sql's people.role comment — 'leader' is a real live role and the schema's documentation is stale",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "people",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "GET /control",
+      "access": "owner",
+      "via": "writes people"
+     },
+     {
+      "id": "POST /profile",
+      "access": "bearer",
+      "via": "writes people"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "control",
+      "name": "Settings",
+      "status": "live",
+      "via": "GET /control"
+     }
+    ],
+    "dependsOn": [
+     "Q76EFC99D"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "Q35D52468",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "A goal node carries an accountable owner and a due-by/window",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "goal_nodes",
+      "declared": false
+     }
+    ],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "QC43F2D02"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "Q36AF8BA1",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "RE-RULED: EIGHT tabs - Home, Build, GTM, Goals, Decisions, Map, Broadcast, Control",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [],
+    "blocks": [
+     "Q2485A7FD",
+     "Q322F3DF0",
+     "Q60A19A32",
+     "Q92958D54",
+     "Q935B7970",
+     "Q9F9FBAF7",
+     "QB7ADA764",
+     "QB963C7EE",
+     "QFC27D0F3"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q39680DD7",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "ONE versioning spine across every filed object - architecture, canvas, wireframes, rulings, filings, goals, schema, the door contract, broadcast items, presets and manifests",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [],
+    "blocks": [
+     "Q1448A167",
+     "Q751749A5",
+     "Q77B09895",
+     "QEBB5D318"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q3F213DB1",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "transmission_refs is the fan-out — a contribution can touch anything on the canvas, goals or GTM planes, and touching it updates the UI",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "transmission_refs",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "POST /backfill-refs",
+      "access": "owner",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "POST /handoff",
+      "access": "bearer",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "POST /mcp",
+      "access": "bearer",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "POST /pack/grade",
+      "access": "bearer",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "POST /rank",
+      "access": "reader",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "POST /respond",
+      "access": "bearer",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "POST /round",
+      "access": "bearer",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "POST /send",
+      "access": "bearer",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "POST /transmission",
+      "access": "bearer",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "POST /transmission/batch",
+      "access": "bearer",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "POST /verb",
+      "access": "reader",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "POST /versions/restore",
+      "access": "owner",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "mcp:rank",
+      "access": "reader",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "mcp:respond",
+      "access": "reader",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "mcp:restore_version",
+      "access": "owner",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "mcp:round",
+      "access": "reader",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "mcp:send_handoff",
+      "access": "reader",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "mcp:submit_grade",
+      "access": "reader",
+      "via": "writes transmission_refs"
+     },
+     {
+      "id": "mcp:submit_transmission",
+      "access": "reader",
+      "via": "writes transmission_refs"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "page",
+      "name": "Sheet",
+      "status": "live",
+      "via": "POST /send"
+     }
+    ],
+    "dependsOn": [
+     "QFC497F89"
+    ],
+    "blocks": [
+     "QFB99F9D4"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q40CD2B46",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Drop loops entirely — its pointer was dropped, its tools are cut, and only filings matter",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "loops",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "POST /handoff",
+      "access": "bearer",
+      "via": "writes loops"
+     },
+     {
+      "id": "POST /loops",
+      "access": "bearer",
+      "via": "writes loops"
+     },
+     {
+      "id": "POST /mcp",
+      "access": "bearer",
+      "via": "writes loops"
+     },
+     {
+      "id": "POST /send",
+      "access": "bearer",
+      "via": "writes loops"
+     },
+     {
+      "id": "mcp:open_loop",
+      "access": "reader",
+      "via": "writes loops"
+     },
+     {
+      "id": "mcp:send_handoff",
+      "access": "reader",
+      "via": "writes loops"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "page",
+      "name": "Sheet",
+      "status": "live",
+      "via": "POST /send"
+     }
+    ],
+    "dependsOn": [],
+    "blocks": [
+     "Q17DA834C",
+     "Q7F799993",
+     "QBC3E1296"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q4C3F0029",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "A leader must be able to FILE and be MEASURED — the dimension gets fields, submit kinds and a proof rule like the other five; what the unit of contribution is remains the owner's to name",
+     "severity": "blocker",
+     "whoOwes": "owner"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [],
+    "blocks": [
+     "Q8C207F4B",
+     "QB39F5251"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q4FF173D7",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Goal movement TRACED BACK to the person's decisions - the filing moved the goal, the filing flowed from your ruling, you get the credit",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "transmission",
+      "declared": true
+     },
+     {
+      "table": "goal_nodes",
+      "declared": false
+     }
+    ],
+    "doors": [
+     {
+      "id": "POST /backfill",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /handoff",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /mcp",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /pack/grade",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /rank",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /respond",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /round",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /send",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission/:id/decide",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission/batch",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /verb",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /versions/restore",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:decide_transmission",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:rank",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:respond",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:restore_version",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:round",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:send_handoff",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:submit_grade",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:submit_transmission",
+      "access": "reader",
+      "via": "writes transmission"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "page",
+      "name": "Sheet",
+      "status": "live",
+      "via": "POST /send"
+     }
+    ],
+    "dependsOn": [
+     "QC43F2D02",
+     "QFC497F89"
+    ],
+    "blocks": [
+     "QF4CC7033"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q5461BE7C",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Fold the outreach ledger into the goal-node screen — no standalone outreach screen",
+     "severity": null,
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "goal-node",
+      "name": "Goal / campaign detail",
+      "status": "planned",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "QC43F2D02"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "Q571B3D89",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Equipping is per WORKSPACE - the workspace holds it, everyone working there gets it",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "equips",
+      "declared": false
+     }
+    ],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "Q2485A7FD",
+     "Q952CAE10"
+    ],
+    "blocks": [
+     "Q3E6CBE0E",
+     "QEBB5D318"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q5AAE9144",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Fix both — the no-pack denial highlights the wrong tab, and a comment claims a leader landing that was never built",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [],
+    "blocks": [
+     "QDEEE78C5"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q60A19A32",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "RE-RULED: Map is SEVEN planes - Architecture, System, Data, API and webhooks, MCP and skills, Flows, Dependencies",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "wf-map-system",
+      "name": "Map · System",
+      "status": "planned",
+      "via": "named"
+     },
+     {
+      "id": "wf-map-arch",
+      "name": "Map · Architecture",
+      "status": "planned",
+      "via": "named"
+     },
+     {
+      "id": "wf-map-data",
+      "name": "Map · Data",
+      "status": "planned",
+      "via": "named"
+     },
+     {
+      "id": "wf-map-api",
+      "name": "Map · API",
+      "status": "planned",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "Q36AF8BA1"
+    ],
+    "blocks": [
+     "Q01E2875D"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q61A1D91E",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "A campaign is BOTH — its own filing and a goal-tree node",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "goal_nodes",
+      "declared": false
+     }
+    ],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "QC43F2D02"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "Q67288EF5",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "sharingu Brand Guidelines v2 is THE design law for every sharingu surface, superseding all three token docs",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [],
+    "blocks": [
+     "Q92958D54",
+     "Q9F9FBAF7",
+     "QB90F6CC4"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q76EFC99D",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "people is authored — the FIRST member of an org is automatically its admin, and admin is transferable to another member",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "people",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "GET /control",
+      "access": "owner",
+      "via": "writes people"
+     },
+     {
+      "id": "POST /profile",
+      "access": "bearer",
+      "via": "writes people"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "control",
+      "name": "Settings",
+      "status": "live",
+      "via": "GET /control"
+     }
+    ],
+    "dependsOn": [],
+    "blocks": [
+     "Q347E27ED"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q8C207F4B",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "A leader's unit of contribution is a DECISION — submitKinds decision/ruling, fields touches + why, proof: the decision recorded with what it unblocked",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "Q4C3F0029"
+    ],
+    "blocks": [
+     "Q52C55C67"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q8EFBCCF8",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "ONE KEY for every purpose — admin provisions the person and hands the key over manually; the user can rotate it later. The invite-code flow goes away",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "invites",
+      "declared": true
+     },
+     {
+      "table": "tokens",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "GET /control",
+      "access": "owner",
+      "via": "writes tokens"
+     },
+     {
+      "id": "POST /login",
+      "access": "none",
+      "via": "writes tokens"
+     },
+     {
+      "id": "GET /logout",
+      "access": "none",
+      "via": "writes tokens"
+     },
+     {
+      "id": "POST /profile",
+      "access": "bearer",
+      "via": "writes tokens"
+     },
+     {
+      "id": "POST /project",
+      "access": "bearer",
+      "via": "writes tokens"
+     },
+     {
+      "id": "POST /signout",
+      "access": "bearer",
+      "via": "writes tokens"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "control",
+      "name": "Settings",
+      "status": "live",
+      "via": "GET /control"
+     }
+    ],
+    "dependsOn": [
+     "QD46CF220"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "Q925964F5",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Fold it into the people list itself - manage access where the person is, no separate surface",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "access",
+      "name": "Workspace access",
+      "status": "planned",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "QF4B10135"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "Q931C7D31",
+     "kind": "ruling",
+     "state": "contradicted",
+     "title": "THE BOARD MUST BE PRISTINE FIRST - and pristine is COMPUTED, never felt: seven conditions the board already measures, checked by tools/pristine.mjs, which refuses",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "Q5AE248CC",
+     "Q939178BC",
+     "QD98A4F09",
+     "QE2D90B38",
+     "QFE3B074B"
+    ],
+    "blocks": [
+     "Q42D7E8A3"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q935B7970",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Home carries what the project IS, its aim, who is here, the leaderboard, what needs you, and ask-anything",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "wf-home",
+      "name": "Home",
+      "status": "planned",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "Q36AF8BA1"
+    ],
+    "blocks": [
+     "Q57988E56"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q952CAE10",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Workspaces stay ONE column in ONE database — but every read goes through one helper that requires a workspace, and a check proves no raw query escapes it",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "projects",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "GET /control",
+      "access": "owner",
+      "via": "writes projects"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "control",
+      "name": "Settings",
+      "status": "live",
+      "via": "GET /control"
+     }
+    ],
+    "dependsOn": [],
+    "blocks": [
+     "Q0FC31D4A",
+     "Q571B3D89",
+     "QA143C9C8"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q9B49FEF1",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Capture REAL screens — a CDP walk per console route, a PNG per screen, referenced from screens[].states[].shot as saruspay does",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [],
+    "blocks": [
+     "QB8558FAE"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q9BD4565B",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "A FILING IS WHAT MOVES THE BRAIN — one standard schema, multi-dimensional, updating progress, goals and the contribution trail across every page; and EVERY filing carries a goal, either an existing one or a new one it creates",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "QB7143313"
+    ],
+    "blocks": [
+     "QB39F5251",
+     "QF89E795D"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "Q9F9FBAF7",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "The real screens, empty, each with a clear empty status - no guided first run, no seeding",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "Q36AF8BA1",
+     "Q67288EF5"
+    ],
+    "blocks": [
+     "QE9178667"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QA20249FB",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "No-inputs removes the KEYBOARD, not the TRIGGER - twelve verbs, twelve buttons, zero text fields",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "wf-build",
+      "name": "Build",
+      "status": "planned",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "Q1E8D4C9C"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QA3D4779F",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "login_attempts stays, made as standard and as cheap as possible for free-tier Cloudflare",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "login_attempts",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "POST /login",
+      "access": "none",
+      "via": "writes login_attempts"
+     },
+     {
+      "id": "POST /profile",
+      "access": "bearer",
+      "via": "writes login_attempts"
+     }
+    ],
+    "surfaces": [],
+    "dependsOn": [],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QA5443BA9",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Counter-file is a control that rides on any filing, everywhere it is shown - built once, reused",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "wf-build",
+      "name": "Build",
+      "status": "planned",
+      "via": "named"
+     },
+     {
+      "id": "wf-home",
+      "name": "Home",
+      "status": "planned",
+      "via": "named"
+     },
+     {
+      "id": "wf-goals",
+      "name": "Goals",
+      "status": "planned",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "QC8B94276"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QB2B34099",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "R owns the FILING rules and the eval set, and nothing about how work gets done — every process rule (a PR's shape, a design's wireframe/layout/standards) is owned and defined BY the dev and design agents themselves",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [],
+    "blocks": [
+     "QB7143313",
+     "QBFED8886"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QB39F5251",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "PROOF is ruled from the doctrine already written — a filing's proof must satisfy its own lane's proof rule, and the schema REFUSES one that does not; `kind` is raised per lane because it needs the generalisation test",
+     "severity": "blocker",
+     "whoOwes": "owner"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "Q4C3F0029",
+     "Q9BD4565B"
+    ],
+    "blocks": [
+     "Q52C55C67"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QB7ADA764",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Give /profile a real lane — R is the product now, so its nav must tell the truth",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "profile",
+      "name": "Your profile",
+      "status": "live",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "Q36AF8BA1"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QB8558FAE",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Every plane must be 1:1 and correct — a wrong wireframe is a defect, and screens, flows, data model, database, MCP and architecture must all agree",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "decisions",
+      "name": "Decisions",
+      "status": "live",
+      "via": "named"
+     },
+     {
+      "id": "pack",
+      "name": "Pack",
+      "status": "live",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "Q9B49FEF1"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QBC3E1296",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Drop the claims metric together with the loops table - do not rebuild it on transmission_refs",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "loops",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "POST /handoff",
+      "access": "bearer",
+      "via": "writes loops"
+     },
+     {
+      "id": "POST /loops",
+      "access": "bearer",
+      "via": "writes loops"
+     },
+     {
+      "id": "POST /mcp",
+      "access": "bearer",
+      "via": "writes loops"
+     },
+     {
+      "id": "POST /send",
+      "access": "bearer",
+      "via": "writes loops"
+     },
+     {
+      "id": "mcp:open_loop",
+      "access": "reader",
+      "via": "writes loops"
+     },
+     {
+      "id": "mcp:send_handoff",
+      "access": "reader",
+      "via": "writes loops"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "page",
+      "name": "Sheet",
+      "status": "live",
+      "via": "POST /send"
+     }
+    ],
+    "dependsOn": [
+     "Q40CD2B46"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QBE031073",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Cut the MCP door to NINE plain verbs — whoami, list, get, find, file, attach, mine, decide, grade — with decide and grade given a read twin",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [],
+    "blocks": [
+     "Q65596427",
+     "QDE28F442",
+     "QE86D460E"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QBE2A9003",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Anyone may file, at any time — but every filing carries who it is attributed to",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "transmission",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "POST /backfill",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /handoff",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /mcp",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /pack/grade",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /rank",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /respond",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /round",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /send",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission/:id/decide",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission/batch",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /verb",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /versions/restore",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:decide_transmission",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:rank",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:respond",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:restore_version",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:round",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:send_handoff",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:submit_grade",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:submit_transmission",
+      "access": "reader",
+      "via": "writes transmission"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "page",
+      "name": "Sheet",
+      "status": "live",
+      "via": "POST /send"
+     }
+    ],
+    "dependsOn": [
+     "QFC497F89"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QBFED8886",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "R publishes the eval set through its own door, and an agent pulls it ONCE into local state — after that only UPDATES come down, so the common grader costs almost no cloud read or write",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "QB2B34099"
+    ],
+    "blocks": [
+     "Q9A519E69"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QC43F2D02",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Declare a REAL objective tree for sharingu itself and file against it",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "goal_nodes",
+      "declared": false
+     }
+    ],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [],
+    "blocks": [
+     "Q28293D55",
+     "Q35D52468",
+     "Q4FF173D7",
+     "Q5461BE7C",
+     "Q61A1D91E",
+     "QACEE7392",
+     "QB1FCC0C7"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QC74D4892",
+     "kind": "ruling",
+     "state": "contradicted",
+     "title": "ONE ORG WORKER: only ryuklabs-agent-r stays. The siru, saruspay (sarus), bunny and ryuklabs projects move INTO the ryuklabs org, with their people (seats) and records carried into its database, and each old database is backed up to its own project's folder first. Only then are siru-agent-r, veil-agent-r and bunny-agent-r (worker, D1, KV, R2) and the launcher agent-r-frame deleted. The git brain repos are kept for later updates.",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "Q65300E50"
+    ],
+    "blocks": [
+     "Q60929461"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QC8B94276",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "A COUNTER IS A FILING. The session already doing the work produces it, carrying its reasoning, conformed to the standards and rules, fanned out like any other filing",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "transmission",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "POST /backfill",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /handoff",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /mcp",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /pack/grade",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /rank",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /respond",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /round",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /send",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission/:id/decide",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission/batch",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /verb",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /versions/restore",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:decide_transmission",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:rank",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:respond",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:restore_version",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:round",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:send_handoff",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:submit_grade",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:submit_transmission",
+      "access": "reader",
+      "via": "writes transmission"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "page",
+      "name": "Sheet",
+      "status": "live",
+      "via": "POST /send"
+     }
+    ],
+    "dependsOn": [
+     "QFC497F89"
+    ],
+    "blocks": [
+     "QA5443BA9"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QD08A1E8F",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "RE-RULED: the org carries ONE monotonic state version, bumped in the same transaction as any fan-out write and returned on every response. Everyone knows the org's sync state at any moment; a screen that is behind SAYS SO rather than looking current",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "QFB99F9D4"
+    ],
+    "blocks": [
+     "Q47C9CCD3",
+     "Q77B09895",
+     "QE9178667"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QD46CF220",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "tokens stays — one key per person, issued and rotatable here, and it is where ADMIN defines which workspaces that person can reach",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "tokens",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "GET /control",
+      "access": "owner",
+      "via": "writes tokens"
+     },
+     {
+      "id": "POST /login",
+      "access": "none",
+      "via": "writes tokens"
+     },
+     {
+      "id": "GET /logout",
+      "access": "none",
+      "via": "writes tokens"
+     },
+     {
+      "id": "POST /profile",
+      "access": "bearer",
+      "via": "writes tokens"
+     },
+     {
+      "id": "POST /project",
+      "access": "bearer",
+      "via": "writes tokens"
+     },
+     {
+      "id": "POST /signout",
+      "access": "bearer",
+      "via": "writes tokens"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "control",
+      "name": "Settings",
+      "status": "live",
+      "via": "GET /control"
+     }
+    ],
+    "dependsOn": [],
+    "blocks": [
+     "Q8EFBCCF8"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QEA9771A2",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "artifacts is authored WITH A STRONGER RULE than drafted — a filing must carry extracted meaning and its relation to the product, never a raw dump",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "artifacts",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "POST /artifact",
+      "access": "bearer",
+      "via": "writes artifacts"
+     },
+     {
+      "id": "POST /backfill",
+      "access": "owner",
+      "via": "writes artifacts"
+     },
+     {
+      "id": "POST /fragment",
+      "access": "bearer",
+      "via": "writes artifacts"
+     },
+     {
+      "id": "POST /mcp",
+      "access": "bearer",
+      "via": "writes artifacts"
+     },
+     {
+      "id": "POST /round",
+      "access": "bearer",
+      "via": "writes artifacts"
+     },
+     {
+      "id": "mcp:bank_artifact",
+      "access": "reader",
+      "via": "writes artifacts"
+     },
+     {
+      "id": "mcp:round",
+      "access": "reader",
+      "via": "writes artifacts"
+     }
+    ],
+    "surfaces": [],
+    "dependsOn": [
+     "QFC497F89"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QEBB5D318",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Equipped items are pinned to the version equipped; an update notice appears and the holder chooses",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "equips",
+      "declared": false
+     }
+    ],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "Q39680DD7",
+     "Q571B3D89"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QF4CC7033",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Leaderboard ranks by goal movement, broken out per area, and lives on Home",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "wf-home",
+      "name": "Home",
+      "status": "planned",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "Q4FF173D7"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QF89E795D",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "The todo list is DERIVED from the goal tree — a person's outstanding work is the nodes in their lane with no filing against them — PLUS ad-hoc items that can be promoted into the tree",
+     "severity": "high",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "project_seats",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "GET /control",
+      "access": "owner",
+      "via": "writes project_seats"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "control",
+      "name": "Settings",
+      "status": "live",
+      "via": "GET /control"
+     }
+    ],
+    "dependsOn": [
+     "Q9BD4565B"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QFB99F9D4",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "A filing FANS OUT - every surface it touches updates together: its list, the goal it moves, the leaderboard, the canvas node, the dependency chain, the counts on Home",
+     "severity": "blocker",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "Q3F213DB1",
+     "QFC497F89"
+    ],
+    "blocks": [
+     "QD08A1E8F"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QFC27D0F3",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Link workspaces from the org switcher; leave l-health direct-link-only",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [
+     {
+      "id": "projects",
+      "name": "Projects",
+      "status": "live",
+      "via": "named"
+     }
+    ],
+    "dependsOn": [
+     "Q36AF8BA1"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QFC497F89",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "transmission is the core ledger — and a filing lands against one of THREE planes: canvas, goals or GTM",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "transmission",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "POST /backfill",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /handoff",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /mcp",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /pack/grade",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /rank",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /respond",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /round",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /send",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission/:id/decide",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /transmission/batch",
+      "access": "bearer",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /verb",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "POST /versions/restore",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:decide_transmission",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:rank",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:respond",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:restore_version",
+      "access": "owner",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:round",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:send_handoff",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:submit_grade",
+      "access": "reader",
+      "via": "writes transmission"
+     },
+     {
+      "id": "mcp:submit_transmission",
+      "access": "reader",
+      "via": "writes transmission"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "page",
+      "name": "Sheet",
+      "status": "live",
+      "via": "POST /send"
+     }
+    ],
+    "dependsOn": [],
+    "blocks": [
+     "Q3F213DB1",
+     "Q4FF173D7",
+     "QBE2A9003",
+     "QC8B94276",
+     "QEA9771A2",
+     "QFB99F9D4"
+    ],
+    "blocking": true
+   },
+   {
+    "head": {
+     "qid": "QFE43B9D9",
+     "kind": "ruling",
+     "state": "pending",
+     "title": "Drop events.session_id with the sessions table",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [
+     {
+      "table": "events",
+      "declared": true
+     }
+    ],
+    "doors": [
+     {
+      "id": "POST /artifact",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "GET /boot",
+      "access": "key",
+      "via": "writes events"
+     },
+     {
+      "id": "GET /control",
+      "access": "owner",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /event",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /fragment",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /handoff",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /mcp",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /pack/grade",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /profile",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /rank",
+      "access": "reader",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /respond",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /round",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /send",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /transmission",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /transmission/:id/decide",
+      "access": "owner",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /transmission/batch",
+      "access": "bearer",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /verb",
+      "access": "reader",
+      "via": "writes events"
+     },
+     {
+      "id": "POST /versions/restore",
+      "access": "owner",
+      "via": "writes events"
+     },
+     {
+      "id": "mcp:ask",
+      "access": "reader",
+      "via": "writes events"
+     },
+     {
+      "id": "mcp:bank_artifact",
+      "access": "reader",
+      "via": "writes events"
+     },
+     {
+      "id": "mcp:decide_transmission",
+      "access": "owner",
+      "via": "writes events"
+     },
+     {
+      "id": "mcp:rank",
+      "access": "reader",
+      "via": "writes events"
+     },
+     {
+      "id": "mcp:record_event",
+      "access": "reader",
+      "via": "writes events"
+     },
+     {
+      "id": "mcp:respond",
+      "access": "reader",
+      "via": "writes events"
+     },
+     {
+      "id": "mcp:restore_version",
+      "access": "owner",
+      "via": "writes events"
+     },
+     {
+      "id": "mcp:round",
+      "access": "reader",
+      "via": "writes events"
+     },
+     {
+      "id": "mcp:send_handoff",
+      "access": "reader",
+      "via": "writes events"
+     },
+     {
+      "id": "mcp:submit_grade",
+      "access": "reader",
+      "via": "writes events"
+     },
+     {
+      "id": "mcp:submit_transmission",
+      "access": "reader",
+      "via": "writes events"
+     }
+    ],
+    "surfaces": [
+     {
+      "id": "control",
+      "name": "Settings",
+      "status": "live",
+      "via": "GET /control"
+     },
+     {
+      "id": "page",
+      "name": "Sheet",
+      "status": "live",
+      "via": "POST /send"
+     }
+    ],
+    "dependsOn": [
+     "Q0544F477"
+    ],
+    "blocks": [],
+    "blocking": false
+   },
+   {
+    "head": {
+     "qid": "QFEAE79F8",
+     "kind": "ruling",
+     "state": "contradicted",
+     "title": "The Telegram bot is PER-ORG CONFIG: the org's admin sets it when the bot joins the team's group, it's stored in the org's worker, and it drives that org's alerts and broadcast. It is never in sharingu's env.",
+     "severity": "normal",
+     "whoOwes": "build"
+    },
+    "schema": [],
+    "doors": [],
+    "surfaces": [],
+    "dependsOn": [
+     "Q65300E50"
+    ],
+    "blocks": [
+     "Q28F8373E"
+    ],
+    "blocking": true
+   }
+  ],
+  "cheapest": {
+   "qids": [],
+   "surfaces": 0,
+   "blocks": 0,
+   "door": "POST /respond"
+  },
+  "counts": {
+   "chains": 54,
+   "blocking": 32,
+   "questions": 0,
+   "rulings": 54,
+   "surfaces": 16
+  }
+ }
+}

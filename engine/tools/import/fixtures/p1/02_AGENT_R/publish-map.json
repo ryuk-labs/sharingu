@@ -1,0 +1,29 @@
+{
+  "servePrefix": "serve/ws/@KEY@",
+  "about": "@MK@ is the first project of the selftest org.",
+  "bucket": "selftest-brain",
+  "mechanical": [],
+  "kit": {
+    "aim": { "file": "data/aim.json" },
+    "goals": "02_AGENT_R/tenant-manifest.json",
+    "flows": { "file": "data/flows.json" },
+    "decisions": [
+      { "rows": "data/questions.json", "pointer": "/questions" },
+      { "mdSplit": "data/log.md", "heading": "^## (LOG-\\d+) — (.+)$", "supersededIf": "SUPERSED", "stripLead": "^.*?scope:[^.]*\\.\\s*",
+        "card": { "kind": "log", "label": "Log", "idPattern": "^LOG-\\d+$" } }
+    ],
+    "gaps": "data/gaps.json",
+    "gtm": { "template": "default" },
+    "cards": [
+      { "kind": "capsule", "label": "Capsules", "files": { "cap-@MK@": { "path": "data/capsule.md", "name": "@MK@ capsule" } } },
+      { "kind": "log" },
+      { "kind": "note", "label": "Notes", "dir": "data/cards" }
+    ],
+    "files": [{ "id": "download", "label": "@MK@ download", "from": "data/download.txt", "to": "files/download.txt" }],
+    "roles": [{ "key": "owner", "mapsTo": "owner" }],
+    "copies": [{ "from": "data/brief.md", "to": "serve/lib/docs/brief-@MK@.md" }],
+    "canvas": "derive",
+    "state": { "engineSignals": { "suites": ["evals-selftest"] } },
+    "citations": { "file": "data/sources.md", "sourceKey": "\\bSRC:\\d" }
+  }
+}

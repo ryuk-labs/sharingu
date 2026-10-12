@@ -1,0 +1,169 @@
+{
+ "note": "The owner's rulings of 2026-10-02 (MCQ): the aim is the proposed mission (what-is-siru.md, verbatim); the goal tree's top is the Thiruvallur pilot, as filed. The measure was not ruled: an open question.",
+ "items": [
+  {
+   "kind": "aim",
+   "op": "upsert",
+   "data": {
+    "aim": "Put a governed AI intelligence layer under everyday commerce — starting with pharmacy in Tamil Nadu — so medicine and goods move visibly, safely, and affordably, and value returns to customers and small merchants instead of being extracted from them.",
+    "measure": null,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 10_STRATEGY/what-is-siru.md",
+      "label": "\"Mission (proposed)\""
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "asOf": "2026-10-02",
+    "confidence": "confirmed"
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-vision",
+    "status": "decided",
+    "choice": 0,
+    "label": "Put a governed AI intelligence layer under everyday commerce — starting with pharmacy in Tamil Nadu — so medicine and goods move visibly, safely, and affordably, and value returns to customers and small merchants instead of being extracted from them.",
+    "rationale": "It says what the work is for and where it starts; the vision is the far end state, and the third option describes what SIRU is rather than what it is for.",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "whoOwes": null,
+    "waitingOn": null,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 10_STRATEGY/what-is-siru.md \"Vision & mission (proposed — ratify me)\"",
+      "label": "the proposed wording"
+     },
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 60_DECISIONS/open-questions.md Q-vision",
+      "label": "the open question"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "why": "The bank's vision and mission wording is synthesised from the source documents' intent, not quoted from a founder statement: it is \"proposed, for the owner to ratify or rewrite\" (what-is-siru.md). The aim stayed empty until this was ruled."
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-siru-goal-top",
+    "status": "decided",
+    "choice": 0,
+    "label": "The Thiruvallur pilot (as filed): prove the operating model before the Tamil Nadu rollout",
+    "rationale": "It is what the bank says the build serves now.",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "whoOwes": null,
+    "waitingOn": null,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md",
+      "label": "the core principle and why the note matters to the build"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "why": "The goal tree is filed from the Thiruvallur pilot note (confirmed) and the owner's plan rulings (ADR-105), with the pilot as its root: \"Every surface in 20_PRODUCT/ is really being built to be exercised by this pilot.\" The same note names the step after it, \"Tamil Nadu = Scale-up after validation\", and the tree takes one root."
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-siru-aim-measure",
+    "question": "Which number says SIRU's aim is working (the aim's measure)?",
+    "why": "The owner ruled the aim on 2026-10-02 (Q-vision: the proposed mission) but not its measure. No source names one number for the mission; the pilot note's scorecard lists the pilot's success metrics, and none of them has a value on record. The options are the scorecard's own lines and the pilot unit. Option A is the recommendation: it counts the mission's first step (pharmacy in Tamil Nadu) directly.",
+    "area": "aim",
+    "severity": "normal",
+    "status": "open",
+    "whoOwes": "owner",
+    "waitingOn": "owner",
+    "options": [
+     {
+      "what": "Pharmacies with doors open in the Thiruvallur pilot unit",
+      "tradeoff": "pilot-thiruvallur-2026-09.md: \"70 pharmacies + 1 Node/Hub\" is the pilot unit, doors open 2026-09-30 \"one by one as lights allow\"; the pilot size itself is open (Q-pilot-size: 70 vs 10→100). No count is on record."
+     },
+     {
+      "what": "Order fulfilment success rate",
+      "tradeoff": "pilot-thiruvallur-2026-09.md, Success metrics (the pilot scorecard). Says whether medicine moves reliably; no value on record."
+     },
+     {
+      "what": "Manpower & operating cost per pharmacy",
+      "tradeoff": "pilot-thiruvallur-2026-09.md, Success metrics: \"key unit-economics number\"; it feeds the Pilot Report's Cost per Node. Says whether the model is affordable, not whether it is used; no value on record."
+     }
+    ],
+    "source": [
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md",
+      "label": "the pilot scorecard (\"Success metrics\") and the pilot unit"
+     },
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 10_STRATEGY/what-is-siru.md",
+      "label": "\"Mission (proposed)\""
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "doc",
+   "op": "upsert",
+   "data": {
+    "path": "start-here.md",
+    "body": "# SIRU — start here\n\n*Written for a newcomer from SIRU's knowledge bank (what-is-siru.md, the Thiruvallur pilot note, the decision log, the open questions), as of 2026-10-01 with the owner's rulings of 2026-10-02; the bank's own last record is 2026-09-10. A proposal: the owner confirms or rewrites it.*\n\n## What it is\nSIRU is an AI-powered commerce super-app ecosystem launching in Tamil Nadu, India, with pharmacy as its first live spoke. It is not a shopping app with an AI chatbot: it is a governed AI intelligence platform under an entire ecosystem, with \"Ask SIRU\" as its most visible consumer door. Its pharmacy business runs as a cooperative of neighbourhood member pharmacies organised under a Node/Hub: every customer payment flows through SIRU's payment gateway, SIRU takes a small fixed infrastructure fee, pharmacies sell at a uniform network price, and value returns to customers as merchant-locked reward coins. Product owner: Calsoft; engineered by Ryuk Labs.\n\nClinical safety comes first: AI drafts, a pharmacist decides.\n\n## Where its truth lives here\n- **Home** — the aim: the bank's proposed mission, ruled the aim by the owner on 2026-10-02 (Q-vision). Its measure is still open (Q-siru-aim-measure).\n- **Goals** — the Thiruvallur pilot: the W1–W3 build gates, the two money gates, Rx encryption on day 1, doors open 2026-09-30, the Pilot Report about a month later, and what the pilot depends on outside the devs.\n- **Decisions** — the owner's rulings from the bank, and the questions still open for the owner.\n- **Map** — the apps and their screens, the services, and the bank's open questions as gaps.\n- **Docs** — the bank's notes: start with `10_STRATEGY/what-is-siru.md`, `50_OPERATIONS/pilot-thiruvallur-2026-09.md`, `40_ECONOMICS/payment-reward-coin-model.md` and `30_AI/clinical-safety.md`.\n\n## What to do first\n1. Read what SIRU is and the pilot note.\n2. Know what is still open: the aim's measure (Q-siru-aim-measure); marketplace vs mesh (Q-marketplace-vs-mesh, a joint Ryuk + Vasu decision: do not build screen 41A until it is ruled); the pilot's size (Q-pilot-size).\n3. Rulings bind and the newest wins. If something is not in the bank, the knowledge is incomplete: file a question, never invent an answer.\n",
+    "asOf": "2026-10-02",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 10_STRATEGY/what-is-siru.md",
+      "label": "what SIRU is (confirmed paragraph)"
+     },
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md",
+      "label": "the pilot"
+     },
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 60_DECISIONS/open-questions.md",
+      "label": "Q-vision, Q-marketplace-vs-mesh, Q-pilot-size"
+     },
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 60_DECISIONS/decision-log.md",
+      "label": "ADR-105, ADR-108"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ]
+   }
+  }
+ ]
+}

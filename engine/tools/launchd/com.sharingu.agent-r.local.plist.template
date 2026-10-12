@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.sharingu.agent-r.local.__ORG__ — brings local Agent R (__ORG__) up at login, through
+  tools/r-local.sh (R4, sharingu v1.0 install mode 2). Rendered by tools/r-local-launchd.sh; the
+  placeholders are filled there. `up` is idempotent (already-up reports and exits 0), so RunAtLoad
+  is safe to fire on every login/reload without double-starting the dev server.
+
+  THIS IS A BRING-UP UNIT, NOT A SUPERVISOR: `r-local.sh up` starts `wrangler dev` detached and then
+  exits once it observes a healthy /health — launchd does not hold the wrangler dev process open, so
+  it will not be restarted automatically if it crashes mid-session. Re-run `launchctl kickstart -k`
+  (or just `sh tools/r-local.sh up __ORG__` by hand) to bring it back.
+
+  EnvironmentVariables: none on purpose — this org's own credentials live in its OWN state-dir pool
+  file (~/.sharingu/r-local/__ORG__/credentials.env), never the owner's real
+  ~/.sharingu/credentials.env, and r-local.sh never needs a Cloudflare token to run this mode.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.sharingu.agent-r.local.__ORG__</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>__ENGINE__/tools/r-local.sh</string>
+    <string>up</string>
+    <string>__ORG__</string>
+    <string>--port</string>
+    <string>__PORT__</string>
+    <string>__LAN_FLAG__</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__ENGINE__</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>__STATE_DIR__/launchd.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>__STATE_DIR__/launchd.stderr.log</string>
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>

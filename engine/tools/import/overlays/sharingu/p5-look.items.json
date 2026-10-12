@@ -1,0 +1,754 @@
+{
+ "note": "sharingu's knowledge since p2e-knowledge (2026-10-02 afternoon): the look revision's goals, the passes that landed, and the owner's rulings; read from the plan at 6ffaefd2e.",
+ "items": [
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "d2b-truth-look",
+    "parent": "stage-b",
+    "title": "D2b: the truth-and-look pass (counts agree with rows, the proof rule from the corpus, plain words, the checks name goals)",
+    "dimensions": [
+     "code"
+    ],
+    "status": "done",
+    "sort": 9,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 3: D2b [x] (95429c92f), smoke 162/162"
+     },
+     {
+      "kind": "commit",
+      "ref": "95429c92f430e4cee9feb92be42b6f1211ae4a0c",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "l1-parts",
+    "parent": "stage-b",
+    "title": "L1: the look revision's shared parts, their gallery and the copy check",
+    "dimensions": [
+     "code"
+    ],
+    "status": "done",
+    "sort": 10,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/LOOK.md",
+      "label": "The revision (owner, 2026-10-02): the parts and the gallery, approved"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 3: L1 and L2 [x] (19355b2e5, 87585a170)"
+     },
+     {
+      "kind": "commit",
+      "ref": "19355b2e546f87e8af81b41640e4515831cd0f77",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "l2-tabs",
+    "parent": "stage-b",
+    "title": "L2: Home, Goals, Decisions, Build and GTM on the shared parts",
+    "dimensions": [
+     "code"
+    ],
+    "status": "done",
+    "sort": 11,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 3: L1 and L2 [x] (87585a170), smoke 168/168"
+     },
+     {
+      "kind": "commit",
+      "ref": "87585a170263b6e40c3b43875195b1b75d11d9d7",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "l3-detail-pages",
+    "parent": "stage-b",
+    "title": "L3: every detail page on the shared parts; the copy check at zero outside the old path",
+    "dimensions": [
+     "code"
+    ],
+    "status": "done",
+    "sort": 12,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 3: L3 [x] (bd0f4befe), smoke 173/173"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "the queue: L2 and L3 done"
+     },
+     {
+      "kind": "commit",
+      "ref": "bd0f4befe3ae582ed6198c1aa6f7b8607e961d86",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "d6-old-path",
+    "parent": "stage-b",
+    "title": "D6: the old path deleted in this sprint (no dead code and no dead docs go to the ship)",
+    "dimensions": [
+     "code"
+    ],
+    "status": "not started",
+    "sort": 13,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "the queue step 5: D6, pulled into this sprint by the owner's no dead code"
+     },
+     {
+      "kind": "commit",
+      "ref": "3d25fde6895c745c608530ad342b7afc34105031",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "v-map-arch",
+    "parent": "launch",
+    "title": "After the video: the Map and the architecture (M1 to M7)",
+    "dimensions": [
+     "code"
+    ],
+    "status": "not started",
+    "sort": 3,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "After the video: the Map and the architecture (owner, 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "1188b4147916b78a3fa35cd08d3386d402a410fa",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "b7-gtm",
+    "status": "done",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 3: B7 [x] (7ffdc0442), smoke 153/153"
+     },
+     {
+      "kind": "commit",
+      "ref": "7ffdc04420809d718cee139ec3c83b26dbb2d55e",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "c2-live-walk",
+    "status": "in progress",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 3: S3a [x] (9b39f30a2): the walk covers the whole member path, locally 12 of 13 steps; on live not yet"
+     },
+     {
+      "kind": "commit",
+      "ref": "9b39f30a25a543aaad5c61c28a08e3693eb6ca33",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "c1-backup-measures",
+    "status": "in progress",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "in flight: S3b, the beta gate's local parts (a complete backup and a rehearsed restore, the beta measures)"
+     },
+     {
+      "kind": "commit",
+      "ref": "6ffaefd2ecd46c9854144bcaa97b2dee71b9f7d2",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-look-revision-first",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the look",
+    "question": "Is the front end revised before the second video?",
+    "why": null,
+    "options": [
+     {
+      "what": "Before the video: the whole front end on shared parts (LOOK.md, The revision)"
+     },
+     {
+      "what": "After the video"
+     }
+    ],
+    "choice": 0,
+    "label": "Before the video: three depths, cards, faces, small charts, one filter row and pristine copy on every page.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "The direction (owner, 2026-10-02)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/LOOK.md",
+      "label": "The revision (owner, 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "7887ec757b58ec776eb7dcedffad9ca74c6ee006",
+      "label": "the look: the front end is revised before the video"
+     },
+     {
+      "kind": "commit",
+      "ref": "f1be6935955a2dbe20b3e76076dce56b3e65eb9c",
+      "label": "the owner's rulings of the afternoon: GTM overlays in the repo, no listing yet, what D6 deletes"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-look-pristine-copy",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the look",
+    "question": "What may a screen say?",
+    "why": "Screens carried hints and explanations: every empty state had a sentence naming the MCP call that fills it.",
+    "options": [
+     {
+      "what": "Pristine copy: titles, labels, values, names and buttons; no hint, explanation, raw call, JSON or rule in prose; what to file next lives on What is missing"
+     }
+    ],
+    "choice": 0,
+    "label": "Pristine copy: no hints and no explanations on any screen; a control's meaning lives in its hover and the docs.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/LOOK.md",
+      "label": "The revision: pristine copy"
+     },
+     {
+      "kind": "commit",
+      "ref": "7887ec757b58ec776eb7dcedffad9ca74c6ee006",
+      "label": "the look: the front end is revised before the video"
+     },
+     {
+      "kind": "commit",
+      "ref": "19355b2e546f87e8af81b41640e4515831cd0f77",
+      "label": "the look: the shared parts, their gallery and the copy check"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-look-gallery",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the look",
+    "question": "Is the look revision's parts gallery approved?",
+    "why": "The revision's order put the parts and their gallery first, to be approved by the owner before any tab changed.",
+    "options": [
+     {
+      "what": "Approved as shown (19355b2e5)"
+     }
+    ],
+    "choice": 0,
+    "label": "Approved as shown; the five tabs adopt it right after the truth-and-look pass.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/LOOK.md",
+      "label": "The owner approved the gallery as shown (MCQ, 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "fc91aa9c32089649869de41cd60e50ccaffb91c7",
+      "label": "the look: the gallery approved as shown"
+     },
+     {
+      "kind": "commit",
+      "ref": "19355b2e546f87e8af81b41640e4515831cd0f77",
+      "label": "the look: the shared parts, their gallery and the copy check"
+     },
+     {
+      "kind": "commit",
+      "ref": "7887ec757b58ec776eb7dcedffad9ca74c6ee006",
+      "label": "the look: the front end is revised before the video"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-look-week-read",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the look",
+    "question": "Does the revision add a read?",
+    "why": "The revision was planned with no change to the MCP, the write door or the tables: the pages read only what they read today.",
+    "options": [
+     {
+      "what": "One new read: contributions per day and person for the last 7 days (the week)"
+     }
+    ],
+    "choice": 0,
+    "label": "One new read, the week: contributions per day and person for the last 7 days.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/LOOK.md",
+      "label": "the gallery approved with one new read"
+     },
+     {
+      "kind": "commit",
+      "ref": "fc91aa9c32089649869de41cd60e50ccaffb91c7",
+      "label": "the look: the gallery approved as shown"
+     },
+     {
+      "kind": "file",
+      "ref": "engine/src/week.js",
+      "label": "the week: contributions per day and person, last 7 days (built in L2)"
+     },
+     {
+      "kind": "commit",
+      "ref": "87585a170263b6e40c3b43875195b1b75d11d9d7",
+      "label": "the look: Home, Goals, Decisions, Build and GTM on the shared parts"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-look-faces",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the look",
+    "question": "What face does a person show on a row?",
+    "why": "The revision puts a face on every row a person owns: the person's picture, else their initials.",
+    "options": [
+     {
+      "what": "Initials; a person's own picture comes after beta"
+     }
+    ],
+    "choice": 0,
+    "label": "Initials for faces; a person's own picture after beta.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/LOOK.md",
+      "label": "initials for faces"
+     },
+     {
+      "kind": "commit",
+      "ref": "fc91aa9c32089649869de41cd60e50ccaffb91c7",
+      "label": "the look: the gallery approved as shown"
+     },
+     {
+      "kind": "commit",
+      "ref": "7887ec757b58ec776eb7dcedffad9ca74c6ee006",
+      "label": "the look: the front end is revised before the video"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-gtm-overlays-in-repo",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the projects",
+    "question": "Where do the GTM overlays live?",
+    "why": "The GTM strategy, claims, targets, copy and outreach objectives come from the owner's team context, so they were kept machine-local until the owner said they may live in git.",
+    "options": [
+     {
+      "what": "In the repo: the importer replays them on every machine and at the ship"
+     },
+     {
+      "what": "Machine-local, kept out of git (as before)"
+     }
+    ],
+    "choice": 0,
+    "label": "In the repo: ryuklabs' GTM overlays and sharingu's GTM docs are no longer machine-local.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "Ruled by the owner, 2026-10-02 later"
+     },
+     {
+      "kind": "commit",
+      "ref": "f1be6935955a2dbe20b3e76076dce56b3e65eb9c",
+      "label": "the owner's rulings of the afternoon: GTM overlays in the repo, no listing yet, what D6 deletes"
+     },
+     {
+      "kind": "file",
+      "ref": "engine/tools/import/overlays/ryuklabs/.gitignore",
+      "label": "machine-local until the owner says (deleted in f1be69359)"
+     },
+     {
+      "kind": "file",
+      "ref": "engine/tools/import/overlays/sharingu/.gitignore",
+      "label": "machine-local until the owner says (deleted in f1be69359)"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-old-path-composer",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the old path",
+    "question": "Is the composer (/send) kept?",
+    "why": "The composer was one of the pages that only render the old brain files; they still answered and were due to go with the old path.",
+    "options": [
+     {
+      "what": "Deleted in D6"
+     }
+    ],
+    "choice": 0,
+    "label": "Deleted in D6.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "D6, Ruled (owner, MCQ 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "f1be6935955a2dbe20b3e76076dce56b3e65eb9c",
+      "label": "the owner's rulings of the afternoon: GTM overlays in the repo, no listing yet, what D6 deletes"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "The direction: Clean all the way (owner, 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "3d25fde6895c745c608530ad342b7afc34105031",
+      "label": "handoff rewritten: one queue to beta, the old path deleted in this sprint"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/ARCHITECTURE.md",
+      "label": "the pages that only render brain files (at f371828ce)"
+     }
+    ],
+    "rationale": "No dead code and no dead docs go to the ship: the old path is deleted in this sprint."
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-old-path-guides",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the old path",
+    "question": "Are /understanding and /agentic kept?",
+    "why": "/understanding and /agentic were pages that only render the old brain files; they still answered and were due to go with the old path.",
+    "options": [
+     {
+      "what": "Deleted; /docs is the one public guide"
+     }
+    ],
+    "choice": 0,
+    "label": "Deleted; /docs is the one public guide.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "D6, Ruled (owner, MCQ 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "f1be6935955a2dbe20b3e76076dce56b3e65eb9c",
+      "label": "the owner's rulings of the afternoon: GTM overlays in the repo, no listing yet, what D6 deletes"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "The direction: Clean all the way (owner, 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "3d25fde6895c745c608530ad342b7afc34105031",
+      "label": "handoff rewritten: one queue to beta, the old path deleted in this sprint"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/MCP.md",
+      "label": "§1: the old path's routes, still served (at 7887ec757)"
+     }
+    ],
+    "rationale": "No dead code and no dead docs go to the ship: the old path is deleted in this sprint."
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-old-path-digest",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the old path",
+    "question": "Are the nightly digest and /metrics kept?",
+    "why": "/metrics was among the old path's owner utilities still served, which D6 was to delete or keep; the nightly digest runs on the same crons as the backup dump.",
+    "options": [
+     {
+      "what": "Deleted; the nightly backup stays"
+     }
+    ],
+    "choice": 0,
+    "label": "Deleted; the nightly backup stays.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "D6, Ruled (owner, MCQ 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "f1be6935955a2dbe20b3e76076dce56b3e65eb9c",
+      "label": "the owner's rulings of the afternoon: GTM overlays in the repo, no listing yet, what D6 deletes"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "The direction: Clean all the way (owner, 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "3d25fde6895c745c608530ad342b7afc34105031",
+      "label": "handoff rewritten: one queue to beta, the old path deleted in this sprint"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/MCP.md",
+      "label": "§1: the old path's routes, still served (at 7887ec757)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/INVENTORY.md",
+      "label": "the crons (at 7887ec757)"
+     }
+    ],
+    "rationale": "No dead code and no dead docs go to the ship: the old path is deleted in this sprint."
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-suites-keep-set",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the old path",
+    "question": "What do the suites keep once the old path goes?",
+    "why": "All four suites started through the old machinery (they published brains to R2 and imported through write_knowledge), so deleting the old path meant deciding what the suites keep.",
+    "options": [
+     {
+      "what": "Their 262 live cases, started the way the smoke starts"
+     }
+    ],
+    "choice": 0,
+    "label": "The 262 live cases, started like the smoke.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "D6, Ruled (owner, MCQ 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "f1be6935955a2dbe20b3e76076dce56b3e65eb9c",
+      "label": "the owner's rulings of the afternoon: GTM overlays in the repo, no listing yet, what D6 deletes"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "The direction: Clean all the way (owner, 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "3d25fde6895c745c608530ad342b7afc34105031",
+      "label": "handoff rewritten: one queue to beta, the old path deleted in this sprint"
+     }
+    ],
+    "rationale": "The suites are cut down to what still proves something: auth, the door, the three loops and the hot SQL."
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-order-old-path-d6",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the order",
+    "question": "When is the old path deleted?",
+    "why": "Deleting the old path was planned for sprint 4, after the sprint-3 ship.",
+    "options": [
+     {
+      "what": "In sprint 3, as D6, before the one ship"
+     },
+     {
+      "what": "In sprint 4 (the ruling of 2026-10-01)"
+     }
+    ],
+    "choice": 0,
+    "label": "In sprint 3, as D6: no dead code and no dead docs go to the ship.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "The direction: Clean all the way (owner, 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "3d25fde6895c745c608530ad342b7afc34105031",
+      "label": "handoff rewritten: one queue to beta, the old path deleted in this sprint"
+     }
+    ],
+    "rationale": "No dead code and no dead docs go to the ship."
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-order-old-path-s4",
+    "status": "superseded",
+    "supersededBy": "R-order-old-path-d6"
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "R-map-after-video",
+    "status": "decided",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "area": "the order",
+    "question": "When do the Map and architecture improvements land?",
+    "why": null,
+    "options": [
+     {
+      "what": "After the second video: seven items M1 to M7, which do not hold the PR or the ship"
+     }
+    ],
+    "choice": 0,
+    "label": "After the video: M1 to M7; they hold neither the PR nor the ship.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "After the video (owner, 2026-10-02)"
+     },
+     {
+      "kind": "commit",
+      "ref": "1188b4147916b78a3fa35cd08d3386d402a410fa",
+      "label": "plan: after the video — the Map and the architecture, seven items"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "After the video (owner, 2026-10-02): the Map and the architecture"
+     }
+    ],
+    "rationale": null
+   }
+  }
+ ]
+}

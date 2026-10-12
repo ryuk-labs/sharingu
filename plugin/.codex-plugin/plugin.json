@@ -1,0 +1,107 @@
+{
+  "name": "sharingu",
+  "version": "0.1.11",
+  "description": "Your tools. One company brain. A universal harness connecting contributions, decisions and goals through MCP, with humans in charge.",
+  "author": {
+    "name": "Ryuk Labs",
+    "email": "acie@ryuklabs.io"
+  },
+  "homepage": "https://www.sharingu.xyz",
+  "license": "Proprietary",
+  "keywords": [
+    "mcp",
+    "team",
+    "knowledge",
+    "contributions",
+    "decisions"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "sharingu",
+    "shortDescription": "One company brain for your AI",
+    "longDescription": "sharingu is one company brain for the AI tools your team already uses. People and their assistants file contributions through one MCP server: goals and their progress, decisions with their reasons, open questions, docs, screens and a map of the product. Each org's work lands in its own walled space, and the app shows it live in eight tabs: Home, Build, GTM, Goals, Decisions, Map, Broadcast and Control, with a search across the project.\n\nEvery write is previewed before it lands. Your AI calls preview, you see exactly what would be filed and what it touches, and file files it only then; where the client supports confirmation, nothing is filed until you say yes. Questions go to the person who owns the decision, who rules on them; the record keeps who decided, when and why.\n\nRoles decide what each seat reads and does: an owner manages the org, its projects and its people; members work across the projects they are seated on; a partner sees only the project it was invited to. Reads never change anything, and every write tool is marked as such.\n\nStart with whoami (who you are and where your writes land), then missing (what a project still needs, each with the call that fills it), then preview and file.",
+    "developerName": "Ryuk Labs",
+    "category": "Productivity",
+    "capabilities": [
+      "Read a project's goals, decisions, open questions, docs and map",
+      "Search a project and read any contribution with its link",
+      "Preview every write before it is filed, then file it",
+      "Ask for your confirmation before a write lands, where the client supports it",
+      "File goals, decisions, questions, notes and docs with their why",
+      "Rule on open questions as the person who owns the decision",
+      "Show what a project still needs, each with the call that fills it",
+      "Keep each org walled: a partner sees only the project it was invited to"
+    ],
+    "websiteURL": "https://www.sharingu.xyz",
+    "supportURL": "https://www.sharingu.xyz/support.html",
+    "privacyPolicyURL": "https://www.sharingu.xyz/privacy.html",
+    "termsOfServiceURL": "https://www.sharingu.xyz/terms.html",
+    "defaultPrompt": [
+      "Call sharingu's whoami: who am I, and where do my writes land?",
+      "What does my sharingu project still need?",
+      "Preview a note for my sharingu project, then file it after I confirm."
+    ],
+    "brandColor": "#C2410C",
+    "brandColorDark": "#FB923C",
+    "composerIcon": "./assets/composer-icon.png",
+    "logo": "./assets/logo.png"
+  },
+  "extensions": {
+    "com.openai": {
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Connect and sign in (as the admin account)",
+              "prompt": "1) Add the MCP address to your client and sign in as the admin. 2) Call sharingu's whoami.",
+              "tools_triggered": "whoami",
+              "expected_behavior": "2) Your name (Reviewer Admin), the role owner, the org \"sharingu review\", and the two projects your writes can land in, sharingu and the Sample project."
+            },
+            {
+              "description": "Read the real sharingu project (as the member account)",
+              "prompt": "1) Sign in as the member (in a new chat, or a second client). 2) Show me the goals of the sharingu project. 3) Search the sharingu project for preview. 4) Open the org in a browser as the member.",
+              "tools_triggered": "goals, search",
+              "expected_behavior": "2) sharingu's goal tree, each goal with its status and progress. 3) Matching goals, questions, docs and map nodes, each with a link. 4) Home, Decisions and the Map show the same project."
+            },
+            {
+              "description": "File a contribution through preview, then file (as the member account)",
+              "prompt": "1) In the Sample project, file a note in the leader lane: what 'A reviewer's first note', why 'the store's test case'. Preview it first. 2) File it. 3) Read that contribution. 4) In the browser, open Build.",
+              "tools_triggered": "preview, file, read",
+              "expected_behavior": "1) The preview (the preview tool) shows the one item, \"files at once\", and says nothing is filed yet. 2) The receipt (the file tool) with the contribution's id, T- and the date and a number, and its link. 3) What you filed, by Reviewer Member, in the Sample project. 4) The note is in the list."
+            },
+            {
+              "description": "The confirm: nothing is filed until you say yes (as the admin account)",
+              "prompt": "1) In the Sample project, add a goal 'A reviewer goal' under the goal 'Every contribution closes the loop', and file it only after I confirm. 2) Decline. 3) Read the goal 'A reviewer goal'. 4) Ask again and accept.",
+              "tools_triggered": "preview, read",
+              "expected_behavior": "1) Your client asks you to confirm, showing what would be filed (a client without confirm prompts answers that you were not asked, and files nothing). 2) \"The person declined: nothing was filed.\" 3) There is no such goal (not_found). 4) The goal is filed; it reads back under its parent, and the Goals tab shows it."
+            },
+            {
+              "description": "A partner works only where it is seated (as the partner account)",
+              "prompt": "1) Sign in as the partner. 2) Call whoami. 3) Show the Sample project's goals. 4) In the Sample project, file a note in the leader lane: what 'A reviewer's first note', why 'the store's test case'. Preview it, then file it.",
+              "tools_triggered": "whoami, goals, preview, file",
+              "expected_behavior": "2) The role partner and ONE project, the Sample project. 3) Its goal tree. 4) A receipt with its T- id."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Nothing is deleted through the AI (as the admin account). Why: sharingu has no tool that deletes or archives a project; a project is the owner's to archive on Control, in the browser, and an archive is never a delete.",
+              "prompt": "Delete the Sample project and everything in it.",
+              "expected_behavior": "Your AI says it cannot: no sharingu tool deletes a project. Nothing changes: whoami still lists both projects, and the Sample project's goals still read. If it offers to remove the project's items one by one instead, that is a preview, which files nothing until you file it."
+            },
+            {
+              "description": "A partner cannot read a project it has no seat on (as the partner account). Why: A partner was invited to the Sample project only; the rest of the org is not its to read.",
+              "prompt": "Show the sharingu project's goals.",
+              "expected_behavior": "Refused with project_forbidden, naming the projects the partner holds (the Sample project only) and how to name one. No goal of sharingu is shown."
+            },
+            {
+              "description": "A member cannot call an owner's tool (as the member account). Why: Making a project is the org owner's decision; a member works in the projects it is seated on.",
+              "prompt": "Create a project called Mine.",
+              "expected_behavior": "Refused with owner_only; no project is made (the admin's Control page lists only the two projects)."
+            }
+          ]
+        }
+      }
+    }
+  }
+}

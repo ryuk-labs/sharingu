@@ -1,0 +1,34 @@
+# tools/systemd/sharingu-agent-r-local@.service.template — a systemd USER unit template for
+# bringing local Agent R up at login/boot on Linux (R4, sharingu v1.0 install mode 2). The macOS
+# path (tools/r-local-launchd.sh) renders and installs its LaunchAgent automatically; this template
+# is NOT auto-rendered the same way — Linux wake units are out of scope for the v1.0 program (PRD
+# §7). Hand-adapt the two paths below, then:
+#
+#   mkdir -p ~/.config/systemd/user
+#   sed -e 's|__ENGINE__|/absolute/path/to/sharingu/engine|' \
+#       tools/systemd/sharingu-agent-r-local@.service.template \
+#       > ~/.config/systemd/user/sharingu-agent-r-local@.service
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now sharingu-agent-r-local@myorg     # %i = the org slug
+#   systemctl --user status sharingu-agent-r-local@myorg
+#   systemctl --user disable --now sharingu-agent-r-local@myorg    # stop watching (run
+#                                                                   # `sh tools/r-local.sh down myorg`
+#                                                                   # to actually stop wrangler dev)
+#
+# NOT A SUPERVISOR, same caveat as the macOS unit: `r-local.sh up` starts wrangler dev DETACHED and
+# exits once healthy — systemd (Type=oneshot, RemainAfterExit=yes below) only re-runs `up` at
+# boot/login or on a manual restart, it does not hold the wrangler dev process open or restart it if
+# it crashes mid-session.
+[Unit]
+Description=sharingu Agent R, local mode — org %i (R4, install mode 2)
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=__ENGINE__
+ExecStart=/bin/sh __ENGINE__/tools/r-local.sh up %i
+ExecStop=/bin/sh __ENGINE__/tools/r-local.sh down %i
+
+[Install]
+WantedBy=default.target

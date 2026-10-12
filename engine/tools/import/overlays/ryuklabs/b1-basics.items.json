@@ -1,0 +1,116 @@
+[
+ {
+  "kind": "doc",
+  "op": "upsert",
+  "data": {
+   "path": "start-here.md",
+   "title": "Ryuklabs — start here",
+   "body": "# Ryuklabs — start here\n\n*Written for a newcomer from its source repository, ryuklabs-ops-brain (its README, 10_TRUTH/aim.json, gtm.md, flows.json and the owner's questions), as of 2026-10-01. A proposal: the owner confirms or rewrites it.*\n\n## What it is\nRyuklabs is the org's own home project: its operations and go-to-market work. It has **no app of its own** — no screens, doors or tables — so the Map's screens, API and data planes are empty by design. Sharingu is the product it sells.\n\n**The aim** (ruled 2026-09-29, Q-RL-C5-AIM): GTM traction — land B2B AI-work clients across segments; Sharingu is the product being sold. No number is published for it yet (ruled Q-RL-C5-MEASURE: none until graded GTM contributions exist).\n\n## Where its truth lives here\n- **Goals** — GTM traction: pipeline, revenue, reach, content presence, grants and partners, with their campaigns (ruled Q-RL-C5-TREE), and the outreach objectives.\n- **GTM** — the template's activity kinds (social, outreach, update, content, campaign), the strategy docs under `gtm/`, and the lists: approved claims, targets, copy.\n- **Decisions** — the owner's rulings on this project's aim, measure, goal tree, targets, owners and template.\n- **Map · Flows** — the operating flows the sources state: build-in-public content, outreach (manual), the grants pipeline. All are planned; each step names its actor.\n\n## What to do first\n1. Read the aim on Home and the tree on Goals.\n2. Before any copy goes out, read the positioning and the approved claims with their exact boundaries (the outreach flow's first step).\n3. File GTM work as a contribution in lane `gtm`: what you expected, what happened, and the proof — a link to the shipped post, page or reply, never a narration.\n",
+   "asOf": "2026-10-01",
+   "confidence": "proposal",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "ryuklabs ops brain: README.md",
+     "label": "the org's home project"
+    },
+    {
+     "kind": "file",
+     "ref": "ryuklabs ops brain: 10_TRUTH/aim.json",
+     "label": "the aim, ruled Q-RL-C5-AIM; measure ruled none (Q-RL-C5-MEASURE)"
+    },
+    {
+     "kind": "file",
+     "ref": "ryuklabs ops brain: 10_TRUTH/flows.json",
+     "label": "the flows; \"This project has no app screens or doors of its own\""
+    },
+    {
+     "kind": "file",
+     "ref": "ryuklabs ops brain: 10_TRUTH/owner-questions.json",
+     "label": "the six rulings of 2026-09-29"
+    },
+    {
+     "kind": "file",
+     "ref": "ryuklabs ops brain: dist/pack/gtm.json",
+     "label": "the GTM template: activity kinds and the proof rule"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "question",
+  "op": "upsert",
+  "data": {
+   "qid": "Q-ryuklabs-model",
+   "question": "Does the ryuklabs project hold a product model (apps, lanes, architecture)?",
+   "why": "The audit flags \"no top level of the model\" as high. The ops brain already asks it as the open gap Q-SIRU-GAP-PRODUCT-MODEL: \"The ryuklabs project is the org's own operating work (GTM, outreach, content, grants), not a coded product — this pack ships empty screens/entities/tables/api/architecture. Confirm that stays empty, or point at the repo that should feed it.\" Option A is the recommendation: flows.json says the project has no app screens or doors of its own, and the meter already counts no App area for it.",
+   "area": "map",
+   "severity": "normal",
+   "status": "open",
+   "whoOwes": "owner",
+   "waitingOn": "owner",
+   "affects": [
+    "gap:Q-SIRU-GAP-PRODUCT-MODEL"
+   ],
+   "options": [
+    {
+     "what": "No: it stays empty by design; its gap is closed",
+     "tradeoff": "The gap's first option; flows.json \"This project has no app screens or doors of its own\". The Map shows only the flows."
+    },
+    {
+     "what": "Yes: point at the repo that should feed it",
+     "tradeoff": "The gap's second option. No source names such a repo today."
+    }
+   ],
+   "source": [
+    {
+     "kind": "file",
+     "ref": "ryuklabs ops brain: 02_AGENT_R/gaps.json",
+     "label": "Q-SIRU-GAP-PRODUCT-MODEL"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "question",
+  "op": "upsert",
+  "data": {
+   "qid": "Q-ryuklabs-private-data",
+   "question": "The ryuklabs import carries client names, deal terms and funding details into the data that ships: strip them before the ship?",
+   "why": "Found while filing the basics (2026-10-01): the ops brain's import puts client names with contract and invoice amounts in the goal \"revenue\"'s note and in the doc capsules/gtm.md, and funding details in the notes of the goals grants, capital-lanes and supernova-0x. The live import files them into the org's D1 on Cloudflare. The team context pack's privacy rule (§18) says not to publish old invoices or internal operational records. Option A is the recommendation.",
+   "area": "privacy",
+   "severity": "high",
+   "status": "open",
+   "whoOwes": "owner",
+   "waitingOn": "owner",
+   "affects": [
+    "goal/revenue",
+    "goal/grants",
+    "goal/capital-lanes",
+    "goal/supernova-0x"
+   ],
+   "options": [
+    {
+     "what": "Strip them: an overlay rewrites those notes without names and amounts, and drops capsules/gtm.md from the import",
+     "tradeoff": "The privacy rule of the team context pack (§18) and of this fill. The stage notes keep their dates and stages."
+    },
+    {
+     "what": "Keep them: the project is seated to the org only",
+     "tradeoff": "Nothing changes; the amounts and names live in Cloudflare D1 with the rest of the org's data."
+    }
+   ],
+   "source": [
+    {
+     "kind": "file",
+     "ref": "ryuklabs ops brain: 10_TRUTH/gtm.md",
+     "label": "the stage notes the import carries"
+    },
+    {
+     "kind": "file",
+     "ref": "Ryuklabs master context §18",
+     "label": "the privacy and operating rule"
+    }
+   ]
+  }
+ }
+]

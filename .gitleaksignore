@@ -1,0 +1,113 @@
+# .gitleaksignore — repo root (the CI gitleaks job runs `gitleaks git .` from here and reads this
+# file by default). sec0914:history-carries-live-credentials-before-read-access.
+#
+# ONE fingerprint per verified finding, grouped under a comment header naming the class + a
+# one-line reason. Four classes so far:
+#   fixture / public-by-design / dead / false-positive — never live to begin with (heal round 1).
+#   dead-with-evidence — a class A (live, history) / B (live, HEAD+history) / C (presumed live,
+#     history) finding that WAS live, until the owner/orchestrator actually killed the credential
+#     it names and could cite the proof (heal round 2) — added ONLY once that proof exists, never
+#     speculatively, and never by this row's own author (the row measures + fixes the SCAN; the
+#     owner/orchestrator kill the CREDENTIAL and are the ones who get to declare it dead).
+# A finding with none of the above — still genuinely live, or simply not yet triaged — stays OUT of
+# this file and keeps the scan RED. tools/history-secret-scan.mjs's own accountability check refuses
+# any ignore line that sits under no class header at all.
+#
+# Fingerprint format: gitleaks git's own `commit:file:rule:startLine` (matches --report-format
+# json/csv `Fingerprint` field byte for byte — never hand-typed, always copied from a real scan).
+
+# fixture: test-only synthetic secret-shaped literals (FAKE_JWT / obviously-fake tokens / sample
+# device ids) — every one read at its commit and confirmed the file's own prose calls it fake,
+# fabricated, or a fixture stand-in; never a real credential.
+0d9a3cca1f83e4df5ec45bdb2419872e6d6592ee:orchestrator/cockpit/tests/pack.test.mjs:generic-api-key:16
+12e43334d79eacce195d5ed1f0601a8312520c70:orchestrator/tests/lanes.test.mjs:generic-api-key:206
+12e43334d79eacce195d5ed1f0601a8312520c70:orchestrator/tests/lanes.test.mjs:generic-api-key:208
+1e115c58948521e72ce0195760970abbf184276f:orchestrator/tests/org-export.test.mjs:aws-access-token:110
+1e115c58948521e72ce0195760970abbf184276f:orchestrator/tests/org-export.test.mjs:aws-access-token:90
+37918da3a9625bdb617e8333c4d50ad9402ed626:orchestrator/tests/admin-key-mint.test.mjs:generic-api-key:55
+3ed4a5a4a5c296a715760a8c8e33fe02a96afbd6:orchestrator/tests/accesseditor.test.mjs:generic-api-key:69
+50f89e8d1cfc0a0659c9cb0ab0995ac843f40a3f:orchestrator/tests/session-spawn.test.mjs:jwt:133
+59fee5a7833f720c4eeca5e8a3b38873b34c5f5c:orchestrator/tests/redact.test.mjs:jwt:46
+e4717aba5c57f25d4d5ada925ad535187e127c7c:orchestrator/tests/kit-store.test.mjs:curl-auth-header:144
+e4717aba5c57f25d4d5ada925ad535187e127c7c:orchestrator/tests/kit-store.test.mjs:generic-api-key:185
+792a46febfc1364f5736d2cb09c7ae869936eedb:orchestrator/tests/face-grammar.test.mjs:generic-api-key:169
+792a46febfc1364f5736d2cb09c7ae869936eedb:orchestrator/tests/face-grammar.test.mjs:jwt:173
+bed342fbcf2aec3919f5f3abb3edd2b6eede3192:orchestrator/tests/publish-face.test.mjs:generic-api-key:1768
+394a9627cbd39edf34892b0b30edcec46a606a1c:orchestrator/tests/clone-setup.test.mjs:generic-api-key:19
+394a9627cbd39edf34892b0b30edcec46a606a1c:orchestrator/tests/clone-setup.test.mjs:generic-api-key:52
+bfc7bbc62a133000a70d77164091f24a6e510382:orchestrator/cockpit/tests/runner-secret-scrub.test.mjs:jwt:23
+bfc7bbc62a133000a70d77164091f24a6e510382:orchestrator/tests/runlog-scrub.test.mjs:jwt:12
+bfc7bbc62a133000a70d77164091f24a6e510382:orchestrator/tests/secret-redact.test.mjs:generic-api-key:62
+bfc7bbc62a133000a70d77164091f24a6e510382:orchestrator/tests/secret-redact.test.mjs:generic-api-key:67
+bfc7bbc62a133000a70d77164091f24a6e510382:orchestrator/tests/secret-redact.test.mjs:jwt:21
+bfc7bbc62a133000a70d77164091f24a6e510382:orchestrator/tests/secret-redact.test.mjs:private-key:57
+ca670ce0fe8a6b662c1e7156f5c9bd33fc5ce438:orchestrator/tests/chat-door.test.mjs:jwt:29
+9121938a85003801bea4fe11e5793f5201d2fd27:orchestrator/tests/face-v3-contract.eval.test.mjs:generic-api-key:222
+e41fd48368e07980bea1c80ebeb1603112609853:orchestrator/tests/meetings-fleet.test.mjs:generic-api-key:26
+e9c5360cf9a18d1228c3aeef6677052fa92435c7:orchestrator/tests/secret-redact.test.mjs:generic-api-key:179
+
+# public-by-design: an anon/publishable Supabase key for the RETIRED project ref
+# (ngxrxclliumpbdcnyzzu, docs/INSTANCE.md §7) — role:"anon" / sb_publishable_*, designed to be
+# browser-safe, and the project itself is being deleted by the owner (class A companion fact).
+0d5a76900df035a473e44dfcaf8d92c7267514c3:orchestrator/sharingan/config.json:generic-api-key:1
+6ae829c300483bdfc86b37eda042f929e9d356bf:orchestrator/reports/report.html:jwt:1143
+6bf9dd39a53338d7b24ffe8c1a3b7c2f004cb8ba:orchestrator/reports/report.html:jwt:1031
+b1a46f378afda29d8c9197e2647ed75cf81529cb:orchestrator/reports/report.html:jwt:1031
+cc7c362b468082ed0c6a9f587a5b85844711d27d:orchestrator/reports/report.html:jwt:1099
+f0324b27754ede57f23724a9d951e38eafced3d8:orchestrator/reports/report.html:jwt:1099
+
+# dead: the legacy HMAC cookie-signing SECRET from the RETIRED middleware.js login path — the
+# current middleware.js (HEAD) carries no such secret at all; the comment at middleware.js
+# HEAD says the legacy HMAC login "is retired" and any old siru_auth cookie is cleared on sight.
+5cc0721dbe1af954f3b5925d0c52f69e803e99d0:orchestrator/middleware.js:generic-api-key:22
+
+# fixture: engine/evals.sh's own /mcp bad-bearer eval sends a curl Authorization header built from
+# an obviously-fake literal ("..._notarealkey000"), never a variable holding a real token.
+c3d28973fbaf953eb87442e7404496ca27630337:engine/evals.sh:curl-auth-header:1308
+
+# false-positive: high-entropy-looking literals gitleaks' generic-api-key rule flags that are not
+# secrets at all — atlas.json flowKey ids (a walk/flow slug, not a key), code-inspect-baseline.json
+# (git commit SHA1s keyed by app name, a code-inspect baseline, not a credential store), and the
+# vendored xterm.js bundle (third-party minified UMD build; the whole file is one line).
+065144c938e01b72523b7c18fedc44acfae991e2:orchestrator/sharingan/data/atlas.json:generic-api-key:7474
+5611b3ea712700a6bff3557e929c5bd7e5d5c0dd:orchestrator/docs/runlog/code-inspect-baseline.json:generic-api-key:3
+657f9b5264d6e0f812ffbf5201d2f1ee6e3431ef:orchestrator/sharingu/vendor/xterm/xterm.js:generic-api-key:1
+90850503e07cd45e610d00cb8aaa69cf08a0ab21:orchestrator/cockpit/ui/vendor/xterm/xterm.js:generic-api-key:1
+afeb27b1c81e1679ca0ea8e030213e069bf6b263:orchestrator/apps/monfi/atlas.json:generic-api-key:3142
+
+# dead-with-evidence: class A — the retired Supabase project ngxrxclliumpbdcnyzzu no longer resolves
+# (probed 3x; it previously answered 401) — the owner deleted the project.
+a988f599f273b07fd162da2d0c0efa5f31d9eb99:orchestrator/tests/local-door.test.mjs:jwt:56
+
+# dead-with-evidence: class B — the sharingu-qa preset logins were cleared from the live Vercel env
+# and production redeployed; the documented login now reads 401 (it previously read 200).
+0134353fda9b71192248a772852e1fc0778b2455:orchestrator/docs/DEPLOY.md:curl-auth-user:44
+04c183363a05ef86d08695fce38ff745cc145ff6:orchestrator/docs/INSTANCE.md:curl-auth-user:105
+0bec903312b89899420c3b60e5c7948969c7def1:orchestrator/docs/INSTANCE.md:curl-auth-user:116
+10c51fc65a05ce84f4ca35552534ad0ccf13d6dd:orchestrator/docs/DEPLOY.md:curl-auth-user:85
+10c51fc65a05ce84f4ca35552534ad0ccf13d6dd:orchestrator/docs/HANDOFF_COMMENTS.md:curl-auth-user:54
+3d27400469eaea21657edf583423f39106e657a3:orchestrator/middleware.js:curl-auth-user:6
+5cc0721dbe1af954f3b5925d0c52f69e803e99d0:orchestrator/middleware.js:curl-auth-user:5
+620804cf2a2cca397706dd0090bd0fa486d651ee:orchestrator/middleware.js:curl-auth-user:6
+659325e45cadfeb9eafd64157a10c8bc0392277f:orchestrator/docs/DEPLOY.md:curl-auth-user:115
+7dcfaae41c9643db3d049070d268f7dc071ab795:orchestrator/docs/DEPLOY.md:curl-auth-user:85
+7dcfaae41c9643db3d049070d268f7dc071ab795:orchestrator/docs/HANDOFF_COMMENTS.md:curl-auth-user:54
+a7b8e8f3535e1fd87c68af393b074f591f3a0306:orchestrator/docs/DEPLOY.md:curl-auth-user:85
+a7b8e8f3535e1fd87c68af393b074f591f3a0306:orchestrator/docs/HANDOFF_COMMENTS.md:curl-auth-user:54
+ca84c2c198224774c6846d7d72b5f656f9accad5:orchestrator/docs/HANDOFF_COMMENTS.md:curl-auth-user:54
+e61fe544e9f83529b9a6aa2a18824f2e98443e38:orchestrator/docs/DEPLOY.md:curl-auth-user:144
+e63f6bc6f20b93d534f04e94780bfc39e1c43ea1:orchestrator/docs/DEPLOY.md:curl-auth-user:96
+eeebd0894c5231ed474698d75c1bb1a35992f300:orchestrator/docs/DEPLOY.md:curl-auth-user:137
+eeebd0894c5231ed474698d75c1bb1a35992f300:orchestrator/docs/DEPLOY.md:curl-auth-user:144
+eeebd0894c5231ed474698d75c1bb1a35992f300:orchestrator/docs/HANDOFF_COMMENTS.md:curl-auth-user:54
+
+# dead-with-evidence: class C — a names-only inspection of the committed profile at 1603c6e2 found
+# 0 cookies, 0 saved logins, 0 token_service rows, browsing history only 127.0.0.1:8731, and no
+# Local Storage data files — nothing live was ever extractable from it.
+5d31fd18fef5389de9113f47050d79bd9d161869:orchestrator/.tmp-v2-map-audit-profile/Default/BrowsingTopicsState:generic-api-key:10
+5d31fd18fef5389de9113f47050d79bd9d161869:orchestrator/.tmp-v2-map-audit-profile/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.109.1_0/manifest.json:generic-api-key:24
+5d31fd18fef5389de9113f47050d79bd9d161869:orchestrator/.tmp-v2-map-audit-profile/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/manifest.json:generic-api-key:15
+5d31fd18fef5389de9113f47050d79bd9d161869:orchestrator/.tmp-v2-map-audit-profile/Default/Preferences:generic-api-key:1
+5d31fd18fef5389de9113f47050d79bd9d161869:orchestrator/.tmp-v2-map-audit-profile/Default/Secure Preferences:generic-api-key:1
+5d31fd18fef5389de9113f47050d79bd9d161869:orchestrator/.tmp-v2-map-audit-profile/WasmTtsEngine/20260806.1/wasm_tts_manifest_v3.json:generic-api-key:5
+

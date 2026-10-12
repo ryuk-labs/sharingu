@@ -1,0 +1,191 @@
+{
+ "note": "The demo project's aim and goal tree, from the public sharingu website only (the home page, the guide, llms.txt). The site states no number for the aim, so the measure stays open as a question (5-questions).",
+ "clientRef": "demo-1-aim-goals",
+ "items": [
+  {
+   "kind": "aim",
+   "op": "upsert",
+   "data": {
+    "aim": "sharingu is a universal company harness: one shared brain for goals, contributions, evidence and human decisions. It connects through MCP to compatible tools you already use; your chosen AI tools do the work, and people retain decision authority.",
+    "measure": null,
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/",
+      "label": "the site's answer to \"What is sharingu, exactly?\""
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/llms.txt",
+      "label": "the site's one-paragraph summary"
+     }
+    ],
+    "asOf": "2026-09-28",
+    "confidence": "confirmed"
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "add-up",
+    "parent": null,
+    "title": "Make the work add up to understanding",
+    "dimensions": [],
+    "note": "The site's mission: give understanding a shared home: connect each contribution to its goal, keep the evidence close, and preserve the human judgment that moves it forward. A shared process that lives with your work, whichever tool you use.",
+    "sort": 1,
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/",
+      "label": "Our mission"
+     }
+    ],
+    "asOf": "2026-09-28",
+    "confidence": "direction",
+    "status": "in progress"
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "goal-outlives-chat",
+    "parent": "add-up",
+    "title": "A goal outlives a chat",
+    "dimensions": [
+     "code"
+    ],
+    "note": "People and agents can change tools without losing the direction behind the work. The site: ChatGPT today, Claude tomorrow; your company's context stays connected across people and compatible tools.",
+    "sort": 2,
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/",
+      "label": "Our vision, 01"
+     }
+    ],
+    "asOf": "2026-09-28",
+    "confidence": "direction"
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "reason-survives-handoff",
+    "parent": "add-up",
+    "title": "A reason survives the handoff",
+    "dimensions": [
+     "leader"
+    ],
+    "note": "The next teammate can find who decided, what informed the decision, and what remains uncertain. A decision can settle what the team should do without making every underlying claim true.",
+    "sort": 3,
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/",
+      "label": "Our vision, 02"
+     }
+    ],
+    "asOf": "2026-09-28",
+    "confidence": "direction"
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "learning-belongs",
+    "parent": "add-up",
+    "title": "Learning belongs to the company",
+    "dimensions": [
+     "leader"
+    ],
+    "note": "Understanding accumulates across teams and projects. Human authorship stays visible as the organization grows; contribution tracking is not a performance leaderboard.",
+    "sort": 4,
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/",
+      "label": "Our vision, 03"
+     }
+    ],
+    "asOf": "2026-09-28",
+    "confidence": "direction"
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "contribution-loop",
+    "parent": "add-up",
+    "title": "Every contribution closes the loop: brief, contribute, review, carry forward",
+    "dimensions": [
+     "code",
+     "design",
+     "gtm"
+    ],
+    "note": "One repeatable process for design, research, code and GTM. Brief: agree on the goal, scope and evidence needed. Contribute: attach the work, its author, sources and unresolved questions. Review: the responsible person records the decision, its reason and limits. Carry forward: retain the context and turn the remaining question into the next brief.",
+    "sort": 5,
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/docs.html",
+      "label": "How sharingu works, 08"
+     }
+    ],
+    "asOf": "2026-09-28",
+    "confidence": "direction"
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "cost-to-outcome",
+    "parent": "add-up",
+    "title": "Connect the cost, understand the outcome",
+    "dimensions": [
+     "ba"
+    ],
+    "note": "Follow the resources behind a contribution, the person responsible and the goal it supports. Each measure needs a source, unit, time window and status (observed, reported, estimated or unknown); unreported usage stays unknown, not zero. ROI is not established until there is a measured outcome, a baseline, attribution and all relevant costs.",
+    "sort": 6,
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/docs.html",
+      "label": "How sharingu works, 09"
+     }
+    ],
+    "asOf": "2026-09-28",
+    "confidence": "direction"
+   }
+  },
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "private-beta",
+    "parent": "add-up",
+    "title": "Private beta: an organization contributes a real piece of work",
+    "dimensions": [
+     "gtm"
+    ],
+    "note": "The site's getting-started path: request beta access or a walkthrough; confirm the supported client and organization setup during onboarding; receive the organization's MCP URL and a personal key from its administrator; configure the client and contribute a real piece of work with its references.",
+    "sort": 7,
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/docs.html",
+      "label": "How sharingu works, 11"
+     }
+    ],
+    "asOf": "2026-09-28",
+    "confidence": "confirmed",
+    "status": "in progress"
+   }
+  }
+ ]
+}

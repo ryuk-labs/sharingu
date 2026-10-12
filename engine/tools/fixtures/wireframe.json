@@ -1,0 +1,2335 @@
+{
+  "_pinned": {
+    "from": "agent-rl-sharingu-brain:source/board/sources/wireframe.json",
+    "sha": "0191bf01f3b6f370d31157d7ef1b238b6f8caa48",
+    "lastTouchedBy": "2bb396049a76840373b12d7d3bcd02bded100143",
+    "why": "UI-B1a, re-pinned at UI-B2 (brain0927:pre-b2, the counters MCP call by gapRefs, QB953462F), at UI-B3 (brain0927:pre-b3, the wf-home buttons and doors: see-options, approve, see-diff, grant-once, not-yet, and both counter calls) and at UI-B4a (brain0928:pre-b4, merged as 3c8dee41: wf-filing, the filing page's six regions, its three ruling buttons and the counter call by parent) and at UI-B5b (brain0928:pre-b5, 6d5580f2: wf-versions wired, view -> GET /versions/:v, restore owner only, the orange banner superseded) and at UI-B6a (brain0928:pre-b6, 751e4e4d: wf-goals on the one read GET /goals, expand-node -> GET /goals/:ref, see-gap-on-map waits on UI-B7, the counters call by gapRefs goal/<id>; wf-goal-node added) and at UI-B7b (brain0928:pre-b7, 2b4ff97f, blob 0f44b463: wf-map-system's walk-gaps and select-node on GET /map/node, the Goals layer from the served tree Q0E486A34, the Screens view retired Q1493F52A; wf-goals' see-gap-on-map on GET /map/node) and at UI-B8a (brain0928:pre-b8 + brain0928:b9-export, ae52ddf7: wf-map-api on GET /map/api, wf-map-mcp on GET /map/mcp with equip, equip-preset and open-preset-source waiting disabled for UI-B11, open-door-json on GET /contract, the Spec view retired Q1493F52A, open-card on the card page Q86AD1F48) and at UI-B8b (brain0928:pre-b8, ae52ddf7, brain main 42122a4d, blob d1ef6ae5: wf-map-arch on GET /map/arch with open-contract on GET /contract, wf-map-data on GET /map/data with open-question on GET /question/:qid, see-gap on GET /map/node and open-schema on GET /pack/file/:id, enabled only when the pack declares the schema download; the sample tables and counts superseded by served ones; the spec unchanged since ae52ddf7, this re-pin only confirms it) and at UI-B9 (brain main d0294d47, blob still d1ef6ae5: wf-map-flows on GET /map/flows with all-flows, step-select and open-blocking-question on GET /question/:qid, wf-map-deps on GET /map/deps with only-blockers, node-select and rule-both-now on POST /respond; the typed counts, sample flows, lanes and chains superseded by served ones; the spec unchanged since ae52ddf7, this re-pin only confirms it) and at UI-B10b (brain main 9369fcb3, blob e1788fb9, last touched by brain0929:pre-b10 92e355ef: wf-gtm on GET /gtm/pipeline with campaigns (client, the gtm goal nodes), counters on GET /gtm/pipeline and open-on-goals on GET /goals/:ref, disabled with its reason when the tree has no gtm node; the typed funnel stamp, tiles, lanes, sample orgs and tags superseded by served ones; only wf-gtm moved since d0294d47) and at UI-B11a (brain main a7ec5171 after the pre-b11 merge 5ceea50b, blob a5300b48, last touched by brain0929:pre-b11 07bde566: wf-broadcast's three doors noted (GET /broadcast the shape; POST /broadcast/publish and POST /broadcast/equip a signed-in-browser press, no MCP tool, no key), its four wires and a superseded row for every typed artboard sample; wf-map-mcp's equip on POST /broadcast/equip with no wait, equip-preset and open-preset-source waiting with \"No preset is published.\" (D9); only wf-broadcast and wf-map-mcp moved since 9369fcb3) and at U-MCP (brain main 85db3ed2, blob 7e34ca25, last touched by brain0929:pre-umcp 854cfab8: wf-map-arch region:org-worker notes the ONE population, the org's ACTIVE projects (Q0D506BBC Fork 3 (1)), each a project: a soft scope, the key org-worker.projects, with superseded rows for the \"each a workspace\" copy and the \"ws: <project>\" chip (Q93B3F368); wf-home's who-is-here note names the same population; only wf-map-arch and wf-home moved since a7ec5171 and at UI-B12a (brain main 0191bf01, blob 6a4e0c94, last touched by brain0929:pre-b12 2bb39604: wf-control's doors noted — GET /control/people (the shape, the scope, the budget, no MCP twin) and POST /control (the ONE admin write door, every action, owner-only, refused to a seat independently of the render, the D3 hardening); POST /control/role and /control/workspace folded into it (superseded rows); GET /control, GET /audit and GET /decisions live; nine buttons wired; regions nav · people · workspaces · keys · this-org; a superseded row for every typed artboard sample and for the admin-only buttons shown DISABLED with the reason (QB963C7EE, F6); retired[] desk (/orchestrator), charts (/observatory) and pack (/control/pack), each retired in UI-B12b; the pre-b12 note carrying Forks 1-3; also carried since 85db3ed2, from brain0929:pre-tail 2cc32521: the shell's third door gains its note and wf-home one more note and one more superseded row (U-MCP-tail)): the engine gate never reads outside the repo, so tools/wire-selftest.mjs reads this pinned copy. Re-pin by copying the brain file at a newer sha and updating these two shas; the rest of the file is verbatim."
+  },
+  "_comment": "AUTHORED source. The wireframe (claude.ai/artifact/Qpnsqgwu17yhwUU9rC1nty, v5) as DATA so its buttons and doors are checkable rather than only drawable. B0 (2026-09-26, r112/r113) made it the ONE spec the UI batches build against: 16 artboards at 1280x828 (wireframe/project/canvas.json), the top bar declared once as `shell`, every button wired (`wires[button]`: `door` is a row of this screen's or the shell's doors[], `client` is what it does without a door, `mcp` is the call a person's own Claude makes), and every element a later ruling overrode kept as `superseded[]` with its `supersededBy` ruling ids, never silently dropped. `because[]` cites the ruling(s) that require the screen; gap-scan.mjs fails on an empty one. doors[].state is the DRAWING's claim (live = a route in contracts/door.json today, new = proposed); gap-scan cross-checks it against model.json api[].",
+  "artifact": "https://claude.ai/artifact/Qpnsqgwu17yhwUU9rC1nty",
+  "artifactVersion": 5,
+  "localRevision": "B0 2026-09-26: the local artboards moved past the published artifact v5 (RunConsole deleted, Brand v2 type and colour, the r113 redraws); republishing the artifact is the session's.",
+  "artboard": {
+    "w": 1280,
+    "h": 828
+  },
+  "shell": {
+    "id": "shell",
+    "name": "The top bar, on every artboard",
+    "because": [
+      "Q36AF8BA1",
+      "QC74D4892",
+      "QD0A65555"
+    ],
+    "buttons": [
+      "project-switch",
+      "search",
+      "notifications",
+      "avatar"
+    ],
+    "wires": {
+      "project-switch": {
+        "door": "POST /project",
+        "client": "lists the person's projects from their whoami read"
+      },
+      "search": {
+        "door": "GET /search"
+      },
+      "notifications": {
+        "door": "GET /updates"
+      },
+      "avatar": {
+        "door": "GET /profile",
+        "nav": "/profile"
+      }
+    },
+    "doors": [
+      {
+        "m": "POST",
+        "path": "/project",
+        "state": "live"
+      },
+      {
+        "m": "GET",
+        "path": "/search",
+        "state": "live"
+      },
+      {
+        "m": "GET",
+        "path": "/updates",
+        "state": "live",
+        "note": "2026-09-29 (brain0929:pre-tail, QE6B9CEBA Fork 1 (1)): waitingOnYou.blockers is ONE source — the pack's open rows the ONE owedBy says are yours (decisions.js owedBy: whoOwes owner, still open, no non-provisional answer and not ruled through the link since the publish), as [{id, title}], the owner's only (a member gets []); the same set Home's needs-you decide rows, Decisions' \"Open: yours\", the MCP `state` blockers and the thread brief's badge read. Never the served questionnaire (openQuestions.blocking)."
+      },
+      {
+        "m": "GET",
+        "path": "/profile",
+        "state": "live"
+      }
+    ],
+    "regions": [
+      "mark",
+      "org-name",
+      "project-switcher",
+      "tabs",
+      "search",
+      "notifications",
+      "avatar"
+    ],
+    "superseded": [
+      {
+        "el": "button:org-switch \"ryuklabs / sharingu\" + chip \"3 orgs\"",
+        "supersededBy": [
+          "QC74D4892",
+          "QD0A65555"
+        ],
+        "now": "the org's name (static) beside the project switcher (POST /project)"
+      }
+    ],
+    "notes": [
+      "2026-09-26 B0: search, notifications, the avatar and the switcher were drawn on all 17 artboards and listed on none."
+    ]
+  },
+  "screens": [
+    {
+      "id": "wf-home",
+      "name": "Home",
+      "tab": "Home",
+      "artboard": "Home.dc.html",
+      "because": [
+        "Q36AF8BA1",
+        "Q935B7970",
+        "QF4CC7033",
+        "QA20249FB",
+        "QB953462F",
+        "Q45D29B33",
+        "Q57988E56"
+      ],
+      "buttons": [
+        "choose-option",
+        "see-options",
+        "approve",
+        "see-diff",
+        "grant-once",
+        "not-yet",
+        "counters",
+        "all-open"
+      ],
+      "wires": {
+        "choose-option": {
+          "door": "POST /respond",
+          "client": "a decide row: the first option (R's pick), next /home"
+        },
+        "see-options": {
+          "door": "GET /question/:qid",
+          "nav": "the question card"
+        },
+        "approve": {
+          "door": "POST /contribution/:id/decide",
+          "client": "an approve row: verdict approve, next /home"
+        },
+        "see-diff": {
+          "door": "GET /contribution/:id",
+          "nav": "the filing page"
+        },
+        "grant-once": {
+          "door": "POST /contribution/:id/decide",
+          "client": "a grant row: verdict approve, note \"granted once\" (consent for this one occasion; standing consent stays on /profile)"
+        },
+        "not-yet": {
+          "door": "POST /contribution/:id/decide",
+          "client": "a grant row: verdict needs-work, note \"not yet\". Terminal for this filing: it is decided and leaves Home; the agent re-files with parent: <this id> when the occasion returns. No snooze state (Q45D29B33)"
+        },
+        "counters": {
+          "door": "GET /home/summary",
+          "client": "opens the counters filed against this row and shows the exact MCP call for the row kind",
+          "mcp": "preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"q/<qid>\"], what, why}}]}, then file on a decide row; preview {items: [{contribution: {lane, kind: \"counter\", parent: <this id>, what, why}}]}, then file on an approve or grant row (a question is not a transmission, so a counter names a question by gapRefs and a filing by parent, QB953462F; kind \"counter\" is not in the registry yet)"
+        },
+        "all-open": {
+          "client": "opens the Decisions tab",
+          "nav": "Decisions"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/home/summary",
+          "state": "new",
+          "note": "one composed read (program guardrail 7)"
+        },
+        {
+          "m": "POST",
+          "path": "/respond",
+          "state": "live"
+        },
+        {
+          "m": "GET",
+          "path": "/question/:qid",
+          "state": "live"
+        },
+        {
+          "m": "POST",
+          "path": "/contribution/:id/decide",
+          "state": "live",
+          "note": "owner-only, form-capable; approve, grant once and not yet all ride it"
+        },
+        {
+          "m": "GET",
+          "path": "/contribution/:id",
+          "state": "live"
+        }
+      ],
+      "regions": [
+        "identity",
+        "aim",
+        "metrics",
+        "needs-you",
+        "goals-moved",
+        "who-is-here"
+      ],
+      "superseded": [
+        {
+          "el": "metric:agents-running",
+          "supersededBy": [
+            "QD0A65555"
+          ],
+          "now": "metric:in-motion: a count of filings by tempo (in, with a person, needs more)",
+          "was": "Agents running 3: dev, qa, reviewer"
+        },
+        {
+          "el": "button:org-switch",
+          "supersededBy": [
+            "QC74D4892",
+            "QD0A65555"
+          ],
+          "now": "the org's name in the top bar (shell); the project switcher switches"
+        },
+        {
+          "el": "door:POST /sso/overview",
+          "supersededBy": [
+            "QC74D4892"
+          ],
+          "now": "no screen door: /sso/overview is the launcher's worker-to-worker query, and there is one org worker",
+          "was": "drawn as the org switcher's live door"
+        },
+        {
+          "el": "button:counter-file",
+          "supersededBy": [
+            "QD0A65555",
+            "QC8B94276"
+          ],
+          "now": "button:counters: shows the counter-filings made against the row and the exact MCP call; the person's own Claude files it",
+          "was": "a counter-file control with a reason picker"
+        },
+        {
+          "el": "door:POST /counter",
+          "supersededBy": [
+            "QC8B94276",
+            "QD0A65555"
+          ],
+          "now": "no door: a counter is a filing (POST /transmission with parent set), filed by the person's own Claude through the MCP door"
+        },
+        {
+          "el": "copy:machines in identity and who-is-here",
+          "supersededBy": [
+            "QA78C4808"
+          ],
+          "now": "people and projects only: there is no machine seat (projects, not workspaces: Q93B3F368)",
+          "was": "4 people, 2 machines"
+        },
+        {
+          "el": "chip:roles owner/operator/viewer",
+          "supersededBy": [
+            "QC5F82B90"
+          ],
+          "now": "admin / seated",
+          "was": "owner, operator, viewer"
+        },
+        {
+          "el": "source:blockers = the served questionnaire (openQuestions.blocking)",
+          "supersededBy": [
+            "QBDD22130",
+            "QE6B9CEBA"
+          ],
+          "now": "what waits on the owner at every door (Home's needs-you, the heartbeat, state, the thread brief) is the pack's open rows the ONE owedBy says are yours (decisions.js owedBy: whoOwes owner, still open, no non-provisional answer and not ruled through the link since the publish)",
+          "was": "the heartbeat, state and the thread brief read the served questionnaire's openQuestions.blocking, which QBDD22130 emptied (0 active leader questions) while Home showed the pack's 2"
+        }
+      ],
+      "notes": [
+        "2026-09-27 (brain0927:pre-b3): see-options, approve, see-diff, grant-once and not-yet were drawn on the artboard and listed on none; now wired. A decide row carries choose-option, see-options and counters; an approve row approve, see-diff and counters; a grant row grant-once, not-yet and counters.",
+        "A grant row is a filing an agent makes through the MCP door: preview then file {contribution: {lane, kind: \"grant\", what, why, touches}. The router sends kind \"grant\" to the owner with reason asks-a-grant (Q45D29B33). touches is required for every kind but the plain note (engine/src/transmission.js, the binding step), and a code, design or gtm lane grant meets the screen and proof gates first, so an agent asks in lane leader unless UI-B3 routes kind grant ahead of those gates.",
+        "The aim region reads the served goal.json aim.measure (\"human touches per shipped unit\"), exported by the brain from the run record (Q57988E56); until it is exported the region shows its EMPTY sentence.",
+        "region:who-is-here (2026-09-29, brain0929:pre-umcp, U-MCP Q0D506BBC Fork 3 (1)): \"N projects\" is the org's ACTIVE projects — ONE population, the same count Map · Arch's org-worker reads, through one function (countActiveProjects). On 2026-09-29 the live org carried 5 active rows against the umbrella manifest's 2; the owner archives the parked rows on Control (archive-project, reversible, no data deleted), and RLC.QB1623583.projects checks the live rows equal the manifest.",
+        "region:needs-you (2026-09-29, brain0929:pre-tail, QE6B9CEBA Fork 1 (1)): the decide rows are ONE source — the pack's open rows the ONE owedBy says are yours (decisions.js owedBy: whoOwes owner, still open, no non-provisional answer and not ruled through the link since the publish). The same set is what waits on the owner at every door: the heartbeat's waitingOnYou.blockers (the notifications door), the `state` tool's blockers and the thread brief's badge. The served questionnaire (openQuestions.blocking, emptied by QDBCB2D5A and QBDD22130) is no source of it any more."
+      ]
+    },
+    {
+      "id": "wf-build",
+      "name": "Build",
+      "tab": "Build",
+      "artboard": "Build.dc.html",
+      "because": [
+        "Q36AF8BA1",
+        "QA20249FB",
+        "Q0B546903",
+        "QC8B94276",
+        "QB953462F",
+        "QEFC716D5",
+        "Q4F5323A0"
+      ],
+      "buttons": [
+        "filter",
+        "sort",
+        "rank",
+        "counters",
+        "open-row"
+      ],
+      "wires": {
+        "filter": {
+          "client": "filters the list read by kind: the kinds present in the project's filings (All N, then one chip per kind actually filed), as ?kind= links; the artboard's Bugs/Gaps/Chores are sample content"
+        },
+        "sort": {
+          "client": "orders the list read: Ranked (the newest rank press first, then newest; QEFC716D5), Newest, By goal"
+        },
+        "rank": {
+          "door": "POST /rank",
+          "client": "any seated reader; files ONE filing: lane leader, kind \"rank\", parent <this id>, routes auto (touches optional); the project's shared order is the newest rank press first. No table, no migration: the latest rank is a subquery on idx_transmission_parent (QEFC716D5)",
+          "mcp": "rank {id: <this id>}"
+        },
+        "counters": {
+          "door": "GET /build",
+          "client": "opens the standing counters filed against this row (kind counter or critique, undecided: the one STANDING_COUNTER definition), links to the filing's counters region, and shows the exact MCP call",
+          "mcp": "preview {items: [{contribution: {lane, kind: \"counter\", parent: <this id>, what, why}}]}, then file (a counter needs a target, parent or gapRefs q/<qid>, and no touches; it routes to the owner as counters-a-filing, QC8B94276 + QB953462F)"
+        },
+        "open-row": {
+          "door": "GET /contribution/:id",
+          "nav": "the filing page (wf-filing, OD4)"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/build",
+          "state": "new",
+          "note": "the Build read: one seam readBuild, HTML to a browser and JSON otherwise; every seated reader, scoped to the project (Q0B546903); replaces the 302 to /audit"
+        },
+        {
+          "m": "GET",
+          "path": "/contribution/:id",
+          "state": "live",
+          "note": "the filing page (wf-filing, OD4); owner-only today, every seated reader scoped to the project from UI-B4a"
+        },
+        {
+          "m": "POST",
+          "path": "/rank",
+          "state": "new",
+          "note": "a rank is a filing (kind rank, parent <id>, lane leader, routes auto); any seated reader; MCP twin rank (QEFC716D5)"
+        }
+      ],
+      "regions": [
+        "filings",
+        "tempo",
+        "finish-line"
+      ],
+      "superseded": [
+        {
+          "el": "button:run-crew",
+          "supersededBy": [
+            "QD0A65555"
+          ],
+          "now": "none: work is filed from the person's own Claude through the MCP door; nothing runs from the console",
+          "was": "Run the crew"
+        },
+        {
+          "el": "region:running-now",
+          "supersededBy": [
+            "QD0A65555"
+          ],
+          "now": "region:tempo: each filing's tempo (in, with <owner>, decided, on the canvas, needs more)",
+          "was": "Running now: dev, qa, reviewer"
+        },
+        {
+          "el": "door:POST /run",
+          "supersededBy": [
+            "QD0A65555"
+          ],
+          "now": "no door: runs are not in the product"
+        },
+        {
+          "el": "button:counter-file",
+          "supersededBy": [
+            "QD0A65555",
+            "QC8B94276"
+          ],
+          "now": "button:counters: shows the counter-filings made against the row and the exact MCP call; the person's own Claude files it",
+          "was": "a counter-file control with a reason picker"
+        },
+        {
+          "el": "door:POST /counter",
+          "supersededBy": [
+            "QC8B94276",
+            "QD0A65555"
+          ],
+          "now": "no door: a counter is a filing (POST /transmission with parent set), filed by the person's own Claude through the MCP door"
+        }
+      ],
+      "notes": [
+        "2026-09-26 B0: GET /eagle (the Map canvas) and POST /respond (no Build button answers a question) were drawn as Build's doors; the list read is GET /transmission.",
+        "2026-09-28 (brain0928:pre-b4): the list read is GET /build (new; UI-B4b), no longer GET /transmission; the counters read the same call. Rank is ruled (QEFC716D5): a filing, any seated reader, newest press first, MCP twin rank. The Files view (/artifacts) is retired, its page with it (Q4F5323A0); the Queue view (/thread?only=waiting) goes by Q893B08A5. The finish-line region ships EMPTY until UI-B6 defines stages."
+      ]
+    },
+    {
+      "id": "wf-gtm",
+      "name": "GTM",
+      "tab": "GTM",
+      "artboard": "GTM.dc.html",
+      "because": [
+        "Q36AF8BA1",
+        "Q5461BE7C",
+        "Q792A0B9F",
+        "Q8E554970",
+        "Q61A1D91E"
+      ],
+      "buttons": [
+        "campaigns",
+        "counters",
+        "open-on-goals"
+      ],
+      "wires": {
+        "campaigns": {
+          "client": "chips onto exactly the project's gtm goal nodes (Q61A1D91E: a campaign is a goal-tree node, its channels derived at read time); filters the rows by data-campaign (the row's goalRef)"
+        },
+        "counters": {
+          "door": "GET /gtm",
+          "client": "shows the row's standing counter count and the exact MCP call with the row's id; the row links to /transmission/<id>, where the counters are listed (UI-B4a)",
+          "mcp": "preview {items: [{contribution: {lane, kind: \"counter\", parent: \"<id>\", what, why}}]}, then file"
+        },
+        "open-on-goals": {
+          "door": "GET /goals/:ref",
+          "nav": "the goal node: the selected campaign, else the first gtm node of the tree; disabled with its reason \"This project declares no go-to-market goal.\" when the tree has no gtm node"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/gtm",
+          "state": "new",
+          "note": "UI-B10a (owner MCQ 2026-09-29: lanes = the exported activity kinds; split B10a read / B10b screen; no template -> lanes from the kinds filed): ONE read, HTML to a browser (UI-B10b), JSON otherwise {declared, project, period, template:{v, kinds[{kind, holds, proofConcrete}]}|null, campaigns[{id, title, target, outcomeMetric, href}], stamp:{counts:{filings, landed, awaiting, goals}}, regions:{metrics[one per gtm goal node: that node's gtm cell from the SAME G1 + rollupCells read GET /goals runs {id, title, count, target, pct, realized, awaiting, href}], lanes[{kind, template|null, rows[{id, what, by, created_at, goalRef, expected, actual, outcome, proof, chip, counters:{standing}, call, href}]}], goal-link:{ref, href}|null}, live?, eval?}; lanes in the order of the pack's published gtm.json (pack.json gtm.path), then each filed kind it does not list, in name order; the rows are every gtm-lane filing of the project in the period (?period=quarter|month|all, ?eval=1), seat-scoped, counters, critiques, ranks and restores excluded; no gtm.json: template null and \"The GTM template is not published for this project.\"; at most 3 D1 statements beyond the sign-in (2 when the tree is not declared); twin of the gtm tool and brain://gtm/pipeline"
+        },
+        {
+          "m": "GET",
+          "path": "/goals/:ref",
+          "state": "live",
+          "note": "one goal node (UI-B6a, Q1A7AB8C6): open-on-goals lands here; a ref not in this workspace's tree 404 unknown_goal"
+        }
+      ],
+      "regions": [
+        "metrics",
+        "lanes",
+        "goal-link"
+      ],
+      "superseded": [
+        {
+          "el": "button:run-outreach",
+          "supersededBy": [
+            "QD0A65555"
+          ],
+          "now": "none: outreach is filed from the person's own Claude (kind outreach)",
+          "was": "Run outreach"
+        },
+        {
+          "el": "door:POST /run",
+          "supersededBy": [
+            "QD0A65555"
+          ],
+          "now": "no door: runs are not in the product"
+        },
+        {
+          "el": "button:counter-file",
+          "supersededBy": [
+            "QD0A65555",
+            "QC8B94276"
+          ],
+          "now": "button:counters: shows the counter-filings made against the row and the exact MCP call; the person's own Claude files it",
+          "was": "a counter-file control with a reason picker"
+        },
+        {
+          "el": "door:POST /counter",
+          "supersededBy": [
+            "QC8B94276",
+            "QD0A65555"
+          ],
+          "now": "no door: a counter is a filing (POST /transmission with parent set), filed by the person's own Claude through the MCP door"
+        },
+        {
+          "el": "copy:stalled at pairing / 2 machines",
+          "supersededBy": [
+            "QA78C4808"
+          ],
+          "now": "stalled before its first filing / 3 people: there is no pairing and no machine seat"
+        },
+        {
+          "el": "text:\"312 reached · 57 replied · 31 ran it · 2 stayed\"",
+          "supersededBy": [
+            "Q792A0B9F"
+          ],
+          "now": "served: the stamp is stamp.counts {filings, landed, awaiting, goals} read off the gtm filings and the tree, never typed",
+          "was": "typed funnel counts drawn while designing"
+        },
+        {
+          "el": "region:metrics tiles \"Reached 312 / +41 this week / Replied 57 / 18% of reached / Ran it once 31 goal: 200 / Ran a second week 2 goal: 25\"",
+          "supersededBy": [
+            "Q792A0B9F",
+            "Q8E554970"
+          ],
+          "now": "served: one tile per gtm goal node, its count, target, pct, realized and awaiting the node's gtm cell from the same read GET /goals runs (Goals' numbers, never a second rollup); no column holds a target or a stage today (Q28293D55 pending), so no funnel tile is drawn",
+          "was": "four typed funnel tiles with typed goals and a typed weekly delta"
+        },
+        {
+          "el": "lanes:Reached · Replied · Ran it · Stayed",
+          "supersededBy": [
+            "Q792A0B9F",
+            "QA5BEE85B"
+          ],
+          "now": "served: one lane per activity kind of the published gtm.json template, in its order (social · outreach · update · content · campaign in this brain's export), then each filed kind the template does not list; with no template, the kinds actually filed",
+          "was": "four funnel stages typed while designing"
+        },
+        {
+          "el": "rows:Northwind Labs · Kestrel · Ovid & Co · Merrow · Tessel · Halcyon · Brant · Ardent · Pell",
+          "supersededBy": [
+            "Q792A0B9F",
+            "Q2400C6D4"
+          ],
+          "now": "served: the project's gtm filings (what, who filed, when, the goal it names, expected, actual and outcome, the proof as a link only when it is one, one state chip), never a sample org",
+          "was": "nine sample prospect orgs drawn while designing"
+        },
+        {
+          "el": "tags:warm · stuck · moves the goal",
+          "supersededBy": [
+            "QB74B1B7E",
+            "Q792A0B9F"
+          ],
+          "now": "served: each row wears its ONE state chip (src/tempo.js chipOfTempo); a row moves a goal when its goalRef names a gtm node",
+          "was": "three hand-picked tags"
+        }
+      ],
+      "notes": [
+        "The goal-link region is listed but drawn empty on the artboard; B10 draws it.",
+        "brain0929:pre-b10 (owner MCQ 2026-09-29): lanes are the activity kinds of the pack's published gtm.json (tools/export-pack.mjs copies board-pack/gtm.json, whose activityKinds normalize.mjs derives from the /docs SOP table); campaigns are the tree's gtm nodes (Q61A1D91E); metrics are Goals' own cells (Q8E554970: gtm is the 6th axis of the SAME apparatus); the counters wire's registry note is dropped (kind counter landed in UI-B4a). The product PR re-pins engine/tools/fixtures/wireframe.json."
+      ]
+    },
+    {
+      "id": "wf-goals",
+      "name": "Goals",
+      "tab": "Goals",
+      "artboard": "Goals.dc.html",
+      "because": [
+        "Q36AF8BA1",
+        "QF4CC7033",
+        "Q1A7AB8C6",
+        "Q48115AD1",
+        "Q0E486A34"
+      ],
+      "buttons": [
+        "period",
+        "counters",
+        "see-gap-on-map",
+        "expand-node"
+      ],
+      "wires": {
+        "period": {
+          "client": "switches the period of the tree read (quarter, month or all; ?period= on GET /goals)"
+        },
+        "counters": {
+          "door": "GET /goals",
+          "client": "opens the counters filed against this row and shows the exact MCP call",
+          "mcp": "preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"goal/<id>\"], what, why}}]}, then file"
+        },
+        "see-gap-on-map": {
+          "door": "GET /map/node",
+          "nav": "Map · System",
+          "client": "opens /eagle?node=goal/<id> on the first goal with no feed (Q0E486A34), or the gap walk when Blocked holds only DECIDE rows; disabled with the reason \"Nothing is blocking a goal.\" when Blocked is empty"
+        },
+        "expand-node": {
+          "door": "GET /goals/:ref"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/goals",
+          "state": "live",
+          "note": "the ONE tree read (UI-B6a): HTML to a browser, JSON otherwise; the feed folds in (What fed, Blocked and each row's counters come from the same period-bounded aggregate, ?period=quarter|month|all, ?eval=1); was /goals/tree + /goals/feed on the artboard"
+        },
+        {
+          "m": "GET",
+          "path": "/goals/:ref",
+          "state": "new",
+          "note": "one goal node (UI-B6a, Q1A7AB8C6): node, cells, filings, children, counters; a ref not in this workspace's tree 404 unknown_goal"
+        },
+        {
+          "m": "GET",
+          "path": "/map/node",
+          "state": "new",
+          "note": "UI-B7b: the node read the button lands on (Map · System's inspector); a nav door, so it never derives Goals' purpose"
+        }
+      ],
+      "regions": [
+        "goal-tree",
+        "what-fed",
+        "blocked"
+      ],
+      "superseded": [
+        {
+          "el": "button:counter-file",
+          "supersededBy": [
+            "QD0A65555",
+            "QC8B94276"
+          ],
+          "now": "button:counters: shows the counter-filings made against the row and the exact MCP call; the person's own Claude files it",
+          "was": "a counter-file control with a reason picker"
+        },
+        {
+          "el": "door:POST /counter",
+          "supersededBy": [
+            "QC8B94276",
+            "QD0A65555",
+            "Q48115AD1"
+          ],
+          "now": "no door: a counter is a filing (POST /transmission, kind counter), filed by the person's own Claude through the MCP door; on a goal row it names the goal by gapRefs [\"goal/<id>\"] (Q48115AD1)"
+        }
+      ],
+      "notes": [
+        "2026-09-28 pre-B6: the artboard's /goals/tree and /goals/feed fold into the one read GET /goals (the brief's D1: a separate feed door would run the same statement twice); GET /map/node is UI-B7's, so see-gap-on-map waits (drawn disabled, data-client) until B7 serves it; a counter on a goal row names it by gapRefs [\"goal/<id>\"] (Q48115AD1), never parent (parent is a filing).",
+        "2026-09-28 pre-B7: see-gap-on-map rides GET /map/node (UI-B7b) with nav Map · System and lands on the no-feed goal (Q0E486A34); it stops waiting on UI-B7 the moment B7b ships."
+      ]
+    },
+    {
+      "id": "wf-goal-node",
+      "name": "A goal",
+      "tab": "Goals",
+      "artboard": null,
+      "because": [
+        "Q1A7AB8C6",
+        "Q48115AD1",
+        "QFC497F89",
+        "Q35D52468",
+        "Q792A0B9F",
+        "Q67288EF5"
+      ],
+      "buttons": [
+        "open-row",
+        "expand-node",
+        "counters"
+      ],
+      "wires": {
+        "open-row": {
+          "door": "GET /contribution/:id",
+          "nav": "the filing's own page"
+        },
+        "expand-node": {
+          "door": "GET /goals/:ref",
+          "nav": "a child goal's own page"
+        },
+        "counters": {
+          "door": "GET /goals/:ref",
+          "client": "the counters region: every standing counter on this goal (by gapRefs goal/<id>) with who and when, headed \"N standing · M ruled\"; below it the exact MCP call with the id filled in",
+          "mcp": "preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"goal/<id>\"], what, why}}]}, then file"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/goals/:ref",
+          "state": "new",
+          "note": "the page itself (UI-B6a): {node, parent, children, dims, filings:{rows (newest 25, one state chip each), more}, counters:{standing, ruled, call}, owner, due, period}; HTML to a browser, JSON otherwise; at most 3 D1 statements; a ref not in this workspace's tree 404 unknown_goal (M-ADR-028)"
+        },
+        {
+          "m": "GET",
+          "path": "/contribution/:id",
+          "state": "live",
+          "note": "open-row: a filing's own page"
+        }
+      ],
+      "regions": [
+        "node",
+        "cells",
+        "filings",
+        "children",
+        "counters"
+      ],
+      "notes": [
+        "2026-09-28 (brain0928:pre-b6, owner MCQ Q1A7AB8C6): no artboard (artboard null); the regions are screens-planned goal-node's, in this order, styled like the Goals rows on Brand v2 tokens (Q67288EF5). node = title, its % in Fredoka, the parent breadcrumb, owner and due-by when the served tree carries them (Q35D52468), else the EMPTY sentence; cells = per dimension, count/target and %; filings = the rows that name this goal, one state chip each, open-row to the filing; children = each child goal with its %, expand-node to its page; counters = the standing counters and the exact call.",
+        "Every number is from filings only (Q792A0B9F). GTM channels (Q61A1D91E) are UI-B10's, not this page's."
+      ]
+    },
+    {
+      "id": "wf-decisions",
+      "name": "Decisions",
+      "tab": "Decisions",
+      "artboard": "Decisions.dc.html",
+      "because": [
+        "Q36AF8BA1"
+      ],
+      "buttons": [
+        "choose-option",
+        "see-options",
+        "counters",
+        "answer-bulk",
+        "export-round",
+        "filter"
+      ],
+      "wires": {
+        "choose-option": {
+          "door": "POST /respond"
+        },
+        "see-options": {
+          "door": "GET /question/:qid",
+          "nav": "the question card"
+        },
+        "counters": {
+          "door": "GET /decisions",
+          "client": "opens the counters filed against this row and shows the exact MCP call",
+          "mcp": "preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"q/<qid>\"], what, why}}]}, then file (a question is not a transmission: transmission.parent is an FK to transmission(id), so a counter names its question by gapRefs, QB953462F; kind \"counter\" is not in the registry yet)"
+        },
+        "answer-bulk": {
+          "door": "POST /respond",
+          "client": "sends answers[] for more than one card"
+        },
+        "export-round": {
+          "door": "POST /round"
+        },
+        "filter": {
+          "client": "filters the decisions read"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/decisions",
+          "state": "new",
+          "note": "NEW: today's GET /decisions is only a 302 tab alias; B2 replaces it with the decisions read"
+        },
+        {
+          "m": "POST",
+          "path": "/respond",
+          "state": "live"
+        },
+        {
+          "m": "POST",
+          "path": "/round",
+          "state": "new"
+        },
+        {
+          "m": "GET",
+          "path": "/question/:qid",
+          "state": "new"
+        }
+      ],
+      "regions": [
+        "metrics",
+        "question-list",
+        "who-owes"
+      ],
+      "superseded": [
+        {
+          "el": "button:counter-file",
+          "supersededBy": [
+            "QD0A65555",
+            "QC8B94276"
+          ],
+          "now": "button:counters: shows the counter-filings made against the row and the exact MCP call; the person's own Claude files it",
+          "was": "a counter-file control with a reason picker"
+        },
+        {
+          "el": "door:POST /counter",
+          "supersededBy": [
+            "QC8B94276",
+            "QD0A65555"
+          ],
+          "now": "no door: a counter is a filing (POST /transmission with gapRefs [\"q/<qid>\"], QB953462F), filed by the person's own Claude through the MCP door"
+        }
+      ]
+    },
+    {
+      "id": "wf-map-arch",
+      "name": "Map · Architecture",
+      "tab": "Map",
+      "artboard": "MapArch.dc.html",
+      "because": [
+        "Q60A19A32",
+        "Q0FC31D4A",
+        "Q01E2875D",
+        "QFAEA20A3"
+      ],
+      "buttons": [
+        "plane-switch",
+        "open-contract",
+        "version-chip"
+      ],
+      "wires": {
+        "plane-switch": {
+          "client": "switches the Map plane"
+        },
+        "open-contract": {
+          "door": "GET /contract"
+        },
+        "version-chip": {
+          "door": "GET /versions",
+          "nav": "Versions"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/map/arch",
+          "state": "new",
+          "note": "UI-B8b (QFAEA20A3): the model plane, read from the project's published canvas.json (R2): lanes and org worker from architecture.diagram, crossing rules from architecture.crossing; the seam's counts and the worker name in-process; 0 D1 beyond the shell's own seats and active-project count read; 404 not_published with no canvas.json"
+        },
+        {
+          "m": "GET",
+          "path": "/contract",
+          "state": "new",
+          "note": "UI-B8a (QFAEA20A3): contracts/door.json exactly as the gate diffed it, served in-process from the generated src/doorcontract.js (application/json, an ETag of the body, private, max-age=300)"
+        },
+        {
+          "m": "GET",
+          "path": "/versions",
+          "state": "live"
+        }
+      ],
+      "regions": [
+        "lanes",
+        "seam",
+        "org-worker",
+        "crossing-rules"
+      ],
+      "superseded": [
+        {
+          "el": "region:lanes \"ON A MACHINE: AGENT L\"",
+          "supersededBy": [
+            "QA78C4808",
+            "QF281329F"
+          ],
+          "now": "the product (Agent R) beside this repo's build scripts, drawn dashed as NOT a product lane",
+          "was": "Agent L on a machine: orchestrator/, face-serve, the files plane, machine secrets"
+        },
+        {
+          "el": "region:orgs (three org workers)",
+          "supersededBy": [
+            "QC74D4892"
+          ],
+          "now": "region:org-worker: the one org worker ryuklabs-agent-r with the org's projects (one population: its ACTIVE projects, Q0D506BBC Fork 3 (1)); a new org drawn as a dashed outline",
+          "was": "ryuklabs, siru, veil: three workers"
+        },
+        {
+          "el": "button:org-select",
+          "supersededBy": [
+            "QC74D4892"
+          ],
+          "now": "none: one org worker, drawn rather than selected"
+        },
+        {
+          "el": "rule:a person crosses orgs via /sso/*",
+          "supersededBy": [
+            "QC74D4892"
+          ],
+          "now": "a person reaches every workspace in the org with one key; a second org is a second worker and nothing crosses"
+        },
+        {
+          "el": "text:sample counts and five workspaces",
+          "supersededBy": [
+            "QFAEA20A3",
+            "QC74D4892"
+          ],
+          "now": "served: one org worker named by the org's own row (src/tenant.js; sprint 6: the worker's name is the platform's) with the reader's projects and the org's active project count; the seam's counts read off the worker's own registries; the crossing rules from canvas.json architecture.crossing (EMPTY until published); nothing typed",
+          "was": "five workspaces and door counts drawn as samples"
+        },
+        {
+          "el": "copy:\"each a workspace\"",
+          "supersededBy": [
+            "Q93B3F368",
+            "Q0D506BBC"
+          ],
+          "now": "\"<N> projects inside it, each a soft scope, never a second worker.\" — N the org's ACTIVE projects, one population (Fork 3 (1))",
+          "was": "\"<N> active projects inside it, each a workspace: a soft scope, never a second worker.\""
+        },
+        {
+          "el": "chip:\"ws: <project>\"",
+          "supersededBy": [
+            "Q93B3F368",
+            "Q0D506BBC"
+          ],
+          "now": "the reader's projects by name, no prefix (org-worker.projects)",
+          "was": "a \"ws: <name>\" chip per seat (org-worker.workspaces)"
+        }
+      ],
+      "notes": [
+        "2026-09-28 pre-B8 (owner MCQ): the Arch plane is UI-B8b's (after UI-B8a and the canvas republish); it reads the published canvas.json (the model), while open-contract rides GET /contract, which UI-B8a serves in-process (QFAEA20A3). GET /architecture answers 302 to /map/arch once the plane lands.",
+        "region:org-worker (2026-09-29, brain0929:pre-umcp, U-MCP Q0D506BBC Fork 3 (1) + D11): the one org worker with the org's projects — ONE population, the org's ACTIVE projects (the same count Home's who-is-here reads) — each a project: a soft scope, never a second worker. The copy reads \"<N> projects inside it, each a soft scope, never a second worker.\"; the chips are the reader's projects by name with no \"ws:\" prefix; the JSON key is org-worker.projects (was org-worker.workspaces). The region id workspace-shelf (wf-map-mcp) stays: a spec id, out of scope. The product PR re-pins engine/tools/fixtures/wireframe.json."
+      ]
+    },
+    {
+      "id": "wf-map-system",
+      "name": "Map · System",
+      "tab": "Map",
+      "artboard": "Map.dc.html",
+      "because": [
+        "Q01E2875D",
+        "Q60A19A32",
+        "Q0496BF13",
+        "Q0E486A34",
+        "Q1493F52A"
+      ],
+      "buttons": [
+        "layer-toggle",
+        "state-toggle",
+        "zoom",
+        "fit",
+        "replay",
+        "walk-gaps",
+        "select-node",
+        "open-card",
+        "version-chip"
+      ],
+      "wires": {
+        "layer-toggle": {
+          "client": "shows or hides a canvas layer"
+        },
+        "state-toggle": {
+          "client": "switches the drawn state"
+        },
+        "zoom": {
+          "client": "zooms the canvas"
+        },
+        "fit": {
+          "client": "fits the canvas"
+        },
+        "replay": {
+          "client": "replays the redraw"
+        },
+        "walk-gaps": {
+          "door": "GET /map/node",
+          "client": "steps through the canvas's OPEN gaps (missingLinks, then ambiguities, then unknowns: \"1 of n\", Prev and Next; ?gap=<n>) and swaps the inspector to the node's HTML answer"
+        },
+        "select-node": {
+          "door": "GET /map/node",
+          "client": "selects a node on the canvas or in a layer (?ref=<screen|api|table|entity|gap>:<id>, or goal/<id> on the Goals layer) and swaps the inspector to its HTML answer"
+        },
+        "open-card": {
+          "door": "GET /pack/card/:kind/:id",
+          "nav": "the card in the shell (Q86AD1F48, from UI-B8a)"
+        },
+        "version-chip": {
+          "door": "GET /versions",
+          "nav": "Versions"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/canvas.json",
+          "state": "live"
+        },
+        {
+          "m": "GET",
+          "path": "/eagle",
+          "state": "live"
+        },
+        {
+          "m": "GET",
+          "path": "/map/node",
+          "state": "new",
+          "note": "UI-B7b: one node of the map (reader; R2 only, 0 D1 beyond the request baseline): ?ref=<screen|api|table|entity|gap>:<id>, goal/<id> from the served goal tree (Q0E486A34), or ?gap=<n> for the walk over OPEN gaps; the inspector fragment as HTML to a browser, JSON otherwise {ref, kind, layer, title, parent, what, state, facts {gapKind, trackedBy, ruledBy, blocks, implStatus, foundBy}, edges, card, walk {i, n, prev, next}, model, version}; trackedBy is read from the pack's decisions `affects`; 404 unknown_node / not_published"
+        },
+        {
+          "m": "GET",
+          "path": "/pack/card/:kind/:id",
+          "state": "live"
+        },
+        {
+          "m": "POST",
+          "path": "/verb",
+          "state": "live"
+        },
+        {
+          "m": "GET",
+          "path": "/versions",
+          "state": "live"
+        }
+      ],
+      "regions": [
+        "layers",
+        "canvas",
+        "inspector"
+      ],
+      "superseded": [
+        {
+          "el": "node:/counter",
+          "supersededBy": [
+            "QC8B94276"
+          ],
+          "now": "node:/transmission: the live filing door a counter goes through"
+        },
+        {
+          "el": "text:46 gaps",
+          "supersededBy": [
+            "Q0496BF13"
+          ],
+          "now": "the Gaps layer, the walk bar (\"1 of n\") and the gap count read the canvas's OPEN gaps only (retired false; a gap retires once its tracking ruling is live); 6 of 43 on the brain's canvas.json at brain0928:pre-b7",
+          "was": "\"46 canvas gaps\" and \"1 of 46 gaps\": every gap ever found, drawn before gaps retired"
+        },
+        {
+          "el": "chips:plane row (Arch · System · Data · API · MCP · Flows · Deps)",
+          "supersededBy": [
+            "Q60A19A32",
+            "QD74AC4E2",
+            "Q322F3DF0",
+            "QFAEA20A3"
+          ],
+          "now": "a plane chip registers only when its plane is served: System in UI-B7b (on /eagle), API and MCP in UI-B8a and Arch and Data in UI-B8b (GET /map/:plane), Flows and Deps in UI-B9; until then the chip is absent, never a dead link. The Map view bar in between: System · Versions, gaining a view per served plane; the Screens view (/atlas) is retired in UI-B7b and the Spec view (/pack/spec) in UI-B8a (Q1493F52A)",
+          "was": "all seven plane chips drawn at once, five of them onto planes no door serves"
+        }
+      ],
+      "notes": [
+        "2026-09-28 pre-B7 (owner MCQ): the Goals layer draws the SERVED goal tree (goal nodes, title and parent, from the tenant manifest: R2, 0 D1; canvas.json's shape unchanged), and GET /map/node resolves goal/<id> (Q0E486A34). walk-gaps and select-node ride GET /map/node; open-card rides GET /pack/card/:kind/:id; file-it rides POST /verb, which hotfix #240 (d0438162d) already closed to cross-site session writes and read-only keys. The re-token (canvas and Eagle Eye on Brand v2 tokens, Q60182EE6) is UI-B7a; the screen and the door are UI-B7b."
+      ]
+    },
+    {
+      "id": "wf-map-data",
+      "name": "Map · Data",
+      "tab": "Map",
+      "artboard": "MapData.dc.html",
+      "because": [
+        "Q60A19A32",
+        "QFAEA20A3"
+      ],
+      "buttons": [
+        "plane-switch",
+        "table-select",
+        "open-schema",
+        "open-question",
+        "see-gap",
+        "version-chip"
+      ],
+      "wires": {
+        "plane-switch": {
+          "client": "switches the Map plane"
+        },
+        "table-select": {
+          "client": "selects a table"
+        },
+        "open-schema": {
+          "door": "GET /pack/file/:id",
+          "client": "the schema download (GET /pack/file/schema), enabled only when the pack declares it (tools/export-pack.mjs `schema`, brain0928:pre-b8); otherwise disabled with its reason"
+        },
+        "open-question": {
+          "door": "GET /question/:qid",
+          "nav": "the question card"
+        },
+        "see-gap": {
+          "door": "GET /map/node",
+          "nav": "Map . System"
+        },
+        "version-chip": {
+          "door": "GET /versions",
+          "nav": "Versions"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/map/data",
+          "state": "new",
+          "note": "UI-B8b (QFAEA20A3): the model plane, read from the project's published canvas.json (R2): tables, columns, FKs (solid) and convention relations (dashed), indexes, readBy and writtenBy; 0 D1 beyond the request baseline; 404 not_published with no canvas.json"
+        },
+        {
+          "m": "GET",
+          "path": "/eagle",
+          "state": "live"
+        },
+        {
+          "m": "GET",
+          "path": "/pack/file/:id",
+          "state": "live"
+        },
+        {
+          "m": "GET",
+          "path": "/question/:qid",
+          "state": "live"
+        },
+        {
+          "m": "GET",
+          "path": "/map/node",
+          "state": "new",
+          "note": "UI-B7b's door (new until it lands): see-gap opens GET /map/node?ref=table:<name>"
+        },
+        {
+          "m": "GET",
+          "path": "/versions",
+          "state": "live"
+        }
+      ],
+      "regions": [
+        "table-list",
+        "er-diagram",
+        "inspector"
+      ],
+      "superseded": [
+        {
+          "el": "table:counters",
+          "supersededBy": [
+            "QC8B94276"
+          ],
+          "now": "no table: a counter is a filing, linked by transmission.parent; the inspector shows equips — against a filing it sets parent (the filing's id); against a question it names q/<qid> in gapRefs (QB953462F)",
+          "was": "counters (id, filing_id, reason_id, by, at)"
+        },
+        {
+          "el": "tables:filings, ledger, workspaces, goal_nodes, equips",
+          "supersededBy": [
+            "QFAEA20A3"
+          ],
+          "now": "served: the tables, columns, FKs and indexes of the project's published canvas.json (derived from engine/boot.sql: 15 tables and 31 indexes at brain0928:pre-b8), never a sample",
+          "was": "sample tables drawn while designing; of them only people, transmission and transmission_refs exist"
+        }
+      ]
+    },
+    {
+      "id": "wf-map-api",
+      "name": "Map · API",
+      "tab": "Map",
+      "artboard": "MapApi.dc.html",
+      "because": [
+        "Q60A19A32",
+        "QFAEA20A3"
+      ],
+      "buttons": [
+        "plane-switch",
+        "open-door-json",
+        "route-select",
+        "hook-select",
+        "version-chip"
+      ],
+      "wires": {
+        "plane-switch": {
+          "client": "switches the Map plane"
+        },
+        "open-door-json": {
+          "door": "GET /contract"
+        },
+        "route-select": {
+          "client": "selects a route row"
+        },
+        "hook-select": {
+          "client": "selects a webhook row; disabled with its reason while no webhook is served"
+        },
+        "version-chip": {
+          "door": "GET /versions",
+          "nav": "Versions"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/map/api",
+          "state": "new",
+          "note": "UI-B8a (QFAEA20A3): the door plane, read in-process: every CAPABILITIES row (= contracts/door.json rest) with its chip (landed, or retired for a 302 alias); route-select opens the row's screens and tables from canvas.json api[] when published; webhooks EMPTY (none is served); 0 D1 beyond the request baseline"
+        },
+        {
+          "m": "GET",
+          "path": "/contract",
+          "state": "new",
+          "note": "UI-B8a (QFAEA20A3): contracts/door.json as the gate diffed it (src/doorcontract.js)"
+        },
+        {
+          "m": "GET",
+          "path": "/versions",
+          "state": "live"
+        }
+      ],
+      "regions": [
+        "routes",
+        "webhooks",
+        "contract-note"
+      ],
+      "superseded": [
+        {
+          "el": "route:POST /sso/mint",
+          "supersededBy": [
+            "Q73F14080"
+          ],
+          "now": "route row: POST /transmission (live)",
+          "was": "proxied invite mint, drawn live"
+        },
+        {
+          "el": "route:POST /counter",
+          "supersededBy": [
+            "QC8B94276",
+            "QD0A65555"
+          ],
+          "now": "route row: POST /project, the project switcher's door (live)"
+        },
+        {
+          "el": "webhook:land.completed",
+          "supersededBy": [
+            "QD0A65555",
+            "QF281329F"
+          ],
+          "now": "webhook:filing.decided (new): land is the build scripts' CLI, not a product event",
+          "was": "drawn live"
+        },
+        {
+          "el": "webhook:run.finished",
+          "supersededBy": [
+            "QD0A65555",
+            "Q1486165E"
+          ],
+          "now": "webhook:pack.published (new): runs left the product and the held line was pruned with the factory",
+          "was": "drawn live"
+        },
+        {
+          "el": "text:11 doors · 26 tools · 5 hooks; routes /sso/enter and /goals/tree",
+          "supersededBy": [
+            "QFAEA20A3"
+          ],
+          "now": "served: every route the worker's CAPABILITIES registry declares, its count read off the registry; no webhook is served, so the webhooks region is EMPTY",
+          "was": "typed sample counts and two routes that do not exist"
+        }
+      ],
+      "notes": [
+        "No webhook is served today; the drawing marked two live."
+      ]
+    },
+    {
+      "id": "wf-map-mcp",
+      "name": "Map · MCP",
+      "tab": "Map",
+      "artboard": "MapMcp.dc.html",
+      "because": [
+        "Q60A19A32",
+        "Q3E6CBE0E",
+        "QFAEA20A3"
+      ],
+      "buttons": [
+        "plane-switch",
+        "equip",
+        "equip-preset",
+        "open-door-json",
+        "open-preset-source",
+        "version-chip"
+      ],
+      "wires": {
+        "plane-switch": {
+          "client": "switches the Map plane"
+        },
+        "equip": {
+          "door": "POST /broadcast/equip",
+          "client": "equips the workspace-shelf row's newest version into this project (the same door Broadcast's equip presses; UI-B11)"
+        },
+        "equip-preset": {
+          "door": "POST /broadcast/equip",
+          "client": "waits disabled with its reason \"No preset is published.\" (D9: the manifest is this repo's build tooling, QF281329F, and the pack exports no preset file)"
+        },
+        "open-door-json": {
+          "door": "GET /contract"
+        },
+        "open-preset-source": {
+          "door": "GET /map/skills",
+          "client": "waits disabled with its reason \"No preset is published.\" (D9: GET /map/skills is not built)"
+        },
+        "version-chip": {
+          "door": "GET /versions",
+          "nav": "Versions"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/map/mcp",
+          "state": "new",
+          "note": "UI-B8a (QFAEA20A3): the door plane, read in-process: every MCP_TOOLS row (name, args, desc, Owner only, write) with callable for this reader by tools/list's own filter; the count read off the array; 0 D1 beyond the request baseline"
+        },
+        {
+          "m": "POST",
+          "path": "/mcp",
+          "state": "live"
+        },
+        {
+          "m": "GET",
+          "path": "/map/skills",
+          "state": "new",
+          "note": "not built (D9 of UI-B11): open-preset-source waits disabled with its reason while no preset is published"
+        },
+        {
+          "m": "POST",
+          "path": "/broadcast/equip",
+          "state": "new",
+          "note": "UI-B11 (Broadcast, Q3E6CBE0E): equip on the workspace-shelf rides it once GET /broadcast serves; equip-preset still waits: no preset is published (D9)"
+        },
+        {
+          "m": "GET",
+          "path": "/contract",
+          "state": "new"
+        },
+        {
+          "m": "GET",
+          "path": "/versions",
+          "state": "live"
+        }
+      ],
+      "regions": [
+        "mcp-tools",
+        "workspace-shelf",
+        "global-presets"
+      ],
+      "superseded": [
+        {
+          "el": "tools:board.read, board.answer, filing.file, canvas.read, equip.add",
+          "supersededBy": [
+            "QBE031073"
+          ],
+          "now": "the names MCP_TOOLS serves, every row, counted off the registry and never typed (contracts/door.json tools); QBE031073's nine verbs are pending in code",
+          "was": "names invented while drawing"
+        },
+        {
+          "el": "tool:filing.counter",
+          "supersededBy": [
+            "QC8B94276",
+            "QD0A65555"
+          ],
+          "now": "preview then file with parent set — against a filing it sets parent (the filing's id); against a question it names q/<qid> in gapRefs (QB953462F)"
+        },
+        {
+          "el": "tool:run.start",
+          "supersededBy": [
+            "QD0A65555"
+          ],
+          "now": "none: runs are not in the product"
+        },
+        {
+          "el": "region:skills-manifests \"local manifests, what a machine runs\"",
+          "supersededBy": [
+            "QA78C4808"
+          ],
+          "now": "region:workspace-shelf: items equipped from the org's Broadcast shelf, pinned by version"
+        },
+        {
+          "el": "item:five-crew (L, dev, QA, design, reviewer)",
+          "supersededBy": [
+            "QA78C4808"
+          ],
+          "now": "item:release-checker (an org agent)"
+        },
+        {
+          "el": "items:planboard, land-and-verify",
+          "supersededBy": [
+            "QF281329F"
+          ],
+          "now": "items:release-notes, outreach-log (org items): the board and the land loop are this repo's build tooling"
+        },
+        {
+          "el": "presets:Starter build loop, Board-first",
+          "supersededBy": [
+            "QF281329F"
+          ],
+          "now": "a note: sharingu's own build loop and board are not presets"
+        },
+        {
+          "el": "button:open-manifest",
+          "supersededBy": [
+            "QA78C4808"
+          ],
+          "now": "button:open-door-json (the tool registry)"
+        }
+      ],
+      "notes": [
+        "brain0929:pre-b11 (owner MCQ 2026-09-29: Fork 1 (a) publish and equip are FILINGS on the existing ledger, no migration; Fork 2 (a) anyone seated publishes their OWN filed item, equip and update by anyone seated on that project, both a signed-in-browser press only, no MCP tool, no key; Fork 3 (a) split B11a the door, then B11b the screen): the equip wait is lifted (workspace-shelf = GET /broadcast's equipped-here rows); equip-preset and open-preset-source keep waiting with the reason \"No preset is published.\" (D9). The product PR re-pins engine/tools/fixtures/wireframe.json."
+      ]
+    },
+    {
+      "id": "wf-map-flows",
+      "name": "Map · Flows",
+      "tab": "Map",
+      "artboard": "MapFlows.dc.html",
+      "because": [
+        "Q60A19A32"
+      ],
+      "buttons": [
+        "plane-switch",
+        "all-flows",
+        "step-select",
+        "open-blocking-question",
+        "version-chip"
+      ],
+      "wires": {
+        "plane-switch": {
+          "client": "switches the Map plane"
+        },
+        "all-flows": {
+          "client": "lists every flow of the flows read; the count is read off it, never typed"
+        },
+        "step-select": {
+          "client": "selects a step: its actor, its screen and the door that screen is reached through (steps[].door)"
+        },
+        "open-blocking-question": {
+          "door": "GET /question/:qid",
+          "nav": "the question card of the flow's first blockedBy decision; disabled with its reason when the flow names none"
+        },
+        "version-chip": {
+          "door": "GET /versions",
+          "nav": "Versions"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/map/flows",
+          "state": "new",
+          "note": "UI-B9: GET /map/:plane (UI-B8a's door) gains flows, read from the project's published canvas.json `flows` (R2): every flow {id, name, desc, audience, status, foldedInto, steps[{screen, state, actor, mode, does, door}], endToEnd {built, unjoined, notLive}, blockedBy}, exported at brain0928:b9-export; the counts (flows, unbuilt end to end) read off that array; 0 D1 beyond the request baseline; 404 not_published with no canvas.json, EMPTY when a canvas carries no flows"
+        },
+        {
+          "m": "GET",
+          "path": "/question/:qid",
+          "state": "live"
+        },
+        {
+          "m": "GET",
+          "path": "/versions",
+          "state": "live"
+        }
+      ],
+      "regions": [
+        "swimlanes",
+        "lane-legend"
+      ],
+      "superseded": [
+        {
+          "el": "flow:counter-filing \"picks a reason?\"",
+          "supersededBy": [
+            "QC8B94276",
+            "QD0A65555"
+          ],
+          "now": "copies the MCP call, then the filing lands with a parent — against a filing it sets parent (the filing's id); against a question it names q/<qid> in gapRefs (QB953462F)",
+          "was": "taps counter, picks a reason?, counter recorded"
+        },
+        {
+          "el": "text:\"13 flows · 4 shown · 2 unbuilt end to end\" and button \"All 13 flows\"",
+          "supersededBy": [
+            "Q60A19A32",
+            "QFDC1ECCA"
+          ],
+          "now": "served: the flow count is canvas.json flows.length and \"unbuilt end to end\" the non-retired flows whose endToEnd.built is false (QFDC1ECCA's own join, the sum of whose `unjoined` is contract.flowSurface.unnamed); nothing typed",
+          "was": "typed counts (the artboard said 14, the spec's first note 13; the registry held 9 at brain0928:b9-export)"
+        },
+        {
+          "el": "flows:Ruling a question · what that choice sets moving · Equipping a skill · Counter-filing",
+          "supersededBy": [
+            "Q60A19A32",
+            "QFDC1ECCA"
+          ],
+          "now": "served: the flows of the project's published canvas.json (the rows the canvas's journeys lens draws until UI-B9 retires it), never a sample",
+          "was": "four flows drawn while designing"
+        },
+        {
+          "el": "region:lane-legend \"Person · Agent · Board · Worker · Glass\"",
+          "supersededBy": [
+            "QFDC1ECCA",
+            "QA78C4808"
+          ],
+          "now": "served: one lane per actor the served steps carry (steps[].actor, in first-seen order); a machine step names no surface (QFDC1ECCA) and draws in its actor's lane with no screen",
+          "was": "five lanes typed while designing"
+        }
+      ],
+      "notes": [
+        "brain0928:b9-export (owner MCQ 2026-09-28: the brain exports flows/deps NOW, B9 right after UI-B8b): the flow count is read off canvas.json flows, never typed; the artboard said 14 and this note once said 13 — both were counts of the same array at earlier builds."
+      ]
+    },
+    {
+      "id": "wf-map-deps",
+      "name": "Map · Dependencies",
+      "tab": "Map",
+      "artboard": "MapDeps.dc.html",
+      "because": [
+        "Q60A19A32"
+      ],
+      "buttons": [
+        "plane-switch",
+        "only-blockers",
+        "rule-both-now",
+        "node-select",
+        "version-chip"
+      ],
+      "wires": {
+        "plane-switch": {
+          "client": "switches the Map plane"
+        },
+        "only-blockers": {
+          "client": "filters to the chains whose head an unfinished ruling waits on (blocking true)"
+        },
+        "rule-both-now": {
+          "door": "POST /respond",
+          "client": "answers[] for every question of the cheapest move (deps.cheapest.qids), one option each; disabled with its reason when the cheapest move names no question"
+        },
+        "node-select": {
+          "client": "selects a node and shows it in place: a head's kind, state and who owes it; a table's declared flag; a door's access; a surface's status"
+        },
+        "version-chip": {
+          "door": "GET /versions",
+          "nav": "Versions"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/map/deps",
+          "state": "new",
+          "note": "UI-B9: GET /map/:plane gains deps, read from the project's published canvas.json `deps` (R2): chains [{head {qid, kind question|ruling, state open|pending|contradicted, title, severity, whoOwes}, schema [{table, declared}], doors [{id, access, via}], surfaces [{id, name, status, via}], dependsOn, blocks, blocking}], cheapest {qids, surfaces, blocks, door}, counts {chains, blocking, questions, rulings, surfaces}, exported at brain0928:b9-export from sources/ruling-reconciliation.json where[]/dependsOn[] (QE599A805); 0 D1 beyond the request baseline; 404 not_published with no canvas.json, EMPTY when a canvas carries no deps"
+        },
+        {
+          "m": "POST",
+          "path": "/respond",
+          "state": "live"
+        },
+        {
+          "m": "GET",
+          "path": "/versions",
+          "state": "live"
+        }
+      ],
+      "regions": [
+        "chains",
+        "cheapest-move"
+      ],
+      "superseded": [
+        {
+          "el": "chain:counters table, POST /counter",
+          "supersededBy": [
+            "QC8B94276",
+            "QD0A65555"
+          ],
+          "now": "transmission.parent (live column), kind counter (not in the registry yet) — against a filing it sets parent (the filing's id); against a question it names q/<qid> in gapRefs (QB953462F)"
+        },
+        {
+          "el": "text:\"what blocks what · 5 chains\" and \"Two open questions block four surfaces\"",
+          "supersededBy": [
+            "Q60A19A32",
+            "QE599A805"
+          ],
+          "now": "served: the chain count is canvas.json deps.counts.chains and the cheapest move's numbers are deps.cheapest (its qids, surfaces and blocks); nothing typed",
+          "was": "typed counts"
+        },
+        {
+          "el": "chains:QC8B94276 · Q4FF173D7 · Q0FC31D4A · equips · item.version",
+          "supersededBy": [
+            "QE599A805"
+          ],
+          "now": "served: one chain per unfinished decision that reaches a table, a door or a screen, or that an unfinished ruling waits on (canvas.json deps.chains), never a sample",
+          "was": "five chains drawn while designing"
+        },
+        {
+          "el": "column:\"OPEN QUESTION\"",
+          "supersededBy": [
+            "QE599A805"
+          ],
+          "now": "the head is an unfinished decision: an open question (no ruling yet), or a ruling whose implStatus is pending or contradicted (ruled, not built); its kind and state are drawn on the head",
+          "was": "open questions only"
+        },
+        {
+          "el": "region:cheapest-move \"rule both now\"",
+          "supersededBy": [
+            "QE599A805"
+          ],
+          "now": "the open questions the owner answers that reach a surface or block a ruling, ranked by reach; EMPTY (\"No open question blocks a surface.\") with rule-both-now disabled with its reason when there are none",
+          "was": "two sample questions drawn as the move"
+        }
+      ],
+      "notes": [
+        "brain0928:b9-export: every count, chain and move on this plane is read off canvas.json deps, which normalize.mjs derives from the reconciliation plane's where[]/dependsOn[] and the questions' affects; a chain's doors fan out to every door that writes a named table (the artboard's \"every filing row\"), marked by `via`."
+      ]
+    },
+    {
+      "id": "wf-broadcast",
+      "name": "Broadcast",
+      "tab": "Broadcast",
+      "artboard": "Broadcast.dc.html",
+      "because": [
+        "Q2485A7FD",
+        "Q0E5A1073",
+        "Q571B3D89",
+        "QEBB5D318",
+        "QF4501CEC",
+        "Q3E6CBE0E"
+      ],
+      "buttons": [
+        "publish",
+        "equip",
+        "update-version",
+        "kind-filter"
+      ],
+      "wires": {
+        "publish": {
+          "door": "POST /broadcast/publish",
+          "client": "one form per draft of the reader's own that can be published (mine[].publishable), its {id}; with none, disabled with its reason and the exact call a person's own Claude makes to file a draft (FILING_ITEM_CALL); a signed-in browser press only (Q60CCC574)",
+          "mcp": "preview then file {lane: \"leader\", kind: \"item\", what, why, touches: \"skill|agent|workflow\", gapRefs: [\"item/<slug>\"], proof}"
+        },
+        "equip": {
+          "door": "POST /broadcast/equip",
+          "client": "{slug, v, project}: adds that version to the reader's project, with the one fixed line \"Adds <publisher>'s <kind> to <project>. Everyone seated here gets it.\" (Q0E5A1073); disabled with its reason when the reader holds no seat on the project or the project already has that version"
+        },
+        "update-version": {
+          "door": "POST /broadcast/equip",
+          "client": "re-equips at the newest version, shown only when this project is on an older one (\"Update to v<n> (this project is on v<m>)\"); files a new equip row and never rewrites the pinned one (QEBB5D318)"
+        },
+        "kind-filter": {
+          "client": "chips from filter.kinds (skill, agent, workflow, each with its served count); filters the shelf by data-kind"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/broadcast",
+          "state": "new",
+          "note": "UI-B11a (owner MCQ 2026-09-29, Forks 1-3 (a)): ONE read, HTML to a browser (UI-B11b), JSON otherwise {project, org, stamp:{counts:{published, equippedHere, updates}}, filter:{kinds[{kind, count}]}, regions:{shelf[{slug, kind, v, what, why, source|null, publisher:{id, name}, publishedAt, equippedIn, here:{v|null, state:'current'|'update'|'none', by, at}, can:{equip, update, reason}}], equipped-here[{slug, kind, v, latest, state, by, at, href}], org-wall-note:{org, text}}, mine[{id, slug, kind, what, published:v|null, publishable, reason}], call, live?, eval?}; the shelf is org-wide (this worker's D1 only, QF4501CEC): one card per published slug, v = the publish ordinal of that slug, the publisher its first publisher; equippedIn counts only the reader's seated projects (the owner: all); here = the newest equip row of the slug in the reader's project; mine = the reader's own drafts (kind item); eval excluded unless ?eval=1; at most 2 D1 statements beyond the sign-in (GET /map/mcp's workspace-shelf reads the SAME equipped-here, at most 1); a failed ledger read answers 200 live:'unreachable'; twin of the broadcast tool and brain://broadcast"
+        },
+        {
+          "m": "POST",
+          "path": "/broadcast/publish",
+          "state": "new",
+          "note": "a person's press in a signed-in browser; no MCP tool, no key (Q60CCC574): {id} of the reader's OWN complete item filing files ONE filing, kind publish, parent <id> (version n of item/<slug> is its n-th publish); anyone seated anywhere in the org (Fork 2 (a)); refusals not_yours, slug_taken (a slug belongs to its first publisher), unknown_item, incomplete_item; a Bearer key, a session token sent as Bearer, OAuth MCP props or a ?k= key 403 human_verb; a cross-origin cookie 403 cross_origin_session_write; preview then file, POST /transmission and /transmission/batch refuse kind publish 422 reserved_kind; a form is sent back to /broadcast?published=<id>"
+        },
+        {
+          "m": "POST",
+          "path": "/broadcast/equip",
+          "state": "new",
+          "note": "a person's press in a signed-in browser; no MCP tool, no key (Q60CCC574), serving both equip and update-version: {slug, v, project} files ONE filing, kind equip, project <project>, parent the publish row of v<v>, attributed to the presser (Q571B3D89); anyone seated on that project (the owner on any); append-only: an update files a new equip row and the pinned one stands (QEBB5D318); refusals not_seated (403), unknown_item, unknown_version, already_current; the same 403 human_verb and cross-origin refusals as publish; kind equip is reserved at every agent door (422 reserved_kind); a form is sent back to /broadcast?equipped=<id>"
+        }
+      ],
+      "regions": [
+        "shelf",
+        "equipped-here",
+        "org-wall-note"
+      ],
+      "superseded": [
+        {
+          "el": "items:planboard, land-and-verify",
+          "supersededBy": [
+            "QF281329F"
+          ],
+          "now": "none: this repo's build tooling is not an org shelf item; the shelf holds only what a person of this org filed and published"
+        },
+        {
+          "el": "copy:Nothing here reaches siru or veil",
+          "supersededBy": [
+            "QC74D4892",
+            "QF4501CEC"
+          ],
+          "now": "served: the org-wall-note names this org's own name (\"Stays inside <org>. Nothing here reaches another org.\"); siru and veil are projects inside ryuklabs now"
+        },
+        {
+          "el": "text:\"9 published · 3 equipped in this workspace · 1 update available\"",
+          "supersededBy": [
+            "Q2485A7FD",
+            "QEBB5D318"
+          ],
+          "now": "served: stamp.counts {published, equippedHere, updates} read off the publish and equip filings, never typed",
+          "was": "typed counts drawn while designing"
+        },
+        {
+          "el": "filter:\"All 9 · Skills 4 · Agents 3 · Workflows 2\"",
+          "supersededBy": [
+            "Q2485A7FD"
+          ],
+          "now": "served: filter.kinds, one chip per kind (skill, agent, workflow: Q2485A7FD's three) with the shelf's own count",
+          "was": "typed filter counts"
+        },
+        {
+          "el": "items:release-notes · release-checker · outreach-log · surface-sweep",
+          "supersededBy": [
+            "Q2485A7FD",
+            "Q0E5A1073"
+          ],
+          "now": "served: one card per slug a person of this org published (item/<slug>), its version the publish ordinal; EMPTY \"Nothing is published to <org>'s shelf yet.\" when none is",
+          "was": "four sample items drawn while designing"
+        },
+        {
+          "el": "people:ryuk · amir · jun",
+          "supersededBy": [
+            "Q571B3D89"
+          ],
+          "now": "served: the publisher's and the equipper's names off the filings (\"Equipped by <name>, <date>\")",
+          "was": "three sample people"
+        },
+        {
+          "el": "text:\"updated today\" · \"3 days ago\" · \"5 days ago\" · \"2 weeks ago\"",
+          "supersededBy": [
+            "Q571B3D89",
+            "QEBB5D318"
+          ],
+          "now": "served: each card's publishedAt and each equip row's at, off the filings",
+          "was": "typed ages"
+        },
+        {
+          "el": "copy:\"workspace\" (\"equipped in this workspace\", \"this workspace is on v3\", \"adds to this workspace\", \"equipped in 2 workspaces\")",
+          "supersededBy": [
+            "Q93B3F368"
+          ],
+          "now": "project: \"Update to v<n> (this project is on v<m>)\", \"Equipped in N projects\" (the reader's seated projects only)"
+        },
+        {
+          "el": "button:\"Publish something\"",
+          "supersededBy": [
+            "Q1E8D4C9C",
+            "Q0E5A1073"
+          ],
+          "now": "button:publish \"Publish one of your filed items\": a person only chooses one of their own filed drafts, no input"
+        },
+        {
+          "el": "copy:\"Stays inside ryuklabs. Nothing here reaches another org.\"",
+          "supersededBy": [
+            "QF4501CEC",
+            "QC74D4892"
+          ],
+          "now": "served: the org's own name from the tenant manifest (one org worker), never a typed org"
+        }
+      ],
+      "notes": [
+        "brain0929:pre-b11 (owner MCQ 2026-09-29: Fork 1 (a) publish and equip are FILINGS on the existing ledger, no migration; Fork 2 (a) anyone seated publishes their OWN filed item, equip and update by anyone seated on that project, both a signed-in-browser press only, no MCP tool, no key; Fork 3 (a) split B11a the door, then B11b the screen): the doors, wires and superseded rows above. No new table: an item is a filing (kind item, lane leader, touches skill|agent|workflow, gapRefs item/<slug>), a publish and an equip are filings (kinds publish and equip, written ONLY by the broadcast seam and refused 422 reserved_kind at every agent door). \"The webhook\" (Map · API's equip.changed) is B12's (D10). The product PR re-pins engine/tools/fixtures/wireframe.json."
+      ]
+    },
+    {
+      "id": "wf-control",
+      "name": "Control",
+      "tab": "Control",
+      "artboard": "Control.dc.html",
+      "because": [
+        "Q36AF8BA1",
+        "Q925964F5",
+        "Q0FC31D4A",
+        "Q73F14080",
+        "QB963C7EE",
+        "QC5F82B90",
+        "Q8EFBCCF8"
+      ],
+      "buttons": [
+        "provision-person-key",
+        "role-picker",
+        "remove",
+        "add-workspace",
+        "seat",
+        "reissue-key",
+        "open-audit",
+        "open-rulings",
+        "nav-section"
+      ],
+      "wires": {
+        "provision-person-key": {
+          "door": "POST /control",
+          "client": "action add-person: name + email, admin input (OD5; data-input-exception=\"admin\"); the one secret shown once in the response, never in a URL; add-person refuses role=owner (make an admin with the role control)"
+        },
+        "role-picker": {
+          "door": "POST /control",
+          "client": "action set-role {personId, role: admin|seated} (Fork 2 (1) PROVISIONAL: Make admin / Make seated, more than one admin allowed, never zero; the last-admin guard is one atomic UPDATE that does not count the suites' eval-fixed owner)"
+        },
+        "remove": {
+          "door": "POST /control",
+          "client": "action remove-person: archives the person (never deletes), revokes their keys and seats; refuses yourself and the last real admin"
+        },
+        "add-workspace": {
+          "door": "POST /control",
+          "client": "action add-project {key, name}: admin input (OD5); a project costs nothing to add (Q0FC31D4A); no archive button is drawn (owner 2026-09-29: NO archive)"
+        },
+        "seat": {
+          "door": "POST /control",
+          "client": "actions grant-seat / revoke-seat {personId, projectKey}: the person's row carries their project chips and a project select, not typed (Q925964F5); a person with no seat reads \"No project yet: grant one\""
+        },
+        "reissue-key": {
+          "door": "POST /control",
+          "client": "action rotate-key {personId} (Fork 1 (1) PROVISIONAL: the admin reissues a lost key; the new secret is shown once to the admin in the response body, never in a URL, who hands it over); the holder rotates their own on /profile"
+        },
+        "open-audit": {
+          "door": "GET /audit",
+          "nav": "/audit",
+          "client": "the audit trail (lights Control, UI-B12b)"
+        },
+        "open-rulings": {
+          "door": "GET /decisions",
+          "nav": "/decisions?status=in-force",
+          "client": "the rulings in force (lights Decisions)"
+        },
+        "nav-section": {
+          "client": "in-page anchors: People and access, Workspaces, Keys (data-client); Control is one view, no view bar"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/control",
+          "state": "live",
+          "note": "the page (UI-B12b): HTML rendered from the SAME readControl as GET /control/people, 200 to every signed-in reader (the owner-only 403 page goes), anonymous 302 /login; no D1 statement over the JSON; UI-B12a leaves the old page as it is"
+        },
+        {
+          "m": "GET",
+          "path": "/control/people",
+          "state": "new",
+          "note": "UI-B12a (D1): the ONE read of Control, JSON {org:{name, worker, deploy, manifest:'served'|'fallback', projects}, reader:{id, admin}, admin:{name}, people:[{id, name, email|null, admin, you, seats:[{project, name}], can:{role, remove, seat, reissue, reason}}], workspaces:[{key, name, seats}], keys:[{person, devices:[{device, since, expires}]}], stamp:{people, projects}, live?, eval?}; answers every signed-in reader scoped by who they are (D4): the admin reads everyone active, their emails, every ACTIVE project and every device; a non-admin reads the people who share at least one project with them (only the seat chips of projects the reader holds), their own email only, their own seated projects and their own devices, every can.* false with can.reason = CONTROL_REASON \"Only an admin can <verb>. <admin name> is this org's admin.\"; a person with no seat reads only themselves; the ACTIVE population only (active=1, the countActiveProjects predicate: archived projects never listed); the suites' eval-fixed-* people out unless ?eval=1 (then eval: true); at most 3 D1 statements beyond the sign-in (X1 people LEFT JOIN seats, X2 active projects with seat counts, X3 DEVICES_SQL scoped), the reader's own seats from seatsOnce; anonymous 401 JSON (BELOW_ROUTES_1); a failed read 200 live:'unreachable'; NO MCP twin (check-mcp-parity.py NOT_TOOLS: the admin screen's read; whoami already carries the caller's own seats), so tools/list and day1-door are unchanged"
+        },
+        {
+          "m": "POST",
+          "path": "/control",
+          "state": "new",
+          "note": "the ONE admin write door (UI-B12a declares it; D2); actions add-person · rotate-key · set-role · add-project · grant-seat · revoke-seat · remove-person (+ set-title · set-password · archive-project · activate-project · clean-eval kept for scripts, not drawn); owner-only, refused to a seat independently of the render (QB963C7EE amended 2026-09-29 by F6); the response contract unchanged: 200 and the page with the flash for every caller, no JSON negotiation; a refusal is 200 + \"Nothing done — …\" (each named in door.declared.json); hardening D3: set-role never leaves zero real admins (one atomic UPDATE that excludes eval-fixed-%), add-person refuses role=owner, remove-person's last-owner count excludes eval-fixed-%, a write authenticated only by ?k= is refused 403 (a key in a URL reads; it never writes), the read-only credential 403, a cross-origin cookie 403; the one-time secret (add-person, rotate-key) rides the response body only, never a Location or a URL"
+        },
+        {
+          "m": "GET",
+          "path": "/audit",
+          "state": "live",
+          "note": "the nav's Audit trail (open-audit); lights Control from UI-B12b (OFFNAV_TAB.audit: build -> control; the program's KEEP: Control's audit trail)"
+        },
+        {
+          "m": "GET",
+          "path": "/decisions",
+          "state": "live",
+          "note": "the nav's Rulings in force (open-rulings): /decisions?status=in-force, lights Decisions"
+        }
+      ],
+      "regions": [
+        "nav",
+        "people",
+        "workspaces",
+        "keys",
+        "this-org"
+      ],
+      "superseded": [
+        {
+          "el": "nav:Machines and seats",
+          "supersededBy": [
+            "QA78C4808"
+          ],
+          "now": "removed: there is no machine seat"
+        },
+        {
+          "el": "nav:Keys and pairing",
+          "supersededBy": [
+            "QA78C4808",
+            "Q8EFBCCF8"
+          ],
+          "now": "nav:Keys: one key per person, provisioned by an admin, rotated by its holder"
+        },
+        {
+          "el": "button:invite-by-code",
+          "supersededBy": [
+            "Q73F14080"
+          ],
+          "now": "button:provision-person-key (Provision a person)",
+          "was": "Invite by code"
+        },
+        {
+          "el": "chip:roles owner/operator/viewer",
+          "supersededBy": [
+            "QC5F82B90"
+          ],
+          "now": "admin / seated"
+        },
+        {
+          "el": "region:your-orgs + button:org-switch",
+          "supersededBy": [
+            "QC74D4892",
+            "QD0A65555"
+          ],
+          "now": "region:this-org: the org's name and its one worker, no switcher"
+        },
+        {
+          "el": "door:POST /sso/overview",
+          "supersededBy": [
+            "QC74D4892"
+          ],
+          "now": "no screen door: worker-to-worker, and one org worker"
+        },
+        {
+          "el": "copy:move between the orgs they hold, the way they would on GitHub",
+          "supersededBy": [
+            "QC74D4892"
+          ],
+          "now": "one org worker: a person reaches every workspace they are seated in"
+        },
+        {
+          "el": "because:QF4B10135",
+          "supersededBy": [
+            "Q925964F5"
+          ],
+          "now": "because:Q925964F5 (access is managed inline in the people list)"
+        },
+        {
+          "el": "door:POST /control/role",
+          "supersededBy": [
+            "QB963C7EE",
+            "Q76EFC99D"
+          ],
+          "now": "folded into POST /control as the action set-role (D2: one admin write door, one auth path, a smaller admin surface)"
+        },
+        {
+          "el": "door:POST /control/workspace",
+          "supersededBy": [
+            "QB963C7EE",
+            "Q0FC31D4A"
+          ],
+          "now": "folded into POST /control as the action add-project (D2)"
+        },
+        {
+          "el": "people:ryuk · amir · jun · sara",
+          "supersededBy": [
+            "QC5F82B90",
+            "QBDFA9D37"
+          ],
+          "now": "served: the org's own people from D1 (GET /control/people people[]), the admin reading everyone active and a non-admin the people who share a project with them",
+          "was": "four sample people drawn while designing"
+        },
+        {
+          "el": "scope:\"all workspaces\" · \"sharingu\" · \"siru-services\"",
+          "supersededBy": [
+            "Q925964F5",
+            "Q93B3F368"
+          ],
+          "now": "served: each person's seat chips (people[].seats), the ACTIVE projects they hold, with a project select in the row (Q925964F5), never a typed scope",
+          "was": "typed scopes"
+        },
+        {
+          "el": "text:\"Workspaces in this org\" · \"sharingu · siru-services\"",
+          "supersededBy": [
+            "Q93B3F368",
+            "Q0FC31D4A"
+          ],
+          "now": "served: \"Projects in this org\", the ACTIVE projects (workspaces[], length = countActiveProjects), each with its seat count",
+          "was": "a typed project list"
+        },
+        {
+          "el": "this-org:\"ryuklabs\" · \"ryuklabs-agent-r\"",
+          "supersededBy": [
+            "QC74D4892",
+            "QD0A65555"
+          ],
+          "now": "served: org.name (the tenant manifest's brand) and org.worker (the worker's own name, workerNameOf), the deploy stamp, never a typed org or worker",
+          "was": "typed literals"
+        },
+        {
+          "el": "copy:\"workspace\" (\"Workspaces\", \"Add a workspace\", \"every workspace you seat them in\", \"a scope each\", \"Its workspaces switch from the top bar\")",
+          "supersededBy": [
+            "Q93B3F368"
+          ],
+          "now": "project: \"Projects\", \"Add a project\", \"every project you seat them in\"; the region and button ids stay (workspaces, add-workspace)"
+        },
+        {
+          "el": "buttons:admin-only (provision-person-key, role-picker, remove, add-workspace, seat, reissue-key) drawn for the admin only",
+          "supersededBy": [
+            "QB963C7EE",
+            "QC5F82B90",
+            "Q859A8F0A"
+          ],
+          "now": "shown disabled with the reason to a non-admin (QB963C7EE amended 2026-09-29, F6; the Restore precedent Q859A8F0A): each keeps its data-door and an aria-describedby reason, CONTROL_REASON \"Only an admin can <verb>. <admin name> is this org's admin.\"; the door refuses the same call independently"
+        }
+      ],
+      "notes": [
+        "brain0929:pre-b12 (the owner's rulings of 2026-09-29 applied: B12 split into B12a the doors then B12b the screen; B12 absorbs the legacy Control views (Pack, Desk, Charts: /control/pack, /orchestrator, /observatory, see retired[]); admin-only controls shown DISABLED with the reason to a non-admin (QB963C7EE amended by F6; Restore precedent Q859A8F0A); desktop-first with one collapse rule (@media (max-width:980px)); a project differs only by its data; the org is ryuklabs (projects sharingu, siru-services and the parked bunny, siru, saruspay, all ACTIVE, NO archive); the MCP door is the live registry. Forks 1-3 PROVISIONAL (session under the owner's overnight mandate, 2026-09-29; the owner may re-cut): Fork 1 (1) the admin keeps Reissue key, admin set-passphrase leaves the glass (the action stays for scripts) · Fork 2 (1) Make admin / Make seated, more than one admin allowed, never zero (Q76EFC99D's transfer half) · Fork 3 (1) no webhook in B12 (Map · API webhooks stay an honest EMPTY; a named post-beta batch). because drops Q7E1FD0DC (the /sso doors, deleted under Q6FA72180) and adds QB963C7EE, QC5F82B90, Q8EFBCCF8. The product PR re-pins engine/tools/fixtures/wireframe.json (wf-control and the retired desk, charts, pack rows). Brief: 02_AGENT_R/next-batch-ui-b12-control.md; probe: probes/control_people.py."
+      ]
+    },
+    {
+      "id": "wf-question",
+      "name": "A question, decided",
+      "tab": "Decisions",
+      "artboard": "QuestionCard.dc.html",
+      "because": [
+        "Q36AF8BA1",
+        "Q1E8D4C9C"
+      ],
+      "buttons": [
+        "option-a",
+        "option-b",
+        "option-c",
+        "record-ruling",
+        "mark-provisional",
+        "add-to-round",
+        "counters"
+      ],
+      "wires": {
+        "option-a": {
+          "client": "selects option A"
+        },
+        "option-b": {
+          "client": "selects option B"
+        },
+        "option-c": {
+          "client": "selects option C"
+        },
+        "record-ruling": {
+          "door": "POST /respond"
+        },
+        "mark-provisional": {
+          "door": "POST /respond",
+          "client": "the same answer, marked provisional"
+        },
+        "add-to-round": {
+          "door": "POST /round"
+        },
+        "counters": {
+          "door": "GET /question/:qid",
+          "client": "opens the counters filed against this row and shows the exact MCP call",
+          "mcp": "preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"q/<qid>\"], what, why}}]}, then file (a question is not a transmission: transmission.parent is an FK to transmission(id), so a counter names its question by gapRefs, QB953462F; kind \"counter\" is not in the registry yet)"
+        }
+      },
+      "doors": [
+        {
+          "m": "POST",
+          "path": "/respond",
+          "state": "live"
+        },
+        {
+          "m": "POST",
+          "path": "/round",
+          "state": "new"
+        },
+        {
+          "m": "GET",
+          "path": "/question/:qid",
+          "state": "new"
+        }
+      ],
+      "regions": [
+        "why",
+        "options",
+        "what-blocks",
+        "provenance",
+        "counters"
+      ],
+      "superseded": [
+        {
+          "el": "button:counter-file",
+          "supersededBy": [
+            "QD0A65555",
+            "QC8B94276"
+          ],
+          "now": "button:counters: shows the counter-filings made against the row and the exact MCP call; the person's own Claude files it",
+          "was": "a counter-file control with a reason picker"
+        }
+      ],
+      "notes": [
+        "The counters region draws the counter control OPEN: the counter-filings made against the question and the exact MCP call (r113 OD2).",
+        "The why card is the screen's one pinned note: shadow-pin on Ink with its +1.2deg tilt (design-law depth)."
+      ]
+    },
+    {
+      "id": "wf-versions",
+      "name": "Versions",
+      "tab": "Map",
+      "artboard": "Versions.dc.html",
+      "because": [
+        "Q39680DD7",
+        "QCB29CC2B",
+        "Q1448A167",
+        "Q859A8F0A",
+        "Q1AA8A1DE"
+      ],
+      "buttons": [
+        "view",
+        "restore",
+        "back-to-current",
+        "filter",
+        "version-chip"
+      ],
+      "wires": {
+        "view": {
+          "door": "GET /versions/:v"
+        },
+        "restore": {
+          "door": "POST /versions/restore"
+        },
+        "back-to-current": {
+          "client": "returns to the current version"
+        },
+        "filter": {
+          "client": "filters the timeline"
+        },
+        "version-chip": {
+          "door": "GET /versions"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/versions",
+          "state": "new",
+          "note": "the spine read (UI-B5b): HTML to a browser, JSON otherwise; every seated reader; ?head=1 is the BEHIND poll (no-store); no spine yet -> EMPTY, the next publish mints v1 (Q1AA8A1DE)"
+        },
+        {
+          "m": "GET",
+          "path": "/versions/:v",
+          "state": "new",
+          "note": "one version (v = n or key), with the diff from v to current; viewing is free and changes nothing (Q1448A167); unknown v -> 404 unknown_version"
+        },
+        {
+          "m": "POST",
+          "path": "/versions/restore",
+          "state": "new",
+          "note": "owner only (Q859A8F0A): files ONE filing, lane leader, kind restore, gapRefs v/<key>, decided approve at once; anyone else 403 owner_only and a disabled button with the reason; the worker never writes R2, the next close carries it out and the spine appends a restored version"
+        }
+      ],
+      "regions": [
+        "not-current-banner",
+        "diff",
+        "timeline"
+      ],
+      "superseded": [
+        {
+          "el": "copy:not-current-banner drawn in orange (the clock icon and both lines #FB923C)",
+          "supersededBy": [
+            "QB74B1B7E",
+            "Q67288EF5"
+          ],
+          "now": "the BEHIND pattern (design-law design.behind): stone well, dark text, its own icon, never orange or red; it says what moved and that acting still works. Viewing the current version says so with the LANDED chip.",
+          "was": "You are looking at v9, from 12 September. This is not the current architecture. Three versions have been minted since. (orange text and icon)"
+        }
+      ],
+      "notes": [
+        "2026-09-28 pre-B5: view rides GET /versions/:v (the drawing wrote /versions/v); restore is owner only (Q859A8F0A); the orange banner is superseded by BEHIND (Brand v2: orange is never a state). The viewing chip keeps orange-well: design-law tokenDecisions names it identity (the selected row), not a state."
+      ]
+    },
+    {
+      "id": "wf-filing",
+      "name": "A filing",
+      "tab": "Build",
+      "artboard": null,
+      "because": [
+        "Q0B546903",
+        "QC8B94276",
+        "QB953462F",
+        "Q1E8D4C9C",
+        "QD0A65555",
+        "Q67288EF5"
+      ],
+      "buttons": [
+        "approve",
+        "needs-work",
+        "reject",
+        "counters",
+        "question-link",
+        "back-to-build"
+      ],
+      "wires": {
+        "approve": {
+          "door": "POST /contribution/:id/decide",
+          "client": "the owner's ruling: verdict approve with a fixed note, no typed note (Q1E8D4C9C); shown to the owner only"
+        },
+        "needs-work": {
+          "door": "POST /contribution/:id/decide",
+          "client": "the owner's ruling: verdict needs-work with a fixed note; shown to the owner only"
+        },
+        "reject": {
+          "door": "POST /contribution/:id/decide",
+          "client": "the owner's ruling: verdict reject with a fixed note; shown to the owner only"
+        },
+        "counters": {
+          "door": "GET /contribution/:id",
+          "client": "the counters region: every counter on this filing (by parent) with who, when and tempo, each linking to its own page, headed \"N standing · M ruled\"; below it the exact MCP call with the id filled in",
+          "mcp": "preview {items: [{contribution: {lane, kind: \"counter\", parent: \"<id>\", what, why}}]}, then file"
+        },
+        "question-link": {
+          "door": "GET /question/:qid",
+          "nav": "the question this filing answers or counters (gapRefs q/<qid>, QB953462F); on a counter-of-a-filing the link goes to the parent filing instead"
+        },
+        "back-to-build": {
+          "door": "GET /build",
+          "nav": "Build (the back link, was \"the queue\" /transmission)"
+        }
+      },
+      "doors": [
+        {
+          "m": "GET",
+          "path": "/contribution/:id",
+          "state": "live",
+          "note": "the page itself: transmissionOneFor plus one counters statement, 2 D1 in total; every seated reader scoped to the project, another project's row 404 (Q0B546903, UI-B4a)"
+        },
+        {
+          "m": "POST",
+          "path": "/contribution/:id/decide",
+          "state": "live",
+          "note": "owner-only, form-capable; the three ruling buttons ride it"
+        },
+        {
+          "m": "GET",
+          "path": "/question/:qid",
+          "state": "live"
+        },
+        {
+          "m": "GET",
+          "path": "/build",
+          "state": "new",
+          "note": "the back link's target (new in UI-B4b; until then /build still 302s to /audit)"
+        }
+      ],
+      "regions": [
+        "header",
+        "ruling",
+        "envelope",
+        "refs",
+        "counters",
+        "trail"
+      ],
+      "notes": [
+        "2026-09-28 (brain0928:pre-b4): OD4 keeps the filing detail page and restyles it. There is no artboard (artboard null): the regions are the page's own, in this order, on Brand v2 tokens (Q67288EF5); header = title, kind chip, tempo, filed by; ruling = the three owner buttons (owner only; a reader sees the verdict); envelope = what, why, touches, lane, route and reason; refs = goalRef, gapRefs, parent; counters = the standing counters and the exact call; trail = the filing's own events.",
+        "No typed input anywhere on the page: the decide form's textarea goes (Q1E8D4C9C); the JSON and MCP decide still take a note.",
+        "When the filing is itself a counter, the page says what it counters: a link to the parent filing, or the question link (gapRefs q/<qid>)."
+      ]
+    }
+  ],
+  "retired": [
+    {
+      "id": "wf-run",
+      "name": "A run",
+      "artboard": "RunConsole.dc.html",
+      "supersededBy": [
+        "QD0A65555"
+      ],
+      "because": [
+        "QA20249FB"
+      ],
+      "was": {
+        "buttons": [
+          "interrupt",
+          "watch-live",
+          "land",
+          "deploy",
+          "publish",
+          "consent"
+        ],
+        "doors": [
+          {
+            "m": "POST",
+            "path": "/run",
+            "state": "new"
+          },
+          {
+            "m": "POST",
+            "path": "/run/interrupt",
+            "state": "new"
+          },
+          {
+            "m": "CLI",
+            "path": "sharingu land",
+            "state": "live"
+          },
+          {
+            "m": "CLI",
+            "path": "tools/ship.sh",
+            "state": "live"
+          }
+        ],
+        "regions": [
+          "steps",
+          "yours-alone"
+        ]
+      },
+      "now": "deleted: runs are not in the product (r113). interrupt and watch-live go with it; land and deploy stay CLI (sharingu land, tools/ship.sh), never doors.",
+      "homed": {
+        "publish": "Broadcast — the Publish button (the versioned shelf; B11)",
+        "consent": "Home — the needs-you row's 'Grant once / Not yet' (per occasion; B3); standing consent on /profile",
+        "ruledBy": "owner MCQ 2026-09-26"
+      }
+    },
+    {
+      "id": "spec",
+      "name": "Map · Spec (GET /pack/spec)",
+      "artboard": "none (the Spec view was never drawn)",
+      "supersededBy": [
+        "Q1493F52A"
+      ],
+      "because": [
+        "Q1493F52A",
+        "Q86AD1F48"
+      ],
+      "was": {
+        "buttons": [],
+        "doors": [
+          {
+            "m": "GET",
+            "path": "/pack/spec",
+            "state": "live"
+          }
+        ],
+        "regions": []
+      },
+      "now": "retired in UI-B8a (Q1493F52A): the Spec view and GET /pack/spec go; a pack card lands at GET /pack/card/:kind/:id, drawn in the shell to a browser and JSON otherwise, and a decision at GET /question/:qid (Q86AD1F48); the top bar's search hits and Versions' diff links point there; GET /pack/file/:id and GET /control/pack stay"
+    },
+    {
+      "id": "desk",
+      "name": "Control · Desk (GET /orchestrator)",
+      "artboard": "none (the Desk view was never drawn)",
+      "supersededBy": [
+        "QD74AC4E2",
+        "QC5F82B90"
+      ],
+      "because": [
+        "QD74AC4E2",
+        "Q89F97582"
+      ],
+      "was": {
+        "buttons": [],
+        "doors": [
+          {
+            "m": "GET",
+            "path": "/orchestrator",
+            "state": "live"
+          }
+        ],
+        "regions": []
+      },
+      "now": "retired in UI-B12b (the program's DROP list); Control absorbs it: nothing moves (Home carries what needs you, Build the queue); 404 via KNOWN, no new 302"
+    },
+    {
+      "id": "charts",
+      "name": "Control · Charts (GET /observatory)",
+      "artboard": "none (the Charts view was never drawn)",
+      "supersededBy": [
+        "QD74AC4E2"
+      ],
+      "because": [
+        "QD74AC4E2"
+      ],
+      "was": {
+        "buttons": [],
+        "doors": [
+          {
+            "m": "GET",
+            "path": "/observatory",
+            "state": "live"
+          }
+        ],
+        "regions": []
+      },
+      "now": "retired in UI-B12b (the program's DROP list); Control absorbs it: nothing moves (its four unbounded aggregates over transmission, events and artifacts go with it); 404 via KNOWN, no new 302"
+    },
+    {
+      "id": "pack",
+      "name": "Control · Pack (GET /control/pack)",
+      "artboard": "none (the Pack view was never drawn)",
+      "supersededBy": [
+        "QD74AC4E2"
+      ],
+      "because": [
+        "QD74AC4E2",
+        "Q925964F5"
+      ],
+      "was": {
+        "buttons": [],
+        "doors": [
+          {
+            "m": "GET",
+            "path": "/control/pack",
+            "state": "live"
+          }
+        ],
+        "regions": []
+      },
+      "now": "retired in UI-B12b (the program's DROP list); Control absorbs it: Versions has the history, Control has the seats; GET /pack/file/:id and GET /pack/card/:kind/:id stay; 404 via KNOWN, no new 302"
+    }
+  ],
+  "_correction": "2026-09-18: four doors drawn as LIVE did not exist — /sso/orgs, /sso/invite, /serve/lib/canvas/canvas.json and /mcp/tools were plausible names invented while drawing, not read off the registry. gap-scan.mjs check 1 caught all four on its first run. The real routes are POST /sso/overview, POST /sso/mint, GET /canvas.json and POST /mcp. Recorded rather than silently corrected: a wireframe that asserts a route exists is making a claim about the built product, and this one was wrong four times.",
+  "_correction2": "2026-09-26 (B0): wrong door claims fixed. POST /sso/overview was drawn as Home's and Control's live door: it is the launcher's worker-to-worker query and no screen calls it. sharingu land and tools/ship.sh were listed as doors (m: CLI) on the run console: they are CLI, never doors, and left with the console. Build listed GET /eagle and POST /respond: its list read is GET /transmission. Map . API drew two webhooks as live; none is served. The artboards were 1280x828 while this file said 940."
+}

@@ -1,0 +1,62 @@
+{
+  // SELF-HOST CONFIG TEMPLATE — sharingu on YOUR OWN Cloudflare account: this file with its THREE holes filled (<ORG>,
+  // <D1_ID>, <KV_ID>) and its own resources, on THIS same engine code (one engine, never a fork; the same platform as the
+  // hosted one, every org a row of its one D1). `sh tools/new-org.sh <name> --email <you>` does steps 1-4 below in one command (read that first); this
+  // walk-through is the manual path it automates. Copy to wrangler.<name>.jsonc (<ORG> below is that <name>), then:
+  //   1. Create resources:
+  //      D1:  npx wrangler d1 create <ORG>-agent-r            (take the id)
+  //      R2:  npx wrangler r2 bucket create <ORG>-brain       (answer the interactive
+  //           location question with plain Enter; the non-interactive fallback "no"
+  //           is correct)
+  //      KV:  use the RAW CF API for a clean title — `wrangler kv namespace create`
+  //           prefixes the CURRENT script's name (the wrong one):
+  //           curl -X POST "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/storage/kv/namespaces" \
+  //                -H "Authorization: Bearer $TOKEN" -d '{"title":"<ORG>-agent-r-oauth"}'
+  //   2. npx wrangler d1 execute <ORG>-agent-r -c wrangler.<ORG>.jsonc --remote --file boot.sql   (the schema only: an EMPTY
+  //      platform — no org, no person, no key)
+  //   3. npx wrangler deploy -c wrangler.<ORG>.jsonc
+  //   4. node tools/operator.mjs allow --live --config wrangler.<ORG>.jsonc --confirm-live <ORG>-agent-r --email <you>
+  //      (your one-time code, printed once) → <url>/signup → <url>/orgs/new (your org; its owner key shown once)
+  //   5. DAY0_URL=… DAY0_KEY=… DAY0_EMAIL=… sh tools/day0-verify.sh  → must go ALL-GREEN
+  //      (the script computes and prints its own N/N — never hand-type a count here, it drifts
+  //      the moment a check is added)
+  //   6. Handoff→GitHub issues (optional): npx wrangler secret put GH_TOKEN -c wrangler.<ORG>.jsonc
+  //
+  // The "triggers" block below counts against this Cloudflare ACCOUNT's total cron-trigger cap
+  // (Workers Free: 5 triggers account-wide, not per-worker — measured live 2026-09-14, wrangler
+  // error 10072); tools/new-org.sh checks this before creating anything and refuses by name if adding
+  // these crons would exceed it, or drops this block entirely with --no-cron.
+  "name": "<ORG>-agent-r",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-01",
+  // sprint 7, 7.4 (the front door by path): AsyncLocalStorage (node:async_hooks) carries the request's org base — the
+  // /<org> every URL the worker builds starts with (src/orgpath.js) — through every await of the request, so no renderer
+  // takes it as a parameter. nodejs_als enables that one module, nothing else of Node.
+  "compatibility_flags": ["nodejs_als"],
+  // RATE LIMITING (M-ADR-033, D1b): /login, /signup and /orgs are public doors, so they carry the per-IP flood filter the
+  // hosted platform has (LOGIN_LIMIT, 20 attempts a minute per address) besides the per-account lockout. namespace_id is a
+  // number unique within the Cloudflare ACCOUNT: an account holding more than one deployment gives each its own (the hosted
+  // platform's is 1003).
+  "ratelimits": [ { "name": "LOGIN_LIMIT", "namespace_id": "1101", "simple": { "limit": 20, "period": 60 } } ],
+  "observability": { "enabled": true },
+  "workers_dev": true,
+  "kv_namespaces": [
+    { "binding": "OAUTH_KV", "id": "<KV_ID>" }
+  ],
+  "r2_buckets": [
+    { "binding": "BRAIN", "bucket_name": "<ORG>-brain" }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "<ORG>-agent-r",
+      "database_id": "<D1_ID>"
+    }
+  ],
+  "triggers": {
+    "crons": ["0 3 * * *", "0 15 * * *"]
+  },
+  "version_metadata": {
+    "binding": "CF_VERSION_METADATA"
+  }
+}

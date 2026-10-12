@@ -1,0 +1,10 @@
+{
+  "questions": [
+    { "qid": "Q@MKU@O", "question": "@MK@ open question?", "status": "open", "choice": "", "label": "", "rationale": "", "updated": "2026-01-05",
+      "severity": "high", "area": "home", "why": "@MK@ why", "whoOwes": "owner", "waitingOn": "owner", "affects": ["surface:wf-goals"],
+      "options": [{ "what": "@MK@ option A", "tradeoff": "t" }, { "what": "@MK@ option B", "tradeoff": "t" }] },
+    { "qid": "Q@MKU@D", "question": "@MK@ decided question?", "status": "decided", "choice": 1, "label": "@MK@ option D2", "rationale": "ruled", "updated": "2026-01-05",
+      "severity": "normal", "area": "goals", "why": "@MK@ why", "whoOwes": "owner", "waitingOn": "owner", "affects": [], "applies": "rides along",
+      "options": [{ "what": "@MK@ option D1", "tradeoff": "t" }, { "what": "@MK@ option D2", "tradeoff": "t" }] }
+  ]
+}

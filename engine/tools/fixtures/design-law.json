@@ -1,0 +1,486 @@
+{
+  "_pinned": {
+    "from": "agent-rl-sharingu-brain:source/board/sources/design-law.json",
+    "sha": "747d4f593572e6b4494f2e9f465e32d157592d5e",
+    "lastTouchedBy": "6d5580f2ecae88ee9d5f88754d9517293d15e3cc",
+    "why": "UI-B1a: the engine gate never reads outside the repo, so tools/wire-selftest.mjs reads this pinned copy. Re-pin by copying the brain file at a newer sha and updating these two shas; the rest of the file is verbatim."
+  },
+  "design": {
+    "governing": {
+      "name": "sharingu Brand Guidelines v2",
+      "scope": "THE law, owner-named 2026-09-19",
+      "note": "v1 was written to stop AI slop and it worked, but it also stopped the page from having any presence. Nine rules loosened on purpose, each with a reason."
+    },
+    "worlds": [
+      {
+        "id": "paper",
+        "name": "Paper",
+        "what": "where people read: the marketing page and documents. Never pure white as the page; white is a card that sits on paper.",
+        "tokens": [
+          {
+            "n": "paper",
+            "v": "#F7F5EF",
+            "u": "page"
+          },
+          {
+            "n": "paper-2",
+            "v": "#EFEBE2",
+            "u": "wells, bands"
+          },
+          {
+            "n": "surface",
+            "v": "#FFFDF8",
+            "u": "cards"
+          },
+          {
+            "n": "ink",
+            "v": "#1C1917",
+            "u": "text, buttons"
+          },
+          {
+            "n": "ink-2",
+            "v": "#57534E",
+            "u": "body"
+          },
+          {
+            "n": "line",
+            "v": "#E2DDD3",
+            "u": "borders"
+          }
+        ]
+      },
+      {
+        "id": "ink",
+        "name": "Ink",
+        "what": "the PRODUCT's own look: near-black, orange accents, mono data. Product panels, terminal frames, one band per page.",
+        "tokens": [
+          {
+            "n": "dark",
+            "v": "#0F0E0D",
+            "u": "band"
+          },
+          {
+            "n": "dark-2",
+            "v": "#1A1917",
+            "u": "panels"
+          },
+          {
+            "n": "dark-3",
+            "v": "#262421",
+            "u": "wells"
+          },
+          {
+            "n": "dark-text",
+            "v": "#EBE6DC",
+            "u": "text on dark"
+          },
+          {
+            "n": "dark-text-2",
+            "v": "#A39C92",
+            "u": "secondary text on dark"
+          },
+          {
+            "n": "dark-line-2",
+            "v": "#3A3733",
+            "u": "lines on wells and controls"
+          },
+          {
+            "n": "orange-well",
+            "v": "#2A1A0E",
+            "u": "orange tint: avatars, the selected node, \"viewing\""
+          }
+        ]
+      }
+    ],
+    "brand": [
+      {
+        "n": "orange",
+        "v": "#FB923C",
+        "u": "identity"
+      },
+      {
+        "n": "orange-deep",
+        "v": "#C2410C",
+        "u": "small orange text"
+      },
+      {
+        "n": "peach",
+        "v": "#FBEEE3",
+        "u": "wash, band"
+      },
+      {
+        "n": "verified",
+        "v": "#059669",
+        "u": "binding, checks"
+      },
+      {
+        "n": "amber",
+        "v": "#B45309",
+        "u": "needs a person"
+      },
+      {
+        "n": "stone",
+        "v": "#79716B",
+        "u": "incomplete"
+      }
+    ],
+    "presence": [
+      {
+        "n": "gold",
+        "v": "#F59E0B"
+      },
+      {
+        "n": "sky",
+        "v": "#0EA5E9"
+      },
+      {
+        "n": "violet",
+        "v": "#8B5CF6"
+      }
+    ],
+    "colourRules": [
+      "Orange carries INK text, never white, and never body-size text on paper: use orange-deep for that.",
+      "Green appears only for verified and binding.",
+      "Red exists only for errors, and always with an icon.",
+      "Presence colours live on avatars, cursors and pins only.",
+      "Tool and AI logos keep their own colours. We do not recolour Slack.",
+      "On Ink, the three states are the Ink states set (verified-ink, needs-ink, error-ink) plus stone; Paper's values stay on Paper.",
+      "Orange is identity, never a state: every state chip takes a state colour (stateChips)."
+    ],
+    "depth": [
+      {
+        "n": "shadow-lift",
+        "u": "cards and panels at rest",
+        "v": "0 1px 2px .05 + 0 10px 28px .09"
+      },
+      {
+        "n": "shadow-float · tilt -1.5°",
+        "u": "the artifact: product boards, the hero object",
+        "v": "anything that should feel picked up off the page"
+      },
+      {
+        "n": "shadow-pin · tilt +1.2°",
+        "u": "the pinned note: question cards, decisions, the U-chan note",
+        "v": "hard ink offset, no blur"
+      },
+      {
+        "n": "shadow-pin-ink · tilt +1.2°",
+        "u": "the pinned note on Ink: one per screen, on a dark-2 card",
+        "v": "5px 5px 0 #FB923C. The Paper pin is a hard INK offset, and ink is invisible on #0F0E0D; orange is the one brand colour that reads there as a hard edge."
+      }
+    ],
+    "voice": {
+      "line": "Inform, justify, never hype. Playful, warm, real. Short declaratives. Every claim carries its reason.",
+      "banned": [
+        "revolutionary",
+        "game-changing",
+        "blazingly",
+        "10x",
+        "magic",
+        "supercharge",
+        "seamless",
+        "empower",
+        "unlock"
+      ],
+      "hard": [
+        "No em dashes anywhere. Use a full stop, a colon or a comma.",
+        "Specific beats clever: names, times, ids and numbers when they are real, or clearly a made-up example.",
+        "No numbers from the real production org in public."
+      ],
+      "keepers": [
+        "Proof, or it isn't binding.",
+        "Authority is a human act. Always.",
+        "Nobody updates the dashboard. The dashboard is what updating looks like."
+      ]
+    },
+    "loosened": [
+      {
+        "r": "Theme",
+        "v1": "Light only. Dark only inside terminal frames.",
+        "v2": "Two worlds. Paper for the marketing page, Ink for the machine. Both are the brand."
+      },
+      {
+        "r": "Depth",
+        "v1": "Four surface levels and 1px lines, never shadow.",
+        "v2": "Add three named shadows, tilt, overlap and bleed. Flat boxes on a flat plane are now the failure."
+      },
+      {
+        "r": "Backgrounds",
+        "v1": "Flat paper, flat peach. No gradients or imagery.",
+        "v2": "Paper-to-peach washes, a dark band, faint grain, the mascot and product artifacts as backdrops. Still no blue-purple, no mesh, no glow blobs."
+      },
+      {
+        "r": "Orange",
+        "v1": "One accent, used sparingly.",
+        "v2": "The identity, used with conviction: hero mark, one full band per page, agent tiles, primary button. Always with ink text."
+      },
+      {
+        "r": "Motion",
+        "v1": "Only to demonstrate product flow.",
+        "v2": "A heartbeat: at least four authored motions per page. Never hide content behind a reveal."
+      },
+      {
+        "r": "Icons",
+        "v1": "Phosphor thin icons.",
+        "v2": "Drawn in the U-chan line: thick ink outline, rounded. No icon packs."
+      },
+      {
+        "r": "Mascot",
+        "v1": "Lowkey, sparingly, never louder than the work.",
+        "v2": "At scale where it earns it: hero, footer, empty states, the U-chan note."
+      }
+    ],
+    "superseded": [
+      {
+        "doc": "orchestrator/docs/DESIGN_TOKENS.md",
+        "was": "the V1 SPA law: warm paper, one orange"
+      },
+      {
+        "doc": "docs/superpowers/specs/assets/2026-08-18-v2-design-tokens.md",
+        "was": "dual theme, yellow accent"
+      },
+      {
+        "doc": "DESIGN_TOKENS.md §The Face standard",
+        "was": "Agent R shell 1:1"
+      }
+    ],
+    "inkStates": {
+      "ruling": "QB90F6CC4",
+      "what": "The door's three states on a near-black ground: the same hues as Paper's, lightened to read on #1A1917 (Paper amber sat near 3:1). Each has a well, the tint its chip sits on.",
+      "tokens": [
+        {
+          "n": "verified-ink",
+          "v": "#34D399",
+          "well": "#10291F",
+          "paper": "#059669",
+          "u": "binding, checks"
+        },
+        {
+          "n": "needs-ink",
+          "v": "#E0A33E",
+          "well": "#2C2011",
+          "paper": "#B45309",
+          "u": "needs a person"
+        },
+        {
+          "n": "error-ink",
+          "v": "#F87171",
+          "well": "#2E1616",
+          "paper": "#B91C1C",
+          "u": "errors only, always with an icon"
+        },
+        {
+          "n": "stone",
+          "v": "#79716B",
+          "well": "#262421",
+          "paper": "#79716B",
+          "u": "incomplete: glyphs, dashed lines and large text on Ink; small incomplete text is dark-text-2 on the dark-3 well"
+        }
+      ]
+    },
+    "stateChips": {
+      "what": "Every state and severity chip maps to ONE brand colour. Red is errors only. Orange is identity, never a state.",
+      "chips": [
+        {
+          "chip": "BLOCKER",
+          "ground": "#E0A33E",
+          "text": "#1C1917",
+          "token": "needs-ink, solid",
+          "why": "a blocker waits on a person's ruling: needs-a-person at full strength. It was red; red is errors only."
+        },
+        {
+          "chip": "HIGH",
+          "ground": "#2C2011",
+          "text": "#E0A33E",
+          "token": "needs-ink on its well",
+          "why": "a question a person owes, below a blocker"
+        },
+        {
+          "chip": "OPEN",
+          "ground": "#2C2011",
+          "text": "#E0A33E",
+          "token": "needs-ink on its well",
+          "why": "an open filing waits on a person"
+        },
+        {
+          "chip": "DECIDE",
+          "ground": "#2C2011",
+          "text": "#E0A33E",
+          "token": "needs-ink on its well",
+          "why": "a human act is owed: amber means a human has to rule. It was red."
+        },
+        {
+          "chip": "APPROVE",
+          "ground": "#2C2011",
+          "text": "#E0A33E",
+          "token": "needs-ink on its well",
+          "why": "a human act is owed"
+        },
+        {
+          "chip": "GRANT",
+          "ground": "#2C2011",
+          "text": "#E0A33E",
+          "token": "needs-ink on its well",
+          "why": "a human act is owed. It was orange; orange is identity, not a state."
+        },
+        {
+          "chip": "REVIEW",
+          "ground": "#262421",
+          "text": "#A39C92",
+          "token": "stone family (dark-3 + dark-text-2)",
+          "why": "recorded and attributed, binding on no one yet"
+        },
+        {
+          "chip": "LANDED",
+          "ground": "#10291F",
+          "text": "#34D399",
+          "token": "verified-ink on its well",
+          "why": "binding: green appears only for verified and binding"
+        },
+        {
+          "chip": "gap",
+          "ground": "#262421",
+          "text": "#A39C92",
+          "line": "1px dashed #79716B",
+          "token": "stone, dashed",
+          "why": "incomplete: something is missing. It was red."
+        },
+        {
+          "chip": "pending",
+          "ground": "#262421",
+          "text": "#A39C92",
+          "token": "stone family",
+          "why": "ruled, not built: incomplete, not a person's act. It was amber."
+        },
+        {
+          "chip": "ERROR",
+          "ground": "#2E1616",
+          "text": "#F87171",
+          "token": "error-ink on its well, with an icon",
+          "why": "the ERROR and UNREACHABLE state patterns only"
+        }
+      ],
+      "ruling": "QB74B1B7E",
+      "helper": "ONE helper, stateChip(state, word?) in engine/src/ui.js, renders every chip as data-chip=<one of the 11>; its colours live once (UI-B5a)."
+    },
+    "behind": {
+      "rulings": [
+        "QD08A1E8F",
+        "QE9178667",
+        "Q47C9CCD3"
+      ],
+      "what": "BEHIND: the page a person reads is older than the served set. ONE pattern, the same everywhere, beside EMPTY, LOADING, ERROR and UNREACHABLE.",
+      "ground": "#262421",
+      "text": "#EBE6DC",
+      "token": "stone well (dark-3) with dark-text",
+      "icon": "its own (a clock with a return arrow), never the ERROR or UNREACHABLE icon",
+      "never": [
+        "orange: orange is identity, never a state",
+        "red: red is ERROR only"
+      ],
+      "says": "what moved and that acting still works (Q47C9CCD3: it warns and still lets you act); its one action is \"See v<n>\"",
+      "markup": "data-state=\"behind\" role=\"status\"",
+      "why": "Behind is not an error and not a person's act: incomplete-family stone reads as \"not the latest\" without alarm. The Versions artboard drew it in orange; that line is superseded (wireframe wf-versions superseded[])."
+    },
+    "tempo": {
+      "ruling": "QD0A65555",
+      "what": "Runs are not in the product (r113). What Build and Home show instead is where each FILING is: its tempo.",
+      "stages": [
+        {
+          "stage": "in",
+          "token": "stone",
+          "u": "filed and graded at the door",
+          "chip": "REVIEW"
+        },
+        {
+          "stage": "with <owner>",
+          "token": "needs-ink",
+          "u": "waiting on a named person",
+          "chip": "OPEN"
+        },
+        {
+          "stage": "decided",
+          "token": "verified-ink",
+          "u": "approved or ruled; a reject or needs-work shows REVIEW with its verdict word, never green (QB74B1B7E)",
+          "chip": "LANDED"
+        },
+        {
+          "stage": "on the canvas",
+          "token": "verified-ink",
+          "u": "landed and drawn on the Map",
+          "chip": "LANDED"
+        },
+        {
+          "stage": "needs more",
+          "token": "stone",
+          "u": "sent back for one more thing",
+          "chip": "gap"
+        }
+      ]
+    },
+    "type": [
+      {
+        "n": "display",
+        "face": "Manrope 800",
+        "u": "page titles, tracking -2% on the product (the brand's -5% is for the marketing display size)"
+      },
+      {
+        "n": "card title",
+        "face": "Manrope 700",
+        "u": "card and panel titles, 17 to 26px"
+      },
+      {
+        "n": "body",
+        "face": "Manrope 400/500",
+        "u": "reading text and controls"
+      },
+      {
+        "n": "character",
+        "face": "Fredoka 600",
+        "u": "the wordmark and mark, agent names, big numbers"
+      },
+      {
+        "n": "data",
+        "face": "JetBrains Mono",
+        "u": "ids, times, versions, grades, code"
+      }
+    ],
+    "tokenDecisions": [
+      {
+        "token": "Ink states #34D399 · #E0A33E · #F87171 (+ stone #79716B)",
+        "decision": "JOIN the law as inkStates",
+        "why": "QB90F6CC4 ruled them brand tokens, not the board's own; this is the named Ink states set that ruling asked the brand to carry."
+      },
+      {
+        "token": "state wells #10291F · #2C2011 · #2E1616",
+        "decision": "JOIN as each Ink state's well",
+        "why": "Brand v2 chips are \"tinted\"; a tint on Ink needs a value, and one per hue keeps a chip's ground and text the same state."
+      },
+      {
+        "token": "dark-text-2 #A39C92",
+        "decision": "JOIN the Ink world",
+        "why": "Paper has ink and ink-2; Ink had one text token. The artboards use it 500 times for secondary text, and stone on dark-2 falls below the body-text floor."
+      },
+      {
+        "token": "dark-line-2 #3A3733",
+        "decision": "JOIN the Ink world",
+        "why": "Ink draws its hairline in dark-3 (#262421), which vanishes on a dark-3 well. Controls and wells need one step up; stone would read as \"incomplete\"."
+      },
+      {
+        "token": "orange-well #2A1A0E",
+        "decision": "JOIN the Ink world",
+        "why": "Ink's counterpart to peach: the orange tint for avatars, the selected node and \"viewing\". Identity, never a state."
+      },
+      {
+        "token": "the canvas lane palette (blue, violet, green, red, a paper amber: 17 values)",
+        "decision": "CHANGE the artboards to existing tokens",
+        "why": "Brand v2 bans lane hues. A node kind is told by its ground and line (dark-3 / dark-2 / dark, dark-text-2 / stone), missing things by a dashed stone line, the selected node by orange."
+      },
+      {
+        "token": "Source Serif 4 (53 uses)",
+        "decision": "CHANGE to Manrope 800/700, Fredoka 600 and JetBrains Mono",
+        "why": "Brand v2 type: three voices, no serif."
+      }
+    ]
+  }
+}

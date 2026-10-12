@@ -1,0 +1,496 @@
+[
+ {
+  "kind": "question",
+  "op": "upsert",
+  "data": {
+   "qid": "Q-vision",
+   "question": "What is SIRU for (the aim on Home)?",
+   "why": "The bank's vision and mission wording is synthesised from the source documents' intent, not quoted from a founder statement: it is \"proposed, for the owner to ratify or rewrite\" (what-is-siru.md; open question Q-vision: \"ratify, rewrite, or point to an existing founder statement\"). The aim stays empty until this is ruled. Option A is the recommendation: it says what the work is for and where it starts; the vision (B) is the far end state; C describes what SIRU is rather than what it is for.",
+   "area": "aim",
+   "severity": "high",
+   "status": "open",
+   "whoOwes": "owner",
+   "waitingOn": "owner",
+   "options": [
+    {
+     "what": "Put a governed AI intelligence layer under everyday commerce — starting with pharmacy in Tamil Nadu — so medicine and goods move visibly, safely, and affordably, and value returns to customers and small merchants instead of being extracted from them.",
+     "tradeoff": "what-is-siru.md, \"Mission (proposed)\". Synthesised by the bank, not a founder statement."
+    },
+    {
+     "what": "A trusted, AI-run local commerce network where any neighbourhood pharmacy — and eventually any local merchant — operates with the intelligence, supply power and reliability of a national chain, while the customer always sees one simple, trustworthy experience.",
+     "tradeoff": "what-is-siru.md, \"Vision (proposed)\". Synthesised by the bank; an end state rather than a purpose."
+    },
+    {
+     "what": "An AI-powered commerce super-app ecosystem launching in Tamil Nadu, India, with pharmacy as its first live spoke: a governed AI intelligence platform under an entire ecosystem, not a shopping app with a chatbot.",
+     "tradeoff": "what-is-siru.md, \"What it is (one paragraph, confirmed)\". Confirmed, but a description of the product, not its aim."
+    }
+   ],
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 10_STRATEGY/what-is-siru.md \"Vision & mission (proposed — ratify me)\"",
+     "label": "the proposed wording"
+    },
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 60_DECISIONS/open-questions.md Q-vision",
+     "label": "the open question"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "question",
+  "op": "upsert",
+  "data": {
+   "qid": "Q-siru-goal-top",
+   "question": "What sits at the top of SIRU's goal tree?",
+   "why": "The goal tree is filed from the Thiruvallur pilot note (confirmed) and the owner's plan rulings (ADR-105), with the pilot as its root: \"Every surface in 20_PRODUCT/ is really being built to be exercised by this pilot.\" The same note names the step after it: \"Tamil Nadu = Scale-up after validation\". The tree takes one root. Option A is the recommendation: it is what the bank says the build serves now.",
+   "area": "goals",
+   "severity": "normal",
+   "status": "open",
+   "whoOwes": "owner",
+   "waitingOn": "owner",
+   "options": [
+    {
+     "what": "The Thiruvallur pilot (as filed): prove the operating model before the Tamil Nadu rollout",
+     "tradeoff": "pilot-thiruvallur-2026-09.md \"Why this note matters to the build\"; the near, dated goal. The rollout is not in the tree."
+    },
+    {
+     "what": "The Tamil Nadu rollout, with the pilot under it",
+     "tradeoff": "pilot-thiruvallur-2026-09.md \"Core principle\": \"Tamil Nadu = Scale-up after validation\"; the bank holds no rollout plan yet, so the root would have one child."
+    }
+   ],
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md",
+     "label": "the core principle and why the note matters to the build"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "thiruvallur-pilot",
+   "parent": null,
+   "title": "Thiruvallur pilot: prove the operating model before the Tamil Nadu rollout",
+   "dimensions": [],
+   "sort": 0,
+   "note": "Core principle (pilot note, S-02): \"September = Process Check · Thiruvallur = Proof of Model · 70 Pharmacies + 1 Node = Pilot Unit · Tamil Nadu = Scale-up after validation.\" The pilot validates the whole operating process end to end: pharmacy onboarding, inventory visibility, order flow, stock movement, replenishment, billing, settlement, returns, expiry handling and Node operations. Pilot size is a logged conflict, not resolved: 70 pharmacies + 1 Node (Vasu, S-02) vs 1 node, 10→100 pharmacies (Rein, S-29) — Q-pilot-size, RV3. The bank's last record is 2026-09-10: progress after that is not on file.",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md",
+     "label": "the pilot note (confirmed, last updated 2026-09-08)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "pilot-w1-base",
+   "parent": "thiruvallur-pilot",
+   "title": "W1 base: counter sale → day close → goods-in by scan → stock in the diary → pooled invoice chain, on seeded data",
+   "dimensions": [
+    "code"
+   ],
+   "due": "2026-09-14",
+   "sort": 1,
+   "note": "S-28 W1 (Sep 8–14) Friday gate, verbatim. Rein reported on 2026-09-08 that week 1 was already running (ADR-108).",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"The road to Sept 30\"",
+     "label": "W1 gate (S-28, ADR-105)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "pilot-w2",
+   "parent": "thiruvallur-pilot",
+   "title": "W2: every screen on the real backend",
+   "dimensions": [],
+   "due": "2026-09-21",
+   "sort": 2,
+   "note": "S-28 W2 (Sep 15–21). Its gate cannot pass until the two money gates close (ADR-105 R5).",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"The road to Sept 30\"",
+     "label": "W2 (S-28, ADR-105 R5)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "pilot-w2-gate",
+   "parent": "pilot-w2",
+   "title": "W2 gate: order → pick → pack → deliver → money in the bank, on the real backend (\"Not a demo script. The app.\")",
+   "dimensions": [
+    "code"
+   ],
+   "due": "2026-09-21",
+   "sort": 1,
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"The road to Sept 30\"",
+     "label": "W2 Friday gate, verbatim (S-28)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "pilot-gate-bank-encrypted",
+   "parent": "pilot-w2",
+   "title": "Money gate: bank data encrypted at rest",
+   "dimensions": [
+    "code"
+   ],
+   "owner": "Thyagu",
+   "sort": 2,
+   "note": "A W2 gate item; ratchet evals per ADR-097 (ADR-105 R5).",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 60_DECISIONS/decision-log.md ADR-105 R5",
+     "label": "the two money gates"
+    },
+    {
+     "kind": "thread",
+     "ref": "Q-plaintext-bank",
+     "label": "the open question it closes"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "pilot-gate-per-service-keys",
+   "parent": "pilot-w2",
+   "title": "Money gate: per-service keys, no impersonation",
+   "dimensions": [
+    "code"
+   ],
+   "owner": "Thyagu",
+   "sort": 3,
+   "note": "A W2 gate item; ratchet evals per ADR-097 (ADR-105 R5).",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 60_DECISIONS/decision-log.md ADR-105 R5",
+     "label": "the two money gates"
+    },
+    {
+     "kind": "thread",
+     "ref": "Q-internal-key",
+     "label": "the open question it closes"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "pilot-rx-encryption",
+   "parent": "thiruvallur-pilot",
+   "title": "Rx image retained and encrypted through pharmacist verification, day 1 (W1/W2)",
+   "dimensions": [
+    "code"
+   ],
+   "sort": 3,
+   "note": "ADR-006 holds; ADR-105 R4 moves Rx encryption into W1/W2 beside the consent pages (not legal-gated).",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 60_DECISIONS/decision-log.md ADR-105 R4",
+     "label": "Rx retention and encryption is day-1 scope"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "pilot-w3-freeze",
+   "parent": "thiruvallur-pilot",
+   "title": "W3 freeze + real load: the 10 green lights, all green → soft launch",
+   "dimensions": [
+    "code"
+   ],
+   "due": "2026-09-28",
+   "sort": 4,
+   "note": "S-28 W3 (Sep 22–28). The ten lights are unlisted; RV17 makes them the G4 scorecard. Sep 29–30 is the buffer.",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"The road to Sept 30\"",
+     "label": "W3 Friday gate (S-28)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "pilot-doors-open",
+   "parent": "thiruvallur-pilot",
+   "title": "Doors open in Thiruvallur: soft launch, \"doors open one by one as lights allow\"",
+   "dimensions": [],
+   "due": "2026-09-30",
+   "sort": 5,
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 60_DECISIONS/decision-log.md ADR-105 R2",
+     "label": "doors open 2026-09-30"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "pilot-onboarding-sop",
+   "parent": "thiruvallur-pilot",
+   "title": "A standard pharmacy onboarding SOP, so the same model replicates district by district",
+   "dimensions": [
+    "leader"
+   ],
+   "sort": 6,
+   "note": "Field team: pharmacy-association personnel trained to upload each pharmacy's inventory (SKU → Brand → Batch → Expiry → Quantity → Purchase Price → Selling Price → GST → Location).",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"Inventory digitisation & training\"",
+     "label": "the SOP"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "pilot-report",
+   "parent": "thiruvallur-pilot",
+   "title": "The Thiruvallur Pilot Report: what worked, what failed, what needs modification, cost, manpower and pharmacies per Node, technology changes, the rollout SOP",
+   "dimensions": [
+    "leader"
+   ],
+   "sort": 7,
+   "note": "The go/no-go. Lands about one month after doors open, ≈ end of October (ADR-105 R2, ADR-059); on it the Tamil Nadu implementation model is frozen. No exact date is on file.",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"The go/no-go\"",
+     "label": "the Pilot Report"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "pilot-dependencies",
+   "parent": "thiruvallur-pilot",
+   "title": "Outside the devs: what the pilot depends on",
+   "dimensions": [],
+   "sort": 8,
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"Outside the devs\"",
+     "label": "S-28 \"What we depend on\""
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "dep-hub-call",
+   "parent": "pilot-dependencies",
+   "title": "The hub call (RV5)",
+   "dimensions": [
+    "leader"
+   ],
+   "sort": 1,
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"Outside the devs\"",
+     "label": "S-28"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "dep-hardware-order",
+   "parent": "pilot-dependencies",
+   "title": "The hardware order: Android phone + Bluetooth thermal printer for POS and picker",
+   "dimensions": [],
+   "sort": 2,
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 60_DECISIONS/decision-log.md ADR-105 R1 (d)",
+     "label": "devices"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "dep-licence-structure",
+   "parent": "pilot-dependencies",
+   "title": "The licence structure, to counsel (RV6)",
+   "dimensions": [],
+   "sort": 3,
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"Outside the devs\"",
+     "label": "S-28"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "dep-pharmacy-agreement",
+   "parent": "pilot-dependencies",
+   "title": "The signed pharmacy agreement and the settlement cadence (RV7, RV20)",
+   "dimensions": [],
+   "sort": 4,
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"Outside the devs\"",
+     "label": "S-28"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "dep-payment-gateway",
+   "parent": "pilot-dependencies",
+   "title": "The payment gateway live check and the ₹1 canary",
+   "dimensions": [
+    "vendor"
+   ],
+   "sort": 5,
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"Outside the devs\"",
+     "label": "S-28"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "dep-medicine-master",
+   "parent": "pilot-dependencies",
+   "title": "The clean medicine master (RV18)",
+   "dimensions": [],
+   "sort": 6,
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"Outside the devs\"",
+     "label": "S-28"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "dep-sideload-vs-play",
+   "parent": "pilot-dependencies",
+   "title": "Sideload vs Play Store (Rein's call)",
+   "dimensions": [
+    "leader"
+   ],
+   "sort": 7,
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md \"Outside the devs\"",
+     "label": "S-28"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "doc",
+  "op": "upsert",
+  "data": {
+   "path": "start-here.md",
+   "title": "SIRU — start here",
+   "body": "# SIRU — start here\n\n*Written for a newcomer from SIRU's knowledge bank (what-is-siru.md, the Thiruvallur pilot note, the decision log, the open questions), as of 2026-10-01; the bank's own last record is 2026-09-10. A proposal: the owner confirms or rewrites it.*\n\n## What it is\nSIRU is an AI-powered commerce super-app ecosystem launching in Tamil Nadu, India, with pharmacy as its first live spoke. It is not a shopping app with an AI chatbot: it is a governed AI intelligence platform under an entire ecosystem, with \"Ask SIRU\" as its most visible consumer door. Its pharmacy business runs as a cooperative of neighbourhood member pharmacies organised under a Node/Hub: every customer payment flows through SIRU's payment gateway, SIRU takes a small fixed infrastructure fee, pharmacies sell at a uniform network price, and value returns to customers as merchant-locked reward coins. Product owner: Calsoft; engineered by Ryuk Labs.\n\nClinical safety comes first: AI drafts, a pharmacist decides.\n\n## Where its truth lives here\n- **Home** — the aim is empty on purpose: the bank's vision and mission are proposed, not ruled. The question Q-vision asks the owner.\n- **Goals** — the Thiruvallur pilot: the W1–W3 build gates, the two money gates, Rx encryption on day 1, doors open 2026-09-30, the Pilot Report about a month later, and what the pilot depends on outside the devs.\n- **Decisions** — the owner's rulings from the bank, and the questions still open for the owner.\n- **Map** — the apps and their screens, the services, and the bank's open questions as gaps.\n- **Docs** — the bank's notes: start with `10_STRATEGY/what-is-siru.md`, `50_OPERATIONS/pilot-thiruvallur-2026-09.md`, `40_ECONOMICS/payment-reward-coin-model.md` and `30_AI/clinical-safety.md`.\n\n## What to do first\n1. Read what SIRU is and the pilot note.\n2. Know what is still open: the aim (Q-vision); marketplace vs mesh (Q-marketplace-vs-mesh, a joint Ryuk + Vasu decision: do not build screen 41A until it is ruled); the pilot's size (Q-pilot-size).\n3. Rulings bind and the newest wins. If something is not in the bank, the knowledge is incomplete: file a question, never invent an answer.\n",
+   "asOf": "2026-10-01",
+   "confidence": "proposal",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 10_STRATEGY/what-is-siru.md",
+     "label": "what SIRU is (confirmed paragraph)"
+    },
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md",
+     "label": "the pilot"
+    },
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 60_DECISIONS/open-questions.md",
+     "label": "Q-vision, Q-marketplace-vs-mesh, Q-pilot-size"
+    },
+    {
+     "kind": "file",
+     "ref": "siru knowledge bank: 60_DECISIONS/decision-log.md",
+     "label": "ADR-105, ADR-108"
+    }
+   ]
+  }
+ }
+]

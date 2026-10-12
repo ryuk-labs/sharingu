@@ -1,0 +1,317 @@
+[
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "b5-extract",
+   "status": "done",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "docs/plan/SPRINTS.md",
+     "label": "sprint 3: B5 [x] (78afdf772), smoke 132/132"
+    },
+    {
+     "kind": "file",
+     "ref": "docs/plan/HANDOFF.md",
+     "label": "lane D: D1 B5 extract [x]"
+    },
+    {
+     "kind": "commit",
+     "ref": "78afdf772663d93450c565d8d9b3114d4cfb070a",
+     "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "b7-gtm",
+   "status": "in progress",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "docs/plan/HANDOFF.md",
+     "label": "in flight since 2026-10-02 08:50 UTC: D2 B7 GTM lists, Broadcast through the door"
+    },
+    {
+     "kind": "commit",
+     "ref": "26cd1427bee3d385ef78148bd9a693a82170ce39",
+     "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "d1b-door-findings",
+   "parent": "stage-b",
+   "title": "D1b: the door findings pass (the fixes from the four real runs)",
+   "dimensions": [
+    "code"
+   ],
+   "status": "done",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "docs/plan/HANDOFF.md",
+     "label": "the work queue to beta (lanes D, P, S)"
+    },
+    {
+     "kind": "file",
+     "ref": "docs/plan/SPRINTS.md",
+     "label": "sprint 3: the door findings pass"
+    },
+    {
+     "kind": "commit",
+     "ref": "45ab6f18698e9c0d4876b4eac94086cbd7ed2076",
+     "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "p2-ship-candidate",
+   "parent": "stage-b",
+   "title": "P2: every project sharp and clean before the ship (the ship candidate)",
+   "dimensions": [
+    "code",
+    "leader"
+   ],
+   "status": "in progress",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "docs/plan/HANDOFF.md",
+     "label": "the work queue to beta (lanes D, P, S)"
+    },
+    {
+     "kind": "file",
+     "ref": "docs/plan/SPRINTS.md",
+     "label": "sprint 3: P2 the ship candidate"
+    },
+    {
+     "kind": "commit",
+     "ref": "4d563bc25419e740ea681cb5c0a10f72a472698f",
+     "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "p2b-code-model",
+   "parent": "stage-b",
+   "title": "P2b: sharingu's model and checks generated from this repo's code",
+   "dimensions": [
+    "code"
+   ],
+   "status": "done",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "docs/plan/HANDOFF.md",
+     "label": "the work queue to beta (lanes D, P, S)"
+    },
+    {
+     "kind": "file",
+     "ref": "docs/plan/SPRINTS.md",
+     "label": "sprint 3: P2b [x]"
+    },
+    {
+     "kind": "commit",
+     "ref": "e76a4b3e7b8d248281e1693722072b07b758661f",
+     "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "s1-fresh-org",
+   "parent": "stage-b",
+   "title": "S1: a fresh org comes up green (day0-verify, new-org.sh, the stranger's local walk)",
+   "dimensions": [
+    "code"
+   ],
+   "status": "done",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "docs/plan/HANDOFF.md",
+     "label": "the work queue to beta (lanes D, P, S)"
+    },
+    {
+     "kind": "file",
+     "ref": "docs/plan/SPRINTS.md",
+     "label": "sprint 3: a fresh org comes up green, locally [x]"
+    },
+    {
+     "kind": "commit",
+     "ref": "749aa324deee660599e949482acff53390620bc3",
+     "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "s2-proof-tools",
+   "parent": "stage-b",
+   "title": "S2: the proof tools catch up (shots with the session cookie, the docs check, the selftests in the gate)",
+   "dimensions": [
+    "code"
+   ],
+   "status": "done",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "docs/plan/HANDOFF.md",
+     "label": "the work queue to beta (lanes D, P, S)"
+    },
+    {
+     "kind": "file",
+     "ref": "docs/plan/SPRINTS.md",
+     "label": "sprint 3: the proof tools catch up [x]"
+    },
+    {
+     "kind": "commit",
+     "ref": "749aa324deee660599e949482acff53390620bc3",
+     "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "goal",
+  "op": "upsert",
+  "data": {
+   "id": "s4-ship-tools",
+   "parent": "stage-b",
+   "title": "S4: the budget tools know the plan; the ship tools ready for this ship",
+   "dimensions": [
+    "code"
+   ],
+   "status": "done",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "docs/plan/HANDOFF.md",
+     "label": "the work queue to beta (lanes D, P, S)"
+    },
+    {
+     "kind": "commit",
+     "ref": "2fb5b2076099604eb8541d5167021dc229d37892",
+     "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+    }
+   ]
+  }
+ },
+ {
+  "kind": "question",
+  "op": "upsert",
+  "data": {
+   "qid": "R-render-not-stale",
+   "status": "decided",
+   "decidedBy": "Ryuk",
+   "decidedAt": "2026-10-02",
+   "area": "the MCP",
+   "question": "Does a new picture of a screen make the grades on that screen stale?",
+   "why": "In the real grading run a new render made every grade on its screen stale: 22 pictures forced 55 regrades.",
+   "options": [
+    {
+     "what": "No: a picture is not a change of behaviour; a new render does not make a grade stale"
+    },
+    {
+     "what": "Yes: a new render stales every grade on its screen (as built before the door findings pass)"
+    }
+   ],
+   "choice": 0,
+   "label": "A new picture of a screen does not make its grades stale (built in the door findings pass, migrate-057).",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "docs/plan/HANDOFF.md",
+     "label": "Ruled 2026-10-02"
+    },
+    {
+     "kind": "file",
+     "ref": "docs/plan/SPRINTS.md",
+     "label": "sprint 3: sharingu is a real project, finding 2"
+    },
+    {
+     "kind": "commit",
+     "ref": "45ab6f18698e9c0d4876b4eac94086cbd7ed2076",
+     "label": "sprint 3: the door findings pass — 23 fixes from the four real runs"
+    },
+    {
+     "kind": "commit",
+     "ref": "5f070e15aec0edbb7fd5eb412ed66df82a7dbf6e",
+     "label": "plan: sharingu is a real project locally — what the run found, queued"
+    },
+    {
+     "kind": "commit",
+     "ref": "90f615ec89ae1ad7c6de377f32fca48ea4bd0ccb",
+     "label": "the importer replays every project's overlay folder; the owner's rulings recorded"
+    },
+    {
+     "kind": "file",
+     "ref": "engine/migrate-057.sql",
+     "label": "the rule now: a render stales no grade"
+    }
+   ],
+   "rationale": "A picture or wireframe is how the screen looks on file, not a change of what it does, so it puts no proof in question."
+  }
+ },
+ {
+  "kind": "question",
+  "op": "upsert",
+  "data": {
+   "qid": "R-ship-prune-old-model",
+   "status": "decided",
+   "decidedBy": "Ryuk",
+   "decidedAt": "2026-10-02",
+   "area": "the ship",
+   "question": "At the ship, is sharingu's old-brain model removed from live?",
+   "why": "The ship's prune removes from live what the candidate no longer files, including sharingu's old-brain model (2,531 items and the old goal root); that removal waited on the owner's OK.",
+   "options": [
+    {
+     "what": "Remove it, no sharingu snapshot first: the way back is the migrations' Time Travel bookmark (30 days)"
+    }
+   ],
+   "choice": 0,
+   "label": "Remove it at the ship with the prune, no sharingu snapshot first; the way back is step 3's Time Travel bookmark (30 days).",
+   "source": [
+    {
+     "kind": "file",
+     "ref": "docs/plan/HANDOFF.md",
+     "label": "G5 step 5, Ruled 2026-10-02 (MCQ)"
+    },
+    {
+     "kind": "commit",
+     "ref": "26cd1427bee3d385ef78148bd9a693a82170ce39",
+     "label": "plan: the door findings pass ticked; the old data on live is removed at the ship"
+    },
+    {
+     "kind": "commit",
+     "ref": "363b4e1ed651309bc6fc85064a192da1409c72d9",
+     "label": "plan: the ship's order with the rename and the prune"
+    }
+   ],
+   "rationale": "The way back is already there: the migrations' Time Travel bookmark keeps the data recoverable for 30 days."
+  }
+ }
+]

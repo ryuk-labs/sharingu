@@ -1,0 +1,105 @@
+{
+ "note": "The owner's rulings of 2026-10-02 (MCQ) on the basics fill's questions: the aim stays as filed; its measure is the ask → TestFlight lead time, per week.",
+ "items": [
+  {
+   "kind": "aim",
+   "op": "upsert",
+   "data": {
+    "measure": {
+     "name": "Ask → TestFlight lead time",
+     "value": null,
+     "period": "per week",
+     "prior": null,
+     "priorPeriod": "",
+     "source": "backend/docs/plan.md §0 · not counted yet"
+    },
+    "source": [
+     {
+      "kind": "file",
+      "ref": "bunny backend: docs/plan.md §0 Goal",
+      "label": "the plan, rewritten 2026-09-30 after the owner's rulings on the Fable audit"
+     },
+     {
+      "kind": "file",
+      "ref": "bunny project rules (CLAUDE.md)",
+      "label": "\"Read backend/docs/plan.md first. It is the one page: goal, state, how work runs, what is next.\""
+     },
+     {
+      "kind": "file",
+      "ref": "bunny backend: docs/plan.md §0, §4",
+      "label": "the measure: \"Measured weekly\" ask→TestFlight lead time; counted from the asks list and ops/testflight-builds.jsonl, no value stated"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-bunny-aim-measure",
+    "status": "decided",
+    "choice": 0,
+    "label": "Ask → TestFlight lead time, per week",
+    "rationale": "It is the goal's own sentence: an owner ask → code on main → TestFlight the same day.",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "whoOwes": null,
+    "waitingOn": null,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "bunny backend: docs/plan.md §0 Goal",
+      "label": "Measured weekly: asks closed · product lines merged · ask→TestFlight lead time · TestFlight builds shipped"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "why": "The plan (backend/docs/plan.md §0) measures the goal weekly by four numbers: asks closed · product lines merged · ask→TestFlight lead time · TestFlight builds shipped. The aim takes one measure, and none of the four was named as the one."
+   }
+  },
+  {
+   "kind": "doc",
+   "op": "upsert",
+   "data": {
+    "path": "start-here.md",
+    "body": "# BunnyEvents — start here\n\n*Written for a newcomer from the project's own sources (bunny's root CLAUDE.md, backend/docs/plan.md and the board), as of 2026-10-01, with the owner's rulings of 2026-10-02. A proposal: the owner confirms or rewrites it.*\n\n## What it is\nBunnyEvents is an events product in four repos under one folder:\n- **app** — a Flutter iOS app with three modes: attendee, host and door (check-in staff).\n- **console** — a TanStack Start web app on Vercel: `/manage` (the host console), `/admin` (the Bunny console) and the public pages.\n- **backend** — Supabase: Postgres with row-level security, edge functions. It is **the contract**; app and console generate their own types from it, and cross-surface changes land backend first.\n- **board** — the decision record and the schema, API and screen reference (`node board/q.mjs <id>`).\n\n**The goal** (plan.md §0): ship visible product every day — an owner ask becomes code on main and a TestFlight build the same day, and the app and the web app reach the bar in `app/DESIGN.md` (Luma-class: clean, fast, native iOS).\n\n## Where its truth lives here\n- **Home** — the aim, measured by the ask → TestFlight lead time per week (ruled 2026-10-02, Q-bunny-aim-measure). No value is counted yet.\n- **Goals** — the go-live checklist, by party: the owner (approvals, money and accounts only the owner can act on), engineering (build ready, the ship train, the Bunny world test dataset, carried debt) and Apple (TestFlight signing and App Store Connect).\n- **Decisions** — the board's rulings. A ruling binds; the newest wins; superseded and moot ones are marked.\n- **Map** — the six apps (app-attendee, app-host, app-door, web-manage, web-admin, web-public) with their screens, the API doors, the tables, the journeys and state machines, and the board's checks.\n- Outside sharingu: `backend/docs/plan.md` is the project's one page (goal, state, how work runs, what is next); everything under `backend/docs/archive/` is history.\n\n## What to do first\n1. Read the aim on Home and the open items on Goals.\n2. What waits on the owner (plan.md §6): the main hosted project's invoice (or stay on the interim FREE project), OpenAI credit, the Stripe live key at launch, the Apple team transfer, the store copy.\n3. How work runs (root CLAUDE.md): classify a change first (`node backend/tools/tier.mjs classify`) and run only the checks it names; ship only through the gated scripts, never raw hosted CLI; decisions the owner must make are asked as one MCQ, recommended option first.\n",
+    "asOf": "2026-10-02",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "bunny project rules (CLAUDE.md)",
+      "label": "the four repos, how work runs, the owner"
+     },
+     {
+      "kind": "file",
+      "ref": "bunny backend: docs/plan.md §0, §6",
+      "label": "the goal; waiting on the owner"
+     },
+     {
+      "kind": "file",
+      "ref": "bunny board: START-HERE.md",
+      "label": "what the board covers"
+     },
+     {
+      "kind": "file",
+      "ref": "bunny board: GOLIVE.md",
+      "label": "the go-live checklist by party"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ]
+   }
+  }
+ ]
+}

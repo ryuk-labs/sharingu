@@ -1,0 +1,72 @@
+{
+ "note": "MACHINE-LOCAL (from Ryuklabs master context §5; listed in this folder's .gitignore): the owner's ruling of 2026-10-02 that Siru, FlowZo and Redacted/TOKEN2049 are approved claims.",
+ "items": [
+  {
+   "kind": "card",
+   "op": "upsert",
+   "data": {
+    "kind": "claim",
+    "id": "claim-siru",
+    "name": "Siru: a technology partnership around dynamic booking and commerce",
+    "body": "Approved description: a technology partnership around dynamic booking and commerce. Owner-confirmed work includes AI assistance, WhatsApp/Facebook/Instagram integration, English and Arabic, migration and staff training.\n\nSiru is live and onboarding independent pharmacies across India. The founder reported 10,000+ sign-ups on 29 September 2026.\n\n**Boundary:** keep the number as **10,000+ sign-ups** until the unit is confirmed. Do not call them active pharmacies, customers, users or completed onboardings. Do not claim Ryuk Labs owns Siru or that every demonstrated module is live for every business.\n\nLinks: https://siruapp.com/ · https://www.ryuklabs.io/stories/siru\n\nSource: team outreach master context §5 (2026-10-01). Approved as a named claim by the owner (MCQ 2026-10-02, Q-ryuklabs-named-stories).",
+    "status": "approved",
+    "asOf": "2026-10-01",
+    "confidence": "confirmed"
+   }
+  },
+  {
+   "kind": "card",
+   "op": "upsert",
+   "data": {
+    "kind": "claim",
+    "id": "claim-flowzo",
+    "name": "FlowZo: a business partnership around positioning, demonstrations, customer adoption and GTM",
+    "body": "Approved description: a business partnership around positioning, demonstrations, customer adoption and GTM.\n\n**Boundary:** do not automatically claim Ryuk Labs built all FlowZo engineering or generated the illustrative revenue shown in a demonstration.\n\nStory: https://www.ryuklabs.io/stories/flowzo\n\nSource: team outreach master context §5 (2026-10-01). Approved as a named claim by the owner (MCQ 2026-10-02, Q-ryuklabs-named-stories).",
+    "status": "approved",
+    "asOf": "2026-10-01",
+    "confidence": "confirmed"
+   }
+  },
+  {
+   "kind": "card",
+   "op": "upsert",
+   "data": {
+    "kind": "claim",
+    "id": "claim-redacted-token2049",
+    "name": "Redacted / TOKEN2049: the Dubai–Singapore flight experience",
+    "body": "Approved description: owner-confirmed end-to-end experience design, technology and event operations for the Dubai–Singapore TOKEN2049 flight experience.\n\n**Boundary:** 1M+ means owner-reported flight registrations/applications. It does not mean passengers, unique users, paid tickets, simultaneous users or Ryuk Labs-wide usage.\n\nStory: https://www.ryuklabs.io/stories/redacted\n\nSource: team outreach master context §5 (2026-10-01). Approved as a named claim by the owner (MCQ 2026-10-02, Q-ryuklabs-named-stories).",
+    "status": "approved",
+    "asOf": "2026-10-01",
+    "confidence": "confirmed"
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-ryuklabs-named-stories",
+    "status": "decided",
+    "choice": 0,
+    "label": "Yes: file the three as approved claims, each with its boundary and story link",
+    "rationale": "They are public, and their boundaries (e.g. \"keep the number as 10,000+ sign-ups until the unit is confirmed\"; \"1M+ means owner-reported registrations/applications\") are exactly what a teammate needs before writing copy.",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "whoOwes": null,
+    "waitingOn": null,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "Ryuklabs master context §5",
+      "label": "approved proof and exact boundaries"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ round on the basics fill's questions"
+     }
+    ],
+    "why": "The team context pack approves a description and an exact boundary for each (§5), and each is a public story on ryuklabs.io; but each names a client or partner, and no client name is filed without the owner's say."
+   }
+  }
+ ]
+}

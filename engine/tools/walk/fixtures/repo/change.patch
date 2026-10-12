@@ -1,0 +1,18 @@
+From 3f9c2a7e1b0d4c55aa21e8f0c6b7d9e2a1f30b44 Mon Sep 17 00:00:00 2001
+From: Walk Member <member@walk.local>
+Subject: [PATCH] Pricing: show the annual plan first
+
+Buyers asked for yearly billing; the annual plan now leads the pricing page.
+
+Tested: node --test tests/pricing.test.js -> 2 passing, 0 failing
+Next: Review the annual plan copy before it goes out (the admin)
+---
+ pages/pricing.js | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pages/pricing.js b/pages/pricing.js
+--- a/pages/pricing.js
++++ b/pages/pricing.js
+@@ -1 +1 @@
+-export default (prices) => `<main><h1>Plans</h1>${prices.map((p) => `<section><h2>${p.name}</h2><p>${p.eur} EUR</p></section>`).join("")}<a href="/checkout">Choose</a></main>`;
++export default (prices) => `<main><h1>Plans</h1>${[...prices].sort((a, b) => (b.annual ? 1 : 0) - (a.annual ? 1 : 0)).map((p) => `<section><h2>${p.name}</h2><p>${p.eur} EUR</p></section>`).join("")}<a href="/checkout">Choose</a></main>`;

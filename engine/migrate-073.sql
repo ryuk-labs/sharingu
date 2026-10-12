@@ -1,0 +1,23 @@
+-- migrate-073.sql — one session per ACCOUNT (sprint 7, slice 7.4; docs/plan/PLATFORM.md §2 items 8 and 9: one session per
+-- account, the cookie `__Host-` with the whole site as its path, the org from the address and the membership).
+-- EXPAND ONLY (PLATFORM §5): one nullable column added, nothing renamed, nothing dropped; the old code names it nowhere.
+--   1 · tokens.account_id: the ACCOUNT a session belongs to, or NULL for a SEAT session. A session minted by proving the
+--       account's own passphrase (POST /login, the sign-up) carries its account: at an org's address (/<org>/…) it reads as the
+--       account's active seat in THAT org (src/core.js SESSION_AT_SQL). A session minted by a seat's OWN secret (what its org's
+--       admin minted or set) carries none: it opens its seat only (tokens.person_id), in its seat's org only — the no-widening
+--       law of slice 7.1: what one org's admin knows never opens another org's seat.
+--       person_id stays NOT NULL on every row: an account session's ANCHOR seat (the seat the sign-in chose), which the old code
+--       reads as the session's one seat (a rollback reads every session as a seat session: less authority, never more).
+--       No index: the column is read only beside the row's primary key (token_hash), never searched.
+-- EVERY LIVE SESSION SURVIVES UNCHANGED: each row before this file reads NULL, a seat session of its seat (every session ever
+-- minted on live was proven by a seat's secret: no account held a passphrase before slice 7.2), so it answers at its seat's
+-- org's address exactly as it answered before; an old bookmark (/home) is redirected there by the new code. Nothing is
+-- backfilled.
+-- WRITE COST on live: nothing (an ADD COLUMN with no default rewrites no row).
+-- ORDER: BEFORE the code (the new code's sign-in writes the column; the old code names it nowhere).
+-- Re-runnable: on a database that already holds this file the ALTER fails (duplicate column name: the file is skipped whole),
+-- as migrate-070's and migrate-072's replays are.
+-- THE UNDO: the code's rollback alone (the old code reads every session by its person_id); the column can stay.
+
+-- 1 · the session's account
+ALTER TABLE tokens ADD COLUMN account_id TEXT;

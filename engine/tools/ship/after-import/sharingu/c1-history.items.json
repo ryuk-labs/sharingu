@@ -1,0 +1,3098 @@
+{
+ "project": "sharingu",
+ "clientRef": "sharingu-history-c1",
+ "note": "sharingu's history since the re-architecture (2026-09-30 on): one contribution per build commit and per plan commit that records real work, filed as the owner; happenedAt = the commit's UTC time; proof as the record states it.",
+ "items": [
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-09-30T07:02:40Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "127195181215467a18730f33cb28e470c684de4e",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "url",
+      "ref": "https://github.com/ryukdev/sharingu/pull/267",
+      "label": "PR #267"
+     }
+    ],
+    "clientRef": "sharingu-history-127195181",
+    "what": "The owner-approved sharingu plan lands in docs/plan",
+    "why": "docs/plan becomes THE plan the re-architecture follows (the model every line of code serves, the build order, the target architecture). Recorded as PR #267.",
+    "touches": [
+     "docs/plan"
+    ],
+    "goalRef": "sprint-1"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T07:56:43Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "ead3b3a1611b1950fd30e67c84dbf1ec29809f03",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-ead3b3a16",
+    "what": "Sprint-1 setup: the old build machinery deleted; one sprint branch and vertical slices",
+    "why": "Owner ruling 2026-09-30 (four MCQs): a sprint branch with ONE review at sprint end, vertical slices, the knowledge core rewritten clean, the old machinery deleted now. Deleted orchestrator/ (the land door, gates, hooks, run record), the workflows, agents, rules and board skills; AGENTS.md, CLAUDE.md and docs/plan rewritten.",
+    "touches": [
+     "orchestrator/",
+     ".claude/",
+     "AGENTS.md",
+     "CLAUDE.md",
+     "docs/plan"
+    ],
+    "components": [
+     "service:github"
+    ],
+    "proof": "git show --stat ead3b3a16 -> 229 files changed, 306 insertions(+), 37963 deletions(-) (199 of the files under orchestrator/); git cat-file -e f6efbaa17:orchestrator -> exit 128, \"path 'orchestrator' does not exist in 'f6efbaa17'\" (the folder is gone at the head)",
+    "goalRef": "s1-setup",
+    "depends": [
+     "q/R-proc-sprint-branch",
+     "q/R-proc-vertical-slices",
+     "q/R-proc-core-clean",
+     "q/R-proc-delete-machinery"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T08:31:15Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "06b0b5d0b28c6f83bca790650037f6a45921aee5",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-06b0b5d0b",
+    "what": "Slice 0: the knowledge core — D1 tables, write_knowledge / read_knowledge, the smoke",
+    "why": "migrate-039 (13 k_* tables and the org row); one registry entry and validator per kind; write_knowledge as a validated all-or-nothing batch committed in the same D1 batch as its one ledger row, idempotent by clientRef, only the owner rules a question; the ONE read module; the MCP and REST doors; contracts regenerated (51 tools).",
+    "touches": [
+     "door:POST:/mcp",
+     "engine/src/knowledge",
+     "migrate-039"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "proof": "node tools/knowledge-selftest.mjs exit 0 (101/0); sh tools/smoke.sh exit 0 (16/16).",
+    "goalRef": "s1-core",
+    "depends": [
+     "q/R-model-d1-truth",
+     "q/R-proc-core-clean"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T08:31:15Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "4a1a2fcf72bb79890a4beebbc3cba2539d6d2c8b",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-4a1a2fcf7",
+    "what": "Slice 5 (early): the importer — a brain repo becomes write_knowledge batches",
+    "why": "engine/tools/import-brain.mjs and tools/import/: one pure mapper per kind, batches of at most 200 ops and 256 KB validated by the door's own planKnowledge, clientRef a stable hash of the batch.",
+    "touches": [
+     "engine/tools/import-brain.mjs",
+     "engine/tools/import/"
+    ],
+    "components": [
+     "service:cloudflare-workers"
+    ],
+    "proof": "Dry run only so far: ryuklabs-ops-brain -> 32 ops / 6 batches; agent-rl-sharingu-brain -> 2,945 ops / 26 batches, every batch valid. The --url path has only run against a fake door (tools/import/selftest.mjs, 45 checks).",
+    "goalRef": "s1-import",
+    "depends": [
+     "q/R-model-d1-truth"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T08:33:32Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "a90d7c017d0137a6de22929d36d8febca587d0d4",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-a90d7c017",
+    "what": "The local app with real data, the smoke split per slice, the goal-tree readers",
+    "why": "tools/dev-local.sh: a persistent local worker whose D1 is filled by the importer through the MCP door; tools/smoke.mjs imports one case file per slice; src/knowledge/goals.js (goalTree, aimOf) for slices 1 and 3.",
+    "touches": [
+     "engine/tools/dev-local.sh",
+     "engine/tools/smoke/",
+     "engine/src/knowledge/goals.js"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "proof": "Proven: siru-services 32 ops and sharingu 2,945 ops filed, read_knowledge stored == built for every kind on both; a second run is a replay.",
+    "goalRef": "s1-import"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T08:46:06Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "ca3daf27beab5995a121b5a4d7163ea5c799b218",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-ca3daf27b",
+    "what": "The free-tier budget, measured per screen: D1 rows read in the timing header and tools/page-budget.mjs",
+    "why": "src/timing.js sums every statement's rows read and written per request (the d1-rows Server-Timing entry); tools/page-budget.mjs loads every tab and the main MCP reads on the local app with real data against the 5M daily budget (warn 1,500, fail 6,000 rows). Baseline before slices 1-3: worst load 245 rows.",
+    "touches": [
+     "engine/src/timing.js",
+     "engine/tools/page-budget.mjs"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "proof": "The commit states: baseline before slices 1-3, worst load 245 rows (read_knowledge question, 346 rows). Run now: curl -D - -H \"Authorization: Bearer $KEY\" -H \"x-count-rows: 1\" http://127.0.0.1:8830/goals?project=sharingu -> 200, server-timing d1-rows desc=\"read=243 written=0 stmts=11 unknown=0\"",
+    "goalRef": "sprint-1"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T09:47:09Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "e311ef503dc8e040f0d43538df6f204768b7a841",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-e311ef503",
+    "what": "Slices 1-3: Goals, Home, Decisions and the Map read D1; a ruling is live; checks light the map",
+    "why": "Slice 1: the goal tree and the aim feed Goals, one goal, Home, Build's finish line, GTM and the goalRef check. Slice 2: questions and options from D1; respond, an approve and the new rule_question rule a question in the same request; the overlay is project-filtered. Slice 3: the canvas from k_nodes/k_edges; a node lights from its checks' grades; submit_grade refuses an unknown check. Built by three builders in one checkout (one commit).",
+    "touches": [
+     "screen:goals",
+     "screen:home",
+     "screen:decisions",
+     "screen:question",
+     "screen:map",
+     "door:MCP:submit_grade",
+     "door:MCP:respond",
+     "table:check_results"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "screens": "goals,home,decisions,question,map",
+    "proof": "sh tools/smoke.sh 41/41; 21 selftests exit 0 (d1-hot 319/0, wire 474/0, knowledge 101/0, canvas 58/0); check-mcp-parity, check-boot-schema, check-brand exit 0; tools/page-budget.mjs on the real import: worst load 1,316 rows (System map), under the 1,500 flag.",
+    "goalRef": "s1-slices-1-3",
+    "depends": [
+     "q/R-model-live",
+     "q/R-model-three-loops"
+    ],
+    "open": [
+     "the canvas has no stateMatrix, progress or crew (not imported)",
+     "contracts/door.declared.json prose for goals / home / decisions is stale"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T10:44:21Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "df4a5e7cc538d725d526b3fb7222428d6fb455c6",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-df4a5e7cc",
+    "what": "Slice 4: Versions are snapshots in D1, holes close by filing, docs / cards / GTM / state read D1",
+    "why": "publish_version and restore_version are real (snapshots copied and restored inside the database, restore by difference); holes grades the project's D1 knowledge and every open piece carries the exact fillPath that closes it; library, doc, capsule, start-here, cards, state, heartbeat and Home's shipped / as-of read D1; each goal lists its checks.",
+    "touches": [
+     "screen:versions",
+     "screen:holes",
+     "screen:docs",
+     "screen:gtm",
+     "screen:home",
+     "door:MCP:holes",
+     "door:MCP:restore_version"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "screens": "versions,holes,docs,gtm,home",
+    "proof": "sh tools/smoke.sh 57/57; all 43 node selftests exit 0; parity, boot-schema, brand, orphans exit 0. tools/page-budget.mjs on the real import: worst load 1,317 rows (System map); holes 124-128, Home 88, Goals 131, a plain page 25-34. A real publish of sharingu reads ~15.6k rows and writes 24.",
+    "goalRef": "s1-slice-4",
+    "depends": [
+     "q/R-model-versions"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T10:50:51Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "51e4735dd1a7984875a8d6150c535fa1a8cc3c52",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-51e4735dd",
+    "what": "The gate: the knowledge core's selftests replace the retired brain-kit step; the syntax check covers src/knowledge",
+    "why": "The brain-kit step verified R2 files against engine readers that no longer read R2.",
+    "touches": [
+     "engine/gate.sh"
+    ],
+    "components": [
+     "service:github"
+    ],
+    "proof": "sh gate.sh: exit 0, 73 steps green",
+    "goalRef": "s1-end"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T10:52:59Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "ebee96416307baee621217245dab2ae5416cae19",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-ebee96416",
+    "what": "The ship path: a preview hook in ship.sh and tools/import-live.sh",
+    "why": "SHIP_PREVIEW_HOOK runs once after the preview smoke and before any traffic moves; tools/import-live.sh files both projects through the MCP door there (a 20-op probe first, then 50 ops a call).",
+    "touches": [
+     "engine/tools/ship.sh",
+     "engine/tools/import-live.sh"
+    ],
+    "components": [
+     "service:cloudflare-workers"
+    ],
+    "proof": "Rehearsed against a fresh local worker: stored == built for every kind on both projects; ship-selftest 52/0.",
+    "goalRef": "s1-end",
+    "depends": [
+     "q/R-data-d1-only"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-09-30T11:56:01Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "b4900c2e9a05b6cec511dbf510d94994d73eafe4",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/LOOK.md",
+      "label": "the look"
+     }
+    ],
+    "clientRef": "sharingu-history-b4900c2e9",
+    "what": "The look written down: the owner's bar (Obsidian / Claude Code clean, the website's brand) as docs/plan/LOOK.md",
+    "why": "The look pass is a real design pass on shared parts, with the brand source named so nothing is invented or drifts.",
+    "touches": [
+     "docs/plan/LOOK.md"
+    ],
+    "goalRef": "a-foundation",
+    "depends": [
+     "q/R-look-bar"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T12:04:38Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "07c532a290c4f58360779db8e2338019f7cbb71b",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-07c532a29",
+    "what": "Review fixes: role-restricted knowledge is enforced at every door; restore keeps unpublished work; budget and limits",
+    "why": "From the sprint's one independent review (17 findings; two HIGH: role-restricted docs and cards were writable and readable by any seated member).",
+    "touches": [
+     "door:MCP:pack_card",
+     "door:MCP:pack_find",
+     "door:MCP:pack_kinds",
+     "door:MCP:restore_version",
+     "door:MCP:holes",
+     "screen:versions"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "screens": "versions",
+    "proof": "smoke 68/68; all 45 node selftests exit 0; the ship-style import on a fresh worker stored == built for every kind (903 options == the source's 903); worst page 1,316 rows read.",
+    "goalRef": "s1-end",
+    "open": [
+     "deferred to sprint 2 by choice: concurrent-writer invariants, eval marks on knowledge rows"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T12:52:58Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "389356a2b5b40501749246a49a06c97f26b9f34a",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-389356a2b",
+    "what": "Sprint end: the suites triaged on D1 — evals 468/0/58, sims 144/0/26, tabs-verify 154/0, verify-live 76/0 (local)",
+    "why": "The suites' local org gets its knowledge from the importer; retired cases deleted, moved cases re-aimed, three loop cases added. A bug the first run caught: an eval-marked answer ruled a REAL question for good; ruleFromAnswer now refuses an eval answer.",
+    "touches": [
+     "engine/evals.sh",
+     "engine/sims.sh",
+     "engine/tools/lib-r-local.sh"
+    ],
+    "components": [
+     "service:cloudflare-workers"
+    ],
+    "proof": "sh evals.sh exit 0; sh sims.sh exit 0; sh tools/tabs-verify.sh exit 0; sh tools/verify-live.sh exit 0; sh tools/smoke.sh 68/68; 45 node selftests exit 0; sh gate.sh exit 0 (73 steps).",
+    "goalRef": "s1-end"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T14:09:56Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "95b48a60a06ce69afa2cfca04e879db79744ad4e",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-95b48a60a",
+    "what": "Migrations replay clean over the new triggers; the dry run accepts tables a migration creates",
+    "why": "Found by rehearsing the chain on a copy of the live database: migrate-031 failed to replay over migrate-041's triggers; the dry run's row-count check treated every new empty table as a change.",
+    "touches": [
+     "migrate-031",
+     "engine/tools/migrate-dryrun.sh",
+     "table:check_results"
+    ],
+    "components": [
+     "service:cloudflare-d1"
+    ],
+    "proof": "sh tools/migrate-dryrun.sh ryuklabs-agent-r exit 0 (23 applied on the first pass, the replay clean, 0 orphans, row counts accounted for); migrate-dryrun-selftest 8/8.",
+    "goalRef": "s1-end"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T15:06:16Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "54d489d430a478dc1f1bcbea5dbcdd915fa191a2",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-54d489d43",
+    "what": "Sprint 1 shipped: the handoff, the plan ticks, and tools/live-walk.mjs (the three loops on the deployed worker)",
+    "why": "The ship of sprint 1 and its live proof; measured rows on live recorded as sprint-2 budget items (heartbeat 473-491, /control 563-578).",
+    "touches": [
+     "engine/tools/live-walk.mjs",
+     "docs/plan/HANDOFF.md"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "proof": "Live e870a1b2 (was 76c2b6e6). The walk passed 5 of 5 on agent.ryuklabs.io; every tab 200 on both real projects",
+    "goalRef": "s1-end",
+    "depends": [
+     "q/R-model-three-loops"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T16:45:04Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "5a26059dfc06afbfd1c90a5d0c8634b4da60c8ff",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-5a26059df",
+    "what": "Sprint 2: the look's foundation (rail, Paper + Ink, shared parts, Home, Decisions, sign-in) and the live budget (tallies, indexes)",
+    "why": "The look (LOOK.md; owner: a left rail, follow the system theme, comfortable rows): one token set for two worlds, a slim left rail, shared parts and one stylesheet, Home, Decisions, the question page and sign-in rebuilt. The live budget: migrate-042, four tally tables kept exact by triggers and ten indexes (on the fixture a plain page 449 -> 33 rows, heartbeat 1,624 -> 54).",
+    "touches": [
+     "screen:home",
+     "screen:decisions",
+     "screen:question",
+     "screen:login",
+     "engine/src/ui.js",
+     "engine/src/shell.js",
+     "migrate-042"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "screens": "home,decisions,question,login",
+    "proof": "sh tools/smoke.sh 68/68; all 46 node selftests exit 0 (wire 487/0, d1-hot 333/0, tally 10/10); parity, boot-schema (35 tables, 48 indexes), fonts check exit 0.",
+    "goalRef": "a-foundation",
+    "depends": [
+     "q/R-look-bar",
+     "q/R-look-layout",
+     "q/R-look-theme",
+     "q/R-look-density",
+     "q/R-order-sprint-2"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T17:44:42Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "f2ef883ee9b1318056fdad2d1095313d64570ac6",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-f2ef883ee",
+    "what": "Sprint 2: the other screens on the shared parts, the command palette, the logo, motion; siru, saruspay and bunny import",
+    "why": "Goals, one goal, GTM, holes, Build, a filing and Versions rebuilt on the shared parts; the command palette; one logo part and GET /favicon.svg; the motion system. The importer learns three more layouts and fills siru, saruspay and bunny; the System map on saruspay costs 5,984 rows, so the Map slice must move node lights onto a maintained table.",
+    "touches": [
+     "screen:goals",
+     "screen:gtm",
+     "screen:holes",
+     "screen:build",
+     "screen:filing",
+     "screen:versions",
+     "engine/tools/import/"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "screens": "goals,gtm,holes,build,filing,versions",
+    "proof": "sh tools/smoke.sh 68/68; all 46 node selftests exit 0 (wire 490/0, import 100/0); parity, boot-schema, fonts check exit 0; page-budget on sharingu: worst 1,319 (System map), a plain page 26 rows.",
+    "goalRef": "a-screens",
+    "depends": [
+     "q/R-look-logo",
+     "q/R-look-motion",
+     "q/R-people-all-projects"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T20:27:43Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "f7ed97c35887e3a39fd1f44ff144af4dd783c14e",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-f7ed97c35",
+    "what": "Sprint 2: the Map, the main tab; Control simple with Connect; profiles with hats",
+    "why": "The Map (LOOK.md 'The Map, ruled'): one page, a compact toolbar, a layered layout computed on the server, pan/zoom/minimap, hover and pin, find, the light filter, flow playback, a lights poll; migrate-043 (k_node_lights, k_node_links): the Map reads 554 rows on sharingu (was 1,319). Control = Members, Projects, Connect your AI, Admin; migrate-044 (hats, avatar, role_label); the profile; Home's For-you strip.",
+    "touches": [
+     "screen:map",
+     "screen:control",
+     "screen:profile",
+     "screen:home",
+     "migrate-043",
+     "migrate-044"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "screens": "map,control,profile,home",
+    "proof": "sh tools/smoke.sh 73/73; all 49 node selftests exit 0 (map 36, maplights 25, hats 14, wire 410, d1-hot 340); parity, boot-schema (37 tables, 51 indexes) exit 0; page-budget worst load 978 (saruspay Map), /control 388 on the 305-person fixture.",
+    "goalRef": "a-map",
+    "depends": [
+     "q/R-map-canvas",
+     "q/R-map-layout",
+     "q/R-map-interactions",
+     "q/R-map-lights",
+     "q/R-map-compact",
+     "q/R-people-roles",
+     "q/R-people-control-connect",
+     "q/R-people-profile",
+     "q/R-people-connect-clients"
+    ],
+    "open": [
+     "names instead of raw refs in the panel's edge list",
+     "/map/node reads every question on saruspay (~400 rows)",
+     "the flow panel does not say what blocks a flow"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-09-30T20:30:06Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "2be1806af52ef442d07e177452ada677716f3602",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-2be1806af",
+    "what": "The gate: the Map client replaces the retired eagle client-script check",
+    "why": "The generated eagle client was deleted with the Map slice; the gate checks the Map's client instead.",
+    "touches": [
+     "engine/gate.sh",
+     "screen:map"
+    ],
+    "components": [
+     "service:github"
+    ],
+    "screens": "map",
+    "proof": "On the code at f6efbaa17: grep -n \"Map client script\" gate.sh -> lines 320-321 (node --check src/mapclient.js ... echo \"the Map client script parses\"); node --check src/mapclient.js -> exit 0",
+    "goalRef": "a-map"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T01:56:25Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "4eeb26bade51bce627d9315612506d8c1dd118eb",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-4eeb26bad",
+    "what": "Sprint 2: admin-set access hats; Broadcast live (people to goals) and the built-in starter pack",
+    "why": "Access hats (owner MCQ 2026-10-01): migrate-045, people.access_hats set only by the admin; a self-picked hat admits nothing. Broadcast: the live people-to-goals picture, replayed on open, then a poll; the starter pack built into the engine (twelve items: six agents, three workflows, three skills), Equip copies an item into the project.",
+    "touches": [
+     "screen:broadcast",
+     "screen:control",
+     "screen:home",
+     "door:POST:/broadcast/equip",
+     "migrate-045"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "screens": "broadcast,control,home",
+    "proof": "sh tools/smoke.sh 78/78; all 50 node selftests exit 0; parity, boot-schema, presets check exit 0; page-budget on sharingu: Broadcast 165 rows, its poll 137, worst load 554 (the Map).",
+    "goalRef": "a-broadcast",
+    "depends": [
+     "q/R-people-access-hats",
+     "q/R-broadcast-picture",
+     "q/R-broadcast-starter",
+     "q/R-broadcast-built-in"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-01T02:02:47Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "5744631dd3d58fd45ae8ad1afbf7bd6a33fc3989",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/ARCHITECTURE.md",
+      "label": "§11"
+     }
+    ],
+    "clientRef": "sharingu-history-5744631dd",
+    "what": "Screens and renders — the standard written (ARCHITECTURE §11); the atlas ruled",
+    "why": "A project's screens reach the app the way everything else does: one standard format filed through the MCP (render and style kinds, bodies in R2 by content hash, the wireframe grammar, the limits).",
+    "touches": [
+     "docs/plan/ARCHITECTURE.md"
+    ],
+    "goalRef": "a1-atlas",
+    "depends": [
+     "q/R-atlas-view",
+     "q/R-atlas-standard"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-01T02:37:28Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "638b0a36fa079abc3203d7be34cddbbe6d849984",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/ARCHITECTURE.md",
+      "label": "§12"
+     }
+    ],
+    "clientRef": "sharingu-history-638b0a36f",
+    "what": "Sprint 3 planned as filling through the MCP, and impact (ARCHITECTURE §12); the old-path deletion moves to sprint 4",
+    "why": "The loop the product closes: fill -> change -> impact -> re-prove; the checklist is the standard, the fill kit, impact as a bounded walk, stale proof.",
+    "touches": [
+     "docs/plan/ARCHITECTURE.md",
+     "docs/plan/SPRINTS.md"
+    ],
+    "goalRef": "stage-b",
+    "depends": [
+     "q/R-order-old-path-s4"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-01T02:51:39Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "c74b8a3b7ff45e0bc748054e19777dc36cc4d4a9",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/MCP.md",
+      "label": "the audit"
+     }
+    ],
+    "clientRef": "sharingu-history-c74b8a3b7",
+    "what": "The MCP, whole: the audit of every page and tool, and the sprint-3 plan (preview, fill, extract, impact; names renamed at once)",
+    "why": "The owner's ask: any input becomes knowledge through the MCP, and nothing falls between the door and the screens. Audited 8 tabs, 54 tools and 122 REST rows (three vocabularies for one thing, no dry run, partial search, no single read of change, missing verbs).",
+    "touches": [
+     "docs/plan/MCP.md"
+    ],
+    "goalRef": "stage-b",
+    "depends": [
+     "q/R-mcp-preview-always",
+     "q/R-mcp-names"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-01T02:55:29Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "ef9083aac478cd2d82ef963612fb1dc0c7aa675d",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/BETA.md",
+      "label": "the road to beta"
+     }
+    ],
+    "clientRef": "sharingu-history-ef9083aac",
+    "what": "The road to beta, end to end, written (BETA.md): the gate, stages A-C, the slice order",
+    "why": "One page for what beta is, the three stages that get there, who does what, and what is deliberately left for after.",
+    "touches": [
+     "docs/plan/BETA.md"
+    ],
+    "goalRef": "beta",
+    "depends": [
+     "q/R-beta-gate"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-01T03:10:08Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "a40b32c6b1ec69de500482f0128413c7f92b5dfb",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/MCP.md",
+      "label": "§9"
+     }
+    ],
+    "clientRef": "sharingu-history-a40b32c6b",
+    "what": "Demands from the team context files read into the plan (MCP.md §9); the word is contribution; outside teams on their own account; the gate gains the stranger's install",
+    "why": "The two team context files checked against the plan and the code: eleven demands, each placed in a slice.",
+    "touches": [
+     "docs/plan/MCP.md",
+     "docs/plan/BETA.md"
+    ],
+    "goalRef": "stage-b",
+    "depends": [
+     "q/R-mcp-word",
+     "q/R-beta-own-account"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T03:21:32Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "ed0a8f55cd0023bebd530c2640e00f3606002507",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-ed0a8f55c",
+    "what": "Sprint 2: the screens atlas — kinds render and style, bodies in R2 by content hash, the Screens view on the Map, importers for four projects",
+    "why": "The standard (ARCHITECTURE §11): write_knowledge kinds render and style; migrate-046; html stored sanitised and served only as a sandboxed document; GET /map/screens and map_screens; the Screens view (one app at a time, outline -> wireframe -> real render by zoom). Importers: saruspay 1,587 renders, bunny 760, siru 34, sharingu 18 wireframes. migrate-046 must be applied before this code runs on a database.",
+    "touches": [
+     "screen:map",
+     "migrate-046",
+     "engine/src/knowledge"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1",
+     "service:cloudflare-r2"
+    ],
+    "screens": "map",
+    "proof": "Smoke 87/87, 51 selftests, page budget unchanged (saruspay web 968 rows).",
+    "goalRef": "a1-atlas",
+    "depends": [
+     "q/R-atlas-view",
+     "q/R-atlas-standard"
+    ],
+    "open": [
+     "no blob garbage collection",
+     "the sanitiser is a second wall behind the CSP sandbox, review both"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T03:23:45Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "4de3fc84fa073fcb1947adecd0d02be9b98a88d4",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-4de3fc84f",
+    "what": "Atlas: the door's limits read as KB and MB",
+    "why": "The brand check reads a bare 000,000 as a record id.",
+    "touches": [
+     "engine/src/knowledge"
+    ],
+    "components": [
+     "service:cloudflare-workers"
+    ],
+    "proof": "formats {kind: \"render\"} on http://127.0.0.1:8830 (code f6efbaa17) -> the body limits read in KB: \"html at most 195 KB, a wireframe 49 KB as JSON; one call carries at most 256 KB of bodies\", an image \"at most 977 KB\"",
+    "goalRef": "a1-atlas"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T03:26:31Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "dbf02ae7d248e6e71eac7debaebc54e5f31b0988",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-dbf02ae7d",
+    "what": "Docs cleaned of the old brain-repo model and dead mentions; two dead docs deleted; the atlas ticked",
+    "why": "INSTALL, ORG-SETUP, BUILD, the engine README, SECURITY, INVENTORY and ARCHITECTURE 1-10 rewritten from the code (980 lines out, 419 in); AGENT-TEMPLATE.md and tools/INTAKE.md deleted.",
+    "touches": [
+     "docs/INSTALL.md",
+     "docs/plan/INVENTORY.md",
+     "docs/plan/ARCHITECTURE.md"
+    ],
+    "components": [
+     "service:github"
+    ],
+    "proof": "The commit states 980 lines out, 419 in; git show --stat dbf02ae7d -> 20 files changed, 453 insertions(+), 1131 deletions(-); git cat-file -e dbf02ae7d~1:engine/AGENT-TEMPLATE.md -> exit 0 (there before); git cat-file -e f6efbaa17:engine/AGENT-TEMPLATE.md -> exit 128 and f6efbaa17:engine/tools/INTAKE.md -> exit 128 (both gone at the head)",
+    "goalRef": "stage-a",
+    "open": [
+     "found on the way and queued in SPRINTS: day0-verify D16 and new-org.sh's warm-up fail on a fresh org"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-01T03:32:00Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "017d0296d70b7adac3fa967c9f904e400707e3ff",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/BETA.md",
+      "label": "Stage A, what the local worker cannot prove"
+     }
+    ],
+    "clientRef": "sharingu-history-017d0296d",
+    "what": "The plan aligned: the member path first (impact before extract), the ship's render ladder from a CPU measurement, the session's rules, what the owner is asked for",
+    "why": "Measured on the Mini: sanitising and hashing 50 real SarusPay renders (734 KB) took about 12 ms of CPU against the free plan's 10 ms a request, so on the preview the renders go up a ladder (1, 5, 10, 20 a call).",
+    "touches": [
+     "docs/plan/BETA.md"
+    ],
+    "goalRef": "a6-ship",
+    "depends": [
+     "q/R-order-member-path-first"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T03:53:19Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "ccf7ce858be84dd9259f05ebd66451dfacb21e9d",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-ccf7ce858",
+    "what": "Sprint 2 leftovers: one wireframe drawer, names in the Map's panel, Goals' Just filed removed, Screens pills only for apps with screens",
+    "why": "BETA.md A2: the four leftovers before the suites.",
+    "touches": [
+     "screen:map",
+     "screen:goals"
+    ],
+    "components": [
+     "service:cloudflare-workers"
+    ],
+    "screens": "map,goals",
+    "proof": "node tools/map-selftest.mjs -> exit 0, 85/85 passed; node tools/render-selftest.mjs -> exit 0, 136 passed, 0 failed (both carry this commit's cases: the one wireframe drawer, names in the Map's panel, Screens pills only for apps with screens); run 2026-10-01 on the code at f6efbaa17",
+    "goalRef": "a2-leftovers",
+    "open": [
+     "frame captions overlap the frame above on a desktop-width app at mid zoom"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T04:09:33Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "6fe27a5ffddc358b11f5e5508be546598a6b34cf",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 2: the suites, local, once each"
+     }
+    ],
+    "clientRef": "sharingu-history-6fe27a5ff",
+    "what": "Sprint 2: the suites follow the redesign — stale pins re-aimed at the hooks, one sim's shell bug fixed, auth coverage widened; all four green",
+    "why": "BETA.md A3: the suites once each. SPRINTS.md: 25 first-run failures were all in the suites (pins of the pre-redesign markup, one sim's shell bug); no product change; the auth coverage grew by 9 assertions.",
+    "touches": [
+     "engine/evals.sh",
+     "engine/sims.sh"
+    ],
+    "components": [
+     "service:cloudflare-workers"
+    ],
+    "proof": "docs/plan/SPRINTS.md (this commit): evals 465 / 0 / 59, sims 144 / 0 / 26, tabs-verify 125 / 0, verify-live 77 / 0",
+    "goalRef": "a3-suites"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T04:43:38Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "651246effda623515b3d22ec21103e670d28b862",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-651246eff",
+    "what": "Sprint 2: the review's fixes — a Partner reads only seated projects on every door, renders are stricter, demotion clears access hats",
+    "why": "BETA.md A4: one independent read-only review (roles, hats, access hats, the render sandbox) and its fixes: no SVG, own or public artifacts only as renders, a linear CSS scan.",
+    "touches": [
+     "screen:broadcast",
+     "screen:control",
+     "door:GET:/control/people",
+     "door:MCP:heartbeat"
+    ],
+    "components": [
+     "service:cloudflare-workers"
+    ],
+    "screens": "broadcast,control",
+    "proof": "Six new smoke cases fail on the old code; smoke 93/93, 51 selftests, the four suites green.",
+    "goalRef": "a4-review",
+    "depends": [
+     "q/R-people-roles",
+     "q/R-people-access-hats"
+    ],
+    "open": [
+     "render bodies can never be purged (needed before outside teams)",
+     "/broadcast/publish and /equip test the bare role, not the role class"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "note",
+    "happenedAt": "2026-10-01T05:24:05Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "dd7e3c1ff03e42ce4aad2eac206f2bdd59271d91",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "Right now"
+     }
+    ],
+    "clientRef": "sharingu-history-dd7e3c1ff",
+    "what": "Sprint 2 shipped (live 3eb9f8ff); the import overran the day's write limit; the live walk is owed after the reset; sprint 3 opens",
+    "why": "PR ryukdev/sharingu#270 merged; migrations 042-046 applied live; five projects imported on the preview (stored == built for every kind; 2,399 renders at 20 a call). The import wrote 149,380 D1 rows against the free 100,000 a day, so nothing live runs until 00:00 UTC.",
+    "goalRef": "a6-ship",
+    "depends": [
+     "q/R-order-ship-2-first"
+    ],
+    "open": [
+     "the live walk (node tools/live-walk.mjs) and the Partner cases on live"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T07:05:14Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "5d287b1b0eb09be3dfae17432f3441e5146b2d1b",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 3: B1, From the ship"
+     }
+    ],
+    "clientRef": "sharingu-history-5d287b1b0",
+    "what": "Sprint 3 B1: the registry (kinds and contribution shapes declare format, example, place, preview, checklist; formats; migrate-047) and the fixes from the ship",
+    "why": "MCP.md §4: one registry drives validation, the formats read, the checklist, the preview and the contract. The fixes from the ship: the import's write count and budget refusal, cheaper upserts (a re-import 139,457 -> 23,922 rows), migration replay, Decisions paged (bunny 1,007 KB -> 180 KB), a fresh org green.",
+    "touches": [
+     "screen:decisions",
+     "engine/src/knowledge/schema.js",
+     "engine/src/shapes.js",
+     "migrate-047"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "screens": "decisions",
+    "proof": "docs/plan/SPRINTS.md (this commit): a re-import 139,457 -> 23,922 rows; Decisions on bunny 1,007 KB -> 180 KB. Run now on the code at f6efbaa17: node tools/knowledge-selftest.mjs -> exit 0, 236 passed, 0 failed (its registry cases included)",
+    "goalRef": "b1-registry",
+    "depends": [
+     "q/R-mcp-one-checklist"
+    ],
+    "open": [
+     "submit_transmission's older fields are still hand-typed (left for B6)"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "note",
+    "happenedAt": "2026-10-01T08:02:35Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "8b9cb2df790fe2024c779142b777bbf29a45995b",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "Found while recording the walkthrough video"
+     }
+    ],
+    "clientRef": "sharingu-history-8b9cb2df7",
+    "what": "The walkthrough recorded (first cut); its findings written into the plan; the recorder kept as a tool; a second video on real data at the beta gate",
+    "why": "Found while recording: the Screens view shows empty outlines until deep zoom on a large app; sharingu's own architecture node still describes the deleted build machinery; not one check is graded on any project; a local org's seed leaves a junk project. The first cut used demo grades on a local copy.",
+    "goalRef": "c6-video",
+    "open": [
+     "the Screens view shows empty outlines until deep zoom; the wheel on the Screens board",
+     "a REAL grading run on sharingu before any second video"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T08:06:19Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "af731670ef4d4598f306e3db0c90190a9715c956",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 3: B2"
+     }
+    ],
+    "clientRef": "sharingu-history-af731670e",
+    "what": "Sprint 3 B2: preview then file — a preview plans every item through the write doors and writes one row; file files exactly what was previewed",
+    "why": "MCP.md §0: every filing is previewed first, always. The terminal text, the page /preview/:id, the reach (src/reach.js); ids past 999 a day no longer collide (migrate-048, 049).",
+    "touches": [
+     "door:POST:/mcp",
+     "engine/src/reach.js",
+     "migrate-048",
+     "migrate-049"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "proof": "docs/plan/SPRINTS.md (this commit): Smoke 104/104. Run now on the code at f6efbaa17: node tools/preview-selftest.mjs -> exit 0, 52 pass, 0 fail",
+    "goalRef": "b2-preview-file",
+    "depends": [
+     "q/R-mcp-preview-always",
+     "q/R-mcp-preview-forms"
+    ],
+    "open": [
+     "the card in the chat (MCP Apps) and the confirm prompt (elicitation)",
+     "live CPU of a 200-item preview",
+     "expired previews are never pruned"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-01T08:32:54Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "36a78a5466f76a57121ea23a161f63ad90e4ecf7",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/MARKETPLACE.md",
+      "label": "the marketplace launch"
+     }
+    ],
+    "clientRef": "sharingu-history-36a78a546",
+    "what": "The marketplace launch after beta written (MARKETPLACE.md): three listings, the one-address decision, stages M0-M5, the owner's list",
+    "why": "What each store asks, where the code stands on it (checked 2026-10-01), the one structural decision the owner owes, and what only the owner can prepare.",
+    "touches": [
+     "docs/plan/MARKETPLACE.md"
+    ],
+    "goalRef": "marketplace",
+    "depends": [
+     "q/R-marketplace-aim",
+     "q/Q-marketplace-address"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T09:13:17Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "f2ec4c142fbb86776ec3d665f559ef152d6a566f",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 3: B3"
+     }
+    ],
+    "clientRef": "sharingu-history-f2ec4c142",
+    "what": "Sprint 3 B3: the checklist and the meter (k_fill, create_project, Home led by goals moved, records are not open work) and the animated Architecture view with sharingu's architecture rewritten from the code",
+    "why": "MCP.md §0: 'filled' is a full checklist per page with a fill meter; the admin's agent creates a project through the MCP; Home leads with goals moved and who contributed. migrate-050 (k_fill kept exact by 21 triggers). The Architecture view alive by default; sharingu's own architecture rewritten from the code (5 lanes, 21 parts, 29 links, 4 journeys).",
+    "touches": [
+     "screen:holes",
+     "screen:home",
+     "screen:map",
+     "migrate-050",
+     "architecture:main"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1",
+     "architecture:main"
+    ],
+    "screens": "holes,home,map",
+    "proof": "docs/plan/SPRINTS.md (this commit): Smoke 110/110; a fresh import writes 163,666 rows (8% more). Run now on the code at f6efbaa17: node tools/checklist-selftest.mjs -> exit 0, 44 passed, 0 failed; node tools/arch-selftest.mjs -> exit 0, 71/71 passed",
+    "goalRef": "b3-checklist",
+    "depends": [
+     "q/R-mcp-filled",
+     "q/R-mcp-create-project",
+     "q/R-mcp-home-goals-moved",
+     "q/R-sharingu-arch-view"
+    ],
+    "open": [
+     "an empty aim's example call files a placeholder measure",
+     "the owner's owed rulings count in a member's meter",
+     "the Architecture view: the worker lane is dense; dep nodes are not drawn"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T09:27:24Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "4ea7ea39676457660fcdcf40bd91ac89337f0923",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-4ea7ea396",
+    "what": "Sprint 3: happenedAt — a contribution says when its work really happened; the record keeps its true filing time (migrate-051)",
+    "why": "The owner's ruling (MCQ 2026-10-01): sharingu as a real project keeps each contribution's true filing time and carries when it happened, never a backdated record. Build's Newest, Home's goals moved and Broadcast's picture order by it (SPRINTS.md).",
+    "touches": [
+     "screen:build",
+     "screen:home",
+     "screen:broadcast",
+     "migrate-051"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "screens": "build,home,broadcast",
+    "proof": "Run now on the code at f6efbaa17: node tools/knowledge-selftest.mjs -> exit 0, 236 passed, 0 failed, among them \"shapes: happenedAt takes a date or a UTC date-time up to now ...\" and \"door: happenedAt is stored in happened_at beside a created_at of now and read back; a future one files nothing\"",
+    "goalRef": "b8-big-fills",
+    "depends": [
+     "q/R-sharingu-real-project"
+    ],
+    "open": [
+     "the Goals tab's period still buckets by the month a contribution was filed"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "clientRef": "sharingu-history-07b06740c",
+    "happenedAt": "2026-10-01T09:48:28Z",
+    "what": "The first real fill of sharingu written into the plan: nine places the door was not enough (SPRINTS.md sprint 3, MCP.md)",
+    "why": "An agent holding only preview and file filed sharingu's history: 159 items, the meter 50% -> 71%; the knowledge all landed, 21 of 39 contributions could not. The nine findings are the one-pass fix's scope.",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/MCP.md"
+    ],
+    "goalRef": "b8-big-fills",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "07b06740c76c1a3f10121b8bbc53e86ddeb37a94",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "What the first real fill found"
+     }
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "clientRef": "sharingu-history-495c8c71b",
+    "happenedAt": "2026-10-01T09:52:07Z",
+    "what": "The owner's ruling written into the plan: the fill's nine findings fixed in one pass after B4; beta first, the plugin after",
+    "why": "Screens optional for work that touches no screen (naming what it touches, ids checked against the Map); proof is a stated result, a command with its result, or a link; then the 21 left contributions are filed again.",
+    "touches": [
+     "docs/plan/SPRINTS.md"
+    ],
+    "goalRef": "b-onepass-fix",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "495c8c71b7c7b5119c9667bd6dcb63d7209f8ee1",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "Ruled (owner, 2026-10-01)"
+     }
+    ],
+    "depends": [
+     "q/R-fill-findings-one-pass",
+     "q/R-proof-forms",
+     "q/R-screens-optional"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "clientRef": "sharingu-history-8cb9ae32f",
+    "happenedAt": "2026-10-01T10:58:51Z",
+    "what": "Sprint 3 B4: impact and carry-forward - the Impact view and tool, stale proof by change and by age, pick_up and follow-ups, the Screens view's zoom and wheel, Goals by the month the work happened",
+    "why": "MCP.md: the loop the product closes is fill -> change -> impact -> re-prove. A grade goes STALE when a node it names changed after it (trigger-kept, a change counts only on a graded node; the import costs the same rows as before); cards and docs come due by age; pick_up is the handoff; three findings from the first video (wireframes from 20% zoom, one wheel rule on both views, Goals by the month the work happened).",
+    "touches": [
+     "migrate-052",
+     "migrate-053",
+     "migrate-054",
+     "engine/src/pickup.js",
+     "engine/src/reach.js",
+     "engine/src/mapread.js",
+     "screen:home",
+     "screen:goals",
+     "screen:filing"
+    ],
+    "screens": "home,goals,filing",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "proof": "docs/plan/SPRINTS.md: B4 smoke 118/118. Run now on the code at f6efbaa17: node tools/impact-selftest.mjs -> exit 0, 62 passed, 0 failed",
+    "goalRef": "b4-impact",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "8cb9ae32fdbfde327098269333aa15af14bf10b2",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 3: B4"
+     }
+    ],
+    "depends": [
+     "q/R-mcp-stale"
+    ],
+    "open": [
+     "the contribution page now reads up to about 610 rows",
+     "a follow-up's person shows as typed",
+     "contributions filed before 053 never show as due"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "clientRef": "sharingu-history-e8f675da7",
+    "happenedAt": "2026-10-01T15:18:57Z",
+    "what": "The rule for the rest of the road written (BETA.md): local to the max, then one clean push; the handoff self-contained; the fill and one-pass briefs saved",
+    "why": "Everything is built, tested and fine-tuned end to end on the local app first; nothing goes to Cloudflare until the local run of the gate is green; then ONE push.",
+    "touches": [
+     "docs/plan/BETA.md",
+     "docs/plan/HANDOFF.md",
+     "docs/plan/briefs/real-fill.md",
+     "docs/plan/briefs/one-pass-fix.md"
+    ],
+    "goalRef": "beta",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "e8f675da75336f0500e5d167bb5abf82eab7fa06",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/BETA.md",
+      "label": "The rule for the rest of the road"
+     }
+    ],
+    "depends": [
+     "q/R-local-to-the-max"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "clientRef": "sharingu-history-da66abc0a",
+    "happenedAt": "2026-10-01T16:32:30Z",
+    "what": "Sprint 3: the one-pass fix of the first real fill's nine findings (migrate-055)",
+    "why": "Work that touches no screen files with what it does touch; screens, components and depends are checked against the project's own Map, a miss is \"needs\" with near matches; proof is a command with its result, a stated result with numbers, a link or an artifact; goals carry status; a decided question may hold the ruled option alone; questions, goals, docs and the aim carry a source; holes points at preview; whoami says where an owner's writes land; the GTM tab lists the docs under gtm/; no default pick on an open question.",
+    "touches": [
+     "migrate-055",
+     "engine/src/transmission.js",
+     "engine/src/ui.js",
+     "engine/src/shell.js",
+     "screen:gtm",
+     "screen:home"
+    ],
+    "screens": "gtm,home",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "proof": "The commit states: replayed on a fresh org, the fill's 39 contributions read 28 file at once, 11 need proof; smoke 125/125, 57 selftests. Run now on this org: preview of the 21 left items as first filed -> 10 files, 11 needs (\"It carries no proof.\"), 0 waits for the owner (P-c9f4b6861613aee8)",
+    "goalRef": "b-onepass-fix",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "da66abc0a56da77b93d5efcb73141984fb4631f7",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/SPRINTS.md",
+      "label": "sprint 3: the one-pass fix"
+     }
+    ],
+    "depends": [
+     "q/R-proof-forms",
+     "q/R-screens-optional",
+     "q/R-fill-findings-one-pass"
+    ],
+    "open": [
+     "evals.sh / sims.sh cases re-aimed but not run",
+     "a 50-contribution preview on saruspay reads 1,233 rows",
+     "a ruling recorded by its label alone still reads \"No options are filed\" on its page"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "clientRef": "sharingu-history-b2f5ca977",
+    "happenedAt": "2026-10-01T16:39:02Z",
+    "what": "The evening's rulings written into the plan: plans feed a goal, Goals open on all time, step 2 approved, the video last of the local steps",
+    "why": "HANDOFF.md \"Ruled 2026-10-01, evening (MCQ and chat)\"; BETA.md: the video is recorded LAST of the local steps.",
+    "touches": [
+     "docs/plan/HANDOFF.md",
+     "docs/plan/BETA.md"
+    ],
+    "goalRef": "stage-b",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "b2f5ca97736383d8ca64e802b9f3933b059e4be1",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "Ruled 2026-10-01, evening"
+     }
+    ],
+    "depends": [
+     "q/R-plans-feed-goal",
+     "q/R-goals-all-time",
+     "q/R-video-last"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "clientRef": "sharingu-history-f6efbaa17",
+    "happenedAt": "2026-10-01T16:40:30Z",
+    "what": "Sprint 3: Goals and GTM open on all time (owner, MCQ) - one default period, so work never vanishes on the first day of a quarter",
+    "why": "Ruled 2026-10-01 evening: Goals and GTM open on ALL TIME (one default, GOALS_DEFAULT_PERIOD); the old default \"this quarter\" hid all September work from Oct 1.",
+    "touches": [
+     "engine/src/goals.js",
+     "engine/src/goalsread.js",
+     "engine/src/gtm.js",
+     "contracts/door.declared.json",
+     "screen:goals",
+     "screen:gtm"
+    ],
+    "screens": "goals,gtm",
+    "components": [
+     "service:cloudflare-workers"
+    ],
+    "proof": "Run now: goals {project: \"sharingu\"} on http://127.0.0.1:8830 (no period sent) -> period {key: \"all\", from: \"1970-01-01T00:00:00.000Z\"}; tools/list goals.period -> \"the period the numbers cover, UTC (default all)\"; node tools/wire-selftest.mjs (code f6efbaa17) -> exit 0, 419 pass, 0 fail",
+    "goalRef": "stage-b",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "f6efbaa179dc1402b8f43aeef5681cfe0cf36992",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "depends": [
+     "q/R-goals-all-time"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "clientRef": "sharingu-history-b96ef5d91",
+    "happenedAt": "2026-10-01T16:43:13Z",
+    "what": "The work queue to beta: three parallel lanes (the door, the projects' data, beside them) with a done-when each, every project audited before the ship, the video last",
+    "why": "Owner, 2026-10-01 evening: hands-free, in parallel, local to the max; the video last; ONE ship. A step is done only by its \"done when\".",
+    "touches": [
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "beta",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "b96ef5d91567a25f34f2a5c9f298eb5a401105bc",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "The work queue to beta"
+     }
+    ],
+    "depends": [
+     "q/R-video-last",
+     "q/R-local-to-the-max"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T17:06:38Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "749aa324deee660599e949482acff53390620bc3",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-749aa324d",
+    "what": "A fresh org comes up green, and the proof tools catch up",
+    "why": "day0-verify reads the owner's projects by seat or writeProjects and requires every holes call to be a preview; new-org.sh waits on /health and /whoami and reads R2 back; a local org's default seed has no project; shots.mjs --cookie signs in through the app's own form; a docs check, and the preview, checklist, impact and new-org-flow selftests join the gate.",
+    "touches": [
+     "engine/tools/day0-verify.sh",
+     "engine/tools/new-org.sh",
+     "engine/tools/day0-seed.sh",
+     "engine/tools/shots.mjs",
+     "engine/tools/check-docs.py",
+     "engine/gate.sh",
+     "docs/INSTALL.md"
+    ],
+    "components": [
+     "service:github"
+    ],
+    "goalRef": "s1-fresh-org",
+    "proof": "The commit states: the stranger's local walk passed, 17/0/3 on day0-verify; the smoke and the gate were not run in this commit (they ran at the next door integration)."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-01T17:06:38Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "d07df374ed9952cccb3f0b2c8ecfc85ddccf596d",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-d07df374e",
+    "what": "S1 and S2 ticked in the plan; the fresh-org walk's door findings queued for the door lane",
+    "why": "SPRINTS.md records day0-verify 17/0/3 on a fresh local org and queues what the walk found for the door lane: holes' Complete list, a new org not pointed at create_project, an unseated owner filing with no project, the stale webhooks region, the tenant template's --key-out and LOGIN_LIMIT, validate-seed demanding a project.",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "s1-fresh-org"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-01T17:21:57Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "5f070e15aec0edbb7fd5eb412ed66df82a7dbf6e",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-5f070e15a",
+    "what": "The first real grading run of sharingu written into the plan: 424 checks graded with proof, 22 renders, nine findings queued",
+    "why": "SPRINTS.md records P1 done on the old model (312 proven, 106 refused, 6 incomplete; meter 78%) and what it found for the door lane: no picture through the MCP, a render staling grades, the artifact existence oracle, the proof rule's unknown commands, the stale grade's fix line, the history index, the 302-or-401 root cause, and that the project's model was the old system's.",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "b8-big-fills"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-01T17:31:54Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "4d563bc25419e740ea681cb5c0a10f72a472698f",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-4d563bc25",
+    "what": "The ship candidate: the importer's overlays, ryuklabs as the key, clean titles, and a project audit",
+    "why": "import-brain takes --overlay (knowledge ops folded in after the source by the door's own rules): sharingu imports with its architecture from the code and the real fill's knowledge; the ops project is filed as ryuklabs; siru's register lines read as words; a go-live item's title is its first clause; dev-local can run the worker from a frozen copy; tools/audit/project-audit.mjs audits any org through the door.",
+    "touches": [
+     "engine/tools/import-brain.mjs",
+     "engine/tools/import/overlay.mjs",
+     "engine/tools/import/overlays/sharingu",
+     "engine/tools/audit/project-audit.mjs",
+     "engine/tools/dev-local.sh",
+     "engine/tools/import-live.sh"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "p2-ship-candidate",
+    "proof": "The commit states: import selftest 139/0; on the fresh build all five projects read back stored == built and every meter recounts true."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-01T17:32:59Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "c4cc27e40b95a2ec67a804f855d69d27f9796148",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-c4cc27e40",
+    "what": "The ship candidate's audit written into the plan: what is clean, what is not",
+    "why": "SPRINTS.md P2 records the audit (stored == built on all five, meters true, no junk project, worst load 1,457 rows) and what was not clean yet: the four projects' basics, sharingu's old model, 164,184 rows written, the core findings for the door lane and the rename's rest.",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "p2-ship-candidate"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T01:11:30Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "90f615ec89ae1ad7c6de377f32fca48ea4bd0ccb",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-90f615ec8",
+    "what": "The importer replays every project's overlay folder; the owner's rulings on the projects' basics recorded",
+    "why": "dev-local.sh and import-live.sh file each project's tools/import/overlays/<project>/*.items.json after its source, in name order, and say a machine-local overlay this machine lacks instead of skipping it silently.",
+    "touches": [
+     "engine/tools/dev-local.sh",
+     "engine/tools/import-live.sh",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "p2-ship-candidate",
+    "proof": "Run now on the code at 45ab6f186 (the ship candidate rebuilt from empty, 2026-10-02): sh tools/dev-local.sh up -> exit 0; the import logs name each project's overlay files (ryuklabs 4, siru 3, saruspay 2, bunny 2) and read back stored == built for every kind."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T01:18:57Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "3cd5f28e0161d521d9a8949f60988965c17d9866",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-3cd5f28e0",
+    "what": "The ryuklabs account is on Workers Paid: the write-cost migration moves after beta, the budget tools learn the plan",
+    "why": "The owner says the paid plan is active (2026-10-02): D4 is no longer a ship blocker and S4 teaches cf-budget.sh and the importer's write guard the plan; the per-screen row budget stays, because an outside team installs on its own account, which may be free.",
+    "touches": [
+     "AGENTS.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "s4-ship-tools"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T01:25:17Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "78afdf772663d93450c565d8d9b3114d4cfb070a",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-78afdf772",
+    "what": "B5 extract: search, read, changes, brief, the Library, and what changed since the version on every tab",
+    "why": "Each is a tool, a REST twin and a page from one function (src/extract.js); search is a contentless FTS5 index kept by triggers (migrate-056), read back by rowid with the project and the reader's visibility checked again; a hidden doc or card is never named or counted.",
+    "touches": [
+     "screen:library",
+     "screen:changes",
+     "door:MCP:search",
+     "door:MCP:read",
+     "door:MCP:changes",
+     "door:MCP:brief",
+     "table:k_find",
+     "migrate-056",
+     "engine/src/extract.js"
+    ],
+    "screens": "library,changes",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "b5-extract",
+    "depends": [
+     "q/R-mcp-extract"
+    ],
+    "proof": "The commit states: smoke 132/132, 58 selftests, extract selftest 50/50 in the gate; worst load 1,457 rows (saruspay /map)."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T01:26:50Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "b75a2fa098a7d0a24aaa0a3348ca33c1898a2ac3",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-b75a2fa09",
+    "what": "The ship candidate's overlays: the four projects' basics and the owner's rulings of 2026-10-02",
+    "why": "bunny, saruspay, siru and ryuklabs each replay their start-here, lanes, goal tree and rulings after their source; ryuklabs' private notes are rewritten and its GTM capsule removed (the GTM lists and named stories stay machine-local).",
+    "touches": [
+     "engine/tools/import/overlays/bunny",
+     "engine/tools/import/overlays/saruspay",
+     "engine/tools/import/overlays/siru",
+     "engine/tools/import/overlays/ryuklabs"
+    ],
+    "goalRef": "p2-ship-candidate",
+    "proof": "The builder's record (engine/.runs/ship-candidate/rulings/PROGRESS.md, 06:53) states: rebuild #2 exit 0, audit exit 0, verify ok, privacy 0 hits; the commit states stored == built for every kind on all five projects and 83 ryuklabs items read with 0 hits."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T01:31:13Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "4488678ac68b4e472547b46a96ff84ebdcb19c67",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-4488678ac",
+    "what": "siru's measure, ruled: pharmacies with doors open in the Thiruvallur pilot",
+    "why": "The owner's ruling of 2026-10-02 filed as siru's overlay (b3-measure), so the measure rides every import of siru, on the candidate and at the ship.",
+    "touches": [
+     "engine/tools/import/overlays/siru/b3-measure.items.json",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "p2-ship-candidate",
+    "proof": "HANDOFF.md in this commit states: the measure filed into the ship candidate, siru reads 4 of 11, 56%."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T02:13:29Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "e76a4b3e7b8d248281e1693722072b07b758661f",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-e76a4b3e7",
+    "what": "sharingu's model and checks are generated from this repo's code",
+    "why": "import-brain's code layout (tools/import/read-code.mjs) reads the contract, the route tables, the MCP cases, the SQL, boot.sql and the shell's tabs into screens, doors, tables, flows, gaps and checks an agent can observe through the door; the old brain's questions, cards, evidence and checks are dropped (it stays the source of the 18 wireframes).",
+    "touches": [
+     "engine/tools/import/read-code.mjs",
+     "engine/tools/import/code-model/model.json",
+     "engine/tools/import/read.mjs",
+     "engine/tools/import-brain.mjs",
+     "engine/tools/dev-local.sh"
+    ],
+    "components": [
+     "architecture:main"
+    ],
+    "goalRef": "p2b-code-model",
+    "proof": "The commit states: import selftest 170/0; on a fresh org stored == built, no duplicate, orphan or dead ref; 15,684 rows written (was 20,495); a probe of every check: 244 of 255 true."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T02:14:02Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "585c525040af7c92f6f441a2a169956767c33822",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-585c52504",
+    "what": "The model from the code ticked in the plan; the registry's own faults queued for the door lane",
+    "why": "SPRINTS.md P2b records the generated model and queues what its probe found: undeclared empty-body errors, GET /area/:ref 404 on a filed project, stale redirects and garbled text in the registry, tables nothing reads, pages still reading the old served files, GET rows with no JSON shape and writes with no refusal, no check naming a goal.",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "p2b-code-model"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T02:57:31Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "2fb5b2076099604eb8541d5167021dc229d37892",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-2fb5b2076",
+    "what": "The ship tools are ready for this ship",
+    "why": "cf-budget and the importer's write guard read the account's plan; migrate-dryrun exports around the search index and takes --from; ship-plan prints this ship's plan read-only; the rename siru-services -> ryuklabs is one reviewed data migration with a guard and a local proof; import-live mirrors dev-local, smallest project first, and can prune what the candidate no longer files.",
+    "touches": [
+     "engine/tools/cf-budget.sh",
+     "engine/tools/migrate-dryrun.sh",
+     "engine/tools/ship-plan.sh",
+     "engine/tools/ship/rename-siru-services.sql",
+     "engine/tools/ship/prune.mjs",
+     "engine/tools/import-live.sh",
+     "engine/tools/import/cost.mjs"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "s4-ship-tools",
+    "proof": "The builder's record (engine/.runs/s4-ship-tools/PROGRESS.md, 08:25) states: cf-budget selftest 22/0, ship 57/0, import 170/0, import-budget 16/0, migrate-dryrun --selftest 9/9 and fts 6/0; the live-sim rename proof green (312 rows); import-live with IMPORT_PRUNE=1 green on all five."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T02:57:59Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "363b4e1ed651309bc6fc85064a192da1409c72d9",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-363b4e1ed",
+    "what": "The ship's order written down with the rename and the prune; S4 ticked",
+    "why": "HANDOFF G5 lists the ship step by step, each with its undo: cf-budget, the dry run from 047, the migrations one at a time, the rename's guarded migration, the code and the import in one command with the import on the preview before traffic, then the live walk and the gate on live.",
+    "touches": [
+     "docs/plan/HANDOFF.md",
+     "docs/plan/SPRINTS.md"
+    ],
+    "goalRef": "s4-ship-tools"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T03:16:07Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "45ab6f18698e9c0d4876b4eac94086cbd7ed2076",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-45ab6f186",
+    "what": "The door findings pass: 23 fixes from the four real runs",
+    "why": "Safety: an id door checks the caller before the lookup, a hidden doc answers as a missing one, one sign-in rule on every door. The door: an image render files as base64 through the MCP, a changed item under a used clientRef is never a false receipt, a command with an observed number is proof, a new picture no longer stales a grade (migrate-057). The screens: open decisions are open questions, Blocked is blocked, the aim leads Home, a project may hold no product model, a screen may belong to several apps (migrate-058).",
+    "touches": [
+     "screen:home",
+     "screen:goals",
+     "screen:decisions",
+     "screen:map",
+     "screen:map/screens",
+     "door:MCP:preview",
+     "door:MCP:file",
+     "door:MCP:formats",
+     "door:MCP:holes",
+     "door:MCP:whoami",
+     "table:k_aim",
+     "migrate-057",
+     "migrate-058"
+    ],
+    "screens": "home,goals,decisions,map,map/screens",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "d1b-door-findings",
+    "depends": [
+     "q/R-render-not-stale"
+    ],
+    "proof": "The commit states: smoke 149/149 with 17 new cases, 59 selftests; evals, sims and tabs-verify re-aimed, not run before the sprint end."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T03:19:25Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "26cd1427bee3d385ef78148bd9a693a82170ce39",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-26cd1427b",
+    "what": "The door findings pass ticked; D2 and the candidate rebuild in flight; the old data on live is removed at the ship (owner)",
+    "why": "HANDOFF records D1b done, D2 (GTM lists, Broadcast through the door, the registry's faults) and P2e (the candidate on HEAD, sharingu real on its new model) in flight, and the owner's ruling: sharingu's old-brain model is pruned from live at the ship with no snapshot first.",
+    "touches": [
+     "docs/plan/HANDOFF.md",
+     "docs/plan/SPRINTS.md"
+    ],
+    "goalRef": "d1b-door-findings",
+    "depends": [
+     "q/R-ship-prune-old-model"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T03:51:08Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "8ae508027325bcf2e98c03809debe50a2593a623",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-8ae508027",
+    "what": "The ship candidate on the current code: siru's shared screens, saruspay's named apps, ryuklabs' ruled absences, and sharingu's replayable history",
+    "why": "read-bank files a screen two apps share with both; read-board names saruspay's apps from its served canvas; ryuklabs' overlay declares no product model and a ruled-none measure; after-import.mjs files sharingu's contributions and screen pictures through preview then file on any org, so the same fill replays on live after the ship.",
+    "touches": [
+     "engine/tools/ship/after-import.mjs",
+     "engine/tools/import/read-bank.mjs",
+     "engine/tools/import/read-board.mjs",
+     "engine/tools/audit/project-audit.mjs",
+     "engine/tools/dev-local.sh",
+     "engine/tools/import/overlays/sharingu/p2e-knowledge.items.json",
+     "door:MCP:preview",
+     "door:MCP:file"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "p2-ship-candidate",
+    "depends": [
+     "q/R-sharingu-real-project"
+    ],
+    "proof": "The commit states: on the candidate rebuilt from empty, stored == built on all five, no high finding after the import, 172,161 rows written; one import selftest case is red until the door builder's registry edits land."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T03:52:22Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "dc0c4dc955b757a2ed4216e3edf5ca4fc6ca8f3b",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-dc0c4dc95",
+    "what": "The candidate on the current code written into the plan; the truth-and-look pass queued before the video",
+    "why": "SPRINTS.md records P2e (63 contributions, 263 of 266 checks graded with observed proof, 30 screens pictured, the Map's lights) and queues D2b on the door lane: every tab of sharingu on the candidate must read right to a stranger, because that is what the video records.",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "p2-ship-candidate"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T04:06:10Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "7ffdc04420809d718cee139ec3c83b26dbb2d55e",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-7ffdc0442",
+    "what": "B7: a card kind lists on the tab it names, a card's own page, publish and equip through the door, the registry's own faults",
+    "why": "Claims, targets and copy show on GTM from one bounded read under the reader's visibility; a card has its page at /read?ref=card/... with its source (migrate-059); publish and equip are tools with REST twins, previewed first and refused to a Partner by role class; the registry declares what its doors answer; /area retires to read and brief.",
+    "touches": [
+     "screen:gtm",
+     "screen:card",
+     "screen:broadcast",
+     "door:MCP:publish",
+     "door:MCP:equip",
+     "door:POST:/broadcast/publish",
+     "door:POST:/broadcast/equip",
+     "door:GET:/read",
+     "migrate-059",
+     "engine/src/tablists.js"
+    ],
+    "screens": "gtm,card,broadcast",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "b7-gtm",
+    "depends": [
+     "q/R-broadcast-built-in"
+    ],
+    "proof": "The commit states: smoke 153/153, 60 selftests; worst load 1,469 rows (saruspay /map); evals and sims re-aimed, not run before the sprint end."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T04:14:43Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "f371828ce9ca20c3b0a721dc6ec1ebc6636cb9b5",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-f371828ce",
+    "what": "sharingu's measure, ruled: activated organisations",
+    "why": "The owner's MCQ of 2026-10-02: two different people complete a useful handoff against the same real goal; filed as the aim's measure with no value (nothing is counted before beta) in the overlay p3-measure, so it rides every import.",
+    "touches": [
+     "engine/tools/import/overlays/sharingu/p3-measure.items.json",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "p2-ship-candidate",
+    "depends": [
+     "q/Q-aim-measure"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T04:36:02Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "3d25fde6895c745c608530ad342b7afc34105031",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-3d25fde68",
+    "what": "Clean all the way: the old path is deleted in this sprint (D6); the handoff rewritten as one queue to beta",
+    "why": "The owner's direction of 2026-10-02: no dead code and no dead docs go to the ship. The old path moves from sprint 4 into this sprint as D6, every doc names only what exists, and a finished brief is deleted, not kept.",
+    "touches": [
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "d6-old-path",
+    "depends": [
+     "q/R-order-old-path-d6"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T04:39:51Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "9b39f30a25a543aaad5c61c28a08e3693eb6ca33",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-9b39f30a2",
+    "what": "The walk covers the whole member path, and one command rehearses the gate",
+    "why": "live-walk.mjs walks gate line 1 as an admin and a new member on a throwaway project from sample input: invite, connect, create, preview, file, every tab, the meter, a ruling, a grade and its light, a change and its stale proof, the regrade, a pick-up, extract, the authority probes and a clean-up; gate-rehearsal.sh prints the seven gate lines against a local org.",
+    "touches": [
+     "engine/tools/live-walk.mjs",
+     "engine/tools/gate-rehearsal.sh",
+     "engine/tools/walk/selftest.mjs",
+     "engine/gate.sh",
+     "flow:member-path"
+    ],
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "c2-live-walk",
+    "open": [
+     "a member's checklist offers a start-here doc the door refuses them",
+     "the backup holds no knowledge table"
+    ],
+    "proof": "The commit states: locally the walk passes 12 of 13 steps; the one red step is a member's checklist offering a start-here doc the door refuses them (queued); the rehearsal shows the backup holds no knowledge table (queued, S3b)."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T05:07:08Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "04b105a6bc4c04c96f87ada78a39d0ef8deeb72d",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-04b105a6b",
+    "what": "The docs aligned with the code and the state: no dead docs",
+    "why": "SPRINTS is the truth of today; BETA, MCP, ARCHITECTURE, INVENTORY, LOOK and MARKETPLACE re-verified against the contract, boot.sql and the commits; the finished briefs deleted; the gate's docs check covers every doc but the handoff (paths, routes, tools, commands, migrations, commits and links).",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/BETA.md",
+     "docs/plan/MCP.md",
+     "docs/plan/ARCHITECTURE.md",
+     "docs/plan/INVENTORY.md",
+     "docs/plan/LOOK.md",
+     "docs/plan/MARKETPLACE.md",
+     "AGENTS.md",
+     "engine/tools/check-docs.py",
+     "engine/gate.sh"
+    ],
+    "goalRef": "d6-old-path"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T05:11:10Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "7887ec757b58ec776eb7dcedffad9ca74c6ee006",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-7887ec757",
+    "what": "The front end is revised before the video: three depths, cards, faces, small charts, one filter row, pristine copy",
+    "why": "The owner's ruling of 2026-10-02: LOOK.md gains The revision (glance, scan, expand on every page; a few cards each with one job; initials on every row a person owns; shapes over sentences; one filter row; no hint or explanation on any screen) and the plan puts L1, L2 and L3 before the video.",
+    "touches": [
+     "docs/plan/LOOK.md",
+     "docs/plan/HANDOFF.md",
+     "docs/plan/SPRINTS.md"
+    ],
+    "goalRef": "l1-parts",
+    "depends": [
+     "q/R-look-revision-first",
+     "q/R-look-pristine-copy"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T05:40:05Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "f1be6935955a2dbe20b3e76076dce56b3e65eb9c",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-f1be69359",
+    "what": "The owner's rulings of the afternoon: the GTM overlays live in the repo, no directory listing yet, what D6 deletes",
+    "why": "The GTM overlays (ryuklabs' strategy and named stories, sharingu's GTM docs) leave .gitignore and replay on every machine; beta uses the plugin and a custom connector with no directory listing; D6 deletes the composer, /understanding and /agentic, the digest and /metrics, and the suites keep their 262 live cases.",
+    "touches": [
+     "docs/plan/HANDOFF.md",
+     "docs/plan/MARKETPLACE.md",
+     "engine/tools/import/overlays/ryuklabs/b2-gtm-local.items.json",
+     "engine/tools/import/overlays/sharingu/k4-docs-gtm.items.json",
+     "engine/tools/import/overlays/sharingu/p4-marketplace.items.json"
+    ],
+    "goalRef": "d6-old-path",
+    "depends": [
+     "q/R-gtm-overlays-in-repo",
+     "q/Q-marketplace-address",
+     "q/R-old-path-composer",
+     "q/R-old-path-guides",
+     "q/R-old-path-digest",
+     "q/R-suites-keep-set"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T05:52:34Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "19355b2e546f87e8af81b41640e4515831cd0f77",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-19355b2e5",
+    "what": "L1: the look revision's shared parts, their gallery and the copy check",
+    "why": "src/parts.js holds the revision's parts (card, tile, avatar, bars, sparkline, ring, chip, filter row, folded group, the one-line row and its details, option cards, empty) on the shell's tokens in one stylesheet; parts-gallery.mjs shoots eight mock pages in both worlds; copy-check.mjs lists every hint, raw call and explaining sentence a screen prints, its allowlist only shrinks.",
+    "touches": [
+     "engine/src/parts.js",
+     "engine/tools/parts-gallery.mjs",
+     "engine/tools/copy-check.mjs",
+     "engine/tools/copy-check-allow.json"
+    ],
+    "components": [
+     "service:cloudflare-workers"
+    ],
+    "goalRef": "l1-parts",
+    "depends": [
+     "q/R-look-pristine-copy"
+    ],
+    "proof": "The commit states: tools/copy-check.mjs lists every hint, raw call and explaining sentence a screen prints today (393 on the revision's pages)."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T05:53:54Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "fc91aa9c32089649869de41cd60e50ccaffb91c7",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-fc91aa9c3",
+    "what": "The gallery approved as shown; the tabs adopt it right after the truth-and-look pass",
+    "why": "The owner's MCQ of 2026-10-02 approved the parts gallery as shown, with one new read (contributions per day and person for the last 7 days) and initials for faces; a person's own picture comes after beta.",
+    "touches": [
+     "docs/plan/LOOK.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "l1-parts",
+    "depends": [
+     "q/R-look-gallery",
+     "q/R-look-week-read",
+     "q/R-look-faces"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T06:48:00Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "95429c92f430e4cee9feb92be42b6f1211ae4a0c",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-95429c92f",
+    "what": "D2b: the truth-and-look pass",
+    "why": "The proof rule is rewritten from a corpus of every proof the runs filed or had refused; counts agree with their rows on Home and Build; the owner holds every project; a picture redoes no check; the atlas draws a plate for a screen with no picture; the Map's door groups have plain names; the generated checks name goals; an empty region is a phrase; a seatless member in a multi-project org must name the project.",
+    "touches": [
+     "screen:home",
+     "screen:build",
+     "screen:map",
+     "screen:map/screens",
+     "door:MCP:preview",
+     "door:MCP:file",
+     "migrate-060",
+     "engine/src/transmission.js",
+     "engine/tools/import/read-code.mjs"
+    ],
+    "screens": "home,build,map,map/screens",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "d2b-truth-look",
+    "depends": [
+     "q/R-proof-forms",
+     "q/R-render-not-stale"
+    ],
+    "proof": "The commit states: 856 true proofs accepted and 65 narrations refused by the rewritten rule; the generated checks name goals (122 of 314); saruspay /map 1,469 -> 1,072 rows; smoke 162/162 with nine new cases, 62 selftests."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T08:42:35Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "87585a170263b6e40c3b43875195b1b75d11d9d7",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-87585a170",
+    "what": "L2: Home, Goals, Decisions, Build and GTM on the shared parts",
+    "why": "Each tab is a tile strip, a filter row kept in the address, cards, folded groups and one-line rows that open in place, with initials for faces and ink bars; a ruled decision shows its ruling; one new read (the week, src/week.js) feeds the week charts, the People card and the person filter; every call, hint and legend is gone from the five tabs.",
+    "touches": [
+     "screen:home",
+     "screen:goals",
+     "screen:decisions",
+     "screen:build",
+     "screen:gtm",
+     "engine/src/week.js",
+     "engine/src/parts.js",
+     "engine/tools/copy-check.mjs"
+    ],
+    "screens": "home,goals,decisions,build,gtm",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "l2-tabs",
+    "depends": [
+     "q/R-look-gallery",
+     "q/R-look-week-read",
+     "q/R-look-faces"
+    ],
+    "open": [
+     "Home on sharingu reads 1,197 rows",
+     "six sims pins to re-aim before the sprint-end suites"
+    ],
+    "proof": "The commit states: the copy allowlist 471 -> 381, now checked by the gate; Build on sharingu reads 655 rows (was 1,015); smoke 168/168 with s20-look, 62 selftests."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T09:46:35Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "1188b4147916b78a3fa35cd08d3386d402a410fa",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-1188b4147",
+    "what": "After the video: the Map and the architecture, seven items",
+    "why": "The owner's ruling of 2026-10-02: collapsible panels and a focus mode, a real architecture for every project, links between systems, animation with meaning, density controls, frame history and a guided first fill land after the second video and hold neither the PR nor the ship.",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "v-map-arch",
+    "depends": [
+     "q/R-map-after-video"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T11:03:50Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "bd0f4befe3ae582ed6198c1aa6f7b8607e961d86",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-bd0f4befe",
+    "what": "L3: every detail page on the shared parts; the copy check at zero outside the old path",
+    "why": "A goal, a question, a contribution and its impact, What is missing, a card, a doc, a preview, the Library, search, What changed, Versions, Activity, Profile, Projects, Control, Broadcast and sign-in are rebuilt on the parts; the Map's views lose their explaining paragraphs; forms keep their fields and checks; a contribution that landed by itself shows no decide buttons; the week counts by the day the work happened.",
+    "touches": [
+     "screen:goal-node",
+     "screen:question",
+     "screen:filing",
+     "screen:impact",
+     "screen:holes",
+     "screen:card",
+     "screen:doc",
+     "screen:preview",
+     "screen:library",
+     "screen:changes",
+     "screen:versions",
+     "screen:audit",
+     "screen:profile",
+     "screen:projects",
+     "screen:control",
+     "screen:broadcast",
+     "screen:login",
+     "migrate-061"
+    ],
+    "screens": "goal-node,question,filing,impact,holes,card,doc,preview,library,changes,versions,audit,profile,projects,control,broadcast,login",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "l3-detail-pages",
+    "depends": [
+     "q/R-look-pristine-copy"
+    ],
+    "proof": "The commit states: the copy allowlist 381 -> 41, all of it pages D6 deletes; Home on sharingu 1,198 -> 854 rows; smoke 173/173, 62 selftests; sims and evals pins re-aimed, not run."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T11:45:26Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "a37bcc661a5fd4264e03824a73a15ac18e148004",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-a37bcc661",
+    "what": "The candidate on the new look: the code reader follows the revised pages; sharingu's history and rulings extended",
+    "why": "The reader finds a page by its own key (the card page lives on /read), reads pageHead titles, and treats a region shown only when it has data as such; sharingu's replayable history grows to 78 contributions and a new overlay carries the look revision's goals and the owner's rulings of 2026-10-02.",
+    "touches": [
+     "engine/tools/import/read-code.mjs",
+     "engine/tools/import/selftest.mjs",
+     "engine/tools/import/overlays/sharingu/p5-look.items.json",
+     "engine/tools/ship/after-import/sharingu/c1-history.items.json"
+    ],
+    "goalRef": "p2-ship-candidate",
+    "depends": [
+     "q/R-sharingu-real-project",
+     "q/R-look-revision-first"
+    ],
+    "proof": "The commit states: import selftest 182/0; rebuilt from empty, 174,022 rows written, stored == built on all five, no high finding; 309 of 315 checks proven with observed proof, none refused."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T11:46:02Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "950d2e94e86d65f062399ef4343d88e9ac270e92",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-950d2e94e",
+    "what": "siru: a resolved question no longer quotes the retired password it was rotated off",
+    "why": "A ruled siru question quoted the password it retired; an overlay on siru's import rewrites that ruling's words so the value is never filed, here or at the ship.",
+    "touches": [
+     "engine/tools/import/overlays/siru/b4-no-old-password.items.json"
+    ],
+    "goalRef": "p2-ship-candidate",
+    "proof": "docs/plan/SPRINTS.md states (the candidate on the new look, a37bcc661 and 950d2e94e): a resolved siru question quoted a retired password: removed by overlay."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T11:46:42Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "3bb6bd887bbf4f562a8fe9f3775178f94a6aedf4",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-3bb6bd887",
+    "what": "The last look pass queued before the video, and the projects' data fixes",
+    "why": "The candidate's shot pass read 107 screens of the new look on real data; its findings become L4's eight groups on the door lane (the zero that reads as an 8, numbers that disagree, the wrong tab lit, raw words, the atlas, the phone cuts), done when a rebuilt candidate's shot pass finds nothing in groups (a) to (d); the data faults go to the projects lane.",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "l4-last-look"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T12:02:43Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "80714a2ac43486c10f4b1419a82c0da14eaab20b",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-80714a2ac",
+    "what": "S3b: the beta gate's local parts",
+    "why": "The backup holds every table that holds truth, page by page, with no credential; tools/restore-local.mjs restores a dump into a fresh org and verifies it; the beta measures are on Control for the owner, with an export; the checklist offers each role only what the door lets it make; search, read, changes and brief take the eval switch so the walk runs marked; the product is sharingu to a connecting client and a fresh org.",
+    "touches": [
+     "screen:control",
+     "door:GET:/control/measures",
+     "door:MCP:search",
+     "door:MCP:read",
+     "door:MCP:changes",
+     "door:MCP:brief",
+     "migrate-062",
+     "engine/src/backup.js",
+     "engine/src/measures.js",
+     "engine/tools/restore-local.mjs",
+     "engine/tools/live-walk.mjs",
+     "engine/tools/gate-rehearsal.sh"
+    ],
+    "screens": "control",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "s3b-gate-local",
+    "depends": [
+     "q/R-beta-gate"
+    ],
+    "proof": "The commit states: tools/restore-local.mjs restored a dump into a fresh org and verified it (22,900 rows, the derived tables, both doors, on the real-data org); the walk is 13 of 13; smoke 184/184, 65 selftests; the local gate rehearsal reads 20 pass, 3 fail (the card, the review, the names)."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T12:30:56Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "c025bc666ee89e38e547171c9dae906fb134f5e0",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-c025bc666",
+    "what": "The projects' data before the video: the owner's name, a ruling's reason, no machine path, no credential-shaped text",
+    "why": "A local org can be seeded with its owner's real name; a ruling's why says why the question mattered and its rationale why that option was ruled, from the record or empty, and where it was recorded is its source; tidy.mjs strips machine paths, markdown, an email address and a bare question id from titles; text-rules.mjs fails an import, and the audit, on a machine path or credential-shaped text.",
+    "touches": [
+     "engine/tools/import/tidy.mjs",
+     "engine/tools/audit/text-rules.mjs",
+     "engine/tools/audit/project-audit.mjs",
+     "engine/tools/import/overlay.mjs",
+     "engine/tools/import-brain.mjs",
+     "engine/tools/dev-local.sh",
+     "engine/tools/lib-r-local.sh"
+    ],
+    "goalRef": "p2-ship-candidate",
+    "proof": "The commit states: siru's retired password (9 quotes in 7 items) and saruspay's Interlace test secret are removed; 103 questions carry a why and rationale from the record or empty; import selftest 196/0."
+   }
+  },
+  {
+   "contribution": {
+    "lane": "leader",
+    "kind": "doc",
+    "happenedAt": "2026-10-02T12:31:19Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "170f15cda2004c31699f1a2463259f660a772dd1",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-170f15cda",
+    "what": "The projects' data fixed at the source; what is left, and the secrets that are on live until the ship",
+    "why": "saruspay's open questions read the import time because the source states no asked-at date (a door field askedAt, after beta); saruspay's two Notifications screens keep the source's shared name; the secrets on live since sprint 2 leave with the ship's import and prune, and the sources' own copies are the owner's to rotate or clean.",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "p2-ship-candidate"
+   }
+  },
+  {
+   "contribution": {
+    "lane": "code",
+    "kind": "pr",
+    "happenedAt": "2026-10-02T13:39:31Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "a547d7a99dbb249372492e233578d1e84c0a5983",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-a547d7a99",
+    "what": "L4: the last look pass before the video",
+    "why": "Small counts, times and meta are set in Manrope's tabular figures (the mono zero read as an 8); one definition each for a goal's state, when a contribution happened, a change's reach, an area's total, the tab a page lights and a kind's word; the fill chips leave the tabs; the atlas loads pictures nearest first under named plates; a playing flow frames its step; What changed folds a batch into one row; a named check with the number it reported is proof.",
+    "touches": [
+     "screen:home",
+     "screen:build",
+     "screen:goals",
+     "screen:goal-node",
+     "screen:decisions",
+     "screen:gtm",
+     "screen:filing",
+     "screen:impact",
+     "screen:changes",
+     "screen:library",
+     "screen:audit",
+     "screen:control",
+     "screen:profile",
+     "screen:broadcast",
+     "screen:map",
+     "screen:map/screens",
+     "screen:map/arch",
+     "engine/src/parts.js",
+     "engine/src/shell.js",
+     "engine/src/transmission.js"
+    ],
+    "screens": "home,build,goals,goal-node,decisions,gtm,filing,impact,changes,library,audit,control,profile,broadcast,map,map/screens,map/arch",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "l4-last-look",
+    "depends": [
+     "q/R-look-pristine-copy",
+     "q/R-proof-forms"
+    ],
+    "proof": "The commit states: Home on sharingu reads 520 rows (was 855); smoke 193/193 with s22-last-look, 65 selftests."
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T14:08:45Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "3d0282d8c69064aaf5cd47d87489486c222a890a",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-3d0282d8c",
+    "lane": "code",
+    "kind": "pr",
+    "what": "The final candidate: the owner as on live, sharingu's history to 85 contributions, the gate's goals and rulings",
+    "why": "The ship candidate is rebuilt from empty on the last look pass's code with the owner seeded as Ryuk, as live has it; the code reader places a page that lights no tab by a reviewed entry; sharingu's replayable history grows to 85 contributions and an overlay carries S3b, L4 and two owner rulings.",
+    "touches": [
+     "engine/tools/import/read-code.mjs",
+     "engine/tools/import/selftest.mjs",
+     "engine/tools/import/overlays/sharingu/p6-gate.items.json",
+     "engine/tools/audit/project-audit.mjs",
+     "engine/tools/ship/after-import/sharingu/c1-history.items.json"
+    ],
+    "goalRef": "p2-ship-candidate",
+    "depends": [
+     "q/R-sharingu-real-project"
+    ],
+    "proof": "The commit states: rebuilt from empty, 174,133 rows written, stored == built on all five, no high finding; 312 of 317 checks proven with observed proof, none refused; the Map reads 210 passing, 17 partly, 0 failing."
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T14:09:16Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "005f19f65e7034a6378bdcd3275cc856c3487491",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-005f19f65",
+    "lane": "leader",
+    "kind": "doc",
+    "what": "What is left on the screens goes with the old-path deletion",
+    "why": "The final candidate's shot pass read 107 shots of the new look on the data the ship imports; what it still found (numbers that disagree, Today meaning three windows, controls with nothing to act on, folded done stages, the Doors view) is fixed with D6, which is in the same files, and checked by the next shot pass before the video.",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "d6-old-path"
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T14:16:56Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "e6dfa66838680b8eee638c3629901e6ae462195f",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-e6dfa6683",
+    "lane": "code",
+    "kind": "pr",
+    "what": "The card and the confirm: the last part of preview, then file",
+    "why": "preview {fileOnConfirm: true} asks a client that declared elicitation to confirm on the call's own stream and files exactly that preview on yes (50 seconds; bound to the person, the session and a nonce); ui://sharingu/card draws the preview, the receipt and the publish and equip previews in an MCP Apps host from the page's own summary renderer; unfiled previews are pruned a day after they expire; the two calls are unchanged.",
+    "touches": [
+     "door:MCP:preview",
+     "door:MCP:file",
+     "door:POST:/mcp",
+     "door:GET:/preview/:id",
+     "screen:preview",
+     "engine/src/confirm.js",
+     "engine/src/previewcard.js",
+     "engine/src/preview.js",
+     "engine/src/previewpage.js",
+     "engine/tools/mcp-client-selftest.mjs",
+     "engine/tools/card-shots.mjs"
+    ],
+    "screens": "preview",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "d3-card-confirm",
+    "depends": [
+     "q/R-d3b-after-video"
+    ],
+    "proof": "The commit states: proven locally by a selftest MCP client (70 checks), a sandboxed host page (10) and smoke 197/197."
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T14:19:47Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "9d8bf91747acc7d12fc36c6f0cedc707595a029b",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-9d8bf9174",
+    "lane": "leader",
+    "kind": "doc",
+    "what": "Speaking both MCP revisions is queued after the video (D3b)",
+    "why": "The door speaks MCP 2025-06-18; the current revision drops initialize and sessions and turns the confirm into an input-required answer, and Claude Code falls back to the door's revision today, so speaking both is D3b, after the video and before the ship's gate on live; it moves up if a client drops the fallback first.",
+    "touches": [
+     "docs/plan/SPRINTS.md",
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "d3-card-confirm",
+    "depends": [
+     "q/R-d3b-after-video"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T17:46:13Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "9e97db345858b5120deae10470cf4bb0198f8ccd",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-9e97db345",
+    "lane": "code",
+    "kind": "pr",
+    "what": "The old path, deleted",
+    "why": "The pages and modules that read the old brain's files (the composer, /understanding, /agentic, the sheet, the R2 versions spine, packs), the nightly digest and /metrics, the brain's own tools and their tests go; the org's brand and settings are its D1 row; one project rule finds the project a request reads and carries it on the request.",
+    "touches": [
+     "migrate-063",
+     "table:org",
+     "screen:home",
+     "screen:map",
+     "screen:map/arch",
+     "screen:control",
+     "screen:filing",
+     "screen:impact",
+     "screen:doc",
+     "engine/src/project.js",
+     "engine/src/tenant.js",
+     "engine/src/docpage.js",
+     "engine/src/index.js",
+     "engine/src/core.js"
+    ],
+    "screens": "home,map,map/arch,control,filing,impact,doc",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1",
+     "service:cloudflare-r2"
+    ],
+    "goalRef": "d6-old-path",
+    "depends": [
+     "q/R-order-old-path-d6"
+    ],
+    "proof": "The commit states: 59 files and about 12,000 lines go; the project rule's 432 answers equal the previous code's, case by case; smoke 202/202, the walk 13 of 13, the five projects import from empty."
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T17:48:13Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "640e09d47ac5ea1107614535086e3d7d83e0434c",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-640e09d47",
+    "lane": "leader",
+    "kind": "doc",
+    "what": "The org's row is written on live at the ship, from its served tenant.json",
+    "why": "After the deletion the worker reads the org's brand and settings from its D1 row only, so at the ship, with or before this code, live's org row is written from its served tenant.json (tools/org-row.py through tools/migrate.sh); without it live reads the defaults. The names step is scoped: callers first, the rename and the removal at once, the suites started like the smoke and cut to the keep set.",
+    "touches": [
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "d6-old-path"
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T17:54:55Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "c13775bcc9bd2b35b8240afa5c400472222f193f",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-c13775bcc",
+    "lane": "leader",
+    "kind": "doc",
+    "what": "Docs after the deletion: every sentence names what exists",
+    "why": "The project rule and the org row replace the old-path sections; the screen inventory's function names are checked against the code; the MCP plan's counts are recounted (66 tools, 102 REST rows, 126 error codes) and it says the card and the confirm are built.",
+    "touches": [
+     "docs/plan/ARCHITECTURE.md",
+     "docs/plan/BETA.md",
+     "docs/plan/INVENTORY.md",
+     "docs/plan/LOOK.md",
+     "docs/plan/MARKETPLACE.md",
+     "docs/plan/MCP.md",
+     "docs/plan/README.md",
+     "docs/plan/SPRINTS.md"
+    ],
+    "goalRef": "d6-old-path",
+    "depends": [
+     "q/R-dead-tables-after-beta"
+    ],
+    "proof": "The commit states: the docs check reads 0 findings."
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T20:03:49Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "7fafeb61b6600cf626cd6033a36cd49355a41e08",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-7fafeb61b",
+    "lane": "code",
+    "kind": "pr",
+    "what": "The names: 34 tools in one vocabulary, renamed at once, no alias",
+    "why": "66 tools become 34 (names.json is the map: 25 keep their name, 13 are renamed, 22 fold into another, 4 go, 2 stay as REST only); every old tool answers unknown and every old address 404s; each tool has a title and its annotations; GET /capabilities serves the generated inventory; the importer files through preview then file and reads through read; a Partner with no seat can no longer file into a one-project org; the suites start like the smoke and are cut to a keep set.",
+    "touches": [
+     "door:POST:/mcp",
+     "door:GET:/capabilities",
+     "door:MCP:updates",
+     "door:MCP:missing",
+     "door:MCP:open_items",
+     "door:MCP:wrap_up",
+     "door:MCP:decide_contribution",
+     "door:MCP:gtm",
+     "door:MCP:save_file",
+     "door:MCP:read_file",
+     "door:MCP:map",
+     "door:MCP:read",
+     "door:GET:/updates",
+     "door:GET:/missing",
+     "door:GET:/gtm",
+     "door:GET:/contribution/:id",
+     "door:POST:/open-items",
+     "door:POST:/wrap-up",
+     "door:POST:/grade",
+     "screen:holes",
+     "screen:gtm",
+     "screen:filing",
+     "engine/tools/names.json",
+     "engine/src/index.js",
+     "engine/src/mcp.js",
+     "engine/tools/import-brain.mjs"
+    ],
+    "screens": "holes,gtm,filing",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1"
+    ],
+    "goalRef": "b6-names",
+    "depends": [
+     "q/R-suites-keep-set"
+    ],
+    "proof": "The commit states: 81 rows of the authority table the same, 19 narrower, none wider; the tools block shrinks from 68 KB to 30 KB; the four suites each ran once, green; smoke 207/207, the walk 13 of 13."
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T20:06:01Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "af4b8b09cb9e95693b87ec64c38023b607343688",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-af4b8b09c",
+    "lane": "leader",
+    "kind": "doc",
+    "what": "The one independent review is scoped, and the suites' cut is checked against the owner's keep set",
+    "why": "The review is read-only and proves its findings on a frozen copy: the adversarial read of auth (the project rule, the write door, sign-in and sessions, existence oracles, role visibility) and of the render sandbox, the migrations and ship tools, what the suites' cut lost and dead code; the owner had ruled the suites keep about 262 live cases, so the cut auth and integrity cases whose proof exists nowhere now are restored.",
+    "touches": [
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "g2-review",
+    "depends": [
+     "q/R-suites-keep-set",
+     "q/R-suites-keep-set-review"
+    ]
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T20:18:04Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "a6c4d365751cf1948406e6cf678c45edee8879e2",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-a6c4d3657",
+    "lane": "leader",
+    "kind": "doc",
+    "what": "Docs on the new names, and the release note",
+    "why": "Every doc names the 34 tools and their addresses; docs/RELEASE-NOTES.md, generated from names.json, is the one place the old names appear; the MCP plan's counts are recounted (34 tools, 79 REST rows, 117 error codes); two scripts' first-run lines say missing, not holes.",
+    "touches": [
+     "docs/INSTALL.md",
+     "docs/README.md",
+     "docs/RELEASE-NOTES.md",
+     "docs/plan/MCP.md",
+     "docs/plan/ARCHITECTURE.md",
+     "engine/tools/check-docs.py",
+     "engine/tools/new-org.sh",
+     "engine/tools/r-local.sh"
+    ],
+    "goalRef": "b6-names"
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T21:14:46Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "90c04a693be55101cf08f661628951168e6ff9a8",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-90c04a693",
+    "lane": "leader",
+    "kind": "doc",
+    "what": "The review's findings, and the fixes in flight",
+    "why": "The review found that Activity showed every project to every signed-in person and the cron's batch report put every project's work into one file a Partner could read (both on live), that the ship's prune could delete a person's own items and anything a missing local file would have produced, that OAuth grants survived a key rotation and a saved html file opened with a key in its address could read it, and smaller faults; all of it went to one fixing builder.",
+    "touches": [
+     "docs/plan/HANDOFF.md"
+    ],
+    "goalRef": "g2-review"
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T23:36:53Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "e632fd8bcdb6245934990b64a1f1c521fd44b4d1",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-e632fd8bc",
+    "lane": "code",
+    "kind": "pr",
+    "what": "The fixes from the independent review",
+    "why": "Activity reads under the one project rule; the cron's batch report is one per project, read under its project's rule, with a clean-up for live; the ship's prune is a reviewed plan that keeps a person's own filings and refuses to run with a missing input; OAuth grants end on a key or passphrase change and refresh tokens live 30 days; a key in an address signs no one in and saved files are inert under a strict CSP; the eval mark is accepted only on an eval project or from a test seat; a clientRef names its content on every door; migrate-054 no longer undoes 057 and 062; the suites' lost proofs are restored.",
+    "touches": [
+     "screen:audit",
+     "door:GET:/audit",
+     "door:POST:/backfill",
+     "door:GET:/artifact/:id",
+     "door:POST:/file",
+     "door:MCP:file",
+     "door:MCP:preview",
+     "door:POST:/login",
+     "table:artifacts",
+     "table:tokens",
+     "engine/src/oauth.js",
+     "engine/src/oauthgrants.js",
+     "engine/src/core.js",
+     "engine/src/knowledge/write.js",
+     "engine/tools/ship/prune.mjs",
+     "engine/tools/ship/prune-plan.mjs",
+     "migrate-054"
+    ],
+    "screens": "audit",
+    "components": [
+     "service:cloudflare-workers",
+     "service:cloudflare-d1",
+     "service:cloudflare-r2"
+    ],
+    "goalRef": "g2-review",
+    "depends": [
+     "q/R-suites-keep-set-review"
+    ],
+    "proof": "The commit states: each fix has an attack case that fails on the previous code; the reviewer's probes re-run against the fixed worker; smoke 226/226, 59 selftests, the walk 13 of 13, the suites once each."
+   }
+  },
+  {
+   "contribution": {
+    "happenedAt": "2026-10-02T23:40:01Z",
+    "source": [
+     {
+      "kind": "commit",
+      "ref": "3e922f9561c4ff166a46e90599b31a8d98262d46",
+      "label": "ryukdev/sharingu (sharingu-mono, branch sprint-3)"
+     }
+    ],
+    "clientRef": "sharingu-history-3e922f956",
+    "lane": "leader",
+    "kind": "doc",
+    "what": "The ship's prune is a reviewed plan, run in three steps",
+    "why": "After the review the ship's import runs three times: a dry run that stops with the prune's plans and promotes nothing, the owner's read of each plan (what is removed, by kind and ref, and nothing a person filed), then the apply with the reviewed plans only; after the code and before its first cron, the old cross-project batch reports are counted and cleaned.",
+    "touches": [
+     "docs/plan/HANDOFF.md",
+     "docs/plan/SPRINTS.md"
+    ],
+    "goalRef": "g2-review"
+   }
+  }
+ ]
+}

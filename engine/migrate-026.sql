@@ -1,0 +1,15 @@
+-- migrate-026.sql — loop refs (WP9 data, PRD one-mind 2026-09-09 · E259b). The PRD line reads
+-- "loops.ref (additive)" — but the schema is ALREADY there, twice over:
+--   * migrate-014 (2026-08-31, B3): `ALTER TABLE loops ADD COLUMN ref TEXT` — stored verbatim by
+--     both loop doors (POST /loops · MCP open_loop) through normalizeRef; boot.sql carries it.
+--   * migrate-017: `idx_loops_ref_open ON loops(status, ref) WHERE ref IS NOT NULL` — the index
+--     every by-ref lookup uses (area.js openClaimsFor · GET /eagle/claims · the leaderboard's
+--     claims join · and, after the WP9 wiring, the card-title lookup on every brief render).
+-- Re-running the ALTER here would throw "duplicate column name" on every live org, so this
+-- migration adds NO DDL. It PINS what WP9 relies on as a re-runnable no-op (IF NOT EXISTS — a
+-- no-op on every live org and on a day-0 boot), so the migration ladder records the dependency
+-- and tools/check-boot-schema.py keeps boot.sql honest against it. What WP9 changes for loops is
+-- CODE, not schema: the doors accept `card` as an alias of `ref`, the exit gate stores a ref when
+-- an open item names one, and a ref that matches a served questionnaire card renders that card's
+-- title.
+CREATE INDEX IF NOT EXISTS idx_loops_ref_open ON loops(status, ref) WHERE ref IS NOT NULL;

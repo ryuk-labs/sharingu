@@ -1,0 +1,237 @@
+{
+  "v": "82767c83",
+  "mechanism": "gtm is not a separate engine — it is the 6th measurement dimension of the SAME Goals Engine (engine/src/lanes.js LANES), given its own kind vocabulary, proof rule and outcome model because a market-facing filing has a genuinely different shape than a build one",
+  "identity": {
+    "key": "gtm",
+    "label": "GTM"
+  },
+  "activityKinds": [
+    "social",
+    "outreach",
+    "update",
+    "content",
+    "campaign"
+  ],
+  "fields": [
+    "expected",
+    "actual",
+    "proof"
+  ],
+  "activityTemplate": {
+    "note": "AUTHORED — today's SOP table (engine/src/docs.js) names only the KIND STRING per lane; no per-kind field schema exists in the engine. This is a proposed standard, not a derived fact.",
+    "schemaStatus": "RULED real-columns (Q28293D55), PENDING in code — engine/boot.sql carries no per-kind GTM columns (channel/audience/target/stage/etc.) today; this template is the design, not yet the schema.",
+    "generalizationTest": "would this field mean the same thing filed by a bakery, a clinic or a software company? If the field name or its plausible values assume screens, users or code, it fails the TOO-SPECIFIC test; if it would read identically for a single tweet and a quarter-long campaign, it fails the TOO-GENERIC test — every field below is named against both.",
+    "attribution": {
+      "field": "doneBy",
+      "status": "PROPOSED — not in the engine schema today",
+      "holds": "who actually did the work, as distinct from `submitter` (who is cryptographically the FILER, per their own API key) — required by ruling QBE2A9003: \"the record must distinguish WHO DID THE WORK from WHO FILED IT, or a filing made on someone's behalf silently credits the wrong person.\"",
+      "scope": "proposed as a UNIVERSAL envelope field (every lane, not gtm-only) — the ruling that requires it draws the same line the events ruling drew for every filing generally, not a gtm-specific one.",
+      "derivedOrAsked": "ASKED — nothing in a session can observe who really performed a piece of market-facing work; only `submitter` (the filer's own key) is ever derivable.",
+      "shape": "person-id from the roster (QACEE7392) — joinable/verifiable; free text was rejected (\"Sam\", \"sam@\" and \"Sam T\" would be three different people to the system, unjoinable for a per-person rollup).",
+      "knownLimit": "you cannot credit someone with no org seat (a contractor, an agency) — named as a real limit, not solved by this ruling."
+    },
+    "kinds": [
+      {
+        "kind": "social",
+        "holds": [
+          {
+            "field": "channel",
+            "ridesOn": "touches[] (convention: \"channel:<name>\", e.g. \"channel:linkedin\")",
+            "derivedOrAsked": "derived-when-tool-connected",
+            "why": "turns \"social\" from an undifferentiated bucket into a comparable unit — five posts on one platform and one post each on five different platforms read as the SAME count today; channel is the one fact that lets a reader tell them apart. Derivable whenever the post itself went through a connected tool (an MCP poster, a browser session on the platform's own domain); asked otherwise."
+          },
+          {
+            "field": "audience",
+            "ridesOn": "touches[] (convention: \"audience:<who>\") or folded into `why`",
+            "derivedOrAsked": "asked",
+            "why": "a post to 40 warm followers and a boosted post to a cold public are not the same unit of reach, and nothing in a session can observe INTENT about who a post targets — only the poster knows."
+          },
+          {
+            "field": "postLink",
+            "ridesOn": "proof (the existing GTM_PROOF_LINK rule already requires exactly this — no new field)",
+            "derivedOrAsked": "derived-when-tool-connected",
+            "why": "the shipped URL both proves delivery and answers \"who can see it\" by which platform it lives on."
+          }
+        ],
+        "proofConcrete": "the live post URL (e.g. linkedin.com/posts/… or x.com/…/status/…) — never a description of having posted.",
+        "rollsInto": "the gtm cell of whatever node `goalRef` names (e.g. a \"social presence\" leaf); an absent goalRef still records but stays unaligned, same as every lane."
+      },
+      {
+        "kind": "outreach",
+        "holds": [
+          {
+            "field": "target",
+            "ridesOn": "touches[] (convention: \"target:<name-or-org>\") — PROPOSED for anything more structured",
+            "derivedOrAsked": "asked",
+            "why": "outreach's entire value is WHO was reached — without a named target, ten outreach filings could be the same person contacted ten times, an uncomparable, misleading count. This is also the field with the sharpest genuine risk: naming a real prospect puts a person's identity into a shared ledger (see the open question on outreach proof privacy)."
+          },
+          {
+            "field": "channel",
+            "ridesOn": "touches[] (convention: \"channel:email|dm|call|intro\")",
+            "derivedOrAsked": "derived-when-tool-connected",
+            "why": "same comparability reason as social's channel — derivable when the send itself went through a connected tool (an MCP email/CRM send), asked otherwise."
+          },
+          {
+            "field": "stage",
+            "ridesOn": "touches[] (convention: \"stage:first-touch|follow-up|response\")",
+            "derivedOrAsked": "asked",
+            "why": "outreach is sequential — a first touch to a new target and a fifth follow-up to the same one are different signals of traction; without a stage marker, a rollup cannot tell \"reached 10 new people\" from \"followed up with 1 person 10 times.\""
+          }
+        ],
+        "proofConcrete": "a sent-confirmation ARTIFACT from the tool that sent it (a message-id, a CRM log line, a calendar-accept timestamp — the artifact-grade path, since a private DM/email/call has no public link) — never \"reached out to them, went well.\"",
+        "rollsInto": "the gtm cell of the node its goalRef names; a target-heavy tree might give outreach its own leaf (e.g. \"pipeline\") distinct from broadcast kinds."
+      },
+      {
+        "kind": "update",
+        "holds": [
+          {
+            "field": "audience",
+            "ridesOn": "touches[] (convention: \"audience:<who>\")",
+            "derivedOrAsked": "derived-when-tool-connected",
+            "why": "an update's value is being seen by an EXISTING relationship (subscribers, the org, investors) — knowing which relationship turns \"sent an update\" into a trackable cadence signal. Derivable when the sending platform (a newsletter tool) knows its own list."
+          },
+          {
+            "field": "issue",
+            "ridesOn": "touches[] (convention: \"issue:<n>\") or the sending tool's own numbering",
+            "derivedOrAsked": "derived-when-tool-connected",
+            "why": "updates are recurring; without a sequence marker there is no way to see whether a cadence commitment (\"weekly\") is actually being kept — the one honest, derivable question this template exists to answer."
+          }
+        ],
+        "proofConcrete": "the archive URL for a public update, or an artifact-grade send confirmation for a private one (investors, internal) — same either/or discipline as every gtm proof.",
+        "rollsInto": "the gtm cell of the node its goalRef names; naturally an \"existing relationship\" leaf, distinct from top-of-funnel kinds."
+      },
+      {
+        "kind": "content",
+        "holds": [
+          {
+            "field": "format",
+            "ridesOn": "touches[] (convention: \"format:blog|video|case-study|doc|podcast\")",
+            "derivedOrAsked": "asked",
+            "why": "content is durable and multi-shape; format tells a reader whether the asset compounds (an indexable blog post) or does not (a one-off live video) — a distinction none of the other four kinds need, because they are not meant to outlive the moment they were filed."
+          },
+          {
+            "field": "link",
+            "ridesOn": "proof (GTM_PROOF_LINK)",
+            "derivedOrAsked": "derived-when-tool-connected",
+            "why": "the publishing tool/CMS knows the permanent URL the instant it ships — strongly derivable, same discipline as social's postLink."
+          },
+          {
+            "field": "topic",
+            "ridesOn": "touches[] (its existing generic meaning — areas/notes this content is about; no new field needed)",
+            "derivedOrAsked": "asked",
+            "why": "this is where the envelope's existing touches[] earns back its generic meaning rather than carrying a kind-specific convention."
+          }
+        ],
+        "proofConcrete": "the published, permanent URL.",
+        "rollsInto": "the gtm cell of the node its goalRef names. ROLLUP HONESTY: a content filing counts as 1 unit the moment it ships and NEVER re-counts on a later read — traffic/rank are never imported (Q792A0B9F, filings-only), so 10 content filings prove 10 assets shipped, never \"300 people read them,\" unless a human later files an `actual`."
+      },
+      {
+        "kind": "campaign",
+        "holds": [
+          {
+            "field": "window",
+            "ridesOn": "touches[] (convention: \"window:<start>..<end>\") — PROPOSED for real date typing",
+            "derivedOrAsked": "asked",
+            "why": "a campaign is explicitly BOUNDED in time, unlike the other four kinds — the window is the fact that lets a reader ask \"is this still open\" and read its own child filings' pace honestly."
+          },
+          {
+            "field": "channels",
+            "ridesOn": "NOT filed at all — DERIVED AT READ TIME by scanning which gtm filings share this campaign's goalRef and noting their own kinds",
+            "derivedOrAsked": "derived (read-time rollup, not filing-time)",
+            "why": "a campaign claiming its own channel list at filing time is a forecast, not a fact; the honest version reads it off which social/outreach/content/update filings actually pointed at this campaign's node — the same rollup mechanism deriveGoals already runs, applied to kind instead of count."
+          },
+          {
+            "field": "budget",
+            "ridesOn": "touches[] (convention: \"budget:<amount>\") — PROPOSED",
+            "derivedOrAsked": "asked",
+            "why": "distinguishes a paid push from an organic one — a real cost-bearing fact a reader of a GTM plane would want to see; never observable from a session."
+          }
+        ],
+        "proofConcrete": "a link to the campaign's own hub/landing/brief, OR no separate proof at all when the campaign is filed purely as a goal-tree node other filings attach to (see the open question on campaign representation).",
+        "rollsInto": "DESIGN INSIGHT: a campaign is best modelled as ALSO a node in the goal tree (a leaf with dimensions:[\"gtm\"], target=N, outcomeMetric:true when its target is a downstream result like signups) — every social/outreach/content/update filing that carries the campaign's node id as its own goalRef feeds that node's gtm cell automatically, using the existing rollup mechanism with no new code."
+      }
+    ]
+  },
+  "proofRule": {
+    "rule": "a bare URL (the shipped post/page/campaign asset link) OR the SAME artifact-grade proof the code lane requires (a runnable command plus an observed result) — never a narration",
+    "accepts": [
+      "https:// or http:// link (GTM_PROOF_LINK)",
+      "command + exit-code/pass-count artifact (proofArtifact, shared with the code lane)"
+    ],
+    "evidence": [
+      "engine/src/transmission.js @ 6d50bfe17:L47 GTM_PROOF_LINK + gtmProofArtifact()"
+    ]
+  },
+  "outcomeModel": {
+    "expected": "a declared outcome at filing time (free text — e.g. \"40 replies\"); never graded — R records and expects, it never performs the work (constitution R2)",
+    "actual": "the realized result, reported later (free text — reach/replies/…); a row with no actual yet reads as \"awaiting\" on an outcomeMetric node (M-ADR-021 G2)",
+    "outcomeNumber": "a FINITE outcome value on the row (M-ADR-021 fine-tune) counts as that many units toward its cell's target, instead of the flat 1 unit every other lane's row counts as",
+    "evidence": [
+      "engine/src/docs.js @ 6d50bfe17 — \"Goals: declare a tree\" SOP table, gtm row",
+      "engine/src/goals.js @ 6d50bfe17:L57 unit()/awaiting"
+    ]
+  },
+  "gate": {
+    "envelope": "the SAME three lines every lane grades on: what, why, touches",
+    "screenJoinKey": "NOT applied — a social post has no canon screen to bind to (transmission.js's own words)",
+    "proofGate": "incomplete when proof is missing or not-artifact-shaped — same discipline as the code lane, never a block (R3, R never blocks)",
+    "evidence": [
+      "engine/src/transmission.js @ 6d50bfe17:L13 header comment",
+      "engine/src/transmission.js @ 6d50bfe17:L251 incomplete-routing check"
+    ]
+  },
+  "ledgerLink": {
+    "note": "gtm is measurement dimension 6 of the SAME goal tree the goals plane rolls up — a gtm filing with a goalRef moves that node's \"gtm\" cell exactly like a code filing moves a \"code\" cell; the two planes share one ledger (transmission) and one rollup engine (deriveGoals) and differ in what a filing on this lane looks like, not in how it counts",
+    "crossRef": "goals.dimensions[] key=\"gtm\""
+  },
+  "tenantExtensionNote": {
+    "what": "DEFAULT_EVENT_KIND_EXTENSIONS = [\"gtm\"] in engine/src/tenant.js",
+    "scope": "TENANT-SPECIFIC, not part of the generalized lane vocabulary above — SIRU's own choice to fold GTM material into R's generic AUDIT EVENT kind enum as its own kind, unrelated to whether an org uses the gtm LANE (every org gets the lane regardless of this extension)",
+    "why": "named explicitly so a reader does not conflate one tenant's own audit-log extension with the universal, engine-level lane this plane otherwise documents",
+    "evidence": [
+      "engine/src/tenant.js @ 6d50bfe17:L73 DEFAULT_EVENT_KIND_EXTENSIONS"
+    ]
+  },
+  "orgActivity": [],
+  "evidence": [
+    {
+      "key": "gtm-lane-registry",
+      "ref": "lane:gtm",
+      "outcome": 1,
+      "what": "LANES row key=\"gtm\" label=\"GTM\" fields=[expected, actual, proof]",
+      "proof": "engine/src/lanes.js @ 6d50bfe17: export const LANES"
+    },
+    {
+      "key": "gtm-proof-rule",
+      "ref": "fn:gtmProofArtifact",
+      "outcome": 1,
+      "what": "link-or-artifact proof discipline",
+      "proof": "engine/src/transmission.js @ 6d50bfe17:L48 gtmProofArtifact()"
+    },
+    {
+      "key": "gtm-sop-row",
+      "ref": "doc:goals-sop-table",
+      "outcome": 1,
+      "what": "submitKinds=[social, outreach, update, content, campaign]",
+      "proof": "engine/src/docs.js @ 6d50bfe17 — \"Goals: declare a tree\" SOP table"
+    }
+  ],
+  "gaps": {
+    "missingLinks": [],
+    "ambiguities": [],
+    "unknowns": [
+      {
+        "id": "GAP-gtm-org-activity",
+        "what": "No org's actual GTM campaigns/channels/activity are committed in the sharingu repo — a declared goal tree (and the ledger rows that move it) is tenant data, held in that org's own brain/D1, not this repo. engine/src/index.js names ryuklabs as having declared its own GTM-shaped tree, but that tree is not committed here to read."
+      },
+      {
+        "id": "GAP-gtm-activity-kinds-fields-blank",
+        "what": "engine/src/lanes.js LANES / the docs.js SOP table name only the KIND STRING per gtm activity (social/outreach/update/content/campaign) — no per-kind field schema exists in the engine today. activityTemplate above is this pass's AUTHORED proposal, not a derived fact; none of its per-kind fields are real schema columns yet (see the open question on schema-vs-convention)."
+      },
+      {
+        "id": "GAP-gtm-doneby-not-in-schema",
+        "what": "activityTemplate.attribution (doneBy) is this pass's authored proposal to satisfy ruling QBE2A9003 — no such column exists on transmission today, and neither its scope (universal vs gtm-only) nor its value shape (person-id vs free text) is decided. See the open question on attribution field shape."
+      }
+    ]
+  }
+}

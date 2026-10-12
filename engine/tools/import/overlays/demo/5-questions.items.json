@@ -1,0 +1,86 @@
+{
+ "note": "Two questions a reader of the public site would ask, left open with options from the site's own words: the owner rules them.",
+ "clientRef": "demo-5-questions",
+ "items": [
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-demo-measure",
+    "question": "Which number says sharingu is working for an organization (the aim's measure)?",
+    "why": "A reader of the site finds four kinds of measure (usage, cost, decisions, outcomes) and the rule that each needs a source, unit, time window and status, but no single number the product itself is judged by. The aim is filed without a measure until the owner rules.",
+    "area": "aim",
+    "status": "open",
+    "whoOwes": "owner",
+    "affects": [
+     "goal/add-up",
+     "goal/cost-to-outcome"
+    ],
+    "options": [
+     {
+      "what": "Progress against a goal, supported by evidence and a meaningful baseline (the site's Outcomes measure)",
+      "tradeoff": "Closest to the mission; needs a baseline and attribution before it means anything, which the site says are not established yet."
+     },
+     {
+      "what": "Decisions moved forward: human rulings recorded with their reasons and the next contribution they make possible (the site's Decisions measure)",
+      "tradeoff": "Countable from the record from day one; a recorded decision does not by itself prove progress."
+     },
+     {
+      "what": "Attributed usage and cost per contribution, with a named budget owner (the site's Usage and Cost measures)",
+      "tradeoff": "Matches the cost-to-outcome claim; unreported usage stays unknown, and the site says live cross-provider metering is not established."
+     }
+    ],
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/",
+      "label": "the home page: what went in, what moved forward"
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/docs.html",
+      "label": "the guide, 09: value and measurements"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-demo-clients",
+    "question": "Which AI clients will the private beta name as supported?",
+    "why": "The site names ChatGPT, Claude and Gemini CLI as examples of tools with MCP support, and says the links are not a completed sharingu integration test; the supported client is confirmed per organization during onboarding. A reader cannot tell which clients work today.",
+    "area": "gtm",
+    "status": "open",
+    "whoOwes": "owner",
+    "affects": [
+     "goal/goal-outlives-chat",
+     "goal/private-beta"
+    ],
+    "options": [
+     {
+      "what": "Name each client on the site once a sharingu integration test passes for it",
+      "tradeoff": "A public list a reader can trust; each name waits for its own test."
+     },
+     {
+      "what": "Keep the site's wording: any client with MCP support, confirmed per organization at onboarding",
+      "tradeoff": "No new claim to prove; a reader still has to ask before trying."
+     }
+    ],
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/docs.html",
+      "label": "the guide, 07"
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/llms.txt",
+      "label": "Scope"
+     }
+    ]
+   }
+  }
+ ]
+}

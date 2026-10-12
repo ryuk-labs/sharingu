@@ -1,0 +1,2406 @@
+{
+ "note": "The showcase (sprint 12, 12.8): the walkthrough's product, the Pilot Shop, an AUTHORED example made up for this demo (no customer, no vendor named; people by their seat): every Map layer (three apps with wireframed screens, the API map, the schema, two flows, the connected apps as services, a dependency chain from an open decision) and the checks a tester grades. The request's loop itself (proposed, decided, picked up, filed done, graded, announced) is filed through the door by the seats (tools/make-reviewer-org.mjs).",
+ "clientRef": "demo-6-showcase",
+ "items": [
+  {
+   "kind": "goal",
+   "op": "upsert",
+   "data": {
+    "id": "pay-by-invoice",
+    "parent": "contribution-loop",
+    "title": "Pilot Shop: a business buyer pays by invoice",
+    "dimensions": [
+     "ba",
+     "code",
+     "gtm"
+    ],
+    "status": "in progress",
+    "sort": 8,
+    "note": "The walkthrough, an authored example (the Pilot Shop is a made-up online shop, no customer's): one request closes the loop. A business seat proposes it, the owner decides, a developer picks it up and files it done, a tester grades its checks, marketing announces it; each lane's cell moves on this goal.",
+    "source": [
+     {
+      "kind": "file",
+      "ref": "product/pilot-shop.md",
+      "label": "the walkthrough's product, an authored example"
+     }
+    ],
+    "asOf": "2026-10-10",
+    "confidence": "direction"
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "surface:storefront",
+    "type": "surface",
+    "name": "Storefront",
+    "data": {
+     "what": "The shop's website, where a shopper or a business buyer orders.",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "surface:shop-app",
+    "type": "surface",
+    "name": "Shop app",
+    "data": {
+     "what": "The shop's mobile app: a buyer's orders and their status.",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "surface:back-office",
+    "type": "surface",
+    "name": "Back office",
+    "data": {
+     "what": "The shop team's admin: orders, invoices and customers.",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:sf-home",
+    "type": "screen",
+    "name": "Shop home",
+    "status": "live",
+    "data": {
+     "surface": "storefront",
+     "lane": "buy",
+     "step": 1,
+     "states": [
+      "default",
+      "signed-in"
+     ],
+     "route": "/",
+     "wireframe": [
+      {
+       "kind": "header",
+       "label": "Pilot Shop"
+      },
+      {
+       "kind": "nav",
+       "items": 4
+      },
+      {
+       "kind": "image",
+       "label": "This week's picks"
+      },
+      {
+       "kind": "title",
+       "label": "Bestsellers"
+      },
+      {
+       "kind": "list",
+       "items": 6
+      },
+      {
+       "kind": "button",
+       "label": "Shop all",
+       "emphasis": true
+      }
+     ],
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:sf-product",
+    "type": "screen",
+    "name": "Product",
+    "status": "live",
+    "data": {
+     "surface": "storefront",
+     "lane": "buy",
+     "step": 2,
+     "states": [
+      "in-stock",
+      "sold-out"
+     ],
+     "route": "/products/:id",
+     "wireframe": [
+      {
+       "kind": "header",
+       "label": "Pilot Shop"
+      },
+      {
+       "kind": "image",
+       "label": "The product photo"
+      },
+      {
+       "kind": "title",
+       "label": "Product name"
+      },
+      {
+       "kind": "text",
+       "label": "Price and delivery",
+       "lines": 2
+      },
+      {
+       "kind": "button",
+       "label": "Add to cart",
+       "emphasis": true
+      },
+      {
+       "kind": "divider"
+      },
+      {
+       "kind": "text",
+       "label": "Details",
+       "lines": 4
+      }
+     ],
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:sf-cart",
+    "type": "screen",
+    "name": "Cart",
+    "status": "live",
+    "data": {
+     "surface": "storefront",
+     "lane": "buy",
+     "step": 3,
+     "states": [
+      "empty",
+      "filled"
+     ],
+     "route": "/cart",
+     "wireframe": [
+      {
+       "kind": "header",
+       "label": "Your cart"
+      },
+      {
+       "kind": "list",
+       "label": "Items",
+       "items": 3
+      },
+      {
+       "kind": "divider"
+      },
+      {
+       "kind": "text",
+       "label": "Subtotal",
+       "lines": 1
+      },
+      {
+       "kind": "button",
+       "label": "Check out",
+       "emphasis": true
+      }
+     ],
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:sf-checkout",
+    "type": "screen",
+    "name": "Checkout",
+    "status": "live",
+    "data": {
+     "surface": "storefront",
+     "lane": "buy",
+     "step": 4,
+     "states": [
+      "card",
+      "invoice",
+      "declined"
+     ],
+     "route": "/checkout",
+     "wireframe": [
+      {
+       "kind": "header",
+       "label": "Checkout"
+      },
+      {
+       "kind": "input",
+       "label": "Email"
+      },
+      {
+       "kind": "input",
+       "label": "Delivery address"
+      },
+      {
+       "kind": "title",
+       "label": "Pay with"
+      },
+      {
+       "kind": "card",
+       "label": "Card",
+       "lines": 2
+      },
+      {
+       "kind": "card",
+       "label": "Pay by invoice: business buyers",
+       "lines": 3,
+       "emphasis": true
+      },
+      {
+       "kind": "input",
+       "label": "Company name"
+      },
+      {
+       "kind": "input",
+       "label": "PO number"
+      },
+      {
+       "kind": "button",
+       "label": "Place order",
+       "emphasis": true
+      }
+     ],
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:sf-order-placed",
+    "type": "screen",
+    "name": "Order placed",
+    "status": "live",
+    "data": {
+     "surface": "storefront",
+     "lane": "buy",
+     "step": 5,
+     "states": [
+      "paid",
+      "invoiced"
+     ],
+     "route": "/orders/:id/placed",
+     "wireframe": [
+      {
+       "kind": "header",
+       "label": "Thank you"
+      },
+      {
+       "kind": "title",
+       "label": "Order placed"
+      },
+      {
+       "kind": "text",
+       "label": "What happens next",
+       "lines": 3
+      },
+      {
+       "kind": "card",
+       "label": "Your invoice",
+       "lines": 2
+      },
+      {
+       "kind": "button",
+       "label": "Track your order"
+      }
+     ],
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:app-home",
+    "type": "screen",
+    "name": "App home",
+    "status": "live",
+    "data": {
+     "surface": "shop-app",
+     "lane": "orders",
+     "step": 1,
+     "states": [
+      "default"
+     ],
+     "route": "app://home",
+     "wireframe": [
+      {
+       "kind": "header",
+       "label": "Pilot Shop"
+      },
+      {
+       "kind": "card",
+       "label": "Your last order",
+       "lines": 2,
+       "emphasis": true
+      },
+      {
+       "kind": "list",
+       "label": "For you",
+       "items": 4
+      },
+      {
+       "kind": "tabbar",
+       "items": 4
+      }
+     ],
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:app-orders",
+    "type": "screen",
+    "name": "My orders",
+    "status": "live",
+    "data": {
+     "surface": "shop-app",
+     "lane": "orders",
+     "step": 2,
+     "states": [
+      "empty",
+      "listed"
+     ],
+     "route": "app://orders",
+     "wireframe": [
+      {
+       "kind": "header",
+       "label": "My orders"
+      },
+      {
+       "kind": "list",
+       "label": "Orders",
+       "items": 6
+      },
+      {
+       "kind": "tabbar",
+       "items": 4
+      }
+     ],
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:app-order",
+    "type": "screen",
+    "name": "Order",
+    "status": "live",
+    "data": {
+     "surface": "shop-app",
+     "lane": "orders",
+     "step": 3,
+     "states": [
+      "paid",
+      "invoiced",
+      "shipped"
+     ],
+     "route": "app://orders/:id",
+     "wireframe": [
+      {
+       "kind": "header",
+       "label": "Order"
+      },
+      {
+       "kind": "title",
+       "label": "Order status"
+      },
+      {
+       "kind": "list",
+       "label": "Items",
+       "items": 3
+      },
+      {
+       "kind": "card",
+       "label": "Invoice: due date and amount",
+       "lines": 2,
+       "emphasis": true
+      },
+      {
+       "kind": "button",
+       "label": "Contact the shop"
+      },
+      {
+       "kind": "tabbar",
+       "items": 4
+      }
+     ],
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:bo-orders",
+    "type": "screen",
+    "name": "Orders",
+    "status": "live",
+    "data": {
+     "surface": "back-office",
+     "lane": "ops",
+     "step": 1,
+     "states": [
+      "new",
+      "all"
+     ],
+     "route": "/admin/orders",
+     "wireframe": [
+      {
+       "kind": "header",
+       "label": "Back office"
+      },
+      {
+       "kind": "nav",
+       "items": 5
+      },
+      {
+       "kind": "title",
+       "label": "Orders"
+      },
+      {
+       "kind": "input",
+       "label": "Search orders"
+      },
+      {
+       "kind": "list",
+       "items": 10
+      },
+      {
+       "kind": "button",
+       "label": "Export"
+      }
+     ],
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:bo-invoices",
+    "type": "screen",
+    "name": "Invoices",
+    "status": "live",
+    "data": {
+     "surface": "back-office",
+     "lane": "ops",
+     "step": 2,
+     "states": [
+      "due",
+      "paid",
+      "overdue"
+     ],
+     "route": "/admin/invoices",
+     "wireframe": [
+      {
+       "kind": "header",
+       "label": "Back office"
+      },
+      {
+       "kind": "nav",
+       "items": 5
+      },
+      {
+       "kind": "title",
+       "label": "Invoices"
+      },
+      {
+       "kind": "card",
+       "label": "Overdue",
+       "lines": 1,
+       "emphasis": true
+      },
+      {
+       "kind": "list",
+       "items": 8
+      },
+      {
+       "kind": "button",
+       "label": "Send a reminder",
+       "emphasis": true
+      }
+     ],
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:bo-customer",
+    "type": "screen",
+    "name": "Customer",
+    "status": "live",
+    "data": {
+     "surface": "back-office",
+     "lane": "ops",
+     "step": 3,
+     "states": [
+      "shopper",
+      "business"
+     ],
+     "route": "/admin/customers/:id",
+     "wireframe": [
+      {
+       "kind": "header",
+       "label": "Back office"
+      },
+      {
+       "kind": "nav",
+       "items": 5
+      },
+      {
+       "kind": "title",
+       "label": "Customer"
+      },
+      {
+       "kind": "text",
+       "label": "Company, contact and terms",
+       "lines": 3
+      },
+      {
+       "kind": "list",
+       "label": "Orders",
+       "items": 5
+      },
+      {
+       "kind": "card",
+       "label": "From the CRM",
+       "lines": 2
+      }
+     ],
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "screen:sf-home",
+    "to": "screen:sf-product",
+    "kind": "nav"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "screen:sf-product",
+    "to": "screen:sf-cart",
+    "kind": "nav"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "screen:sf-cart",
+    "to": "screen:sf-checkout",
+    "kind": "nav"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "screen:sf-checkout",
+    "to": "screen:sf-order-placed",
+    "kind": "nav"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "screen:app-home",
+    "to": "screen:app-orders",
+    "kind": "nav"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "screen:app-orders",
+    "to": "screen:app-order",
+    "kind": "nav"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "screen:bo-orders",
+    "to": "screen:bo-customer",
+    "kind": "nav"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "screen:bo-orders",
+    "to": "screen:bo-invoices",
+    "kind": "nav"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "screen:bo-invoices",
+    "to": "screen:bo-customer",
+    "kind": "nav"
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "door:GET:/api/products",
+    "type": "door",
+    "name": "GET /api/products",
+    "status": "live",
+    "data": {
+     "via": "rest",
+     "method": "GET",
+     "path": "/api/products",
+     "access": "member",
+     "write": false,
+     "screens": [
+      "sf-home",
+      "app-home"
+     ],
+     "does": "lists the products",
+     "group": "Catalog",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "door:GET:/api/products/:id",
+    "type": "door",
+    "name": "GET /api/products/:id",
+    "status": "live",
+    "data": {
+     "via": "rest",
+     "method": "GET",
+     "path": "/api/products/:id",
+     "access": "member",
+     "write": false,
+     "screens": [
+      "sf-product"
+     ],
+     "does": "one product with its stock",
+     "group": "Catalog",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "door:POST:/api/cart/items",
+    "type": "door",
+    "name": "POST /api/cart/items",
+    "status": "live",
+    "data": {
+     "via": "rest",
+     "method": "POST",
+     "path": "/api/cart/items",
+     "access": "shopper",
+     "write": true,
+     "screens": [
+      "sf-product",
+      "sf-cart"
+     ],
+     "does": "adds an item to the cart (a draft order)",
+     "group": "Orders",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "door:POST:/api/checkout",
+    "type": "door",
+    "name": "POST /api/checkout",
+    "status": "live",
+    "data": {
+     "via": "rest",
+     "method": "POST",
+     "path": "/api/checkout",
+     "access": "shopper",
+     "write": true,
+     "screens": [
+      "sf-checkout"
+     ],
+     "does": "places the order and takes the card through the payments provider",
+     "group": "Orders",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "door:POST:/api/invoices",
+    "type": "door",
+    "name": "POST /api/invoices",
+    "status": "live",
+    "data": {
+     "via": "rest",
+     "method": "POST",
+     "path": "/api/invoices",
+     "access": "business buyer",
+     "write": true,
+     "screens": [
+      "sf-checkout"
+     ],
+     "does": "places the order on invoice: the invoice is written and emailed",
+     "group": "Invoices",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "door:GET:/api/orders",
+    "type": "door",
+    "name": "GET /api/orders",
+    "status": "live",
+    "data": {
+     "via": "rest",
+     "method": "GET",
+     "path": "/api/orders",
+     "access": "buyer or staff",
+     "write": false,
+     "screens": [
+      "app-orders",
+      "bo-orders"
+     ],
+     "does": "lists orders: a buyer's own, or all for the shop team",
+     "group": "Orders",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "door:GET:/api/orders/:id",
+    "type": "door",
+    "name": "GET /api/orders/:id",
+    "status": "live",
+    "data": {
+     "via": "rest",
+     "method": "GET",
+     "path": "/api/orders/:id",
+     "access": "buyer or staff",
+     "write": false,
+     "screens": [
+      "sf-order-placed",
+      "app-order"
+     ],
+     "does": "one order with its items and its invoice",
+     "group": "Orders",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "door:GET:/api/invoices",
+    "type": "door",
+    "name": "GET /api/invoices",
+    "status": "live",
+    "data": {
+     "via": "rest",
+     "method": "GET",
+     "path": "/api/invoices",
+     "access": "staff",
+     "write": false,
+     "screens": [
+      "bo-invoices"
+     ],
+     "does": "lists the invoices by state",
+     "group": "Invoices",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "door:POST:/api/invoices/:id/remind",
+    "type": "door",
+    "name": "POST /api/invoices/:id/remind",
+    "status": "live",
+    "data": {
+     "via": "rest",
+     "method": "POST",
+     "path": "/api/invoices/:id/remind",
+     "access": "staff",
+     "write": true,
+     "screens": [
+      "bo-invoices"
+     ],
+     "does": "emails a reminder for an invoice that is due",
+     "group": "Invoices",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "door:GET:/api/customers/:id",
+    "type": "door",
+    "name": "GET /api/customers/:id",
+    "status": "live",
+    "data": {
+     "via": "rest",
+     "method": "GET",
+     "path": "/api/customers/:id",
+     "access": "staff",
+     "write": false,
+     "screens": [
+      "bo-customer"
+     ],
+     "does": "one customer, with the CRM's account record beside it",
+     "group": "Customers",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "door:POST:/api/webhooks/payments",
+    "type": "door",
+    "name": "POST /api/webhooks/payments",
+    "status": "live",
+    "data": {
+     "via": "rest",
+     "method": "POST",
+     "path": "/api/webhooks/payments",
+     "access": "the payments provider",
+     "write": true,
+     "screens": [],
+     "does": "the payments provider confirms a charge or a paid invoice",
+     "group": "Webhooks",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "table:customers",
+    "type": "table",
+    "name": "customers",
+    "status": "live",
+    "data": {
+     "cols": [
+      {
+       "name": "id",
+       "type": "TEXT"
+      },
+      {
+       "name": "name",
+       "type": "TEXT"
+      },
+      {
+       "name": "email",
+       "type": "TEXT"
+      },
+      {
+       "name": "company",
+       "type": "TEXT"
+      },
+      {
+       "name": "terms_days",
+       "type": "INTEGER"
+      },
+      {
+       "name": "crm_id",
+       "type": "TEXT"
+      }
+     ],
+     "pk": [
+      "id"
+     ],
+     "group": "Customers",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "table:products",
+    "type": "table",
+    "name": "products",
+    "status": "live",
+    "data": {
+     "cols": [
+      {
+       "name": "id",
+       "type": "TEXT"
+      },
+      {
+       "name": "name",
+       "type": "TEXT"
+      },
+      {
+       "name": "price_cents",
+       "type": "INTEGER"
+      },
+      {
+       "name": "stock",
+       "type": "INTEGER"
+      }
+     ],
+     "pk": [
+      "id"
+     ],
+     "group": "Catalog",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "table:orders",
+    "type": "table",
+    "name": "orders",
+    "status": "live",
+    "data": {
+     "cols": [
+      {
+       "name": "id",
+       "type": "TEXT"
+      },
+      {
+       "name": "customer_id",
+       "type": "TEXT",
+       "ref": "customers.id"
+      },
+      {
+       "name": "state",
+       "type": "TEXT"
+      },
+      {
+       "name": "pay_with",
+       "type": "TEXT"
+      },
+      {
+       "name": "total_cents",
+       "type": "INTEGER"
+      },
+      {
+       "name": "placed_at",
+       "type": "TEXT"
+      }
+     ],
+     "pk": [
+      "id"
+     ],
+     "group": "Orders",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "table:order_items",
+    "type": "table",
+    "name": "order_items",
+    "status": "live",
+    "data": {
+     "cols": [
+      {
+       "name": "order_id",
+       "type": "TEXT",
+       "ref": "orders.id"
+      },
+      {
+       "name": "product_id",
+       "type": "TEXT",
+       "ref": "products.id"
+      },
+      {
+       "name": "qty",
+       "type": "INTEGER"
+      },
+      {
+       "name": "price_cents",
+       "type": "INTEGER"
+      }
+     ],
+     "pk": [
+      "order_id",
+      "product_id"
+     ],
+     "group": "Orders",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "table:invoices",
+    "type": "table",
+    "name": "invoices",
+    "status": "live",
+    "data": {
+     "cols": [
+      {
+       "name": "id",
+       "type": "TEXT"
+      },
+      {
+       "name": "order_id",
+       "type": "TEXT",
+       "ref": "orders.id"
+      },
+      {
+       "name": "po_number",
+       "type": "TEXT"
+      },
+      {
+       "name": "due_on",
+       "type": "TEXT"
+      },
+      {
+       "name": "state",
+       "type": "TEXT"
+      },
+      {
+       "name": "reminded_at",
+       "type": "TEXT"
+      }
+     ],
+     "pk": [
+      "id"
+     ],
+     "group": "Billing",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "table:payments",
+    "type": "table",
+    "name": "payments",
+    "status": "live",
+    "data": {
+     "cols": [
+      {
+       "name": "id",
+       "type": "TEXT"
+      },
+      {
+       "name": "order_id",
+       "type": "TEXT",
+       "ref": "orders.id"
+      },
+      {
+       "name": "provider_ref",
+       "type": "TEXT"
+      },
+      {
+       "name": "amount_cents",
+       "type": "INTEGER"
+      },
+      {
+       "name": "state",
+       "type": "TEXT"
+      }
+     ],
+     "pk": [
+      "id"
+     ],
+     "group": "Billing",
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "table:orders",
+    "to": "table:customers",
+    "kind": "relation",
+    "label": "customer_id",
+    "data": {
+     "fromTable": "orders",
+     "toTable": "customers",
+     "col": "customer_id",
+     "ref": "customers.id",
+     "derived": "fk"
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "table:order_items",
+    "to": "table:orders",
+    "kind": "relation",
+    "label": "order_id",
+    "data": {
+     "fromTable": "order_items",
+     "toTable": "orders",
+     "col": "order_id",
+     "ref": "orders.id",
+     "derived": "fk"
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "table:order_items",
+    "to": "table:products",
+    "kind": "relation",
+    "label": "product_id",
+    "data": {
+     "fromTable": "order_items",
+     "toTable": "products",
+     "col": "product_id",
+     "ref": "products.id",
+     "derived": "fk"
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "table:invoices",
+    "to": "table:orders",
+    "kind": "relation",
+    "label": "order_id",
+    "data": {
+     "fromTable": "invoices",
+     "toTable": "orders",
+     "col": "order_id",
+     "ref": "orders.id",
+     "derived": "fk"
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "table:payments",
+    "to": "table:orders",
+    "kind": "relation",
+    "label": "order_id",
+    "data": {
+     "fromTable": "payments",
+     "toTable": "orders",
+     "col": "order_id",
+     "ref": "orders.id",
+     "derived": "fk"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "entity:customer",
+    "type": "entity",
+    "name": "Customer",
+    "status": "live",
+    "data": {
+     "table": "customers"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "entity:order",
+    "type": "entity",
+    "name": "Order",
+    "status": "live",
+    "data": {
+     "table": "orders"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "entity:invoice",
+    "type": "entity",
+    "name": "Invoice",
+    "status": "live",
+    "data": {
+     "table": "invoices"
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:GET:/api/products",
+    "to": "table:products",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:GET:/api/products/:id",
+    "to": "table:products",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/cart/items",
+    "to": "table:products",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/cart/items",
+    "to": "table:orders",
+    "kind": "writes"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/cart/items",
+    "to": "table:order_items",
+    "kind": "writes"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/checkout",
+    "to": "table:customers",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/checkout",
+    "to": "table:order_items",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/checkout",
+    "to": "table:orders",
+    "kind": "writes"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/checkout",
+    "to": "table:payments",
+    "kind": "writes"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/invoices",
+    "to": "table:customers",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/invoices",
+    "to": "table:order_items",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/invoices",
+    "to": "table:orders",
+    "kind": "writes"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/invoices",
+    "to": "table:invoices",
+    "kind": "writes"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:GET:/api/orders",
+    "to": "table:orders",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:GET:/api/orders/:id",
+    "to": "table:orders",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:GET:/api/orders/:id",
+    "to": "table:order_items",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:GET:/api/orders/:id",
+    "to": "table:invoices",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:GET:/api/invoices",
+    "to": "table:invoices",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:GET:/api/invoices",
+    "to": "table:customers",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/invoices/:id/remind",
+    "to": "table:invoices",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/invoices/:id/remind",
+    "to": "table:customers",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/invoices/:id/remind",
+    "to": "table:invoices",
+    "kind": "writes"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:GET:/api/customers/:id",
+    "to": "table:customers",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:GET:/api/customers/:id",
+    "to": "table:orders",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/webhooks/payments",
+    "to": "table:payments",
+    "kind": "reads"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/webhooks/payments",
+    "to": "table:payments",
+    "kind": "writes"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/webhooks/payments",
+    "to": "table:orders",
+    "kind": "writes"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/webhooks/payments",
+    "to": "table:invoices",
+    "kind": "writes"
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "service:payments",
+    "type": "service",
+    "name": "The payments provider",
+    "data": {
+     "kind": "integration",
+     "owner": "the Pilot Shop's team",
+     "uses": [
+      "Takes the card on its hosted form: no card number reaches the shop",
+      "Confirms each charge and each paid invoice on the webhook"
+     ],
+     "example": "a generic service, no vendor named"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "service:email",
+    "type": "service",
+    "name": "The email service",
+    "data": {
+     "kind": "integration",
+     "owner": "the Pilot Shop's team",
+     "uses": [
+      "Sends the order receipt and the invoice",
+      "Sends the invoice reminders"
+     ],
+     "example": "a generic service, no vendor named"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "service:crm",
+    "type": "service",
+    "name": "The CRM",
+    "data": {
+     "kind": "integration",
+     "owner": "the Pilot Shop's team",
+     "uses": [
+      "Holds each business customer's account and terms",
+      "The back office shows its record beside the customer"
+     ],
+     "example": "a generic service, no vendor named"
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/checkout",
+    "to": "service:payments",
+    "kind": "depends",
+    "label": "charges the card"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/webhooks/payments",
+    "to": "service:payments",
+    "kind": "depends",
+    "label": "its confirmations"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/invoices",
+    "to": "service:email",
+    "kind": "depends",
+    "label": "emails the invoice"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/invoices/:id/remind",
+    "to": "service:email",
+    "kind": "depends",
+    "label": "emails the reminder"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:GET:/api/customers/:id",
+    "to": "service:crm",
+    "kind": "depends",
+    "label": "reads the account"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "door:POST:/api/invoices",
+    "to": "service:crm",
+    "kind": "depends",
+    "label": "reads the terms"
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "architecture:main",
+    "type": "architecture",
+    "name": "Architecture",
+    "data": {
+     "summary": "The Pilot Shop (a made-up shop, the walkthrough's): three apps (the storefront, the mobile app, the back office) call one API; one database holds the customers, the catalog, the orders, the invoices and the payments; the payments provider, the email service and the CRM are the apps it connects.",
+     "diagram": {
+      "groups": [
+       {
+        "id": "apps",
+        "label": "The apps",
+        "order": 1
+       },
+       {
+        "id": "api",
+        "label": "The shop API",
+        "order": 2
+       },
+       {
+        "id": "data",
+        "label": "The database",
+        "order": 3
+       },
+       {
+        "id": "outside",
+        "label": "The connected apps",
+        "order": 4
+       }
+      ],
+      "seam": {
+       "group": "api",
+       "label": "One API: every app signs in here"
+      },
+      "nodes": [
+       {
+        "id": "storefront",
+        "group": "apps",
+        "kind": "client",
+        "title": "Storefront",
+        "sub": "the website"
+       },
+       {
+        "id": "shop-app",
+        "group": "apps",
+        "kind": "client",
+        "title": "Shop app",
+        "sub": "the mobile app"
+       },
+       {
+        "id": "back-office",
+        "group": "apps",
+        "kind": "client",
+        "title": "Back office",
+        "sub": "the shop team's admin"
+       },
+       {
+        "id": "api",
+        "group": "api",
+        "kind": "service",
+        "title": "The shop API",
+        "sub": "orders, invoices, customers"
+       },
+       {
+        "id": "db",
+        "group": "data",
+        "kind": "store",
+        "title": "The database",
+        "sub": "six tables"
+       },
+       {
+        "id": "payments",
+        "group": "outside",
+        "kind": "integration",
+        "title": "The payments provider",
+        "sub": "cards and paid invoices",
+        "service": "payments"
+       },
+       {
+        "id": "email",
+        "group": "outside",
+        "kind": "integration",
+        "title": "The email service",
+        "sub": "receipts, invoices, reminders",
+        "service": "email"
+       },
+       {
+        "id": "crm",
+        "group": "outside",
+        "kind": "integration",
+        "title": "The CRM",
+        "sub": "business accounts and terms",
+        "service": "crm"
+       }
+      ],
+      "edges": [
+       {
+        "from": "storefront",
+        "to": "api",
+        "label": "orders",
+        "main": true
+       },
+       {
+        "from": "shop-app",
+        "to": "api",
+        "label": "my orders"
+       },
+       {
+        "from": "back-office",
+        "to": "api",
+        "label": "the team's work"
+       },
+       {
+        "from": "api",
+        "to": "db",
+        "label": "reads and writes",
+        "main": true
+       },
+       {
+        "from": "api",
+        "to": "payments",
+        "label": "charges"
+       },
+       {
+        "from": "payments",
+        "to": "api",
+        "label": "webhook"
+       },
+       {
+        "from": "api",
+        "to": "email",
+        "label": "sends"
+       },
+       {
+        "from": "api",
+        "to": "crm",
+        "label": "reads accounts"
+       }
+      ],
+      "paths": [
+       {
+        "name": "Pay by invoice, end to end",
+        "steps": [
+         {
+          "from": "storefront",
+          "to": "api",
+          "says": "A business buyer places the order with Pay by invoice and a PO number"
+         },
+         {
+          "from": "api",
+          "to": "crm",
+          "says": "The API reads the buyer's account and terms"
+         },
+         {
+          "from": "api",
+          "to": "db",
+          "says": "The order and its invoice are written, due by the terms"
+         },
+         {
+          "from": "api",
+          "to": "email",
+          "says": "The invoice goes to the buyer"
+         },
+         {
+          "from": "payments",
+          "to": "api",
+          "says": "The paid invoice is confirmed on the webhook"
+         }
+        ]
+       }
+      ]
+     },
+     "crossing": [
+      {
+       "rule": "No card number reaches the shop: the payments provider's hosted form takes it.",
+       "nodes": [
+        "storefront",
+        "payments"
+       ]
+      },
+      {
+       "rule": "Only the shop team's back office reads every order; a buyer reads their own.",
+       "nodes": [
+        "back-office",
+        "shop-app",
+        "api"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "flow:card-checkout",
+    "type": "flow",
+    "name": "A shopper pays by card",
+    "status": "live",
+    "data": {
+     "audience": "a shopper",
+     "steps": [
+      {
+       "actor": "Shopper",
+       "does": "opens a product and adds it to the cart",
+       "screen": "sf-product",
+       "door": "POST /api/cart/items"
+      },
+      {
+       "actor": "Shopper",
+       "does": "checks out and pays by card",
+       "screen": "sf-checkout",
+       "door": "POST /api/checkout"
+      },
+      {
+       "actor": "The payments provider",
+       "does": "confirms the charge",
+       "door": "POST /api/webhooks/payments"
+      },
+      {
+       "actor": "Shopper",
+       "does": "sees the order placed",
+       "screen": "sf-order-placed",
+       "door": "GET /api/orders/:id"
+      }
+     ],
+     "endToEnd": {
+      "built": true,
+      "unjoined": 0,
+      "notLive": 0
+     },
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:card-checkout",
+    "to": "screen:sf-product",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:card-checkout",
+    "to": "door:POST:/api/cart/items",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:card-checkout",
+    "to": "screen:sf-checkout",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:card-checkout",
+    "to": "door:POST:/api/checkout",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:card-checkout",
+    "to": "door:POST:/api/webhooks/payments",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 2
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:card-checkout",
+    "to": "screen:sf-order-placed",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 3
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:card-checkout",
+    "to": "door:GET:/api/orders/:id",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 3
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "flow:invoice-checkout",
+    "type": "flow",
+    "name": "A business buyer pays by invoice",
+    "status": "live",
+    "data": {
+     "audience": "a business buyer",
+     "steps": [
+      {
+       "actor": "Business buyer",
+       "does": "checks out with Pay by invoice and a PO number",
+       "screen": "sf-checkout",
+       "door": "POST /api/invoices"
+      },
+      {
+       "actor": "Business buyer",
+       "does": "sees the order placed and the invoice",
+       "screen": "sf-order-placed",
+       "door": "GET /api/orders/:id"
+      },
+      {
+       "actor": "Shop team",
+       "does": "follows the invoice until it is paid",
+       "screen": "bo-invoices",
+       "door": "GET /api/invoices"
+      },
+      {
+       "actor": "Business buyer",
+       "does": "reads the invoice's due date in the app",
+       "screen": "app-order",
+       "door": "GET /api/orders/:id"
+      }
+     ],
+     "endToEnd": {
+      "built": true,
+      "unjoined": 0,
+      "notLive": 0
+     },
+     "example": "the Pilot Shop (made up)"
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:invoice-checkout",
+    "to": "screen:sf-checkout",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:invoice-checkout",
+    "to": "door:POST:/api/invoices",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:invoice-checkout",
+    "to": "screen:sf-order-placed",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:invoice-checkout",
+    "to": "door:GET:/api/orders/:id",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:invoice-checkout",
+    "to": "screen:bo-invoices",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 2
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:invoice-checkout",
+    "to": "door:GET:/api/invoices",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 2
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "flow:invoice-checkout",
+    "to": "screen:app-order",
+    "kind": "flow-step",
+    "data": {
+     "steps": [
+      {
+       "i": 3
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-demo-invoice-terms",
+    "question": "Which payment terms does a Pilot Shop invoice carry?",
+    "why": "The walkthrough's request ships Pay by invoice; the due date on the invoice, the reminder and the back office all wait on the terms.",
+    "area": "billing",
+    "status": "open",
+    "whoOwes": "owner",
+    "affects": [
+     "goal/pay-by-invoice",
+     "screen:sf-checkout",
+     "table:invoices"
+    ],
+    "options": [
+     {
+      "what": "30 days for every business buyer",
+      "tradeoff": "One rule to build and to explain; slower cash for the shop."
+     },
+     {
+      "what": "The terms the CRM holds for each account (14 or 30 days)",
+      "tradeoff": "Fits each buyer; the API reads the CRM at every invoice."
+     }
+    ],
+    "source": [
+     {
+      "kind": "file",
+      "ref": "product/pilot-shop.md",
+      "label": "the walkthrough's product, an authored example"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-demo-reminder",
+    "question": "When does the first invoice reminder go out?",
+    "why": "The reminder email is marketing's words and the email service's schedule; its day depends on the terms.",
+    "area": "gtm",
+    "status": "open",
+    "whoOwes": "gtm",
+    "affects": [
+     "goal/pay-by-invoice",
+     "screen:bo-invoices"
+    ],
+    "options": [
+     {
+      "what": "Three days before the due date",
+      "tradeoff": "Fewer late invoices; one more email a buyer may not need."
+     },
+     {
+      "what": "On the due date",
+      "tradeoff": "Quieter; more invoices go overdue before anyone hears."
+     }
+    ],
+    "source": [
+     {
+      "kind": "file",
+      "ref": "product/pilot-shop.md",
+      "label": "the walkthrough's product, an authored example"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "dep:Q-demo-invoice-terms",
+    "type": "dep",
+    "name": "The invoice's payment terms",
+    "data": {
+     "head": {
+      "qid": "Q-demo-invoice-terms",
+      "kind": "question",
+      "title": "Which payment terms does a Pilot Shop invoice carry?",
+      "state": "open",
+      "whoOwes": "owner",
+      "severity": "high"
+     },
+     "surfaces": [
+      {
+       "id": "sf-checkout"
+      },
+      {
+       "id": "bo-invoices"
+      },
+      {
+       "id": "app-order"
+      }
+     ],
+     "doors": [
+      {
+       "id": "POST /api/invoices"
+      }
+     ],
+     "schema": [
+      {
+       "table": "invoices"
+      },
+      {
+       "table": "customers"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "dep:Q-demo-reminder",
+    "type": "dep",
+    "name": "The first reminder's day",
+    "data": {
+     "head": {
+      "qid": "Q-demo-reminder",
+      "kind": "question",
+      "title": "When does the first invoice reminder go out?",
+      "state": "open",
+      "whoOwes": "gtm",
+      "severity": "normal"
+     },
+     "surfaces": [
+      {
+       "id": "bo-invoices"
+      }
+     ],
+     "doors": [
+      {
+       "id": "POST /api/invoices/:id/remind"
+      }
+     ],
+     "schema": [
+      {
+       "table": "invoices"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "dep:Q-demo-reminder",
+    "to": "dep:Q-demo-invoice-terms",
+    "kind": "depends",
+    "label": "waits on the terms"
+   }
+  },
+  {
+   "kind": "edge",
+   "op": "upsert",
+   "data": {
+    "from": "dep:Q-demo-invoice-terms",
+    "to": "dep:Q-demo-reminder",
+    "kind": "blocks",
+    "label": "the reminder's day"
+   }
+  },
+  {
+   "kind": "check",
+   "op": "upsert",
+   "data": {
+    "id": "AC.invoice.01",
+    "title": "A business buyer places an order with Pay by invoice",
+    "given": "a business buyer with a PO number at checkout",
+    "when": "they pick Pay by invoice and place the order",
+    "then": "the order is placed, its invoice is written with the PO number, and Order placed shows the invoice",
+    "refs": [
+     "screen:sf-checkout",
+     "door:POST:/api/invoices",
+     "table:invoices",
+     "pay-by-invoice"
+    ],
+    "kind": "acceptance"
+   }
+  },
+  {
+   "kind": "check",
+   "op": "upsert",
+   "data": {
+    "id": "AC.invoice.02",
+    "title": "The invoice email reaches the buyer",
+    "given": "an order placed on invoice",
+    "when": "the invoice is written",
+    "then": "the email service sends it to the buyer, with the amount, the due date and the PO number",
+    "refs": [
+     "door:POST:/api/invoices",
+     "service:email",
+     "pay-by-invoice"
+    ],
+    "kind": "acceptance"
+   }
+  },
+  {
+   "kind": "check",
+   "op": "upsert",
+   "data": {
+    "id": "AC.checkout.01",
+    "title": "A shopper pays by card",
+    "given": "a shopper with a filled cart",
+    "when": "they pay by card",
+    "then": "the payments provider confirms the charge and Order placed shows it paid",
+    "refs": [
+     "screen:sf-checkout",
+     "door:POST:/api/checkout",
+     "door:POST:/api/webhooks/payments"
+    ],
+    "kind": "acceptance"
+   }
+  },
+  {
+   "kind": "doc",
+   "op": "upsert",
+   "data": {
+    "path": "product/pilot-shop.md",
+    "title": "The Pilot Shop: the walkthrough's product",
+    "body": "# The Pilot Shop: the walkthrough's product\n\n*An authored example, made up for this demo: the Pilot Shop is no one's shop, and its people are named by their seat. It\nshows what a team's project holds once its AI has filled the product side, and one request's whole loop.*\n\n## The product\n\n- **Three apps:** the Storefront (the website), the Shop app (mobile) and the Back office (the shop team's admin). Each\n  screen on Map · Screens carries its wireframe.\n- **One API:** eleven doors on Map · Doors, each with the screens that call it and the tables it reads and writes.\n- **One database:** six tables on Map · Data (customers, products, orders, order_items, invoices, payments) with their keys,\n  and the three things the product talks about (a customer, an order, an invoice).\n- **The connected apps:** the payments provider, the email service and the CRM, on Map · Arch with what reaches each.\n- **Two flows** on Map · Flows: a shopper pays by card; a business buyer pays by invoice.\n- **Two open decisions** on Map · Deps: the invoice's payment terms, and the first reminder's day, which waits on them.\n\n## The loop, one request end to end\n\n1. **Proposed.** A business seat files the request (lane BA, a proposal) on the goal *Pilot Shop: a business buyer pays by\n   invoice*: business buyers asked to pay on invoice with a PO number. A proposal waits for the owner.\n2. **Decided.** The owner approves it, with the reason.\n3. **Picked up.** A developer takes its next action: it is theirs until done.\n4. **Filed done.** The developer files the change (lane code) on the same goal, with its proof.\n5. **Graded.** A tester grades the checks it must pass, each with its proof; the screens and doors they name light up.\n6. **Announced.** Marketing files the launch (lane GTM) on the same goal, with the outcome it expects.\n\nThe goal's page shows each lane's cell move: the business ask, the build and the launch, beside the checks' grades.\n",
+    "asOf": "2026-10-10",
+    "confidence": "direction"
+   }
+  }
+ ]
+}

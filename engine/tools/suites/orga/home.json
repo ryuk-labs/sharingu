@@ -1,0 +1,10 @@
+{
+  "_doc": "Org A's own fixture (sprint 6, 6.6: the second org everywhere): org 1 of every suite's local database is the REAL org a suite never writes in — its owner files this project's little data through preview then file (tools/lib.sh suite_local_up, step 4), unmarked, as a real org's. The suites' cases run in org B, the suites' own org (tools/suites/fixtures/, its eval seats minted by tools/lib-mint-seat.sh), beside it; no case reads or names this project.",
+  "project": "home",
+  "name": "Home",
+  "items": [
+    { "kind": "goal", "op": "upsert", "data": { "id": "home-root", "title": "The real org's own goal", "parent": null, "dimensions": ["leader"] } },
+    { "kind": "question", "op": "upsert", "data": { "qid": "QHOME1", "question": "The real org's own question: which way?", "whoOwes": "owner", "options": [{ "what": "this way" }, { "what": "that way" }] } },
+    { "contribution": { "lane": "leader", "kind": "note", "what": "The real org's own note", "why": "org A holds a little data beside the suites' org" } }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+ "note": "The owner's ruling of 2026-10-02 (MCQ): sharingu's measure is activated organisations — two different people complete a useful handoff against the same real goal. No count is on record before beta, so the value is not measured yet.",
+ "items": [
+  {
+   "kind": "aim",
+   "op": "upsert",
+   "data": {
+    "measure": {
+     "name": "Activated organisations",
+     "value": null,
+     "period": "as of today",
+     "prior": null,
+     "priorPeriod": "",
+     "source": "BETA.md Stage C · not counted before beta"
+    }
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-aim-measure",
+    "status": "decided",
+    "choice": 1,
+    "label": "Activated organisations",
+    "rationale": null,
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "whoOwes": null,
+    "waitingOn": null,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "docs/plan/BETA.md",
+      "label": "Stage C: activation is the first handoff, a pick_up by someone other than the contributor"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's MCQ on sharingu's own measure"
+     },
+     {
+      "kind": "commit",
+      "ref": "f371828ce9ca20c3b0a721dc6ec1ebc6636cb9b5",
+      "label": "sharingu's measure, ruled: activated organisations"
+     },
+     {
+      "kind": "file",
+      "ref": "docs/plan/HANDOFF.md",
+      "label": "Ruled by the owner: the projects' data (2026-10-02), sharingu's is activated organisations"
+     }
+    ],
+    "why": "No measure was ever decided: the aim was stated with no number, and the checklist's aim item wants one."
+   }
+  }
+ ]
+}

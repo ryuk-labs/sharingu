@@ -1,0 +1,9 @@
+{
+  "flows": [
+    { "id": "flow-@MK@", "name": "@MK@ flow", "desc": "@MK@ flow desc", "audience": "reach", "status": "planned", "goalRef": "reach-@MK@",
+      "steps": [
+        { "state": "a", "actor": "Ann", "mode": "human", "does": "drafts", "screen": "", "door": null, "source": "SRC:1" },
+        { "state": "b", "actor": "Bo", "mode": "human", "does": "posts", "screen": "", "door": null, "source": "SRC:2" }
+      ] }
+  ]
+}

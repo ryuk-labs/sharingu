@@ -1,0 +1,15 @@
+{
+  "name": "sharingu",
+  "description": "sharingu's own marketplace: the sharingu plugin for Claude Code.",
+  "owner": {
+    "name": "Ryuk Labs",
+    "email": "acie@ryuklabs.io"
+  },
+  "plugins": [
+    {
+      "name": "sharingu",
+      "source": "./plugin",
+      "description": "Your tools. One company brain. A universal harness connecting contributions, decisions and goals through MCP, with humans in charge."
+    }
+  ]
+}

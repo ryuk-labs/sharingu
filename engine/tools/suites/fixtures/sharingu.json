@@ -1,0 +1,18 @@
+{
+  "_doc": "The suites' fixture for project sharingu (engine/tools/suites/load-fixtures.mjs files it through preview then file, as the owner, on every fresh suite org; tools/lib.sh suite_local_up seeds one project per fixture file, keyed by `project`). Knowledge carries no eval mark; the one contribution is eval-marked (eval: true rides the preview). The qids are card ids (src/handoff.js HANDOFF_CARD_RE) so a wrap_up may answer them. QSUITE1 and QSUITE2: evals.sh answers them through wrap_up (eval answers never rule). QSUITE3: sims.sh S9 rules it. QSUITE4: sims.sh S5 files a ruling claim on it. Only QSUITE3 is owed by the owner, so Home's needs-you keeps room for the approve row sims.sh S10 presses (Home draws four rows).",
+  "project": "sharingu",
+  "name": "Sharingu",
+  "eval": true,
+  "items": [
+    { "kind": "aim", "op": "upsert", "data": { "aim": "Every suite case runs on a fresh org, its fixtures filed through the door", "measure": { "name": "suite cases green", "value": 0, "source": "the suites" } } },
+    { "kind": "goal", "op": "upsert", "data": { "id": "suites-green", "title": "The suites run green on a fresh org", "parent": null, "dimensions": ["leader"] } },
+    { "kind": "goal", "op": "upsert", "data": { "id": "suites-fixtures", "title": "File the fixtures through preview then file", "parent": "suites-green", "dimensions": ["leader"] } },
+    { "kind": "question", "op": "upsert", "data": { "qid": "QSUITE1", "question": "Suite fixture: which door files a wrap-up's card answer?", "options": [{ "what": "wrap_up, as an answer row" }, { "what": "nothing, it is dropped" }], "whoOwes": "the team", "severity": "high", "area": "suite" } },
+    { "kind": "question", "op": "upsert", "data": { "qid": "QSUITE2", "question": "Suite fixture: does a second card answer file too?", "options": [{ "what": "yes, one row per card" }, { "what": "no, only the first" }], "whoOwes": "the team", "severity": "high", "area": "suite" } },
+    { "kind": "question", "op": "upsert", "data": { "qid": "QSUITE3", "question": "Suite fixture: which option does the Decisions walk rule?", "options": [{ "what": "Option alpha (the walk rules it)" }, { "what": "Option bravo (left)" }], "whoOwes": "owner", "severity": "blocker", "area": "suite" } },
+    { "kind": "question", "op": "upsert", "data": { "qid": "QSUITE4", "question": "Suite fixture: who decides a ruling claimed on a question?", "options": [{ "what": "the owner, on the claim" }, { "what": "nobody" }], "whoOwes": "the team", "severity": "high", "area": "suite" } },
+    { "kind": "node", "op": "upsert", "data": { "id": "screen:suite-home", "type": "screen", "name": "Suite Home", "data": { "surface": "suite-web" } } },
+    { "kind": "check", "op": "upsert", "data": { "id": "AC.suite.01", "title": "The suite's home screen serves", "given": "a signed-in reader", "when": "they open it", "then": "it renders", "refs": ["screen:suite-home"] } },
+    { "contribution": { "lane": "leader", "kind": "note", "what": "Suite fixture: the project's first note", "why": "a fixture, so Build and Home read a filed contribution", "touches": ["onboarding"] } }
+  ]
+}

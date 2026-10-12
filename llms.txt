@@ -1,0 +1,35 @@
+# sharingu
+
+> A shared company brain for people and their AI tools: one platform (one Cloudflare worker, one database) serves
+> every org at its own address, with the app, a REST API and an MCP door; what happens in an org stays in it. Hosted at
+> https://agent.ryuklabs.io; every AI connects at https://agent.ryuklabs.io/mcp. Agents file contributions through the
+> door (every write is preview, then file); the database holds the truth; every screen reads it live. The door teaches
+> its own use: call `whoami` first, then `missing` with a project — each open item carries the exact call that fills it.
+
+## Connect and use
+
+- [INSTALL](docs/INSTALL.md): join an org (§1), start your own on the hosted platform (§2: sign-up by the operator's
+  allowlist and one-time code, then /orgs/new), connect a client (§3), run your own on your Cloudflare account (§4) or
+  your machine (§5). A seat's key is both its web passphrase and its bearer token; an account's passphrase signs in to
+  every org it has a seat in.
+- [Door contract](contracts/door.json): all 35 MCP tools and their REST twins — shapes, refusals, annotations.
+  Generated; the authoritative tool reference.
+- [Release notes](docs/RELEASE-NOTES.md): what changes for a connected client.
+- First calls, in order: `whoami` · `missing {project}` · `formats` · `preview {items}` · `file {previewId, items}`.
+  Every session after: `updates` first; `ask` asks the owner; `wrap_up` hands over. A connection that reaches several
+  orgs names one with `orgSlug` on any call; `whoami` lists them.
+
+## Work on sharingu itself
+
+- [README](README.md): what it is, the loop, quickstarts, the client table.
+- [AGENTS.md](AGENTS.md): the map, the build process and the laws (MCP is the only input; D1 is the truth; no dead
+  code, no dead docs).
+- [The plan](docs/plan/README.md): reading order for the current state; [BETA gate](docs/plan/BETA.md) is green.
+- [Engine layout](engine/README.md) and [engine/CLAUDE.md](engine/CLAUDE.md): the worker's files and the scars.
+
+## Optional
+
+- [Beta note](docs/BETA-NOTE.md): what an invited beta team gets (MIT, as-is, no SLA).
+- [The platform road](docs/plan/PLATFORM.md): next, limits and usage per org, then the plugin; the store listings:
+  [MARKETPLACE](docs/plan/MARKETPLACE.md).
+- [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [License](LICENSE)

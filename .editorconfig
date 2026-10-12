@@ -1,0 +1,22 @@
+# EditorConfig — https://editorconfig.org
+# Ordinary, boring defaults: every editor and IDE reads this without being told, no per-project
+# prose needed. Part of the native-structure batch (QC533C291) — the process lives in the
+# mechanisms the tools already have.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.py]
+indent_size = 4
+
+[Makefile]
+indent_style = tab

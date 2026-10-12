@@ -1,0 +1,184 @@
+{
+ "note": "The GTM lists: the waitlist as a target, and five claims the public site makes, each with the boundary the site itself states.",
+ "clientRef": "demo-4-gtm-cards",
+ "items": [
+  {
+   "kind": "card_kind",
+   "op": "upsert",
+   "data": {
+    "key": "target",
+    "label": "Targets",
+    "tab": "gtm"
+   }
+  },
+  {
+   "kind": "card_kind",
+   "op": "upsert",
+   "data": {
+    "key": "claim",
+    "label": "Claims",
+    "tab": "gtm"
+   }
+  },
+  {
+   "kind": "card",
+   "op": "upsert",
+   "data": {
+    "kind": "target",
+    "id": "target-private-beta-waitlist",
+    "name": "The private-beta waitlist: organizations request beta access or a walkthrough",
+    "status": "open",
+    "body": "The waitlist page: \"A conversation, not a sales funnel.\" A visitor tells the team where their work needs to connect and asks for private-beta access or a product walkthrough. The form asks for an email address and the interest; a name, an organization and what they would like to connect are optional.\n\nBoundaries: a request is not an instant-access invitation or a confirmed booking; the team follows up by email. The page asks visitors not to include secrets or sensitive information. The site states no number of requests to reach and no count of requests so far.",
+    "asOf": "2026-09-28",
+    "confidence": "confirmed",
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/waitlist",
+      "label": "the waitlist page"
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/privacy.html",
+      "label": "what the form collects"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "card",
+   "op": "upsert",
+   "data": {
+    "kind": "claim",
+    "id": "claim-one-company-brain",
+    "name": "Your tools. One company brain. A universal harness connecting contributions, decisions and goals through MCP.",
+    "status": "published",
+    "body": "The home page's top claim: ChatGPT today, Claude tomorrow; your company's context stays connected across people and compatible tools.\n\nBoundaries: logos identify tools, not partnerships. ChatGPT, Claude and Gemini CLI are examples of tools with MCP support; the links document client capabilities, not a completed sharingu integration test. The supported client, authentication and access scope are confirmed during onboarding.",
+    "asOf": "2026-09-28",
+    "confidence": "confirmed",
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/",
+      "label": "the home page"
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/docs.html",
+      "label": "the guide, 07"
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/llms.txt",
+      "label": "Scope"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "card",
+   "op": "upsert",
+   "data": {
+    "kind": "claim",
+    "id": "claim-humans-decide",
+    "name": "Agents produce, humans author: Agent R connects, grades and guides; people retain decision authority.",
+    "status": "published",
+    "body": "The through-line of the brand and the answer to \"Does this replace human decisions?\": no.\n\nBoundaries: a recorded approval does not establish a fact that lacks supporting evidence. The public examples do not imply that sharingu executes or deploys a team's software, or that every agent is hosted, scheduled or managed by sharingu.",
+    "asOf": "2026-09-28",
+    "confidence": "confirmed",
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/brand.html",
+      "label": "the brand page: voice"
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/",
+      "label": "the home page: questions"
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/docs.html",
+      "label": "the guide, 02 and 04"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "card",
+   "op": "upsert",
+   "data": {
+    "kind": "claim",
+    "id": "claim-cost-to-outcome",
+    "name": "Connect budgets and spend to the people, contributions and goals they support, with the decisions and outcomes beside them.",
+    "status": "published",
+    "body": "The home page's value claim: what went in (tokens, time, review cycles), where it went (model charges, partner costs, other expenses, with a named budget owner), what moved forward, and what changed.\n\nBoundaries: each measure needs a source, unit, time window and status; unreported usage stays unknown, not zero. ROI needs a measured outcome, a baseline, attribution and all relevant costs: until then it is not established. The site's sample records do not represent live cross-provider metering; fields and integrations are confirmed during onboarding.",
+    "asOf": "2026-09-28",
+    "confidence": "confirmed",
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/",
+      "label": "the home page: the value"
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/docs.html",
+      "label": "the guide, 09"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "card",
+   "op": "upsert",
+   "data": {
+    "kind": "claim",
+    "id": "claim-private-beta",
+    "name": "sharingu is in private beta: request access or a walkthrough.",
+    "status": "published",
+    "body": "The stage the site states, and its call to action.\n\nBoundaries: the walkthrough records are authored scenarios with a fictional example workspace, not customer results. Pricing, universal automatic metering and measured ROI are not established by the walkthrough. Supported client connections, channel integrations, cross-organization access and measurement collection are confirmed during onboarding.",
+    "asOf": "2026-09-28",
+    "confidence": "confirmed",
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/llms.txt",
+      "label": "Scope"
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/docs.html",
+      "label": "the guide, 11"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "card",
+   "op": "upsert",
+   "data": {
+    "kind": "claim",
+    "id": "claim-bring-your-own-ai",
+    "name": "Not another AI subscription: you bring your own compatible AI tools and their model access.",
+    "status": "published",
+    "body": "The answer to \"Is this another AI subscription?\": sharingu provides the shared company context and contribution process; the deployment model is one cloud-hosted worker per organization with shared storage.\n\nBoundaries: hosting, provider plans and beta terms are confirmed separately. Model access remains with your provider. Do not imply a second model subscription, or unlimited or free model usage.",
+    "asOf": "2026-09-28",
+    "confidence": "confirmed",
+    "source": [
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/",
+      "label": "the home page: questions"
+     },
+     {
+      "kind": "url",
+      "ref": "https://sharingu.ryuklabs.io/docs.html",
+      "label": "the guide, 07"
+     }
+    ]
+   }
+  }
+ ]
+}

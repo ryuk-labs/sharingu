@@ -1,0 +1,103 @@
+{
+  "_doc": "engine/tools/import/code-model/model.json — the little sharingu's model needs that its code cannot say (read by tools/import/read-code.mjs, the `code` layout). Reviewed by hand and kept short: every entry says why it is here. Everything else in the model is read from the code at import time.",
+  "app": {
+    "_why": "the code serves ONE app and never names it as a surface: its key and name on the Map's Screens view",
+    "key": "sharingu",
+    "name": "sharingu"
+  },
+  "lanes": {
+    "_why": "the rail (src/shell.js TABS) draws eight tabs; a page that lights none of them sits in one of these two lanes, after the eight",
+    "anonymous": { "key": "signin", "label": "Sign in" },
+    "signedIn": { "key": "you", "label": "You" },
+    "pages": { "_why": "a page that lights no tab and whose route answers with no credential too, but is the signed-in reader's page: What is missing shows a stranger only the bare checklist (since L4 it lights no tab)", "holes": "you" }
+  },
+  "names": {
+    "_why": "three pages the code gives no label (src/shell.js PAGES has no row for them and their renderers no literal title): their names on the Map, keyed by the page's data-screen or page key",
+    "goal-node": { "name": "A goal" },
+    "broadcast-starter": { "name": "A starter item" },
+    "login": { "name": "Sign in" }
+  },
+  "services": {
+    "_why": "the architecture's service nodes (tools/walkthrough/sharingu-architecture.ops.json, filed by its overlay) and what in the code reaches each: a binding the worker's code calls (wrangler.jsonc), an outside host it fetches, the MCP door its clients call. The reader links the tables, doors and the app to these ids and files each as a bare node the overlay merges onto",
+    "file": "tools/walkthrough/sharingu-architecture.ops.json",
+    "app": "cloudflare-workers",
+    "tables": "cloudflare-d1",
+    "bindings": { "BRAIN": "cloudflare-r2", "OAUTH_KV": "cloudflare-kv" },
+    "hosts": { "api.github.com": "github" },
+    "mcpClients": "claude-code"
+  },
+  "mcpAnonymous": {
+    "_why": "src/oauth.js buildEntry hands a /mcp call that carries no minted key to the OAuth provider library (@cloudflare/workers-oauth-provider), whose answer the engine's code does not spell out",
+    "status": 401,
+    "words": "401 from the OAuth provider (src/oauth.js buildEntry: a call with no minted key is the provider's), with a WWW-Authenticate header naming the resource metadata"
+  },
+  "flows": {
+    "_why": "the beta gate's three proofs (README.md calls them the loops) and member path (docs/plan/README.md, docs/plan/BETA.md gate line 1), as steps over the true screens and doors. A step names a screen by its route and a door by its REST row; `mcp: true` names that row's MCP twin, resolved from the code, so a tool's rename needs no change here",
+    "list": [
+      { "id": "proof-missing", "name": "Proof 1: what is missing, filed, closed", "audience": "member", "desc": "What is missing names the next hole and the exact call that fills it; the person's Claude previews and files it; the item closes on the next read.", "steps": [
+        { "actor": "Claude", "does": "reads what the project still needs, each item with the call that fills it", "door": "GET /missing", "mcp": true },
+        { "actor": "Claude", "does": "previews the filing: what lands, where it shows, how it is graded, what it reaches", "door": "POST /preview", "mcp": true },
+        { "actor": "Person", "does": "reads the preview and confirms it", "screen": "/preview/:id" },
+        { "actor": "Claude", "does": "files the preview's items", "door": "POST /file", "mcp": true },
+        { "actor": "Person", "does": "sees the item closed and the meter moved on What is missing", "screen": "/missing" }
+      ] },
+      { "id": "proof-decisions", "name": "Proof 2: a decision, answered, decided", "audience": "member", "desc": "Decisions lists what is open and who owes it; an answer with an option rules the question at once (the owner) or waits with the owner (a member).", "steps": [
+        { "actor": "Person", "does": "opens Decisions and sees what is open and who owes it", "screen": "/decisions" },
+        { "actor": "Person", "does": "opens one question: why it is asked, its options", "screen": "/question/:qid" },
+        { "actor": "Person", "does": "answers with one option, on the question's own page", "door": "POST /respond" },
+        { "actor": "Person", "does": "sees the question decided (the owner) or answered and with the owner (a member)", "screen": "/question/:qid" }
+      ] },
+      { "id": "proof-checks", "name": "Proof 3: a check, graded, lit", "audience": "member", "desc": "A check names the nodes it proves; a grade with proof lights them on the Map and counts on the goal the check names.", "steps": [
+        { "actor": "Claude", "does": "reads a node with its checks and their latest grades", "door": "GET /map/node", "mcp": true },
+        { "actor": "Claude", "does": "grades one check with its proof (a command and what it printed)", "door": "POST /grade", "mcp": true },
+        { "actor": "Person", "does": "sees the node's light change on the Map", "screen": "/map" },
+        { "actor": "Person", "does": "sees the check counted on its goal", "screen": "/goals" }
+      ] },
+      { "id": "member-path", "name": "A new member, end to end (the beta gate, line 1)", "audience": "member", "desc": "Invited on Control, connects their Claude, gets a project, hands Claude real input, previews, files, sees every tab fill, answers a question, grades a check, files a change and sees its impact and the stale light, regrades.", "steps": [
+        { "actor": "Admin", "does": "invites the member and seats them on a project", "door": "POST /control", "screen": "/control" },
+        { "actor": "Member", "does": "connects their Claude with the command Connect shows", "screen": "/control" },
+        { "actor": "Claude", "does": "reads what the project still needs", "door": "GET /missing", "mcp": true },
+        { "actor": "Claude", "does": "previews what it extracted from the member's input", "door": "POST /preview", "mcp": true },
+        { "actor": "Member", "does": "reads the preview", "screen": "/preview/:id" },
+        { "actor": "Claude", "does": "files it", "door": "POST /file", "mcp": true },
+        { "actor": "Member", "does": "sees the tabs fill and the meter move", "screen": "/home" },
+        { "actor": "Member", "does": "answers one question on its page", "door": "POST /respond" },
+        { "actor": "Claude", "does": "grades one check with proof", "door": "POST /grade", "mcp": true },
+        { "actor": "Claude", "does": "files one change, naming what it touches", "door": "POST /file", "mcp": true },
+        { "actor": "Member", "does": "sees what the change reaches and the proof to redo", "screen": "/contribution/:id/impact" },
+        { "actor": "Member", "does": "sees the stale light on the Map", "screen": "/map" },
+        { "actor": "Claude", "does": "regrades the stale check", "door": "POST /grade", "mcp": true }
+      ] }
+    ]
+  },
+  "wireframes": {
+    "_why": "the kit's wireframe spec (the old brain's source/board/sources/wireframe.json, read with --renders) names its 18 screens wf-*; each is drawn as a render of the page the code serves at this route (the Map's layer openings as the canvas's states)",
+    "wf-home": { "route": "/home" },
+    "wf-build": { "route": "/build" },
+    "wf-gtm": { "route": "/gtm" },
+    "wf-goals": { "route": "/goals" },
+    "wf-goal-node": { "route": "/goals/:ref" },
+    "wf-decisions": { "route": "/decisions" },
+    "wf-question": { "route": "/question/:qid" },
+    "wf-map-system": { "route": "/map" },
+    "wf-map-arch": { "route": "/map/arch" },
+    "wf-map-mcp": { "route": "/map/mcp" },
+    "wf-map-data": { "route": "/map", "state": "data" },
+    "wf-map-api": { "route": "/map", "state": "api" },
+    "wf-map-flows": { "route": "/map", "state": "flows" },
+    "wf-map-deps": { "route": "/map", "state": "deps" },
+    "wf-versions": { "route": "/versions" },
+    "wf-broadcast": { "route": "/broadcast" },
+    "wf-control": { "route": "/control" },
+    "wf-filing": { "route": "/contribution/:id" }
+  },
+  "views": {
+    "_why": "the Map is one page with views and openings (src/mapread.js OPENS, src/mappage.js VIEWS): a view is its own screen, an opening of the canvas on other layers is a state of the canvas. These name the two literals, nothing else",
+    "page": "map",
+    "views": "mappage.js#VIEWS",
+    "openings": "mapread.js#OPENS"
+  },
+  "goals": {"_why": "D2b: no generated check named a goal, so Goals counted no check and proof 3's walk showed nothing. The registry stays free of project data; this is the importer's reviewed map from what a check proves to the goal of sharingu's tree (tools/import/overlays/sharingu/k1-aim-goals, p2e-knowledge) that built it. A screen's checks and its rail check take its lane's goals; a door's checks the goals of the lanes of the screens that call it; a flow's walk its own. An id not in the tree is filed anyway and reads as no goal (the audit lists it).", "lanes": {"home": ["a-foundation"], "decisions": ["a-foundation"], "signin": ["a-foundation"], "build": ["a-screens"], "goals": ["a-screens"], "gtm": ["a-screens", "b7-gtm"], "map": ["a-map"], "broadcast": ["a-broadcast"], "control": ["a-control"], "you": ["a-control"]}, "flows": {"proof-missing": ["beta", "b2-preview-file", "b3-checklist"], "proof-decisions": ["beta"], "proof-checks": ["beta", "b4-impact"], "member-path": ["c2-live-walk"]}},
+  "oldPath": {"_why": "D2b: pages of the old path that sprint 4 deletes, for which no check is generated (a check could only say \"200 HTML\" and passes while the page shows an error body). The ones that still read the old served files are found in the code (r2serve); these are the rest, named by route.", "routes": ["/view"]},
+  "doorGroups": {"_why": "D2b: a door no screen calls is grouped by who may call it, in words a person reads (it read \"Not on a page · bearer\", \"MCP only · member\", \"Redirects\"). Keyed by the registry's own access word (src/index.js CAPABILITIES auth, MCP_TOOLS owner).", "rest": {"bearer": "Scripts and agents", "none": "Public", "reader": "Read by anyone signed in", "owner": "The owner's own doors", "key": "Used with a key in the address", "session": "Signed-in browser only", "redirect": "Old addresses"}, "mcp": {"member": "Agent tools · any member", "owner": "Agent tools · the owner"}}
+}

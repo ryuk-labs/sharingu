@@ -1,0 +1,64 @@
+{
+ "note": "The owner's ruling of 2026-10-02 (MCQ): siru's measure is the pharmacies with doors open in the Thiruvallur pilot unit. No source states a count, so the value is not measured yet.",
+ "items": [
+  {
+   "kind": "aim",
+   "op": "upsert",
+   "data": {
+    "measure": {
+     "name": "Pharmacies with doors open in the Thiruvallur pilot",
+     "value": null,
+     "period": "as of today",
+     "prior": null,
+     "priorPeriod": "",
+     "source": "pilot-thiruvallur-2026-09.md · not counted yet"
+    },
+    "source": [
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 10_STRATEGY/what-is-siru.md",
+      "label": "\"Mission (proposed)\""
+     },
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md",
+      "label": "the pilot unit: \"70 pharmacies + 1 Node/Hub\", doors open one by one; no count on record"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's second MCQ on siru's measure"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "question",
+   "op": "upsert",
+   "data": {
+    "qid": "Q-siru-aim-measure",
+    "status": "decided",
+    "choice": 0,
+    "label": "Pharmacies with doors open in the Thiruvallur pilot unit",
+    "rationale": "It counts the mission's first step (pharmacy in Tamil Nadu) directly.",
+    "decidedBy": "Ryuk",
+    "decidedAt": "2026-10-02",
+    "whoOwes": null,
+    "waitingOn": null,
+    "source": [
+     {
+      "kind": "file",
+      "ref": "siru knowledge bank: 50_OPERATIONS/pilot-thiruvallur-2026-09.md",
+      "label": "the pilot unit: \"70 pharmacies + 1 Node/Hub\", doors open one by one; no count on record"
+     },
+     {
+      "kind": "thread",
+      "ref": "owner ruling, MCQ 2026-10-02",
+      "label": "the owner's second MCQ on siru's measure"
+     }
+    ],
+    "why": "The owner ruled the aim on 2026-10-02 (the proposed mission) but not its measure. No source names one number for the mission; the pilot note's scorecard lists the pilot's success metrics, and none of them has a value on record."
+   }
+  }
+ ]
+}

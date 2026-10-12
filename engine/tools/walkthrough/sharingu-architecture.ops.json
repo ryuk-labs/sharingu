@@ -1,0 +1,143 @@
+{
+  "project": "sharingu",
+  "clientRef": "arch-sharingu-2026-10-01",
+  "ops": [
+    { "kind": "node", "op": "upsert", "data": { "id": "architecture:main", "type": "architecture", "name": "Architecture", "data": {
+      "summary": "sharingu is one Cloudflare worker per org. People and their own AI clients file through one MCP door; every write is checked against the registry of kinds and shapes, previewed, then filed into the org's D1 database, and every screen reads D1 live. R2 keeps only blobs (render bodies by their hash, banked files, backups) and KV only the OAuth grants. sharingu runs no model: the person's own AI reads the input and extracts it.",
+      "diagram": {
+        "groups": [
+          { "id": "clients", "label": "Clients: the person's own AI, or a browser", "order": 1 },
+          { "id": "door", "label": "The door: one MCP, its REST twins, the app", "order": 2 },
+          { "id": "worker", "label": "The worker: one per org", "order": 3 },
+          { "id": "d1", "label": "D1: the truth", "order": 4 },
+          { "id": "blobs", "label": "R2 and KV: blobs and sign-in", "order": 5 }
+        ],
+        "seam": { "group": "door", "label": "The seam: one door in, one contract" },
+        "nodes": [
+          { "id": "claude-code", "group": "clients", "kind": "client", "title": "Claude Code", "sub": "adds the door with one command", "service": "claude-code" },
+          { "id": "claude-app", "group": "clients", "kind": "client", "title": "Claude desktop and web", "sub": "a connector, signed in with OAuth", "service": "claude-code" },
+          { "id": "chatgpt", "group": "clients", "kind": "client", "title": "ChatGPT", "sub": "the same tools, through MCP" },
+          { "id": "codex", "group": "clients", "kind": "client", "title": "Codex", "sub": "the same tools, through MCP" },
+          { "id": "browser", "group": "clients", "kind": "client", "title": "A browser", "sub": "a person on the app's eight tabs" },
+
+          { "id": "mcp", "group": "door", "kind": "door", "title": "The MCP door", "sub": "/mcp: every tool, one contract", "about": "One endpoint for every AI client: the tools to file (preview, then file; submit_grade) and to read. Its contract, contracts/door.json, is generated from the worker's own registries.", "service": "cloudflare-workers" },
+          { "id": "rest", "group": "door", "kind": "door", "title": "The REST twins", "sub": "the same doors, for a script or a form", "about": "Each MCP write has a REST twin (POST /knowledge, /preview, /file, /pack/grade, /respond) with the same checks.", "service": "cloudflare-workers" },
+          { "id": "app", "group": "door", "kind": "door", "title": "The app", "sub": "Home, Build, Goals, the Map and more", "about": "Eight tabs: Home, Build, GTM, Goals, Decisions, Map, Broadcast and Control, behind a session cookie whose writes are same-origin checked.", "service": "cloudflare-workers" },
+
+          { "id": "registry", "group": "worker", "kind": "worker", "title": "The registry", "sub": "every kind and shape: format, example, place", "about": "One declaration of what each kind of knowledge and each contribution shape carries, where it shows and how it is checked. The door's checks, the formats read and the contract all read it.", "service": "cloudflare-workers" },
+          { "id": "preview", "group": "worker", "kind": "worker", "title": "Preview", "sub": "plans every item, writes nothing", "about": "Runs every item through the same checks the real write runs and answers where it will show and how it will be graded. Its one write is its own row.", "service": "cloudflare-workers" },
+          { "id": "file", "group": "worker", "kind": "worker", "title": "File", "sub": "files exactly what was previewed", "about": "Takes the preview's id and the same items, and files them through the existing write doors in one batch.", "service": "cloudflare-workers" },
+          { "id": "grade", "group": "worker", "kind": "worker", "title": "The grade at the door", "sub": "filed, with the owner, or one more thing", "about": "Every contribution is graded as it arrives and routed: filed at once, waiting in the owner's queue, or sent back naming what is missing. A check's grade counts only with its proof.", "service": "cloudflare-workers" },
+          { "id": "sanitiser", "group": "worker", "kind": "worker", "title": "The sanitiser", "sub": "strips what in a screen could run", "about": "A screen's html and css are re-emitted from their own tokens with anything that could run or reach the network taken out, then shown only in a sandbox.", "service": "cloudflare-workers" },
+          { "id": "reads", "group": "worker", "kind": "worker", "title": "Live reads", "sub": "one statement per screen region", "about": "Every page and every MCP read asks D1 at request time, through one bounded statement per region of a screen.", "service": "cloudflare-workers" },
+
+          { "id": "knowledge", "group": "d1", "kind": "data", "title": "Knowledge", "sub": "goals, questions, checks, the model", "about": "The aim, the goal tree, questions and their rulings, checks, the model's nodes and edges, docs, versions and the screens' render index.", "service": "cloudflare-d1" },
+          { "id": "ledger", "group": "d1", "kind": "data", "title": "The ledger", "sub": "filings, grades, events", "about": "Every contribution with its grade and route, every check result, and the events, each attributed to a person.", "service": "cloudflare-d1" },
+          { "id": "identity", "group": "d1", "kind": "data", "title": "Identity", "sub": "people, roles, seats, keys", "about": "The org's people, their role (Admin, Member or Partner), the projects they are seated on, and their keys.", "service": "cloudflare-d1" },
+          { "id": "lights", "group": "d1", "kind": "data", "title": "Tallies and lights", "sub": "kept up by the write door", "about": "Counts and each node's light, maintained by the write door and triggers, so a screen never scans a table to count it.", "service": "cloudflare-d1" },
+
+          { "id": "renders", "group": "blobs", "kind": "data", "title": "Render bodies", "sub": "R2, once each, by content hash", "service": "cloudflare-r2" },
+          { "id": "files", "group": "blobs", "kind": "data", "title": "Files", "sub": "R2: banked files and backups", "service": "cloudflare-r2" },
+          { "id": "oauth", "group": "blobs", "kind": "data", "title": "OAuth grants", "sub": "KV: the connector's sign-in", "service": "cloudflare-kv" }
+        ],
+        "edges": [
+          { "from": "claude-code", "to": "mcp", "label": "MCP over HTTPS, with a key", "main": true },
+          { "from": "claude-app", "to": "mcp", "label": "MCP, signed in with OAuth", "main": true },
+          { "from": "chatgpt", "to": "mcp", "label": "MCP tools" },
+          { "from": "codex", "to": "mcp", "label": "MCP tools" },
+          { "from": "browser", "to": "app", "label": "pages, with a session cookie", "main": true },
+          { "from": "browser", "to": "rest", "label": "a person's buttons: answer, rule, equip" },
+          { "from": "mcp", "to": "preview", "label": "preview: the items, nothing written", "main": true },
+          { "from": "mcp", "to": "file", "label": "file: the preview's id, the same items", "main": true },
+          { "from": "mcp", "to": "registry", "label": "every write, checked against its kind", "main": true },
+          { "from": "mcp", "to": "grade", "label": "a check's grade and its proof" },
+          { "from": "rest", "to": "registry", "label": "the same checks as the MCP" },
+          { "from": "mcp", "to": "identity", "label": "who calls: role and seats" },
+          { "from": "mcp", "to": "oauth", "label": "the connector's grant" },
+          { "from": "mcp", "to": "files", "label": "a banked file" },
+          { "from": "app", "to": "reads", "label": "one read per screen region", "main": true },
+          { "from": "preview", "to": "file", "label": "the preview's id" },
+          { "from": "file", "to": "grade", "label": "each contribution", "main": true },
+          { "from": "registry", "to": "sanitiser", "label": "a screen's html" },
+          { "from": "registry", "to": "knowledge", "label": "one batch, all or nothing", "main": true },
+          { "from": "grade", "to": "ledger", "label": "the filing and its route", "main": true },
+          { "from": "sanitiser", "to": "renders", "label": "the body, once, by its hash", "main": true },
+          { "from": "sanitiser", "to": "knowledge", "label": "the render's index row" },
+          { "from": "ledger", "to": "lights", "label": "a trigger keeps the tally and the light", "main": true },
+          { "from": "knowledge", "to": "reads", "label": "the model, goals, questions", "main": true },
+          { "from": "ledger", "to": "reads", "label": "filings, grades, the queue" },
+          { "from": "lights", "to": "reads", "label": "counts and lights, no table scan", "main": true },
+          { "from": "identity", "to": "reads", "label": "which projects you may read" },
+          { "from": "renders", "to": "app", "label": "bodies, loaded lazily, in a sandbox" },
+          { "from": "reads", "to": "app", "label": "every screen reads D1 live", "main": true }
+        ],
+        "paths": [
+          { "name": "A contribution is filed", "steps": [
+            { "from": "claude-code", "to": "mcp", "says": "Claude calls the MCP door with what it found" },
+            { "from": "mcp", "to": "preview", "says": "Preview plans every item and writes nothing to the project" },
+            { "from": "preview", "to": "file", "says": "The person agrees: file takes the preview's id" },
+            { "from": "file", "to": "grade", "says": "The door checks the format and grades it" },
+            { "from": "grade", "to": "ledger", "says": "One write to D1: the filing and its route" },
+            { "from": "ledger", "to": "reads", "says": "Every screen reads it live" },
+            { "from": "reads", "to": "app", "says": "It is on Build and Home at once" }
+          ] },
+          { "name": "A screen is filed", "steps": [
+            { "from": "codex", "to": "mcp", "says": "Codex files a screen's render through the MCP door" },
+            { "from": "mcp", "to": "registry", "says": "The registry checks the render against its format" },
+            { "from": "registry", "to": "sanitiser", "says": "The html is stripped of anything that could run" },
+            { "from": "sanitiser", "to": "renders", "says": "The body goes to R2 once, named by its hash" },
+            { "from": "sanitiser", "to": "knowledge", "says": "D1 keeps only the index row" },
+            { "from": "knowledge", "to": "reads", "says": "The Screens view reads the index live" },
+            { "from": "renders", "to": "app", "says": "and loads the body lazily, in a sandbox" }
+          ] },
+          { "name": "A check is graded", "steps": [
+            { "from": "claude-app", "to": "mcp", "says": "Claude grades a check, with its proof" },
+            { "from": "mcp", "to": "grade", "says": "With proof it counts; without, it waits for the owner" },
+            { "from": "grade", "to": "ledger", "says": "One result row in D1" },
+            { "from": "ledger", "to": "lights", "says": "A trigger moves the node's light" },
+            { "from": "lights", "to": "reads", "says": "The Map asks for the lights that moved" },
+            { "from": "reads", "to": "app", "says": "The light on the Map changes while it is open" }
+          ] },
+          { "name": "A person opens the Map", "steps": [
+            { "from": "browser", "to": "app", "says": "A person opens the Map" },
+            { "from": "app", "to": "reads", "says": "The page asks D1 for each of its regions" },
+            { "from": "identity", "to": "reads", "says": "Only the projects they are seated on" },
+            { "from": "knowledge", "to": "reads", "says": "The model, one statement per region" },
+            { "from": "lights", "to": "reads", "says": "The lights, kept up, never counted on read" },
+            { "from": "reads", "to": "app", "says": "Drawn from D1 as it is right now" }
+          ] }
+        ]
+      },
+      "crossing": [
+        { "rule": "The MCP is the only input: every write comes through the one door and is checked against its kind.", "nodes": ["mcp", "rest", "registry"] },
+        { "rule": "Every screen reads D1 live: no page reads a published file.", "nodes": ["reads", "app", "knowledge", "ledger", "lights"] },
+        { "rule": "A preview writes nothing to a project: its one write is its own row.", "nodes": ["preview", "file"] },
+        { "rule": "No script runs in a render: a screen's html is stripped at the door and shown only in a sandbox.", "nodes": ["sanitiser", "renders", "app"] },
+        { "rule": "A Partner reads only the projects they are seated on.", "nodes": ["identity", "reads"] },
+        { "rule": "Nothing crosses between orgs: a second org is a second worker with its own database and buckets.", "nodes": ["mcp", "knowledge", "ledger", "identity"] }
+      ]
+    } } },
+    { "kind": "node", "op": "upsert", "data": { "id": "service:cloudflare-workers", "type": "service", "name": "Cloudflare Workers", "data": { "owner": "per-org", "cost": "", "uses": [
+      "One worker per org serves the app (eight tabs), the REST API and the MCP door",
+      "One org worker is deployed today; its projects live inside it as data",
+      "A new org gets its own worker, database, bucket and KV" ] } } },
+    { "kind": "node", "op": "upsert", "data": { "id": "service:cloudflare-d1", "type": "service", "name": "Cloudflare D1", "data": { "owner": "per-org", "cost": "", "uses": [
+      "Binding DB: the org's one SQL database, the truth for every project",
+      "The knowledge tables, the ledger, identity, and the tallies and lights the write door keeps",
+      "Inside the free tier: its daily rows read and written are shared by the account" ] } } },
+    { "kind": "node", "op": "upsert", "data": { "id": "service:cloudflare-r2", "type": "service", "name": "Cloudflare R2", "data": { "owner": "per-org", "cost": "", "uses": [
+      "Binding BRAIN: blobs only, never a page's truth",
+      "Render bodies at renders/<project>/<sha256>, immutable and cacheable",
+      "Banked files, backups and the daily digest" ] } } },
+    { "kind": "node", "op": "upsert", "data": { "id": "service:cloudflare-kv", "type": "service", "name": "Cloudflare KV", "data": { "owner": "per-org", "cost": "", "uses": [
+      "Binding OAUTH_KV: the OAuth grants and tokens of the connector sign-in",
+      "Nothing else is kept in KV" ] } } },
+    { "kind": "node", "op": "upsert", "data": { "id": "service:github", "type": "service", "name": "GitHub", "data": { "owner": "ryukdev", "cost": "", "uses": [
+      "The monorepo: the engine, the contract and the plan",
+      "One branch per sprint, one pull request merged at its end" ] } } },
+    { "kind": "node", "op": "upsert", "data": { "id": "service:claude-code", "type": "service", "name": "Claude (Anthropic)", "data": { "owner": "each person", "cost": "", "uses": [
+      "Claude Code adds the MCP door with one command",
+      "Claude desktop and claude.ai connect as a connector, signed in with OAuth",
+      "sharingu runs no model: the person's own AI reads the input and does the extraction" ] } } }
+  ]
+}

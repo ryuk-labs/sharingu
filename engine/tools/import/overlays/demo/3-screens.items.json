@@ -1,0 +1,147 @@
+{
+ "note": "The console and its eight tabs as screens, each with one line the public site supports (no pictures: the site's showcase is not the app).",
+ "clientRef": "demo-3-screens",
+ "items": [
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "surface:console",
+    "type": "surface",
+    "name": "The organization's console",
+    "data": {
+     "what": "Agent R serves your organization's console and MCP connection (the site's guide, 02). The console's eight tabs are its screens; the site shows them only as concepts and authored examples, not a live dashboard.",
+     "source": "https://sharingu.ryuklabs.io/docs.html"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:home",
+    "type": "screen",
+    "name": "Home",
+    "data": {
+     "surface": "console",
+     "lane": "rail",
+     "step": 1,
+     "purpose": "One place to see the goal, the work behind it, and where a person is needed.",
+     "source": "https://sharingu.ryuklabs.io/"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:build",
+    "type": "screen",
+    "name": "Build",
+    "data": {
+     "surface": "console",
+     "lane": "rail",
+     "step": 2,
+     "purpose": "Every contribution has a place in the picture: the author, the artifact, and the reason it matters; select a contribution to open its trail.",
+     "source": "https://sharingu.ryuklabs.io/"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:gtm",
+    "type": "screen",
+    "name": "GTM",
+    "data": {
+     "surface": "console",
+     "lane": "rail",
+     "step": 3,
+     "purpose": "A launch is a process, not just a publish button: choose the audience, shape the promise, prepare the pilot, keep learning, with the reasons still attached.",
+     "source": "https://sharingu.ryuklabs.io/"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:goals",
+    "type": "screen",
+    "name": "Goals",
+    "data": {
+     "surface": "console",
+     "lane": "rail",
+     "step": 4,
+     "purpose": "Progress you can explain: follow a goal through its stages; progress follows supporting evidence, and recording a decision does not complete the goal.",
+     "source": "https://sharingu.ryuklabs.io/"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:decisions",
+    "type": "screen",
+    "name": "Decisions",
+    "data": {
+     "surface": "console",
+     "lane": "rail",
+     "step": 5,
+     "purpose": "A decision stays with its reasons: the ruling and the evidence are kept separate, and unresolved questions are preserved for the next reader.",
+     "source": "https://sharingu.ryuklabs.io/docs.html"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:map",
+    "type": "screen",
+    "name": "Map",
+    "data": {
+     "surface": "console",
+     "lane": "rail",
+     "step": 6,
+     "purpose": "The system and the reasons behind it: the contributions, sources and human decisions around building a product, connected to goals.",
+     "source": "https://sharingu.ryuklabs.io/"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:broadcast",
+    "type": "screen",
+    "name": "Broadcast",
+    "data": {
+     "surface": "console",
+     "lane": "rail",
+     "step": 7,
+     "purpose": "The contribution loop's starter templates (goal brief, contribution record, human decision, next step), adapted as an instruction manifest for your chosen tools.",
+     "source": "https://sharingu.ryuklabs.io/docs.html"
+    }
+   }
+  },
+  {
+   "kind": "node",
+   "op": "upsert",
+   "data": {
+    "id": "screen:control",
+    "type": "screen",
+    "name": "Control",
+    "data": {
+     "surface": "console",
+     "lane": "rail",
+     "step": 8,
+     "purpose": "Organization-based access with project context: the administrator provides the organization URL and each person's access key; a person can hold several roles.",
+     "source": "https://sharingu.ryuklabs.io/docs.html"
+    }
+   }
+  }
+ ]
+}

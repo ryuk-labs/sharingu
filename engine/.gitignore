@@ -1,0 +1,11 @@
+node_modules/
+.wrangler/
+*.log
+__pycache__/
+*.pyc
+node_modules
+.claude/worktrees/
+.runs/
+.login-csrf-mutation-*/
+.ruling-link-mutation-*/
+.mcporgs-*/

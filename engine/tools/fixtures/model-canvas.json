@@ -1,0 +1,2569 @@
+{
+ "_pinned": "trimmed from the brain's serve/lib/canvas/canvas.json (v af4f51be, brain commit 81088507, after brain0928:pre-b8) for tools/wire-selftest.mjs §13 (UI-B8b): the model planes' keys only (tables with their indexes, relations with `derived`, architecture with its diagram and crossing rules); rulingImpl keeps qid and implStatus (the notes are dropped), services are dropped",
+ "v": "af4f51be",
+ "tables": [
+  {
+   "name": "approval_audit",
+   "scope": "org",
+   "cols": [
+    {
+     "name": "id",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "transmission_id",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "transmission.id"
+    },
+    {
+     "name": "verdict",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "note",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "decided_by",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_approval_audit_decided_by",
+     "cols": [
+      "decided_by"
+     ],
+     "unique": false,
+     "where": null
+    }
+   ],
+   "readBy": [
+    "POST /mcp",
+    "POST /send",
+    "GET /thread",
+    "mcp:thread"
+   ],
+   "writtenBy": [
+    "POST /mcp",
+    "POST /respond",
+    "POST /transmission/:id/decide",
+    "POST /transmission/batch",
+    "POST /versions/restore",
+    "mcp:decide_transmission",
+    "mcp:restore_version",
+    "mcp:respond"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q23D7E346",
+     "implStatus": "live"
+    }
+   ]
+  },
+  {
+   "name": "artifacts",
+   "scope": "project (optional)",
+   "cols": [
+    {
+     "name": "id",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "person_id",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "kind",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "title",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "r2_key",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "sha256",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "bytes",
+     "type": "INTEGER",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "group_tag",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "screens",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "states",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "project",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": true,
+     "ref": "projects.key"
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_artifacts_created_at",
+     "cols": [
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_artifacts_person",
+     "cols": [
+      "person_id",
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_artifacts_project",
+     "cols": [
+      "project",
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    }
+   ],
+   "readBy": [
+    "POST /artifact",
+    "GET /artifact/:id",
+    "POST /fragment",
+    "GET /log",
+    "POST /mcp",
+    "GET /mirror",
+    "GET /observatory",
+    "POST /round",
+    "GET /storage",
+    "mcp:bank_artifact",
+    "mcp:read_artifact",
+    "mcp:round"
+   ],
+   "writtenBy": [
+    "POST /artifact",
+    "POST /backfill",
+    "POST /fragment",
+    "POST /mcp",
+    "POST /round",
+    "mcp:bank_artifact",
+    "mcp:round"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "QE2D90B38",
+     "implStatus": "live"
+    },
+    {
+     "qid": "QEA9771A2",
+     "implStatus": "pending"
+    },
+    {
+     "qid": "Q0B316680",
+     "implStatus": "pending"
+    }
+   ]
+  },
+  {
+   "name": "check_results",
+   "scope": "project",
+   "cols": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "project",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "projects.key"
+    },
+    {
+     "name": "pack_version",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "check_id",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "status",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "transmission_id",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": true,
+     "ref": "transmission.id"
+    },
+    {
+     "name": "graded_by",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "graded_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_check_results_lookup",
+     "cols": [
+      "project",
+      "pack_version",
+      "check_id"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_check_results_recent",
+     "cols": [
+      "project",
+      "graded_at"
+     ],
+     "unique": false,
+     "where": null
+    }
+   ],
+   "readBy": [
+    "POST /mcp",
+    "GET /pack/card/:kind/:id",
+    "GET /pack/checks/:kind/:id",
+    "GET /pack/decisions",
+    "GET /pack/find",
+    "GET /pack/kinds",
+    "GET /pack/live",
+    "mcp:pack_checks"
+   ],
+   "writtenBy": [
+    "POST /mcp",
+    "POST /pack/grade",
+    "mcp:submit_grade"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q5992857D",
+     "implStatus": "live"
+    },
+    {
+     "qid": "Q5AE248CC",
+     "implStatus": "live"
+    }
+   ]
+  },
+  {
+   "name": "events",
+   "scope": "project (optional)",
+   "cols": [
+    {
+     "name": "id",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "session_id",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "person_id",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "kind",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "payload_json",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "touches",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "basis",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "stamped",
+     "type": "INTEGER",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "lane",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "project",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": true,
+     "ref": "projects.key"
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_events_audit",
+     "cols": [
+      "created_at"
+     ],
+     "unique": false,
+     "where": "kind NOT IN ('session_open','exit','fragment','file') AND COALESCE(json_extract(payload_json,'$.mind'),0) != 1 AND COALESCE(json_extract(payload_json,'$.eval'),0) = 0"
+    },
+    {
+     "name": "idx_events_created_at",
+     "cols": [
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_events_person",
+     "cols": [
+      "person_id",
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_events_project",
+     "cols": [
+      "project",
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_events_stamped",
+     "cols": [
+      "kind",
+      "stamped"
+     ],
+     "unique": false,
+     "where": null
+    }
+   ],
+   "readBy": [
+    "POST /backup-dump",
+    "GET /heartbeat",
+    "POST /mcp",
+    "GET /mirror",
+    "GET /observatory",
+    "POST /send",
+    "GET /thread",
+    "mcp:heartbeat",
+    "mcp:thread"
+   ],
+   "writtenBy": [
+    "POST /artifact",
+    "GET /boot",
+    "GET /control",
+    "POST /event",
+    "POST /fragment",
+    "POST /handoff",
+    "POST /mcp",
+    "POST /pack/grade",
+    "POST /profile",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "POST /transmission",
+    "POST /transmission/:id/decide",
+    "POST /transmission/batch",
+    "POST /verb",
+    "POST /versions/restore",
+    "mcp:bank_artifact",
+    "mcp:record_event",
+    "mcp:ask",
+    "mcp:send_handoff",
+    "mcp:submit_transmission",
+    "mcp:decide_transmission",
+    "mcp:rank",
+    "mcp:restore_version",
+    "mcp:submit_grade",
+    "mcp:respond",
+    "mcp:round"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q0B50A78E",
+     "implStatus": "live"
+    },
+    {
+     "qid": "QDB8E4562",
+     "implStatus": "live"
+    },
+    {
+     "qid": "QFE43B9D9",
+     "implStatus": "pending"
+    }
+   ]
+  },
+  {
+   "name": "invites",
+   "scope": "project",
+   "cols": [
+    {
+     "name": "id",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "code_hash",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "project_key",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "projects.key"
+    },
+    {
+     "name": "role",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "label",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_by",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "expires_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "redeemed_at",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "redeemed_person",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "revoked_at",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_invites_open",
+     "cols": [
+      "expires_at"
+     ],
+     "unique": false,
+     "where": "redeemed_at IS NULL AND revoked_at IS NULL"
+    }
+   ],
+   "readBy": [],
+   "writtenBy": [],
+   "rulingImpl": [
+    {
+     "qid": "Q8EFBCCF8",
+     "implStatus": "pending"
+    }
+   ]
+  },
+  {
+   "name": "login_attempts",
+   "scope": "org",
+   "cols": [
+    {
+     "name": "id",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "email",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "ok",
+     "type": "INTEGER",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "at",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_login_email",
+     "cols": [
+      "email",
+      "at"
+     ],
+     "unique": false,
+     "where": null
+    }
+   ],
+   "readBy": [
+    "POST /login",
+    "POST /profile"
+   ],
+   "writtenBy": [
+    "POST /login",
+    "POST /profile"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q870C871C",
+     "implStatus": "live"
+    },
+    {
+     "qid": "QA3D4779F",
+     "implStatus": "pending"
+    },
+    {
+     "qid": "QFD35562C",
+     "implStatus": "live"
+    }
+   ]
+  },
+  {
+   "name": "loops",
+   "scope": "org",
+   "cols": [
+    {
+     "name": "id",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "person_id",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "title",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "status",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "opened_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "closed_at",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "ref",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_loops_person",
+     "cols": [
+      "person_id",
+      "status"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_loops_ref_open",
+     "cols": [
+      "status",
+      "ref"
+     ],
+     "unique": false,
+     "where": "ref IS NOT NULL"
+    },
+    {
+     "name": "idx_loops_status",
+     "cols": [
+      "status",
+      "person_id"
+     ],
+     "unique": false,
+     "where": null
+    }
+   ],
+   "readBy": [
+    "GET /agentic",
+    "GET /area/:ref",
+    "GET /audit",
+    "GET /boot",
+    "GET /build",
+    "GET /control",
+    "GET /control/pack",
+    "GET /decisions",
+    "GET /docs",
+    "GET /eagle",
+    "GET /eagle/claims",
+    "GET /goals",
+    "GET /goals/:ref",
+    "GET /heartbeat",
+    "GET /holes",
+    "GET /home",
+    "GET /loops",
+    "GET /map/:plane",
+    "GET /map/node",
+    "POST /mcp",
+    "GET /observatory",
+    "GET /orchestrator",
+    "GET /pack/card/:kind/:id",
+    "GET /pack/checks/:kind/:id",
+    "GET /pack/decisions",
+    "GET /pack/file/:id",
+    "GET /pack/find",
+    "GET /pack/kinds",
+    "GET /pack/live",
+    "GET /page/:id",
+    "GET /profile",
+    "POST /profile",
+    "GET /projects",
+    "GET /question/:qid",
+    "POST /send",
+    "GET /state",
+    "GET /thread",
+    "GET /transmission/:id",
+    "GET /understanding",
+    "GET /versions",
+    "GET /versions/:v",
+    "GET /view",
+    "GET /whoami",
+    "mcp:whoami",
+    "mcp:heartbeat",
+    "mcp:state",
+    "mcp:loops",
+    "mcp:thread",
+    "mcp:area_brief",
+    "mcp:eagle_claims"
+   ],
+   "writtenBy": [
+    "POST /handoff",
+    "POST /loops",
+    "POST /mcp",
+    "POST /send",
+    "mcp:open_loop",
+    "mcp:send_handoff"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q17DA834C",
+     "implStatus": "pending"
+    },
+    {
+     "qid": "Q205E5B03",
+     "implStatus": "live"
+    },
+    {
+     "qid": "Q40CD2B46",
+     "implStatus": "pending"
+    },
+    {
+     "qid": "QBC3E1296",
+     "implStatus": "pending"
+    }
+   ]
+  },
+  {
+   "name": "people",
+   "scope": "org",
+   "cols": [
+    {
+     "name": "id",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "email",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "role",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "key_hash",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "active",
+     "type": "INTEGER",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "pass_hash",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "pass_salt",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "title",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "capture_mode",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "lane",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "trace_consent",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_people_owner",
+     "cols": [
+      "role",
+      "active",
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    }
+   ],
+   "readBy": [
+    "GET /agentic",
+    "GET /agentic/example/:name",
+    "GET /answers",
+    "GET /area/:ref",
+    "POST /artifact",
+    "GET /artifact/:id",
+    "GET /artifacts",
+    "GET /atlas-img/:key",
+    "GET /audit",
+    "POST /backfill",
+    "POST /backfill-refs",
+    "POST /backup-dump",
+    "GET /boot",
+    "GET /canvas.json",
+    "GET /capabilities",
+    "GET /contract",
+    "GET /control",
+    "GET /control/pack",
+    "GET /doc/:path",
+    "GET /docs",
+    "GET /eagle",
+    "GET /eagle.json",
+    "GET /eagle/claims",
+    "GET /eagle/contract/:id",
+    "GET /eagle/critiques",
+    "GET /eagle/history",
+    "GET /eagle/planned",
+    "GET /eagle/timeline",
+    "POST /handoff",
+    "GET /health",
+    "GET /heartbeat",
+    "GET /holes",
+    "GET /home",
+    "GET /intake/:file",
+    "GET /library",
+    "POST /login",
+    "GET /map/:plane",
+    "GET /map/node",
+    "POST /mcp",
+    "GET /observatory",
+    "GET /orchestrator",
+    "GET /pack/file/:id",
+    "POST /pack/grade",
+    "GET /page/:id",
+    "GET /profile",
+    "POST /profile",
+    "POST /project",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "GET /setup",
+    "GET /state",
+    "GET /thread",
+    "GET /transmission",
+    "POST /transmission",
+    "POST /transmission/batch",
+    "GET /understanding",
+    "POST /verb",
+    "POST /versions/restore",
+    "GET /view",
+    "GET /whoami",
+    "mcp:whoami",
+    "mcp:heartbeat",
+    "mcp:bank_artifact",
+    "mcp:read_artifact",
+    "mcp:send_handoff",
+    "mcp:submit_transmission",
+    "mcp:rank",
+    "mcp:restore_version",
+    "mcp:thread",
+    "mcp:submit_grade",
+    "mcp:area_brief",
+    "mcp:transmission_queue",
+    "mcp:answers",
+    "mcp:respond",
+    "mcp:round",
+    "mcp:eagle_claims",
+    "mcp:eagle_critiques",
+    "mcp:eagle_history"
+   ],
+   "writtenBy": [
+    "GET /control",
+    "POST /profile"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q347E27ED",
+     "implStatus": "pending"
+    },
+    {
+     "qid": "Q76EFC99D",
+     "implStatus": "pending"
+    }
+   ]
+  },
+  {
+   "name": "project_seats",
+   "scope": "project",
+   "cols": [
+    {
+     "name": "person_id",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "project_key",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "projects.key"
+    },
+    {
+     "name": "role",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_project_seats_project",
+     "cols": [
+      "project_key"
+     ],
+     "unique": false,
+     "where": null
+    }
+   ],
+   "readBy": [
+    "GET /agentic",
+    "GET /area/:ref",
+    "POST /artifact",
+    "GET /artifacts",
+    "GET /audit",
+    "GET /build",
+    "GET /control",
+    "GET /control/pack",
+    "GET /decisions",
+    "GET /docs",
+    "GET /eagle",
+    "POST /event",
+    "POST /fragment",
+    "GET /goals",
+    "GET /goals/:ref",
+    "POST /handoff",
+    "GET /holes",
+    "GET /home",
+    "GET /map/:plane",
+    "GET /map/node",
+    "POST /mcp",
+    "GET /observatory",
+    "GET /orchestrator",
+    "GET /pack/card/:kind/:id",
+    "GET /pack/checks/:kind/:id",
+    "GET /pack/decisions",
+    "GET /pack/file/:id",
+    "GET /pack/find",
+    "POST /pack/grade",
+    "GET /pack/kinds",
+    "GET /pack/live",
+    "GET /page/:id",
+    "GET /profile",
+    "POST /profile",
+    "POST /project",
+    "GET /projects",
+    "GET /question/:qid",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "GET /transmission",
+    "POST /transmission",
+    "GET /transmission/:id",
+    "POST /transmission/batch",
+    "GET /understanding",
+    "POST /verb",
+    "GET /versions",
+    "GET /versions/:v",
+    "POST /versions/restore",
+    "GET /view",
+    "GET /whoami",
+    "mcp:whoami",
+    "mcp:state",
+    "mcp:bank_artifact",
+    "mcp:record_event",
+    "mcp:ask",
+    "mcp:send_handoff",
+    "mcp:submit_transmission",
+    "mcp:holes",
+    "mcp:rank",
+    "mcp:restore_version",
+    "mcp:submit_grade",
+    "mcp:transmission_queue",
+    "mcp:respond",
+    "mcp:round",
+    "mcp:list_artifacts"
+   ],
+   "writtenBy": [
+    "GET /control"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q46EF2A50",
+     "implStatus": "live"
+    },
+    {
+     "qid": "QF89E795D",
+     "implStatus": "pending"
+    }
+   ]
+  },
+  {
+   "name": "projects",
+   "scope": "org",
+   "cols": [
+    {
+     "name": "key",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "registry_ptr",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "atlas_map",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "active",
+     "type": "INTEGER",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [],
+   "readBy": [
+    "GET /agentic",
+    "GET /area/:ref",
+    "POST /artifact",
+    "GET /artifacts",
+    "GET /audit",
+    "GET /build",
+    "GET /control",
+    "GET /control/pack",
+    "GET /decisions",
+    "GET /docs",
+    "GET /eagle",
+    "POST /event",
+    "POST /fragment",
+    "GET /goals",
+    "GET /goals/:ref",
+    "POST /handoff",
+    "GET /holes",
+    "GET /home",
+    "GET /map/:plane",
+    "GET /map/node",
+    "POST /mcp",
+    "GET /observatory",
+    "GET /orchestrator",
+    "GET /pack/card/:kind/:id",
+    "GET /pack/checks/:kind/:id",
+    "GET /pack/decisions",
+    "GET /pack/file/:id",
+    "GET /pack/find",
+    "POST /pack/grade",
+    "GET /pack/kinds",
+    "GET /pack/live",
+    "GET /page/:id",
+    "GET /profile",
+    "POST /profile",
+    "POST /project",
+    "GET /projects",
+    "GET /question/:qid",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "GET /transmission",
+    "POST /transmission",
+    "GET /transmission/:id",
+    "POST /transmission/batch",
+    "GET /understanding",
+    "POST /verb",
+    "GET /versions",
+    "GET /versions/:v",
+    "POST /versions/restore",
+    "GET /view",
+    "GET /whoami",
+    "mcp:whoami",
+    "mcp:state",
+    "mcp:doc",
+    "mcp:bank_artifact",
+    "mcp:record_event",
+    "mcp:ask",
+    "mcp:send_handoff",
+    "mcp:submit_transmission",
+    "mcp:holes",
+    "mcp:rank",
+    "mcp:restore_version",
+    "mcp:submit_grade",
+    "mcp:transmission_queue",
+    "mcp:respond",
+    "mcp:round",
+    "mcp:list_artifacts"
+   ],
+   "writtenBy": [
+    "GET /control"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q952CAE10",
+     "implStatus": "pending"
+    }
+   ]
+  },
+  {
+   "name": "sso_nonce",
+   "scope": "org",
+   "cols": [
+    {
+     "name": "n",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [],
+   "readBy": [],
+   "writtenBy": [],
+   "rulingImpl": []
+  },
+  {
+   "name": "tokens",
+   "scope": "project (optional)",
+   "cols": [
+    {
+     "name": "token_hash",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "person_id",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "device",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "expires_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "revoked",
+     "type": "INTEGER",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "project",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": true,
+     "ref": "projects.key"
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_tokens_person",
+     "cols": [
+      "person_id",
+      "revoked"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_tokens_live",
+     "cols": [
+      "revoked",
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    }
+   ],
+   "readBy": [
+    "GET /agentic",
+    "GET /agentic/example/:name",
+    "GET /answers",
+    "GET /area/:ref",
+    "GET /artifact/:id",
+    "GET /artifacts",
+    "GET /atlas-img/:key",
+    "GET /audit",
+    "POST /backfill",
+    "POST /backfill-refs",
+    "POST /backup-dump",
+    "GET /boot",
+    "GET /canvas.json",
+    "GET /capabilities",
+    "GET /contract",
+    "GET /control",
+    "GET /doc/:path",
+    "GET /docs",
+    "GET /eagle",
+    "GET /eagle.json",
+    "GET /eagle/claims",
+    "GET /eagle/contract/:id",
+    "GET /eagle/critiques",
+    "GET /eagle/history",
+    "GET /eagle/planned",
+    "GET /eagle/timeline",
+    "GET /holes",
+    "GET /home",
+    "GET /intake/:file",
+    "GET /library",
+    "GET /map/:plane",
+    "GET /map/node",
+    "POST /mcp",
+    "GET /observatory",
+    "GET /orchestrator",
+    "GET /page/:id",
+    "GET /profile",
+    "POST /profile",
+    "POST /project",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "GET /setup",
+    "GET /state",
+    "GET /thread",
+    "GET /understanding",
+    "POST /verb",
+    "POST /versions/restore",
+    "GET /view"
+   ],
+   "writtenBy": [
+    "GET /control",
+    "POST /login",
+    "GET /logout",
+    "POST /profile",
+    "POST /project",
+    "POST /signout"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q8EFBCCF8",
+     "implStatus": "pending"
+    },
+    {
+     "qid": "QD46CF220",
+     "implStatus": "pending"
+    }
+   ]
+  },
+  {
+   "name": "transmission",
+   "scope": "project (optional)",
+   "cols": [
+    {
+     "name": "id",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "submitter",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "lane",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "kind",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "what",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "why",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "touches",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "screens",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "proof",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "parent",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": true,
+     "ref": "transmission.id"
+    },
+    {
+     "name": "grade",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "route",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "status",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "eval",
+     "type": "INTEGER",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "components",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "decision",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "decided_by",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": true,
+     "ref": "people.id"
+    },
+    {
+     "name": "decided_at",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "decision_note",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "gaprefs",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "report",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "digest",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "trace",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "about",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "project",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": true,
+     "ref": "projects.key"
+    },
+    {
+     "name": "via",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "client_ref",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "goal_ref",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "expected",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "actual",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "outcome",
+     "type": "REAL",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_transmission_clientref",
+     "cols": [
+      "submitter",
+      "client_ref"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_transmission_eval_created",
+     "cols": [
+      "eval",
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_transmission_goalref",
+     "cols": [
+      "goal_ref"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_transmission_kind_eval",
+     "cols": [
+      "kind",
+      "eval"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_transmission_parent",
+     "cols": [
+      "parent"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_transmission_project",
+     "cols": [
+      "project",
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_transmission_queue",
+     "cols": [
+      "route",
+      "eval",
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_transmission_route",
+     "cols": [
+      "route",
+      "status"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_transmission_submitter",
+     "cols": [
+      "submitter",
+      "created_at"
+     ],
+     "unique": false,
+     "where": null
+    }
+   ],
+   "readBy": [
+    "GET /agentic",
+    "GET /answers",
+    "GET /area/:ref",
+    "GET /audit",
+    "POST /backfill",
+    "POST /backfill-refs",
+    "GET /build",
+    "GET /control",
+    "GET /control/pack",
+    "GET /decisions",
+    "GET /docs",
+    "GET /eagle",
+    "GET /eagle/critiques",
+    "GET /eagle/history",
+    "GET /eagle/planned",
+    "GET /eagle/timeline",
+    "GET /goals",
+    "GET /goals/:ref",
+    "POST /handoff",
+    "GET /holes",
+    "GET /home",
+    "GET /map/:plane",
+    "GET /map/node",
+    "POST /mcp",
+    "GET /mirror",
+    "GET /observatory",
+    "GET /orchestrator",
+    "GET /pack/card/:kind/:id",
+    "GET /pack/checks/:kind/:id",
+    "GET /pack/decisions",
+    "GET /pack/file/:id",
+    "GET /pack/find",
+    "POST /pack/grade",
+    "GET /pack/kinds",
+    "GET /pack/live",
+    "GET /page/:id",
+    "GET /profile",
+    "POST /profile",
+    "GET /projects",
+    "GET /question/:qid",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "GET /thread",
+    "GET /transmission",
+    "POST /transmission",
+    "GET /transmission/:id",
+    "POST /transmission/:id/decide",
+    "POST /transmission/batch",
+    "GET /understanding",
+    "POST /verb",
+    "GET /versions",
+    "GET /versions/:v",
+    "POST /versions/restore",
+    "GET /view",
+    "mcp:send_handoff",
+    "mcp:submit_transmission",
+    "mcp:decide_transmission",
+    "mcp:rank",
+    "mcp:restore_version",
+    "mcp:thread",
+    "mcp:pack_live",
+    "mcp:submit_grade",
+    "mcp:area_brief",
+    "mcp:transmission_queue",
+    "mcp:answers",
+    "mcp:respond",
+    "mcp:round",
+    "mcp:eagle_critiques",
+    "mcp:eagle_history",
+    "mcp:eagle_timeline"
+   ],
+   "writtenBy": [
+    "POST /backfill",
+    "POST /handoff",
+    "POST /mcp",
+    "POST /pack/grade",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "POST /transmission",
+    "POST /transmission/:id/decide",
+    "POST /transmission/batch",
+    "POST /verb",
+    "POST /versions/restore",
+    "mcp:send_handoff",
+    "mcp:submit_transmission",
+    "mcp:decide_transmission",
+    "mcp:rank",
+    "mcp:restore_version",
+    "mcp:submit_grade",
+    "mcp:respond",
+    "mcp:round"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q4FF173D7",
+     "implStatus": "pending"
+    },
+    {
+     "qid": "QBE2A9003",
+     "implStatus": "pending"
+    },
+    {
+     "qid": "QC8B94276",
+     "implStatus": "pending"
+    },
+    {
+     "qid": "QDFE40096",
+     "implStatus": "live"
+    },
+    {
+     "qid": "QFC497F89",
+     "implStatus": "pending"
+    },
+    {
+     "qid": "Q0B316680",
+     "implStatus": "pending"
+    }
+   ]
+  },
+  {
+   "name": "transmission_refs",
+   "scope": "org",
+   "cols": [
+    {
+     "name": "tid",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": true,
+     "ref": "transmission.id"
+    },
+    {
+     "name": "ref",
+     "type": "TEXT",
+     "null": false,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [
+    {
+     "name": "idx_transmission_refs_ref",
+     "cols": [
+      "ref"
+     ],
+     "unique": false,
+     "where": null
+    },
+    {
+     "name": "idx_transmission_refs_tid",
+     "cols": [
+      "tid"
+     ],
+     "unique": false,
+     "where": null
+    }
+   ],
+   "readBy": [
+    "GET /answers",
+    "GET /area/:ref",
+    "POST /backfill-refs",
+    "GET /eagle/history",
+    "GET /eagle/timeline",
+    "POST /mcp",
+    "GET /transmission",
+    "mcp:area_brief",
+    "mcp:transmission_queue",
+    "mcp:answers",
+    "mcp:eagle_history",
+    "mcp:eagle_timeline"
+   ],
+   "writtenBy": [
+    "POST /backfill-refs",
+    "POST /handoff",
+    "POST /mcp",
+    "POST /pack/grade",
+    "POST /rank",
+    "POST /respond",
+    "POST /round",
+    "POST /send",
+    "POST /transmission",
+    "POST /transmission/batch",
+    "POST /verb",
+    "POST /versions/restore",
+    "mcp:send_handoff",
+    "mcp:submit_transmission",
+    "mcp:rank",
+    "mcp:restore_version",
+    "mcp:submit_grade",
+    "mcp:respond",
+    "mcp:round"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q3F213DB1",
+     "implStatus": "pending"
+    },
+    {
+     "qid": "QDFE40096",
+     "implStatus": "live"
+    },
+    {
+     "qid": "QFB99F9D4",
+     "implStatus": "pending"
+    }
+   ]
+  },
+  {
+   "name": "transmission_refs_meta",
+   "scope": "org",
+   "cols": [
+    {
+     "name": "key",
+     "type": "TEXT",
+     "null": true,
+     "pk": true,
+     "fk": false,
+     "ref": ""
+    },
+    {
+     "name": "value",
+     "type": "TEXT",
+     "null": true,
+     "pk": false,
+     "fk": false,
+     "ref": ""
+    }
+   ],
+   "indexes": [],
+   "readBy": [
+    "GET /area/:ref",
+    "POST /mcp",
+    "GET /transmission",
+    "mcp:area_brief",
+    "mcp:transmission_queue"
+   ],
+   "writtenBy": [
+    "POST /backfill-refs"
+   ],
+   "rulingImpl": [
+    {
+     "qid": "Q97EE3581",
+     "implStatus": "live"
+    }
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "from": "approval_audit",
+   "to": "transmission",
+   "fromTable": "approval_audit",
+   "toTable": "transmission",
+   "card": "*—1",
+   "verb": "transmission",
+   "derived": "fk"
+  },
+  {
+   "from": "approval_audit",
+   "to": "people",
+   "fromTable": "approval_audit",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "decided_by",
+   "derived": "fk"
+  },
+  {
+   "from": "artifacts",
+   "to": "people",
+   "fromTable": "artifacts",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "person",
+   "derived": "fk"
+  },
+  {
+   "from": "artifacts",
+   "to": "projects",
+   "fromTable": "artifacts",
+   "toTable": "projects",
+   "card": "*—1",
+   "verb": "project",
+   "derived": "fk"
+  },
+  {
+   "from": "check_results",
+   "to": "projects",
+   "fromTable": "check_results",
+   "toTable": "projects",
+   "card": "*—1",
+   "verb": "project",
+   "derived": "fk"
+  },
+  {
+   "from": "check_results",
+   "to": "transmission",
+   "fromTable": "check_results",
+   "toTable": "transmission",
+   "card": "*—1",
+   "verb": "transmission",
+   "derived": "fk"
+  },
+  {
+   "from": "check_results",
+   "to": "people",
+   "fromTable": "check_results",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "graded_by",
+   "derived": "fk"
+  },
+  {
+   "from": "events",
+   "to": "sessions",
+   "fromTable": "events",
+   "toTable": "sessions",
+   "card": "*—1",
+   "verb": "session",
+   "derived": "convention"
+  },
+  {
+   "from": "events",
+   "to": "people",
+   "fromTable": "events",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "person",
+   "derived": "fk"
+  },
+  {
+   "from": "events",
+   "to": "projects",
+   "fromTable": "events",
+   "toTable": "projects",
+   "card": "*—1",
+   "verb": "project",
+   "derived": "fk"
+  },
+  {
+   "from": "invites",
+   "to": "projects",
+   "fromTable": "invites",
+   "toTable": "projects",
+   "card": "*—1",
+   "verb": "project",
+   "derived": "fk"
+  },
+  {
+   "from": "invites",
+   "to": "people",
+   "fromTable": "invites",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "created_by",
+   "derived": "fk"
+  },
+  {
+   "from": "invites",
+   "to": "people",
+   "fromTable": "invites",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "redeemed_person",
+   "derived": "fk"
+  },
+  {
+   "from": "loops",
+   "to": "people",
+   "fromTable": "loops",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "person",
+   "derived": "fk"
+  },
+  {
+   "from": "project_seats",
+   "to": "people",
+   "fromTable": "project_seats",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "person",
+   "derived": "fk"
+  },
+  {
+   "from": "project_seats",
+   "to": "projects",
+   "fromTable": "project_seats",
+   "toTable": "projects",
+   "card": "*—1",
+   "verb": "project",
+   "derived": "fk"
+  },
+  {
+   "from": "tokens",
+   "to": "people",
+   "fromTable": "tokens",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "person",
+   "derived": "fk"
+  },
+  {
+   "from": "tokens",
+   "to": "projects",
+   "fromTable": "tokens",
+   "toTable": "projects",
+   "card": "*—1",
+   "verb": "project",
+   "derived": "fk"
+  },
+  {
+   "from": "transmission",
+   "to": "people",
+   "fromTable": "transmission",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "submitter",
+   "derived": "fk"
+  },
+  {
+   "from": "transmission",
+   "to": "transmission",
+   "fromTable": "transmission",
+   "toTable": "transmission",
+   "card": "*—1",
+   "verb": "parent",
+   "derived": "fk"
+  },
+  {
+   "from": "transmission",
+   "to": "people",
+   "fromTable": "transmission",
+   "toTable": "people",
+   "card": "*—1",
+   "verb": "decided_by",
+   "derived": "fk"
+  },
+  {
+   "from": "transmission",
+   "to": "projects",
+   "fromTable": "transmission",
+   "toTable": "projects",
+   "card": "*—1",
+   "verb": "project",
+   "derived": "fk"
+  },
+  {
+   "from": "transmission_refs",
+   "to": "transmission",
+   "fromTable": "transmission_refs",
+   "toTable": "transmission",
+   "card": "*—1",
+   "verb": "tid",
+   "derived": "fk"
+  }
+ ],
+ "architecture": {
+  "summary": "sharingu is Agent R (QA78C4808) — engine/ is the whole product: a served console + a REST/MCP door (107 REST routes · 47 MCP tools, contracts/door.json), one Cloudflare Worker per org with its own D1 (15 tables, 38 migrations), R2 brain bucket and KV (M-ADR-094/013/027: org = hard-walled worker, project = soft scope inside it). ONE org worker is deployed today — ryuklabs-agent-r (engine/wrangler.jsonc; QC74D4892) — with its projects inside it as data; a new org gets its own worker from engine/wrangler.tenant.template.jsonc (tools/new-org.sh). There is no L agent: orchestrator/ is this repo's own native agentic SDLC (the crew files in .claude/agents/, the lane workflow, the land door, the gates, the run record), used only to build sharingu (QF281329F) — no org, user or stranger needs it, and no manifest is sent to orgs. It reaches R through one seam: contracts/door.json, GENERATED from R's own registries by engine/tools/make-door-contract.py — read, never R's source. GitHub (ryukdev/sharingu) hosts both lanes; CI is LOCAL (Q02FA9104): the land door runs the gates on the exact sha.",
+  "diagram": {
+   "width": 680,
+   "height": 420,
+   "groups": [
+    {
+     "id": "cloudflare",
+     "label": "Cloudflare — one Worker per org (deployed today: ryuklabs-agent-r)",
+     "x": 30,
+     "y": 30,
+     "w": 620,
+     "h": 160,
+     "labelX": 46,
+     "labelY": 46
+    },
+    {
+     "id": "machine",
+     "label": "This repo's own build machine — the native SDLC, builds sharingu only (QA78C4808)",
+     "x": 30,
+     "y": 220,
+     "w": 620,
+     "h": 160,
+     "labelX": 46,
+     "labelY": 236
+    }
+   ],
+   "nodes": [
+    {
+     "id": "browser",
+     "kind": "client",
+     "title": "Browser / Claude Code (MCP)",
+     "sub": "a reader on glass, or an MCP client",
+     "x": 50,
+     "y": 60,
+     "w": 200,
+     "h": 50
+    },
+    {
+     "id": "worker",
+     "kind": "worker",
+     "service": "cloudflare",
+     "title": "Agent R worker",
+     "sub": "engine/src/index.js — 107 REST + 47 MCP",
+     "x": 280,
+     "y": 60,
+     "w": 200,
+     "h": 50
+    },
+    {
+     "id": "d1",
+     "kind": "data",
+     "service": "cloudflare",
+     "title": "D1",
+     "sub": "ryuklabs-agent-r — 15 tables (boot.sql)",
+     "x": 60,
+     "y": 140,
+     "w": 150,
+     "h": 40
+    },
+    {
+     "id": "r2",
+     "kind": "data",
+     "service": "cloudflare",
+     "title": "R2",
+     "sub": "ryuklabs-brain — brain objects (serve/lib/, serve/state/, …)",
+     "x": 230,
+     "y": 140,
+     "w": 150,
+     "h": 40
+    },
+    {
+     "id": "kv",
+     "kind": "data",
+     "service": "cloudflare",
+     "title": "KV",
+     "sub": "OAUTH_KV, bound and read by no code (the SSO nonce left with the launcher, Q6FA72180)",
+     "x": 400,
+     "y": 140,
+     "w": 150,
+     "h": 40
+    },
+    {
+     "id": "contract",
+     "kind": "seam",
+     "title": "contracts/door.json",
+     "sub": "the one file both lanes read",
+     "x": 490,
+     "y": 60,
+     "w": 160,
+     "h": 50
+    },
+    {
+     "id": "landdoor",
+     "kind": "local",
+     "title": "the land door",
+     "sub": "bin/sharingu land — local gates on the exact sha",
+     "x": 60,
+     "y": 260,
+     "w": 200,
+     "h": 50
+    },
+    {
+     "id": "orchestrator-l",
+     "kind": "local",
+     "title": "The native SDLC",
+     "sub": "orchestrator/ · .claude/agents · the lane workflow",
+     "x": 300,
+     "y": 260,
+     "w": 200,
+     "h": 50
+    },
+    {
+     "id": "github",
+     "kind": "external",
+     "service": "github",
+     "title": "GitHub",
+     "sub": "ryukdev/sharingu — PRs; CI is local (Q02FA9104)",
+     "x": 500,
+     "y": 260,
+     "w": 150,
+     "h": 50
+    }
+   ],
+   "edges": [
+    {
+     "d": "browser->worker",
+     "label": "HTTPS — page or /mcp"
+    },
+    {
+     "d": "worker->d1",
+     "label": "reads/writes"
+    },
+    {
+     "d": "worker->r2",
+     "label": "reads/writes"
+    },
+    {
+     "d": "worker->kv",
+     "label": "bound, unread"
+    },
+    {
+     "d": "worker->contract",
+     "label": "GENERATES (make-door-contract.py)"
+    },
+    {
+     "d": "orchestrator-l->contract",
+     "label": "READS (never parses index.js)"
+    },
+    {
+     "d": "orchestrator-l->landdoor",
+     "label": "lands through"
+    },
+    {
+     "d": "landdoor->github",
+     "label": "merges the verified sha"
+    }
+   ]
+  },
+  "crossing": [
+   {
+    "rule": "A person crosses between the projects inside the org only where they hold a seat, with the one key the org gave them: a project is a soft scope, not a wall.",
+    "because": [
+     "QC74D4892",
+     "Q60A19A32"
+    ]
+   },
+   {
+    "rule": "Only the contract crosses lanes: this repo's build scripts read contracts/door.json, generated from the worker's own registries, and never the engine's source.",
+    "because": [
+     "Q60A19A32",
+     "QA78C4808"
+    ]
+   },
+   {
+    "rule": "Nothing crosses between orgs: a second org is a second worker with its own D1, R2 brain and KV, and no tenant data, brain row, ledger line, secret, meeting content or broadcast item leaves its org.",
+    "because": [
+     "Q60A19A32",
+     "QC74D4892"
+    ]
+   }
+  ]
+ }
+}

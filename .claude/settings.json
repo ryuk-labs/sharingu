@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(sh tools/smoke.sh:*)",
+      "Bash(sh engine/tools/smoke.sh:*)",
+      "Bash(sh tools/r-local.sh:*)",
+      "Bash(sh engine/tools/r-local.sh:*)"
+    ]
+  }
+}

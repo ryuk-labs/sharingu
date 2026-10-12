@@ -1,0 +1,224 @@
+# HANDOFF — where sharingu stands (rewritten at every stop; git holds the history)
+
+**As of 2026-10-12: sprint 14 is LIVE (shipped 2026-10-12). Next: the live reviewer world is refreshed, then the owner
+submits to the stores (M4).**
+
+This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
+and must not trust its own memory over this file. Read, in order: `README.md` (the model, how we work) → this file →
+`PLATFORM.md` (the road; §3 is THE one list of open items) → `AGENTS.md` at the repo root (the process, the commands,
+the laws). `SPRINTS.md` holds every slice's record; `MARKETPLACE.md` the store road; `listing/SUBMISSION.md` the forms.
+
+## RESUME HERE — the order of work
+
+**0 · Orient (five minutes, read-only).** From the repo root: `git branch --show-current` (expect `sprint-14`),
+`git log --oneline -4`, `git status --short` (expect clean), `uptime` (load under 8 before anything heavy). Then tell
+the owner where things stand in two lines and ask for the step-1 ship OK (an MCQ, with the order drawn first).
+
+**1 · Ship sprint 14 — DONE 2026-10-12** (`64aad029` at 100%; the steps below are the ship's recipe for the next one). What it ships: four tool descriptions that
+said "call this first" now say when a tool is useful (`whoami`, `updates`, `missing`, `impact`: the stores' reviewers
+reject descriptions that instruct the model), the plugin manifest's `displayName` and `repository` (plugin 0.1.11), and
+the kit's gaps in `listing/SUBMISSION.md`. No migration. Proofs on the branch: every selftest, smoke 327/327, the gate,
+evals 42/42, sims 10/10, tabs-verify 40/40 (on 5da011add); the follow-up description commit re-proved by smoke and gate.
+The ship, from the repo root, each step only when the one before is green:
+   1. `set -a; . ~/.sharingu/env-sharingu.sh; set +a` (in every shell that pushes, calls `gh` or touches live)
+   2. `git push -u origin sprint-14`, then `gh pr create --repo ryukdev/sharingu --base main --head sprint-14 …`
+      (body from a file), then `gh pr merge <n> --repo ryukdev/sharingu --merge`; check it merged BEFORE anything else
+      (`gh pr view <n> --json state`); then `git checkout main && git pull --ff-only`
+   3. from `engine/`: `sh tools/ship-plan.sh ryuklabs --no-import` must end "✓ the plan is complete" (the import hook
+      stays off: the projects' data is not on the road, and its measures are stale by design)
+   4. `sh tools/cf-budget.sh`, then `sh tools/ship.sh ryuklabs` in the background with its output to a log. It runs
+      30–60 min (the cross-org suite on the preview is the long, QUIET part). Watch the suite process's CPU time and
+      its socket, not the log (see Traps). It promotes 10% → canary → 100% or rolls back by itself.
+   5. after "✓ SHIPPED": the live walk and verify-live (both commands under Traps), then record the ship in
+      `SPRINTS.md` sprint 14 and in this file (the new version id, the rollback target), commit, push.
+
+**2 · Refresh the live reviewer world** (the owner's OK given 2026-10-12, "refresh now"; do it right after step 1, and
+always BEFORE any code goes into a store form: a later refresh resets every code and logs the reviewers out). From
+`engine/`, credentials sourced, codes NEVER on screen:
+   `umask 077; node tools/make-reviewer-org.mjs --url https://agent.sharingu.xyz --live --config wrangler.jsonc
+   --confirm-live ryuklabs-agent-r --reissue > ~/.sharingu/reviewer-credentials.new 2> .runs/reviewer-refresh.err`,
+   then check the new file holds 7 `code:` lines (count them, never print them) and move it over
+   `~/.sharingu/reviewer-credentials.txt` (mode 600). It writes about 18,000 rows to org 3 only (the fresh measure:
+   the dev-local run of 2026-10-12). Then walk `listing/test-cases.md`'s five positive and three negative cases on live,
+   each as the account it names. NO live walker exists (smoke case `s51` walks them on a local world only): either walk
+   them by hand through the browser as each account, or make `s51`'s walker take a `--url` and the codes file (a small
+   slice). Record what each case answered.
+
+**3 · The owner's, then M4.** In this order: (a) sync the public plugin repo `ryukdev/sharingu-plugin` to 0.1.11 (it
+is at 0.1.9; Claude's directory reads its `main`): the commands are step 10 of `sh tools/ship-plan.sh ryuklabs
+--no-import`; (b) connect `https://agent.sharingu.xyz/mcp` as a custom connector in Claude, run P1–P3, and check the
+Activity row of P1's filing reads "from Claude" (if it reads "another client", stop: the label needs a fix first);
+(c) for ChatGPT: store the portal's domain token (`node tools/operator.mjs set-openai-challenge --token <it> --live
+--config wrangler.jsonc --confirm-live ryuklabs-agent-r`), record the ChatGPT demo video and put its URL in
+`listing/codex-listing.json` as `demoRecordingURL`, then regenerate (`node tools/make-plugin-skills.mjs`) and build the
+ZIP (`--openai-zip <out.zip>`); (d) upload the four videos as unlisted YouTube links (`listing/videos/`, also copied to
+`~/Desktop/sharingu-videos/`); (e) submit from `listing/SUBMISSION.md`: the Claude connector, the Claude plugin, the
+ChatGPT plugin. The stores' pages were re-read on 2026-10-12; re-read them again on the day (sources at the foot of
+`MARKETPLACE.md`).
+
+**4 · After M4:** M5 (answer reviewers, launch). The platform's hardening rows still marked S9 in `PLATFORM.md` §3 are
+the owner's to open; any time: the beta invites, the allowed emails, the go for the first outside org.
+
+## State (2026-10-12)
+
+- **Live: sprint 14.** Worker `64aad029-1ff5-4ebb-8d7f-187ae9e2087c` (tag `993b1f64e`) at 100% on
+  https://agent.sharingu.xyz and https://agent.ryuklabs.io; D1 `ryuklabs-agent-r` at migrate-080 (no migration in 14).
+  Undo: `sh engine/tools/ship.sh rollback e5dfd3c4-a4a2-401a-8bad-2aae0a92fd54` (code). The 080 Time Travel bookmark
+  `00000ff3-00000000-00005101-2e32cfba286f19c2f08dd49dfd1c265d` (data; it restores EVERY org). Proofs: cross-org 10,332
+  calls, 0 rows across; the walk 13/13 on the preview and on live; verify-live 28/28.
+- **The repo:** `main` = sprint 13 shipped plus the videos and the retakes (45d3ef180). `sprint-14` = its three slices
+  (5da011add) plus the description follow-up, not yet merged. `engine/.runs/` is machine-local (gitignored): the ship
+  logs, the video recorder (`engine/.runs/b12-videos/`: `record.mjs`, `compose-take.sh`, `sweep-take.sh`, `join.sh`).
+- **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at f3580e6, the privacy
+  page naming which AI filed a contribution. Its tools page matches the engine's contract (`npm run check:mcp-tools`).
+- **The plugin:** this tree 0.1.11 (`claude plugin validate --strict ./plugin` passes); the public dist repo 0.1.9.
+- **The live reviewer world:** org 3 at `/sharingu-review`, seven active seats (admin, member, dev, bd, marketing,
+  tester, partner), the sharingu and Sample projects; its sharingu data from 2026-10-10 (refreshed in step 2). The codes
+  live only in `~/.sharingu/reviewer-credentials.txt` (mode 600).
+- **The listing kit:** `listing/SUBMISSION.md` (every form's fields, the release notes, allowed link URIs),
+  `listing/test-cases.md` (5 + 3), `listing/carousel/` (four card PNGs, retaken 2026-10-12), `listing/icon/`,
+  `listing/videos/` (four walkthroughs: 63 s, 55 s, 56 s, 53 s, H.264 1280×800, captions only).
+- **Both domains are in `engine/wrangler.jsonc`** (`routes`): the ship's triggers deploy detaches any Custom Domain
+  not listed there; never attach one by hand alone.
+- **Beta is green** (`BETA.md`). Active people on live: Acie, Dr Vasu, Rein, Tyag, Ryuk, Agent Ops; every test seat is
+  inactive or in the suites' org.
+- **The Cloudflare token** in `~/.sharingu/env-sharingu.sh` is ACCOUNT-scoped: its token-verify endpoint calls it
+  invalid (it only verifies user tokens); wrangler and the account APIs work.
+
+## Traps a session must know (each learned the hard way; none is in a session's memory)
+
+**Ships**
+- The cross-org suite on the preview runs 50 minutes to almost 3 hours with a QUIET log. A quiet log is not a stall:
+  check the `attack-xorg.mjs` process's CPU time moves and it holds an ESTABLISHED socket. Arm any watchdog on that, not
+  on the log's age. `ship.sh` prints "✓ live: <id> at 100% (the rollback target)" at its START: that is not the end.
+- A dirty tracked file under `engine/` makes the run record non-resumable and tags the version `-dirty`: commit first.
+- `gh pr merge` can hit a "base modified" race: never chain a branch delete after it; check the state first.
+- A ship window crossing 03:00 or 15:00 UTC meets the cron's backup heartbeat (the suite excludes its exact shape;
+  never widen that).
+- After the triggers deploy, this Mini's resolver may cache a negative answer for agent.sharingu.xyz for about two
+  minutes (curl rc 6): test with a resolver override before calling it an outage.
+- The live walk needs a credentials FILE with an `*_AGENT_R_OWNER_KEY=` line, which `env-sharingu.sh` does not have.
+  Make a throwaway one and delete it after: `umask 077; f=~/.sharingu/tmp/walk-$$.env; printf
+  'RYUKLABS_AGENT_R_OWNER_KEY=%s\n' "$SHARINGU_RYUKLABS_ADMIN_KEY" > $f; node tools/live-walk.mjs --url
+  https://agent.ryuklabs.io --creds $f --live --operator-config wrangler.jsonc --confirm-live ryuklabs-agent-r; rm -f $f`.
+  Then `sh tools/verify-live.sh --live`: if it SKIPs its authenticated checks on a transient Cloudflare read, run it
+  again; 13/13 is not 28/28.
+
+**Secrets and codes**
+- Any tool that prints codes "once, on this terminal" prints them into the session's transcript: always redirect its
+  stdout to a mode-600 file and count lines; never `cat` it. Never print a key, a code or a token.
+
+**Local worlds**
+- A STANDING local world (dev-local, a reviewer world) misses migrations a newer code expects: after a ship with a
+  migration, apply it by hand (`npx wrangler d1 execute <db> --local --config <its wrangler.local.jsonc> --persist-to
+  <its persist> --file migrate-0NN.sql`) before `dev-local.sh up` (a `PLATFORM.md` §3 row will automate it).
+
+**Videos and screens**
+- Claude can NEVER be granted computer-use control of Claude's own app (a platform rule): a Claude Desktop take is the
+  owner's to record; the session cuts it.
+- A macOS screen recording is variable-frame-rate: seeking into it lands 1–5 s off, unevenly. Transcode to constant
+  25 fps with a keyframe every second BEFORE pinning any cut (`ffmpeg -i in.mov -vf fps=25 -g 25 -keyint_min 25
+  out.mp4`), pin cuts on that copy, then sweep EVERY half second of what is kept (a 2 s sweep once let a local link show
+  for 1.5 s). Its file name has a narrow no-break space before AM/PM: copy it by glob. This ffmpeg has no `drawtext`:
+  captions are rendered as PNGs (`engine/.runs/b12-videos/captions.mjs`).
+- A filing through `mcp-remote` (Claude Desktop's config bridge) reads "from another client" (a `PLATFORM.md` §3 row).
+
+**The shell and the harness**
+- The Bash tool's shell is zsh: an unquoted `$VAR` is not word-split, an unmatched glob is an error, and `sh -c '…'`
+  holding `rm` trips the harness's safety check. Put multi-step scripts in a file and run the file.
+- Gate a heavy run on load INSIDE its own command (`[ load -lt 8 ] || exit`); printing `uptime` is not a check.
+  bunny's simulator runs spike the load in waves: wait, never skip.
+
+## The direction (owner)
+
+Beta is green and the ryuklabs team uses live: keep live stable for real users. sharingu is a hosted platform (one
+worker and one database for every org) with a Claude plugin; the marketplace listings are the main aim now. Every
+change rides the same process: one sprint branch, vertical slices, a smoke per slice, one review and ONE ship at sprint
+end with the owner's OK. Clean all the way: no dead code, no dead docs; a finished brief is deleted.
+
+## Ruled by the owner (the ones a builder must know)
+
+- The MCP is the only input; every write is previewed, then filed; the word is "contribution".
+- Screens are optional for work that touches no screen; ids are checked against the project's own Map; proof is a
+  stated result with its numbers, a command with its result, or a link — only narration is refused.
+- A plan or note feeds the goal it names and moves no code cell. Goals and GTM open on all time.
+- A new picture of a screen does not make its grades stale.
+- Anyone seated may publish their own draft to the shelf; a Partner may not.
+- **The projects' data (2026-10-02):** ryuklabs' private data (client names with amounts, funding details) is stripped,
+  on live too, and it holds no product model by design; siru's aim is its proposed mission, its tree's top the
+  Thiruvallur pilot, its measure the pharmacies with doors open in that pilot; bunny's measure is the ask → TestFlight
+  lead time per week; saruspay's the go-live checklist items done, of 61; sharingu's is activated organisations;
+  Siru, FlowZo and Redacted/TOKEN2049 are approved claims with their boundaries. The projects' data is not on the
+  platform road (2026-10-06).
+- **PROPRIETARY (MCQ 2026-10-09; overturns the 2026-10-05 MIT release):** © Ryuk Labs, all rights reserved; the
+  engine's repo stays private for good; the beta is hosted-only (`docs/BETA-NOTE.md`: no SLA, feedback asked); the
+  plugin installs free from its own public distribution repo `ryukdev/sharingu-plugin`, the service is the priced
+  product (the plans; prices at billing time).
+- **The platform (2026-10-06; the whole design in `PLATFORM.md` §2):** one worker and one database for every org;
+  the wall is org-carrying project keys; what happens in an org stays in the org (no staff seat in the app; only the
+  deployment credentials reach the data); each org at `agent.sharingu.xyz/<org>`, the AI at the one `/mcp`; sign-up
+  by an allowlist and a one-time code handed over by hand (no email service); payment after the beta succeeds.
+- **The suites' cut stands (2026-10-03):** the 80 cases plus the restored proofs; `R-suites-keep-set-review` is the
+  owner's ruling.
+- **Links, ids, invites and limits (2026-10-06, by MCQ):** a public file's link stays readable from any org (ADR-055
+  holds — the wall is the allowlisted sign-up) and contribution ids stay numbered across the database; ONE revisit of
+  both together before sign-up opens to everyone. The free tier: 1,500 items a month and 1,000 calls a day; raising
+  by hand on request is the paid plan during the beta.
+- **The beta-ops grant (2026-10-06):** for the beta the session drives ryuklabs org admin itself as the owner-class
+  service seat `agent-ops` (attribution and `approval_audit` show Agent Ops, never the owner). The key is machine-local
+  (`SHARINGU_RYUKLABS_ADMIN_KEY` in `~/.sharingu/env-sharingu.sh`; the wrapper `~/.sharingu/rl-admin.sh` sources it,
+  never printing). The surface: people, seats, open items, clean-eval through Control and the door, plus the bookmarked
+  SQL path for what Control lacks. Ships, schema migrations, money and other orgs still ask the owner. RETIRE AT THE
+  BETA'S END: archive `agent-ops` on Control, drop the env line, remove the allow rules.
+- **Frictionless start (MCQ 2026-10-10):** the beta's 50 orgs (first come, first served) stay on the WAITLIST, the
+  owner approving each; the GTM filing skill files summaries and links only, never raw mail or DM text, each item
+  previewed. A seventh hat, Quality, joins the six of 2026-10-01; the showcase world seats each class of an org.
+- **Which AI filed it (MCQ 2026-10-11):** each contribution stores one self-declared family word (claude,
+  claude-code, chatgpt, codex, web, api, other), never the raw string; the privacy page says so.
+- **Submission prep (MCQ 2026-10-12):** refresh the live reviewer world now, before any code goes into a form; the
+  videos become unlisted YouTube links, uploaded by the owner after the submissions are prepared; descriptions that
+  told the model what to call first are softened before submitting (sprint 14).
+
+## How the owner works
+
+- Decisions go to the owner as MCQs, with an inline drawing first, the recommended option first, each with its cost.
+  They decide fast, often correct the recommendation, and are usually right. They dislike bulk: keep prose tight.
+- They want to SEE the work: shots after every slice, and they judge the product by how it looks (`LOOK.md`).
+- Ask only for what is theirs (a ship or anything live, money, access design, scope they ruled on, anything
+  irreversible); fold everything else into the plan and carry on.
+- A ship needs their OK each time. Never print a secret.
+- They may switch Claude accounts mid-work: keep this file current at every stop so the next session resumes cold.
+
+## How builders are run
+
+- Opus sub-agents. One on the door files; others only on disjoint files, each from a frozen copy of the code when it
+  needs a running worker. A brief names: what to read, the rulings it implements, what to build, the files it owns
+  and must not touch, its ports, the non-negotiables (no widening of authority, nothing per org or project, the row
+  budget, and from sprint 6 every statement through the scoped data layer), the tests that follow the code, the proof
+  commands, how it must look at its own work, what to report. Builders never commit.
+- **Integrating a builder's work** (from `engine/`): `node --check` every `src/*.js src/knowledge/*.js` ·
+  `python3 tools/make-door-contract.py` · `python3 check-mcp-parity.py` · `python3 check-brand.py` ·
+  `python3 tools/code-atlas.py > code-atlas.json` · `python3 tools/check-boot-schema.py` ·
+  `python3 tools/check-docs.py` · `node tools/make-arch-client.mjs --check` · every `tools/*selftest*.mjs` and
+  `tools/import/selftest.mjs` (`mcp-client-selftest.mjs` needs a running worker: skip it in a bare run) ·
+  `sh tools/smoke.sh` (load under 8) · read the authority-relevant diff and the shots · commit only that builder's
+  files · `sh gate.sh` · the shots to the owner.
+- A builder's "green" is a claim; a screenshot is not a signed-in user (`shots.mjs --cookie`); rows written are
+  counted, never estimated.
+
+Rules that remove ambiguity: a fork that is not the owner's is decided by the plan's laws (one product, nothing per org
+or project, no widening of authority, the per-screen row budget) and recorded in `SPRINTS.md`; a builder cut off resumes
+from its `engine/.runs/<name>/PROGRESS.md`; a migration takes the next free number at integration time; no full suite
+outside a sprint end; load over 8 means wait, never skip the check.
+
+## The machine
+
+A shared Mac Mini (`ryuks-mac-mini`): other projects (bunny, siru, veil) run here — never touch their processes or
+folders. One heavy suite at a time, only when load is under 8. Local workers take ports 88xx: 8840 the ship candidate,
+8850–8879 builders, 8880–8899 smokes, 8930–8939 video worlds. Commit as the checkout's own git identity (plain
+`git commit`, never `-c user.name`). Credentials: `set -a; . ~/.sharingu/env-sharingu.sh; set +a` (never print a
+value). `gh` is logged in as an account that cannot see `ryukdev/sharingu`: run every `gh …` with those credentials
+sourced (its `GH_TOKEN` is the project's own). The site's pushes go through its own wrapper
+(`python3 scripts/with-env.py git push origin main` in `~/batcave_vm/sharingu_website`; its pre-push hook runs the
+full verify). Browser automation uses Playwright's bundled Chromium or the pinned Chrome for Testing, never the owner's
+Chrome.
