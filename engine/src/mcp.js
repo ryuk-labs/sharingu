@@ -186,8 +186,9 @@ export function hasWriteScope(person) {
 // annotationsOf(row) -> the tool's MCP annotations (the spec's ToolAnnotations), DERIVED from its registry row so the two
 // cannot disagree (tools/annotations-selftest.mjs): readOnlyHint is "changes nothing" — no write flag and no `stores` (preview
 // keeps its plan for an hour); destructiveHint, idempotentHint and openWorldHint are the row's own flags (a write that can
-// replace, remove or overrule what is held is destructive; one whose repeat has no further effect is idempotent; wrap_up may
-// open a GitHub issue, the one open-world call). A read is idempotent and never destructive. title is the row's title.
+// replace, remove or overrule what is held, a check's grade included, is destructive, one that only adds is not; one whose
+// repeat has no further effect is idempotent; wrap_up may open a GitHub issue, the one open-world call). A read is
+// idempotent and never destructive. title is the row's title.
 export function annotationsOf(t) {
   const readOnly = !t.write && !t.stores;
   return { title: t.title, readOnlyHint: readOnly, destructiveHint: readOnly ? false : !!t.destructive,

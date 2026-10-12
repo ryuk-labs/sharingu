@@ -1,6 +1,6 @@
 {
   "name": "sharingu",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Your tools. One company brain. A universal harness connecting contributions, decisions and goals through MCP, with humans in charge.",
   "author": {
     "name": "Ryuk Labs",
@@ -72,9 +72,9 @@
             },
             {
               "description": "The confirm: nothing is filed until you say yes (as the admin account)",
-              "prompt": "1) In the Sample project, add a goal 'A reviewer goal' under the goal 'Every contribution closes the loop', and file it only after I confirm. 2) Decline. 3) Read the goal 'A reviewer goal'. 4) Ask again and accept.",
-              "tools_triggered": "preview, read",
-              "expected_behavior": "1) Your client asks you to confirm, showing what would be filed (a client without confirm prompts answers that you were not asked, and files nothing). 2) \"The person declined: nothing was filed.\" 3) There is no such goal (not_found). 4) The goal is filed; it reads back under its parent, and the Goals tab shows it."
+              "prompt": "1) In the Sample project, add a goal 'A reviewer goal' under the goal 'Every contribution closes the loop', and file it only after I confirm. 2) Decline (or, where you were not asked, do not file). 3) Read the goal 'A reviewer goal'. 4) Ask again and accept (or, where you were not asked, say \"File it.\": the file tool).",
+              "tools_triggered": "preview, read, file",
+              "expected_behavior": "1) Either your client asks you to confirm, showing what would be filed, or (a client that shows no confirm prompt) sharingu answers that you were not asked, shows the preview's text and files nothing. 2) \"The person declined: nothing was filed.\" where you were asked; nothing filed either way. 3) There is no such goal (not_found). 4) The goal is filed; it reads back under its parent, and the Goals tab shows it."
             },
             {
               "description": "A partner works only where it is seated (as the partner account)",
@@ -101,6 +101,9 @@
             }
           ]
         }
+      },
+      "publication": {
+        "release_notes": "First public release of sharingu for ChatGPT. One MCP server (https://agent.sharingu.xyz/mcp, OAuth with dynamic client registration) and 19 skills. Read a project's goals, decisions, open questions, docs and map; preview every write before it lands and file it only on confirmation; questions go to the person who owns the decision. Each contribution records which AI tool filed it, as the tool names itself. Hosted beta: an account comes with a one-time sign-up code from the operator."
       }
     }
   }

@@ -22,7 +22,7 @@ sample project). `--reissue` replaces them.
 | Support | https://www.sharingu.xyz/support.html · acie@ryuklabs.io |
 | Company | Ryuk Labs · https://www.sharingu.xyz · contact acie@ryuklabs.io |
 | Icon | `listing/icon/` (64 × 64 under 5 KB, and 128, 256, 512; from the site's favicon) |
-| Reads or writes | Both: 18 read-only tools, 17 write tools, each with a title and its annotation |
+| Reads or writes | Both: 18 read-only tools and 17 writes; 11 of the writes are destructive (`create_project`, `decide_contribution`, `equip`, `file`, `open_items`, `pick_up`, `regrade`, `respond`, `restore_version`, `rule_question`, `submit_grade`), the other 6 only add; each tool has a title and its three hints (their reasons: the ChatGPT section) |
 | Prerequisites | A sharingu account (the beta is by invitation: the operator hands a one-time sign-up code) and an org |
 
 **Description (≤ 2,000):**
@@ -75,6 +75,9 @@ the call that fills it), then `preview` and `file`.
 
 ## Claude · the plugin (claude.ai/directory/manage → Submit new → Plugin bundle)
 
+**Before submitting, locally:** `claude plugin validate --strict ./plugin` from the repo root, exit 0 (the same manifest
+and files the form's Validate reads).
+
 1. **Source:** repository ryuk-labs/sharingu-plugin, plugin path `plugin`, branch `main` (public; GitHub connected on
    claude.ai with push access). **Validate**; it reads the manifest (`plugin/.claude-plugin/plugin.json`), the README (≥ 40 words) and the license
    (`Proprietary`, the `LICENSE` file).
@@ -84,24 +87,83 @@ the call that fills it), then `preview` and `file`.
    people under 18.
 4. **Compliance:** the contact email (acie@ryuklabs.io) and the four acknowledgements.
 5. **Review and submit:** keep the GitHub push webhook (it needs admin on the repo); the directory follows `main`.
-   Submit the connector as well (above): the plugin points at it.
+   **Auto-publish passing versions:** leave it OFF for the first submission (the kit's advice): each version is then
+   reviewed by hand before it reaches users, and a push to `main` publishes nothing on its own. Turn it on later, once a
+   few versions have passed review. Submit the connector as well (above): the plugin points at it.
 
 ## ChatGPT · the plugin with its MCP server (OpenAI platform → Apps)
 
 1. **The package:** the ZIP that `node engine/tools/make-plugin-skills.mjs --openai-zip <out.zip>` builds (it refuses when
    the plugin is stale or a file holds a credential): the Codex manifest `plugin/.codex-plugin/plugin.json`, `plugin/.mcp.json`
-   (the one server, no header; OAuth with dynamic client registration found by discovery), the skills, the logo and
+   (the one server, no header; the ZIP's copy alone adds OpenAI's `extensions["com.openai"].auth`
+   `{ "type": "oauth", "client": { "mode": "dcr" } }`, its registration endpoint found by discovery), the skills, the logo and
    composer icon (`plugin/assets/`, from `listing/icon/`), LICENSE and README. The manifest is GENERATED with the skills:
    its identity is the Claude manifest's, its `interface` listing `listing/codex-listing.json`'s facts plus this file's
-   description and four URLs, its review block the five positive and three negative cases of `listing/test-cases.md`.
+   description and four URLs, its review block the five positive and three negative cases of `listing/test-cases.md`,
+   its `publication.release_notes` the release notes below (item 4).
+   **Developer identity:** on upload, choose the verified business identity **Ryuk Labs** (not an individual): the
+   directory shows the name of the identity chosen, and the manifest's `developerName` is the same.
 2. **Not ready to submit** until: the domain verification answer at
-   `https://agent.sharingu.xyz/.well-known/openai-apps-challenge` (live once sprint 11 ships; the operator stores the portal's
+   `https://agent.sharingu.xyz/.well-known/openai-apps-challenge` (live since sprint 11; the operator stores the portal's
    token: `node tools/operator.mjs set-openai-challenge --token <the portal's token> --live --config wrangler.jsonc
    --confirm-live ryuklabs-agent-r` from `engine/`, then the portal's Verify), and a demo video
    of the test cases at a URL reviewers can open (the owner's: add it to `listing/codex-listing.json` as
-   `demoRecordingURL`, then regenerate). Reviewer access goes in the dashboard, never in the ZIP; reviewer sign-in works
-   without MFA or email codes (an email and its code), as the store asks.
-3. **Release notes** (the review form asks for them; paste):
+   `demoRecordingURL`, then regenerate). The store asks that it show the main use cases and tools "across supported
+   platforms": record the test cases in ChatGPT on desktop AND on mobile (the ChatGPT app), in the one video.
+   Reviewer access goes in the dashboard, never in the ZIP; reviewer sign-in works without MFA or email codes (an email
+   and its code), as the store asks.
+3. **Tool annotations:** the portal reads each tool and its three hints from its scan of the live server, and the final
+   submission asks "a justification for each value on every MCP tool" (the submission-errors page; the guidelines also say
+   justifications "are no longer required", and an automated finding can be appealed). No field of the ZIP carries one, so
+   paste each reason from the table below where the portal asks. It is GENERATED from `contracts/door.json` by
+   `node engine/tools/make-plugin-skills.mjs` (one sentence per hint, by rule; `--check` is red when it drifts).
+
+<!-- BEGIN GENERATED by engine/tools/make-plugin-skills.mjs from contracts/door.json: each tool's three hints and their reasons. Do not edit by hand. -->
+
+35 tools: 18 read-only, 17 writes (11 destructive, 6 that only add), 1 open-world (`wrap_up`).
+
+| Tool | readOnlyHint | destructiveHint | openWorldHint |
+|---|---|---|---|
+| `ask` | false: it keeps state on sharingu, so it is not read-only: it asks the owner a question in a sentence or two. | false: it only adds to the org's record and changes nothing already there. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `brief` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `broadcast` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `build` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `changes` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `create_project` | false: it keeps state on sharingu, so it is not read-only: it creates a project, or makes an archived one active again, and answers its first checklist items with their calls. | true: it can change what is already in the org's record: it creates a project, or makes an archived one active again, and answers its first checklist items with their calls. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `decide_contribution` | false: it keeps state on sharingu, so it is not read-only: it decides a contribution that waits for the owner. | true: it can change what is already in the org's record: it decides a contribution that waits for the owner. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `decisions` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `equip` | false: it keeps state on sharingu, so it is not read-only: it equips a shelf item into a project at version v, or updates it to that version. | true: it can change what is already in the org's record: it equips a shelf item into a project at version v, or updates it to that version. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `file` | false: it keeps state on sharingu, so it is not read-only: it files what a preview showed. | true: it can change what is already in the org's record: it files what a preview showed. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `formats` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `goals` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `gtm` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `home` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `impact` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `map` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `missing` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `open_items` | false: it keeps state on sharingu, so it is not read-only: it opens an open item or closes one, and answers your open items. | true: it can change what is already in the org's record: it opens an open item or closes one, and answers your open items. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `pick_up` | false: it keeps state on sharingu, so it is not read-only: it takes a contribution's next action. | true: it can change what is already in the org's record: it takes a contribution's next action. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `preview` | false: it keeps state on sharingu, so it is not read-only: it shows what would be filed before anything is. | false: it only adds to the org's record and changes nothing already there. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `publish` | false: it keeps state on sharingu, so it is not read-only: it publishes one of your own drafts to the org's shelf as its next version. | false: it only adds to the org's record and changes nothing already there. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `publish_version` | false: it keeps state on sharingu, so it is not read-only: it keeps a snapshot of the project's whole knowledge as version n+1, with a title that says why it exists. | false: it only adds to the org's record and changes nothing already there. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `read` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `read_file` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `regrade` | false: it keeps state on sharingu, so it is not read-only: it regrades the stale or ungraded checks of one flow, node or list of checks. | true: it can change what is already in the org's record: it regrades the stale or ungraded checks of one flow, node or list of checks. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `respond` | false: it keeps state on sharingu, so it is not read-only: it answers an open question with one of its options. | true: it can change what is already in the org's record: it answers an open question with one of its options. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `restore_version` | false: it keeps state on sharingu, so it is not read-only: it makes the project's knowledge that version's on every screen. | true: it can change what is already in the org's record: it makes the project's knowledge that version's on every screen. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `rule_question` | false: it keeps state on sharingu, so it is not read-only: it rules an open question. | true: it can change what is already in the org's record: it rules an open question. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `save_file` | false: it keeps state on sharingu, so it is not read-only: it saves a document or an HTML dump and answers its id and a link you can cite. | false: it only adds to the org's record and changes nothing already there. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `search` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `submit_grade` | false: it keeps state on sharingu, so it is not read-only: it grades one check. | true: it can change what is already in the org's record: it grades one check. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `updates` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `versions` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `whoami` | true: it only reads what the signed-in account may see, and writes nothing. | false: it only reads, so it removes or overwrites nothing. | false: it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace. |
+| `wrap_up` | false: it keeps state on sharingu, so it is not read-only: it hands over at a session's end. | false: it only adds to the org's record and changes nothing already there. | true: it can reach beyond sharingu: what it hands over may also go to a service the org has linked. |
+
+<!-- END the generated annotations -->
+
+4. **Release notes** (the manifest carries them as `publication.release_notes`, so the review form imports them; the
+   generator reads them from here):
 
    > First public release of sharingu for ChatGPT. One MCP server (`https://agent.sharingu.xyz/mcp`, OAuth with dynamic
    > client registration) and 19 skills. Read a project's goals, decisions, open questions, docs and map; preview every
@@ -132,6 +194,7 @@ project (its goals, decisions, map and docs) and a small Sample project.
 The Sample project holds the Pilot Shop walkthrough (a made-up shop): every Map layer, and one request's loop on its goal,
 each step filed by the account that does it (`listing/test-cases.md`).
 
-To connect: add `https://agent.sharingu.xyz/mcp` as a custom connector, press Connect, and sign in on sharingu's page
-with an account's email and its code (the code is the passphrase). No header or key goes in the client. The test
+To connect: add `https://agent.sharingu.xyz/mcp` as a custom connector (Claude) or a custom MCP server with OAuth
+(ChatGPT: Plugins, the plus button, Add custom MCP server), press Connect, and sign in on sharingu's page with an
+account's email and its code (the code is the passphrase). No header or key goes in the client. The test
 cases, step by step: `listing/test-cases.md` (paste its text).

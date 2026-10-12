@@ -16,6 +16,10 @@
 //        .claude-plugin/ or .DS_Store); refused, nothing written: a red --check, a .git, an env file, a forbidden key, a
 //        secret-shaped string, a non-text non-PNG file, no .zip name
 //   X7 · the command line: --check 0 on this tree; --openai-zip into a temp dir 0 with 25 files (six plus the 19 skills)
+//   X8 · the annotations' reasons (16.2): SUBMISSION.md's row and block are what contracts/door.json makes, one reason per hint
+//        per tool by rule (the two graders destructive); a hand edit, a moved hint or a lost marker is red; writePlugin rewrites
+//        them; the release notes are SUBMISSION.md's and reach publication.release_notes; the ZIP's .mcp.json alone declares
+//        OAuth with dynamic client registration (plugin/.mcp.json as it was), and a bad auth declaration is red
 // node tools/plugin-codex-selftest.mjs [<the generator's path>] — exit 1 on any failure (the path: a mutant's, for the red run).
 import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync, cpSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -64,10 +68,11 @@ const PIN = {
     prompt: "1) In the Sample project, file a note in the leader lane: what 'A reviewer's first note', why 'the store's test case'. Preview it first. 2) File it. 3) Read that contribution. 4) In the browser, open Build.",
     tools_triggered: "preview, file, read",
     expected_behavior: "1) The preview (the preview tool) shows the one item, \"files at once\", and says nothing is filed yet. 2) The receipt (the file tool) with the contribution's id, T- and the date and a number, and its link. 3) What you filed, by Reviewer Member, in the Sample project. 4) The note is in the list." },
+  // P4 holds in a client with a confirm prompt (Claude) and in one without (16.2: OpenAI's docs do not say ChatGPT asks)
   P4: { description: "The confirm: nothing is filed until you say yes (as the admin account)",
-    prompt: "1) In the Sample project, add a goal 'A reviewer goal' under the goal 'Every contribution closes the loop', and file it only after I confirm. 2) Decline. 3) Read the goal 'A reviewer goal'. 4) Ask again and accept.",
-    tools_triggered: "preview, read",
-    expected_behavior: "1) Your client asks you to confirm, showing what would be filed (a client without confirm prompts answers that you were not asked, and files nothing). 2) \"The person declined: nothing was filed.\" 3) There is no such goal (not_found). 4) The goal is filed; it reads back under its parent, and the Goals tab shows it." },
+    prompt: "1) In the Sample project, add a goal 'A reviewer goal' under the goal 'Every contribution closes the loop', and file it only after I confirm. 2) Decline (or, where you were not asked, do not file). 3) Read the goal 'A reviewer goal'. 4) Ask again and accept (or, where you were not asked, say \"File it.\": the file tool).",
+    tools_triggered: "preview, read, file",
+    expected_behavior: "1) Either your client asks you to confirm, showing what would be filed, or (a client that shows no confirm prompt) sharingu answers that you were not asked, shows the preview's text and files nothing. 2) \"The person declined: nothing was filed.\" where you were asked; nothing filed either way. 3) There is no such goal (not_found). 4) The goal is filed; it reads back under its parent, and the Goals tab shows it." },
 };
 for (const [id, want] of Object.entries(PIN)) { const got = pos[Number(id[1]) - 1]; ok(JSON.stringify(got) === JSON.stringify(want), `${id} generated exactly: ${JSON.stringify(got)}`); }
 // OpenAI's negatives are prompts to the AI where the plugin should not act (not a sign-in); each says why, then the refusal or fallback
@@ -159,6 +164,11 @@ const mcpRed = [
   ["an http server", { mcpServers: { s: { type: "http", url: "http://a.invalid/mcp" } } }, /url is not https/],
   ["type none", { mcpServers: { s: { type: "none", url: "https://a.invalid/mcp" } } }, /is type none/],
 ];
+const authed = (auth) => ({ mcpServers: { s: { type: "http", url: "https://a.invalid/mcp", extensions: { "com.openai": { auth } } } } });
+mcpRed.push(["a dcr client with a clientId", authed({ type: "oauth", client: { mode: "dcr", clientId: "x" } }), /dcr client holds clientId/],
+  ["auth type none", authed({ type: "none" }), /auth is type none/], ["an unknown client mode", authed({ type: "oauth", client: { mode: "magic" } }), /client\.mode is not/],
+  ["an unknown auth type", authed({ type: "cookie" }), /auth\.type is not/]);
+ok(T.codexProblems(m, { tools, assets, mcp: T.zipMcpOf(mcp) }).length === 0, "the ZIP's own auth declaration is no problem");
 for (const [label, mj, want] of mcpRed) { const p = T.codexProblems(m, { tools, assets, mcp: mj }); ok(p.some((s) => want.test(s)), `.mcp.json ${label}: ${p.join("; ")}`); }
 ok(T.codexProblems(m, { tools, assets, mcp: { mcpServers: { s: { type: "http", url: "https://a.invalid/mcp", headers: {} } } } }).length === 0, "an EMPTY headers object is no problem (the guide rejects only a nonempty one)");
 const tiny = Buffer.from(assets.get("assets/logo.png")); tiny.writeUInt32BE(40, 16); tiny.writeUInt32BE(40, 20);
@@ -175,10 +185,12 @@ function world(name) {
   cpSync(T.PLUGIN_DIR, pluginDir, { recursive: true });
   const lock = join(d, "plugin-version.json"); cpSync(T.VERSION_LOCK, lock);
   const listing = join(d, "codex-listing.json"); cpSync(T.CODEX_SOURCES.listing, listing);
+  const submission = join(d, "SUBMISSION.md"); cpSync(T.CODEX_SOURCES.submission, submission);
+  const door = join(d, "door.json"); cpSync(T.CODEX_SOURCES.door, door);
   const manifest = join(pluginDir, ".claude-plugin", "plugin.json");
-  const sources = { listing, mcp: join(pluginDir, ".mcp.json") };
-  const check = () => T.checkSkills({ dir: join(pluginDir, "skills"), pluginDir, manifest, lock, codex: T.codexOf({ ...sources, manifest, version: T.manifestVersion(manifest) }) });
-  return { d, pluginDir, lock, listing, manifest, sources, check };
+  const sources = { listing, submission, door, mcp: join(pluginDir, ".mcp.json") };
+  const check = () => T.checkSkills({ dir: join(pluginDir, "skills"), pluginDir, manifest, lock, submission, door, codex: T.codexOf({ ...sources, manifest, version: T.manifestVersion(manifest) }) });
+  return { d, pluginDir, lock, listing, submission, door, manifest, sources, check };
 }
 const said = (r) => r.drift.join(" | ");
 
@@ -227,6 +239,11 @@ ok(z.code === 0 && unzipList(out).join() === want.join(), `the ZIP holds exactly
 ok(!unzipList(out).some((p) => p.startsWith(".claude-plugin/") || /\.DS_Store/.test(p)), "never Claude's .claude-plugin/ nor a .DS_Store");
 ok(Buffer.compare(execFileSync("unzip", ["-p", out, "assets/logo.png"]), assets.get("assets/logo.png")) === 0
   && execFileSync("unzip", ["-p", out, ".codex-plugin/plugin.json"], { encoding: "utf8" }) === readFileSync(join(w.pluginDir, ".codex-plugin", "plugin.json"), "utf8"), "the logo and the manifest byte for byte");
+const zipMcp = JSON.parse(execFileSync("unzip", ["-p", out, ".mcp.json"], { encoding: "utf8" })), plainMcp = json(join(w.pluginDir, ".mcp.json"));
+const zs = Object.values(zipMcp.mcpServers);
+ok(zs.length === 1 && JSON.stringify(zs[0].extensions["com.openai"].auth) === JSON.stringify({ type: "oauth", client: { mode: "dcr" } }) && zs[0].url === Object.values(plainMcp.mcpServers)[0].url,
+  `the ZIP's .mcp.json declares OAuth with dynamic client registration on the one server (${JSON.stringify(zs[0].extensions)})`);
+ok(!JSON.stringify(plainMcp).includes("com.openai") && readFileSync(join(w.pluginDir, ".mcp.json"), "utf8") === readFileSync(T.CODEX_SOURCES.mcp, "utf8"), "plugin/.mcp.json (Claude's) carries no OpenAI auth and is unchanged by the ZIP");
 const refusedZip = (label, setup, o = {}, re = /refused, nothing written/) => {
   const wz = world(`zip-${label.replace(/\W+/g, "-")}`); const undo = setup(wz.pluginDir) || (() => {});
   const f = join(tmp, `out-${label.replace(/\W+/g, "-")}.zip`);
@@ -254,6 +271,45 @@ ok(c.code === 0 && /the Codex manifest current, version \d+\.\d+\.\d+/.test(c.ou
 const zc = join(tmp, "cli", "sharingu-openai.zip");
 c = cli("--openai-zip", zc);
 ok(c.code === 0 && unzipList(zc).length === want.length && /25 files/.test(c.out), `--openai-zip ${c.code}: ${c.out.split("\n").slice(-1)[0]}`);
+
+console.log("X8 · the annotations' reasons, the release notes");
+const door = json(T.CODEX_SOURCES.door), byName = Object.fromEntries(door.tools.map((t) => [t.name, t]));
+const subMd = readFileSync(T.CODEX_SOURCES.submission, "utf8");
+ok(T.submissionWith(subMd, door) === subMd && T.submissionDrift().length === 0, "SUBMISSION.md's row and block are what the contract makes");
+const rows = subMd.split("\n").filter((l) => /^\| `[a-z_]+` \|/.test(l));
+ok(rows.length === door.tools.length && door.tools.every((t) => rows.some((r) => r.startsWith(`| \`${t.name}\` | ${!!t.annotations.readOnlyHint}: `) && r.includes(` | ${!!t.annotations.destructiveHint}: `) && r.includes(` | ${!!t.annotations.openWorldHint}: `))),
+  `one row per tool (${rows.length}), each hint's value the contract's`);
+const reads = door.tools.filter((t) => t.annotations.readOnlyHint).length, wipes = door.tools.filter((t) => t.annotations.destructiveHint && !t.annotations.readOnlyHint).map((t) => t.name);
+ok(reads === 18 && door.tools.length - reads === 17 && wipes.includes("submit_grade") && wipes.includes("regrade") && /^\| Reads or writes \| Both: 18 read-only tools and 17 writes; 11 of the writes are destructive \(.*`regrade`.*`submit_grade`\)/m.test(subMd),
+  `the row: 18 read-only, 17 writes, ${wipes.length} destructive with the two graders (${wipes.join(", ")})`);
+const R = (n) => T.reasonsOf(byName[n]);
+ok(R("whoami").readOnlyHint === "true: it only reads what the signed-in account may see, and writes nothing." && R("submit_grade").destructiveHint === "true: it can change what is already in the org's record: it grades one check."
+  && R("preview").destructiveHint === "false: it only adds to the org's record and changes nothing already there." && /^true: it can reach beyond sharingu/.test(R("wrap_up").openWorldHint)
+  && /^false: it keeps state on sharingu, so it is not read-only: it saves a document or an HTML dump and answers its id and a link you can cite\.$/.test(R("save_file").readOnlyHint),
+  `the rule's sentences: ${R("submit_grade").destructiveHint} · ${R("save_file").readOnlyHint}`);
+ok(T.leadOf("Owner only. Rules an open question: qid and choice (the option's index); more.") === "rules an open question" && T.leadOf("Makes it `v`'s (v) on every screen; what it holds is kept.") === "makes it v's on every screen",
+  "the lead: Owner only dropped, parentheses dropped, cut at a colon or semicolon, backticks dropped");
+w = world("annotations");
+ok(w.check().ok, "a world as made: green");
+writeFileSync(w.submission, readFileSync(w.submission, "utf8").replace("| `ask` | false: it keeps", "| `ask` | false: by hand it keeps"));
+r = w.check(); ok(!r.ok && /SUBMISSION\.md: its annotations .* differ from contracts\/door\.json's/.test(said(r)), `a hand-edited reason: red (${said(r)})`);
+const D = json(w.door); D.tools.find((t) => t.name === "publish").annotations.destructiveHint = true; writeFileSync(w.door, JSON.stringify(D));
+cpSync(T.CODEX_SOURCES.submission, w.submission);
+r = w.check(); ok(!r.ok && /SUBMISSION\.md: its annotations/.test(said(r)), `a hint moved in the contract: red (${said(r)})`);
+T.writePlugin({ skillsDir: join(w.pluginDir, "skills"), pluginDir: w.pluginDir, manifest: w.manifest, lock: w.lock, sources: w.sources });
+const rewritten = readFileSync(w.submission, "utf8");
+r = w.check(); ok(r.ok && /\| `publish` \| false: [^|]+\| true: it can change what is already in the org's record: it publishes/.test(rewritten) && /12 of the writes are destructive/.test(rewritten),
+  `writePlugin rewrites the row and the block from the contract, then green (${said(r) || "no drift"})`);
+writeFileSync(w.submission, rewritten.replace(T.ANNOTATIONS_END, ""));
+r = w.check(); ok(!r.ok && /no generated annotations block/.test(said(r)), `a lost marker: red (${said(r)})`);
+const before8 = snapshot(w.d); threw = null;
+try { T.writePlugin({ skillsDir: join(w.pluginDir, "skills"), pluginDir: w.pluginDir, manifest: w.manifest, lock: w.lock, sources: w.sources }); } catch (e) { threw = e.message; }
+ok(threw && /no generated annotations block, nothing written/.test(threw) && snapshot(w.d) === before8, `writePlugin with a lost marker throws, nothing written (${threw})`);
+const pub = m.extensions["com.openai"].publication;
+ok(pub && pub.release_notes === sub.releaseNotes && /^First public release of sharingu for ChatGPT\. One MCP server \(https:\/\/agent\.sharingu\.xyz\/mcp, /.test(pub.release_notes) && !/`|>/.test(pub.release_notes),
+  `publication.release_notes is SUBMISSION.md's release notes, quotes and backticks dropped (${pub.release_notes.length} characters)`);
+const noNotes = clone(m); noNotes.extensions["com.openai"].publication.release_notes = " ";
+ok(problemsOf(noNotes).some((s) => /publication\.release_notes: missing/.test(s)), "no release notes: red");
 
 rmSync(tmp, { recursive: true, force: true });
 console.log(`plugin codex selftest: ${checks - failed}/${checks} green`);

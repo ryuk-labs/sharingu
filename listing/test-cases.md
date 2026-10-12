@@ -22,9 +22,11 @@ whole loop on the goal "Pilot Shop: a business buyer pays by invoice", each step
 bd account proposes it, the admin approves it, the dev picks it up and files it done, the tester grades its checks, and
 marketing announces it. Every account reads it on that goal's page; `brief` for a hat reads what that hat needs first.
 
-**The MCP address:** `https://agent.sharingu.xyz/mcp`. Add it to your client as a remote MCP server (in Claude: Settings,
-Connectors, Add custom connector). The client opens sharingu's sign-in: enter the account's email and its code. No
-header and no key go in the client's configuration. **The org in a browser:** `https://agent.sharingu.xyz/sharingu-review`,
+**The MCP address:** `https://agent.sharingu.xyz/mcp`. Add it to your client as a remote MCP server: in Claude, Settings,
+Connectors, Add custom connector; in ChatGPT, installing the sharingu plugin connects this server, or by hand: Plugins
+(https://chatgpt.com/plugins), the plus button, Add custom MCP server with this address and OAuth, then "I understand
+and want to continue". The client opens sharingu's sign-in: enter the account's email and its code. No header and no key go in the
+client's configuration. **The org in a browser:** `https://agent.sharingu.xyz/sharingu-review`,
 signed in with the same email and code. The tools named below are listed with who may call them on the docs page,
 https://www.sharingu.xyz/mcp-tools.html.
 
@@ -66,11 +68,14 @@ session; an MCP call with a made-up bearer token (`Authorization: Bearer not-a-r
 ### P4 · The confirm: nothing is filed until you say yes — account: admin
 
 1. Ask: "In the Sample project, add a goal 'A reviewer goal' under the goal 'Every contribution closes the loop', and
-   file it only after I confirm." (the `preview` tool, with its confirm) Expect: your client asks you to confirm,
-   showing what would be filed (a client without confirm prompts answers that you were not asked, and files nothing).
-2. Decline. Expect: "The person declined: nothing was filed."
+   file it only after I confirm." (the `preview` tool, with its confirm) Expect: either your client asks you to confirm,
+   showing what would be filed, or (a client that shows no confirm prompt) sharingu answers that you were not asked, shows
+   the preview's text and files nothing.
+2. Decline (or, where you were not asked, do not file). Expect: "The person declined: nothing was filed." where you
+   were asked; nothing filed either way.
 3. Ask: "Read the goal 'A reviewer goal'." (the `read` tool) Expect: there is no such goal (`not_found`).
-4. Ask again and accept. Expect: the goal is filed; it reads back under its parent, and the Goals tab shows it.
+4. Ask again and accept (or, where you were not asked, say "File it.": the `file` tool). Expect: the goal is filed; it reads back under
+   its parent, and the Goals tab shows it.
 
 ### P5 · A partner works only where it is seated — account: partner
 

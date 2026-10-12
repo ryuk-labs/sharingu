@@ -7027,7 +7027,7 @@
     "index.js": {
       "constants": [
         {
-          "line": 633,
+          "line": 634,
           "name": "ABOVE_ROUTES",
           "role": ""
         },
@@ -7037,12 +7037,12 @@
           "role": "G2 M2: a saved file is served as an inert document (GET /artifact/:id): no script, nothing loaded from anywhere"
         },
         {
-          "line": 1962,
+          "line": 1963,
           "name": "BELOW_ROUTES_1",
           "role": ""
         },
         {
-          "line": 2214,
+          "line": 2215,
           "name": "BELOW_ROUTES_2",
           "role": ""
         },
@@ -7067,12 +7067,12 @@
           "role": "code, a filing error, or that it filed. Only the codes the screens know are read; anything else reads as nothing."
         },
         {
-          "line": 629,
+          "line": 630,
           "name": "HEALTH_SQL",
           "role": "/health's one row (sprint 6, 6.3: the platform's, read off the schema; it names nothing of any org)"
         },
         {
-          "line": 512,
+          "line": 513,
           "name": "MCP_TOOLS",
           "role": "needs and what it answers, in at most three sentences. No tenant fact rides a description (check-brand.py guards this)."
         },
@@ -7082,12 +7082,12 @@
           "role": ""
         },
         {
-          "line": 2438,
+          "line": 2439,
           "name": "OBSERVABLE_GETS",
           "role": "(it ends the session). Tested on the URL-normalised PATHNAME (installSelfPage), so a dot-segment path resolves first."
         },
         {
-          "line": 622,
+          "line": 623,
           "name": "ORG_ARG",
           "role": "plane and the attack suite's argument sets all see it."
         },
@@ -7118,55 +7118,55 @@
           "sql": "${sql} WHERE project = ?1 AND ${ids.length > 1 ?"
         },
         {
-          "line": 644,
+          "line": 645,
           "sql": "<dynamic: HEALTH_SQL>"
         },
         {
-          "line": 675,
+          "line": 676,
           "sql": "UPDATE tokens SET revoked = 1 WHERE token_hash = ?"
         },
         {
-          "line": 708,
+          "line": 709,
           "sql": "SELECT key FROM projects WHERE key = ? AND active = 1 AND org = {org}"
         },
         {
-          "line": 722,
+          "line": 723,
           "sql": "UPDATE tokens SET project = ? WHERE token_hash = ? AND revoked = 0"
         },
         {
-          "line": 778,
+          "line": 779,
           "sql": "UPDATE people SET hats = ?, avatar = ? WHERE id = ?"
         },
         {
-          "line": 781,
+          "line": 782,
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         },
         {
-          "line": 804,
+          "line": 805,
           "sql": "UPDATE people SET trace_consent = ? WHERE id = ?"
         },
         {
-          "line": 809,
+          "line": 810,
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         },
         {
-          "line": 1354,
+          "line": 1355,
           "sql": "<dynamic: auditEventsSql(clauses)>"
         },
         {
-          "line": 1367,
+          "line": 1368,
           "sql": "SELECT project, id, name FROM k_nodes WHERE project = ? AND id IN (${ch.map(() ="
         },
         {
-          "line": 1858,
+          "line": 1859,
           "sql": "SELECT a.*, p.name AS by_name FROM artifacts a JOIN people p ON p.id = a.person_"
         },
         {
-          "line": 1973,
+          "line": 1974,
           "sql": "UPDATE tokens SET revoked = 1 WHERE token_hash = ? AND revoked = 0"
         },
         {
-          "line": 2588,
+          "line": 2589,
           "sql": "SELECT settings FROM org WHERE id = {org}"
         }
       ],
@@ -11166,7 +11166,7 @@
           "role": ""
         },
         {
-          "line": 841,
+          "line": 842,
           "name": "NOT_YOURS_TO_CLAIM",
           "role": ""
         },
@@ -11176,17 +11176,17 @@
           "role": "respond and submit_grade file at once; each answer carries ONE line pointing at preview, which shows a filing first"
         },
         {
-          "line": 645,
+          "line": 646,
           "name": "RESOURCE_METHODS",
           "role": "wraps it in its own envelope"
         },
         {
-          "line": 518,
+          "line": 519,
           "name": "RES_PROJECT_HINT",
           "role": "RES_PROJECT_HINT \u2014 U-MCP D5 (Q0D506BBC): every brain:// resource reads one project, and takes ?project=<key> to pick it"
         },
         {
-          "line": 503,
+          "line": 504,
           "name": "RES_TEMPLATES",
           "role": "RES_PROJECT_HINT (U-MCP D5, additive)"
         },
@@ -11198,15 +11198,15 @@
       ],
       "d1Queries": [
         {
-          "line": 446,
+          "line": 447,
           "sql": "INSERT INTO artifacts (id,person_id,kind,title,r2_key,sha256,bytes,group_tag,cre"
         },
         {
-          "line": 450,
+          "line": 451,
           "sql": "INSERT INTO events (id,session_id,person_id,kind,payload_json,created_at,org) VA"
         },
         {
-          "line": 462,
+          "line": 463,
           "sql": "SELECT a.*, p.name AS by_name FROM artifacts a JOIN people p ON p.id=a.person_id"
         }
       ],

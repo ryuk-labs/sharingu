@@ -24,13 +24,17 @@
 // homepage, license, keywords); the `interface` listing is listing/codex-listing.json's facts plus what listing/SUBMISSION.md
 // already says (the long description, the website, support, privacy and terms URLs, the developer); the review block
 // (extensions.com.openai.review) is PARSED from listing/test-cases.md (5 positive, 3 negative; tools_triggered the door's tools
-// each case names in backticks). Its images are copied from listing/icon/ (plugin/assets/). The guide's limits are checked
+// each case names in backticks); publication.release_notes is SUBMISSION.md's quoted release notes (16.2). Its images are copied
+// from listing/icon/ (plugin/assets/). The guide's limits are checked
 // (codexProblems): a manifest over one is never written and --check is red. The digest covers the manifest and the images as
 // the generator makes them, so a change in any of those sources moves the version. demo_recording_url is the owner's: it is
 // emitted only once codex-listing.json holds demoRecordingURL.
 // --openai-zip: the plugin folder less Claude's own .claude-plugin/ (the Codex manifest, .mcp.json, the skills, the images,
-// LICENSE, README.md), with the system zip; refused (exit 2, nothing written) when --check fails or a file holds a forbidden
-// key (test_credentials, reviewer_instructions, clientSecret, a nonempty headers) or a secret-shaped string.
+// LICENSE, README.md), with the system zip; its .mcp.json alone adds OpenAI's OAuth declaration (OPENAI_AUTH, below); refused
+// (exit 2, nothing written) when --check fails or a file holds a forbidden key (test_credentials, reviewer_instructions,
+// clientSecret, a nonempty headers) or a secret-shaped string.
+// THE ANNOTATIONS' REASONS (16.2): the generator also writes listing/SUBMISSION.md's "Reads or writes" row and its generated
+// block (each tool's three hints, one reason each) from contracts/door.json; --check is red when they drift (annotationsOf).
 //
 // THE DIST REPO (sprint 10, 10.2): the engine's repo is private (the proprietary ruling, 2026-10-09); the plugin installs from
 // DIST_REPO, which holds only the files above and its own README.md. Both sync modes refuse (exit 2, nothing written) a <clone>
@@ -40,7 +44,8 @@
 //
 // The presets are read by tools/make-presets.mjs readPresets (the one parser). Output is deterministic: the same presets
 // and the same plugin files make the same bytes and the same version.
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, statSync, lstatSync, realpathSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, mkdtempSync, rmSync, statSync, lstatSync, realpathSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { dirname, join, relative, resolve, sep } from "node:path";
@@ -188,16 +193,72 @@ export function parseTestCases(md, tools) {
 }
 
 // parseSubmission(md) -> what listing/SUBMISSION.md's "facts every form shares" say: the long description (its Description
-// block, backticks dropped), the website, support, privacy and terms URLs (the first https URL of each table row), the developer
+// block, backticks dropped), the website, support, privacy and terms URLs (the first https URL of each table row), the developer;
+// and the ChatGPT section's release notes (the quoted block under its "Release notes" item, backticks dropped)
 export function parseSubmission(md) {
   const row = (label) => { const r = new RegExp(`^\\| ${label} \\| (.+?) \\|$`, "m").exec(md); return r ? r[1] : ""; };
   const url = (label) => (/https:\/\/[^\s·|]+/.exec(row(label)) || [""])[0];
   const d = /^\*\*Description \(≤ [\d,]+\):\*\*\n\n([\s\S]*?)\n\n\*\*Use cases:\*\*/m.exec(md);
+  const notes = /^\d+\. \*\*Release notes\*\*[\s\S]*?\n\n((?:[ \t]*>.*(?:\n|$))+)/m.exec(md);
   return {
+    releaseNotes: notes ? plain(notes[1].split("\n").map((l) => l.replace(/^\s*> ?/, "")).join(" ")) : "",
     longDescription: d ? d[1].split(/\n\s*\n/).map(plain).join("\n\n") : "",
     developerName: flat(row("Company").split("·")[0]),
     websiteURL: url("Website"), supportURL: url("Support"), privacyPolicyURL: url("Privacy policy"), termsOfServiceURL: url("Terms of service"),
   };
+}
+
+// ---- the annotations' reasons (16.2): OpenAI's final submission asks "a justification for each value on every MCP tool"
+// (developers.openai.com/plugins/deploy/submission-errors, 2026-10-12). No field of the ZIP carries one: the portal reads the
+// tools and their hints from its scan of the live server, so the reasons are pasted there. They are GENERATED into
+// listing/SUBMISSION.md (between ANNOTATIONS_BEGIN and ANNOTATIONS_END, and its "Reads or writes" row) from contracts/door.json
+// at generation time, one sentence per hint per tool by the rule below, never typed per tool; --check is red when they drift.
+export const ANNOTATIONS_BEGIN = `<!-- BEGIN ${GENERATED_MARK} from contracts/door.json: each tool's three hints and their reasons. Do not edit by hand. -->`;
+export const ANNOTATIONS_END = "<!-- END the generated annotations -->";
+// leadOf(description) -> what the tool does, from its description: the first sentence (a leading "Admin only." / "Owner only."
+// dropped), its parentheses dropped, cut at its first colon or semicolon, its first letter lowered
+export const leadOf = (d) => {
+  const x = plain(d).replace(/^(Admin|Owner) only\.\s*/, "").split(/\.(?:\s|$)/)[0].replace(/\s*\([^)]*\)/g, "").split(/[:;]/)[0].trim();
+  return x && x[0].toLowerCase() + x.slice(1);
+};
+// reasonsOf(tool) -> { readOnlyHint, destructiveHint, openWorldHint }: each hint's value and its one sentence, by rule
+export function reasonsOf(t) {
+  const a = t.annotations || {}, lead = leadOf(t.description || "");
+  return {
+    readOnlyHint: `${!!a.readOnlyHint}: ${a.readOnlyHint ? "it only reads what the signed-in account may see, and writes nothing." : `it keeps state on sharingu, so it is not read-only: it ${lead}.`}`,
+    destructiveHint: `${!!a.destructiveHint}: ${a.destructiveHint ? `it can change what is already in the org's record: it ${lead}.`
+      : a.readOnlyHint ? "it only reads, so it removes or overwrites nothing." : "it only adds to the org's record and changes nothing already there."}`,
+    openWorldHint: `${!!a.openWorldHint}: ${a.openWorldHint ? "it can reach beyond sharingu: what it hands over may also go to a service the org has linked."
+      : "it reaches only the signed-in account's own orgs on sharingu, a bounded private workspace."}`,
+  };
+}
+// annotationsOf(door) -> { row, block }: the "Reads or writes" row's value and the generated block, from the contract's tools
+export function annotationsOf(door = JSON.parse(readFileSync(CODEX_SOURCES.door, "utf8"))) {
+  const tools = [...(door.tools || [])].sort((x, y) => (x.name < y.name ? -1 : 1));
+  const names = (f) => tools.filter(f).map((t) => `\`${t.name}\``);
+  const reads = names((t) => t.annotations.readOnlyHint), writes = names((t) => !t.annotations.readOnlyHint);
+  const wipes = names((t) => !t.annotations.readOnlyHint && t.annotations.destructiveHint), open = names((t) => t.annotations.openWorldHint);
+  const row = `Both: ${reads.length} read-only tools and ${writes.length} writes; ${wipes.length} of the writes are destructive (${wipes.join(", ")}), the other ${writes.length - wipes.length} only add; each tool has a title and its three hints (their reasons: the ChatGPT section)`;
+  const lines = [ANNOTATIONS_BEGIN, "",
+    `${tools.length} tools: ${reads.length} read-only, ${writes.length} writes (${wipes.length} destructive, ${writes.length - wipes.length} that only add), ${open.length} open-world (${open.join(", ") || "none"}).`, "",
+    "| Tool | readOnlyHint | destructiveHint | openWorldHint |", "|---|---|---|---|",
+    ...tools.map((t) => { const r = reasonsOf(t); return `| \`${t.name}\` | ${r.readOnlyHint} | ${r.destructiveHint} | ${r.openWorldHint} |`; }),
+    "", ANNOTATIONS_END];
+  return { row, block: lines.join("\n") };
+}
+// submissionWith(md, door) -> listing/SUBMISSION.md with its "Reads or writes" row and its generated block as the contract makes
+// them (null when the file holds no such row or no block markers: nothing to place them in)
+export function submissionWith(md, door) {
+  const { row, block } = annotationsOf(door);
+  const rowRe = /^\| Reads or writes \| .+ \|$/m, at = md.indexOf(ANNOTATIONS_BEGIN), end = md.indexOf(ANNOTATIONS_END);
+  if (!rowRe.test(md) || at < 0 || end < at) return null;
+  return (md.slice(0, at) + block + md.slice(end + ANNOTATIONS_END.length)).replace(rowRe, `| Reads or writes | ${row} |`);
+}
+// submissionDrift(path, door) -> [] or ["../listing/SUBMISSION.md: <why>"] (the path relative to plugin/, as every drift line is)
+export function submissionDrift(path = CODEX_SOURCES.submission, door = CODEX_SOURCES.door) {
+  const md = readFileSync(path, "utf8"), want = submissionWith(md, JSON.parse(readFileSync(door, "utf8"))), at = relative(PLUGIN_DIR, path);
+  if (want === null) return [`${at}: no "Reads or writes" row or no generated annotations block to keep`];
+  return want === md ? [] : [`${at}: its annotations (the "Reads or writes" row, the generated block) differ from contracts/door.json's`];
 }
 
 // codexManifest({ claude, listing, submission, cases }) -> the manifest object, in the guide's order
@@ -217,7 +278,7 @@ export function codexManifest({ claude, listing, submission, cases }) {
       brandColor: listing.brandColor, brandColorDark: listing.brandColorDark,
       composerIcon: "./assets/composer-icon.png", logo: "./assets/logo.png",
     },
-    extensions: { "com.openai": { review } },
+    extensions: { "com.openai": { review, publication: { release_notes: submission.releaseNotes } } },
   };
 }
 
@@ -276,11 +337,20 @@ export function codexProblems(m, { tools = new Set(), assets = new Map(), mcp = 
     if (typeof c.description === "string" && !/ Why: \S/.test(c.description)) p.push(`review.test_cases.negative[${n}].description: no Why`);
   });
   if (review.demo_recording_url !== undefined) https("review.demo_recording_url", review.demo_recording_url, 2048);
+  const pub = ((m.extensions || {})["com.openai"] || {}).publication || {};
+  if (typeof pub.release_notes !== "string" || !pub.release_notes.trim()) p.push("publication.release_notes: missing (the final submission requires release notes)");
   const servers = Object.entries((mcp || {}).mcpServers || {});
   if (servers.length !== 1) p.push(`.mcp.json: ${servers.length} servers, not exactly one`);
   for (const [n, s] of servers) {
     if (!/^https:\/\//.test(s.url || "")) p.push(`.mcp.json: ${n}'s url is not https`);
     if (s.type === "none") p.push(`.mcp.json: ${n} is type none`);
+    const auth = ((s.extensions || {})["com.openai"] || {}).auth;
+    if (auth === undefined) continue;
+    if (!["none", "oauth", "mixed", "api_key"].includes(auth.type)) p.push(`.mcp.json: ${n}'s auth.type is not none, oauth, mixed or api_key`);
+    if (auth.type === "none") p.push(`.mcp.json: ${n}'s auth is type none (the guide: never for a protected server)`);
+    const c = auth.client;
+    if (c !== undefined && !["provided", "dcr", "cimd"].includes((c || {}).mode)) p.push(`.mcp.json: ${n}'s auth.client.mode is not provided, dcr or cimd`);
+    if (c && c.mode !== "provided" && Object.keys(c).some((k) => k !== "mode")) p.push(`.mcp.json: ${n}'s ${c.mode} client holds ${Object.keys(c).filter((k) => k !== "mode").join(", ")} (the guide: no clientId or credentials)`);
   }
   const walk = (o, at) => {
     if (!o || typeof o !== "object") return;
@@ -305,17 +375,18 @@ export function codexOf({ version, ...over } = {}) {
   const manifest = codexManifest({ claude, listing, submission: parseSubmission(readFileSync(src.submission, "utf8")), cases: parseTestCases(readFileSync(src.testCases, "utf8"), tools) });
   const assets = new Map(Object.entries(CODEX_ASSETS).map(([p, f]) => [p, readFileSync(join(src.icons, f))]));
   const text = JSON.stringify(manifest, null, 2) + "\n";
-  return { manifest, text, files: new Map([[".codex-plugin/plugin.json", text], ...assets]), problems: codexProblems(manifest, { tools, assets, mcp }) };
+  return { manifest, text, files: new Map([[".codex-plugin/plugin.json", text], ...assets]), problems: codexProblems(manifest, { tools, assets, mcp: zipMcpOf(mcp) }) };
 }
 // the folders only the generator writes (a file there it does not make is drift)
 const GENERATED_DIRS = [".codex-plugin", "assets"];
 
-// checkSkills({ dir, skills, pluginDir, manifest, lock, codex }) -> { ok, count, version, drift: ["<path>: <why>"] } —
+// checkSkills({ dir, skills, pluginDir, manifest, lock, codex, submission, door }) -> { ok, count, version, drift: ["<path>: <why>"] } —
 // plugin/skills/ against what the presets make now, the Codex manifest and its images against their sources (and the guide's
-// limits), and the version against the plugin's content (the inputs are the selftests' seams)
+// limits), SUBMISSION.md's annotations against the contract, and the version against the plugin's content (the inputs are the
+// selftests' seams)
 export function checkSkills({ dir = SKILLS_DIR, skills = expectedSkills(), pluginDir = PLUGIN_DIR, manifest = MANIFEST, lock = VERSION_LOCK,
-  codex = codexOf({ manifest, version: manifestVersion(manifest) ?? undefined }) } = {}) {
-  const want = skills, drift = [];
+  codex = codexOf({ manifest, version: manifestVersion(manifest) ?? undefined }), submission = CODEX_SOURCES.submission, door = CODEX_SOURCES.door } = {}) {
+  const want = skills, drift = [...submissionDrift(submission, door)];
   for (const why of codex.problems) drift.push(`.codex-plugin/plugin.json: ${why}`);
   for (const [path, b] of codex.files) {
     let cur = null; try { cur = readFileSync(join(pluginDir, path)); } catch {}
@@ -339,12 +410,16 @@ export function checkSkills({ dir = SKILLS_DIR, skills = expectedSkills(), plugi
   return { ok: drift.length === 0, count: Object.keys(want).length, version, drift };
 }
 
-// writePlugin({ skillsDir, pluginDir, manifest, lock, sources }) -> { slugs, version, moved }: the skills written (a folder or a
-// file no preset makes removed: B5), the version moved when the content did, then the Codex manifest (at that version) and its
-// images (a file in their folders no source makes removed). Throws, writing nothing, when the Codex manifest breaks a limit
+// writePlugin({ skillsDir, pluginDir, manifest, lock, sources }) -> { slugs, version, moved }: SUBMISSION.md's annotations as the
+// contract makes them, the skills written (a folder or a file no preset makes removed: B5), the version moved when the content
+// did, then the Codex manifest (at that version) and its images (a file in their folders no source makes removed). Throws,
+// writing nothing, when the Codex manifest breaks a limit or SUBMISSION.md has no place for its annotations
 export function writePlugin({ skills = expectedSkills(), skillsDir = SKILLS_DIR, pluginDir = PLUGIN_DIR, manifest = MANIFEST, lock = VERSION_LOCK, sources = {} } = {}) {
-  const draft = codexOf({ ...sources, manifest });
+  const draft = codexOf({ ...sources, manifest }), submission = sources.submission || CODEX_SOURCES.submission;
   if (draft.problems.length) throw new Error(`the Codex manifest breaks the guide, nothing written:\n  ${draft.problems.join("\n  ")}`);
+  const subMd = readFileSync(submission, "utf8"), subWant = submissionWith(subMd, JSON.parse(readFileSync(sources.door || CODEX_SOURCES.door, "utf8")));
+  if (subWant === null) throw new Error(`${relative(REPO, submission)} holds no "Reads or writes" row or no generated annotations block, nothing written`);
+  if (subWant !== subMd) writeFileSync(submission, subWant);
   const slugs = new Set(Object.keys(skills).map((p) => p.split("/")[0]));
   let names = []; try { names = readdirSync(skillsDir); } catch {}
   for (const n of names) if (!slugs.has(n)) rmSync(join(skillsDir, n), { recursive: true, force: true });
@@ -487,21 +562,45 @@ export function zipRefusal(pluginDir, files) {
   }
   return null;
 }
+// THE ZIP'S .mcp.json (16.2; developers.openai.com/plugins/build/plugins, "Configure MCP authentication", 2026-10-12): "Declare
+// authentication under each server's extensions["com.openai"].auth object in mcp.json"; for Dynamic Client Registration the
+// auth object is { type: "oauth", client: { mode: "dcr" } }, registrationUrl omitted when discovery supplies it (ours does:
+// /.well-known/oauth-authorization-server names /oauth/register). Only the ZIP's copy carries it: plugin/.mcp.json is Claude's,
+// read by `claude plugin validate --strict`, and stays as it is.
+export const OPENAI_AUTH = Object.freeze({ type: "oauth", client: Object.freeze({ mode: "dcr" }) });
+// zipMcpOf(mcp) -> the ZIP's .mcp.json object: each server with extensions["com.openai"].auth set to OPENAI_AUTH
+export function zipMcpOf(mcp) {
+  const out = JSON.parse(JSON.stringify(mcp || {}));
+  for (const s of Object.values(out.mcpServers || {})) {
+    s.extensions = { ...(s.extensions || {}), "com.openai": { ...((s.extensions || {})["com.openai"] || {}), auth: JSON.parse(JSON.stringify(OPENAI_AUTH)) } };
+  }
+  return out;
+}
 // openaiZip(out, { check, pluginDir }) -> { code, lines, files }: 2 = refused, nothing written; 0 = the ZIP written and its list
-// read back equal to what was meant (the system zip and unzip; -X no extra attributes, -D no folder entries)
+// read back equal to what was meant (the system zip and unzip; -X no extra attributes, -D no folder entries). The files are
+// staged in a temp folder first (the ZIP's .mcp.json is zipMcpOf's), and the staged copy is refused by the same rules.
 export function openaiZip(out, { check = () => checkSkills(), pluginDir = PLUGIN_DIR } = {}) {
   if (!out || !/\.zip$/.test(out)) return { code: 2, lines: ["--openai-zip refused, nothing written: name the <out>.zip"] };
   const c = check();
   if (!c.ok) return { code: 2, lines: [...c.drift.map((d) => `  plugin/${d}`), "--openai-zip refused, nothing written: plugin/ is stale (run node tools/make-plugin-skills.mjs first)"] };
   const files = zipFiles(pluginDir), why = zipRefusal(pluginDir, files);
   if (why) return { code: 2, lines: [`--openai-zip refused, nothing written: ${why}`] };
-  const at = resolve(out);
-  mkdirSync(dirname(at), { recursive: true });
-  rmSync(at, { force: true });
-  execFileSync("zip", ["-X", "-D", "-q", at, ...files], { cwd: pluginDir, stdio: ["ignore", "pipe", "pipe"] });
-  const listed = execFileSync("unzip", ["-Z1", at], { encoding: "utf8" }).split("\n").filter(Boolean).sort();
-  if (listed.join("\n") !== [...files].sort().join("\n")) { rmSync(at, { force: true }); return { code: 2, lines: [`--openai-zip: the ZIP's list is not the plugin's (${listed.length} of ${files.length}); removed`] }; }
-  return { code: 0, files: listed, lines: [...listed.map((p) => `  ${p}`), `${out}: ${listed.length} files, ${statSync(at).size} bytes (version ${c.version})`] };
+  const stage = mkdtempSync(join(tmpdir(), "sharingu-openai-zip-"));
+  try {
+    for (const p of files) {
+      mkdirSync(dirname(join(stage, p)), { recursive: true });
+      writeFileSync(join(stage, p), p === ".mcp.json" ? JSON.stringify(zipMcpOf(JSON.parse(readFileSync(join(pluginDir, p), "utf8"))), null, 2) + "\n" : readFileSync(join(pluginDir, p)));
+    }
+    const staged = zipRefusal(stage, files);
+    if (staged) return { code: 2, lines: [`--openai-zip refused, nothing written: the ZIP's copy: ${staged}`] };
+    const at = resolve(out);
+    mkdirSync(dirname(at), { recursive: true });
+    rmSync(at, { force: true });
+    execFileSync("zip", ["-X", "-D", "-q", at, ...files], { cwd: stage, stdio: ["ignore", "pipe", "pipe"] });
+    const listed = execFileSync("unzip", ["-Z1", at], { encoding: "utf8" }).split("\n").filter(Boolean).sort();
+    if (listed.join("\n") !== [...files].sort().join("\n")) { rmSync(at, { force: true }); return { code: 2, lines: [`--openai-zip: the ZIP's list is not the plugin's (${listed.length} of ${files.length}); removed`] }; }
+    return { code: 0, files: listed, lines: [...listed.map((p) => `  ${p}`), `${out}: ${listed.length} files, ${statSync(at).size} bytes (version ${c.version}; its .mcp.json declares OAuth with dynamic client registration)`] };
+  } finally { rmSync(stage, { recursive: true, force: true }); }
 }
 
 // run directly? (REAL paths compared: engine/CLAUDE.md's scar)
