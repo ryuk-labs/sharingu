@@ -616,7 +616,7 @@ and the AC eval both teach it); d1-hot's fixture lacked the org row the new sign
 socket failures under the shared Mini's spikes (patientFetch; s40's paced form creation). To S8's ledger: the
 account lockout, the per-seat grants epoch, and the squat's residual (`PLATFORM.md` §3).
 
-## Sprint 15 · The repo move (branch `sprint-15`, opened 2026-10-12; the owner's MCQs of the day)
+## Sprint 15 · The repo move (branch `sprint-15`, opened 2026-10-12; the owner's MCQs of the day) — SHIPPED 2026-10-12
 
 The spec: the owner's rulings of 2026-10-12. Rein reads the engine's code, so the engine moves to the ryuk-labs org with
 a FRESH history (one root commit, 6e6918541; the old repo's history, scanned clean by gitleaks: only three fake test
@@ -636,9 +636,12 @@ updated. Rein is a ryuk-labs admin for now (the owner's call).
 - [x] **15.2 · The live walker.** `tools/listing-walk.mjs` walks `listing/test-cases.md`'s eight cases, each as its
   account, on any worker from a refresh's codes file (never printing one); smoke case `s51` walks the same code. On live
   after the 2026-10-12 refresh: 8/8.
-- [ ] **The sprint end.** Smoke and the gate; ONE PR on ryuk-labs/sharingu; the ship with the owner's OK; the site's
-  branch merged; ryukdev/sharingu archived on GitHub. The cross-org suite's pool waits for the next platform sprint
-  (`PLATFORM.md` §3: at most about 2.3x).
+- [x] **The sprint end.** Smoke 327/327 and the gate; merged as ryuk-labs/sharingu#1 (b07cba466); shipped with the
+  owner's OK: `64aad029` → `16560e8d-8a29-4e91-a8bd-bad4a7429b14` at 100%, no migration (live stays at 080). Proofs: the
+  cross-org suite 10,332 calls both ways, 0 rows across; the walk 13/13 on the preview and on live; the canary pinned;
+  verify-live 28/28; live Control · Connect names ryuk-labs/sharingu-plugin. The site's `plugin-repo-move` merged
+  (3f6a162, verify 236/236) and live. ryukdev/sharingu archived (private). The cross-org suite's pool waits for the next
+  platform sprint (`PLATFORM.md` §3: at most about 2.3x).
 
 ## Sprint 14 · Submission prep (branch `sprint-14`, opened 2026-10-12; the owner's MCQ) — SHIPPED 2026-10-12
 
