@@ -33,7 +33,7 @@ import { grantKindOf, GRANT_KINDS } from "./oauthgrants.js";   // sprint 7, 7.5a
 import { libraryFor, docFor, docRecordFor, roleBriefFor } from "./docread.js";
 import { openItems } from "./openitems.js";
 import { askOwner } from "./ask.js";
-import { formatsAnswer } from "./formats.js";   // the registry, readable through the door (sprint 3, B1)
+import { formatsAnswer, ITEM_SCHEMA } from "./formats.js";   // the registry, readable through the door (sprint 3, B1); one item's schema (17.1)
 import { previewItems, fileItems, readPreviewView } from "./preview.js";   // preview, then file (sprint 3, B2)
 import { renderPreviewPage } from "./previewpage.js";
 import { impactAnswer, impactFor, impactLines, readImpactRow, refsOfRow } from "./impact.js";   // impact and carry-forward (sprint 3, B4)
@@ -507,9 +507,9 @@ const ARTIFACT_CSP = "sandbox allow-popups; default-src 'none'; style-src 'unsaf
 // something: a read-only grant is refused it), project (it reads the project the caller names, checked against their seats),
 // and for the annotations (src/mcp.js annotationsOf, derived, never typed twice): stores (a read that keeps something of its
 // own: preview), destructive (a write that can replace, remove or overrule what is held, a check's grade included; one
-// that only adds is not), idempotent (its repeat changes nothing more), openWorld (it can reach outside the org). title
-// is what a client shows; desc says what it does, what it
-// needs and what it answers, in at most three sentences. No tenant fact rides a description (check-brand.py guards this).
+// that only adds is not), idempotent (its repeat changes nothing more), openWorld (it can reach outside the org: wrap_up's
+// GitHub issue, save_file's public link, open to anyone on the web). title is what a client shows; desc says what it does,
+// what it needs and what it answers, in at most three sentences. No tenant fact rides a description (check-brand.py guards this).
 const MCP_TOOLS = [
   // ---- start a session ----
   { name:"whoami", title:"Who am I", owner:false, desc:"Who you are: your name, role, projects, the project your writes land in, what your consent allows, and the orgs this connection may act in (orgs: any call's orgSlug picks one). Needs nothing. Useful at the start of a session, to see where writes will land.",
@@ -522,17 +522,17 @@ const MCP_TOOLS = [
   { name:"formats", title:"Formats", owner:false, desc:"How every item is shaped, the same for every project: with nothing, each knowledge kind and contribution shape in a line; with kind or shape, its fields, an example and where it shows. Needs no project.",
     schema:{type:"object",properties:{kind:{type:"string",enum:[...KNOWLEDGE_KINDS,"grade","answer"],description:"a knowledge kind, or grade or answer"},shape:{type:"string",enum:[...TX_LANES],description:"a contribution shape (a lane)"}}} },
   // ---- add: preview, then file ----
-  { name:"preview", title:"Preview a filing", owner:false, project:true, stores:true, desc:"Shows what would be filed before anything is: for 1 to 200 items (a knowledge item {kind, op, data}, {contribution}, {grade} or {answer}), where each shows, how it is graded, what it reaches, and a text to show the person. It keeps the preview for an hour and files nothing. Then call file with the same items.",
+  { name:"preview", title:"Preview a filing", owner:false, project:true, stores:true, desc:"Shows what filing 1 to 200 items would do (where each shows, how it is graded, what it reaches, and a text for the person) and keeps that preview for an hour; it files nothing, except with fileOnConfirm: true, where a client that supports confirmation asks the person and files on yes. An item is one of four kinds: a knowledge item {kind, op, data} that adds, changes or removes the project's aim, goals, questions, checks, cards, card kinds, Map nodes and edges, GTM template, docs, screen renders or styles; a {contribution}, a piece of work filed on Build; a check's {grade}; or an {answer} to an open question. Its answer carries the previewId that file takes.",
     schema:{type:"object",required:["items"],properties:{project:{type:"string",description:PROJECT_ARG},
-      items:{type:"array",minItems:1,maxItems:MAX_OPS,description:"each ONE of {kind, op, data} · {contribution: {...}} · {grade: {...}} · {answer: {...}} (formats has every kind and shape)",items:{type:"object"}},
+      items:{type:"array",minItems:1,maxItems:MAX_OPS,description:"each ONE of the four kinds of item (formats has every kind's and shape's fields, an example and where it shows)",items:ITEM_SCHEMA},
       leftOut:{type:"array",maxItems:50,description:"what you read and did not turn into an item, and why: [{what, why}]",items:{type:"object",properties:{what:{type:"string"},why:{type:"string"}}}},
       note:{type:"string",description:"one line for the person"},
       clientRef:{type:"string",description:"your key for the whole batch (1 to 48 of a-z A-Z 0-9 . _ : -): filed again, nothing files twice"},
       fileOnConfirm:{type:"boolean",description:"true: a client that declared elicitation asks the person to confirm, and files on yes"},
       eval:{type:"boolean",description:"marks a suite row"}}} },
-  { name:"file", title:"File", owner:false, write:true, idempotent:true, destructive:true, desc:"Files what a preview showed: previewId and the SAME items. Answers a receipt with each item's id and link; a retry files only what did not land. Refused when the items changed, the preview expired or an item is not ready (only: \"ready\" files the rest).",
+  { name:"file", title:"File", owner:false, write:true, idempotent:true, destructive:true, desc:"Files exactly what a preview showed, by its previewId and the SAME items, the same four kinds: knowledge items (adding, changing or removing the project's aim, goals, questions, checks, cards, card kinds, Map nodes and edges, GTM template, docs, screen renders or styles), contributions, checks' grades and answers to open questions. Answers a receipt with each item's id and link; a retry files only what did not land. Refused when the items changed, the preview expired or an item is not ready (only: \"ready\" files the rest).",
     schema:{type:"object",required:["previewId","items"],properties:{previewId:{type:"string",description:"the id preview answered"},
-      items:{type:"array",minItems:1,maxItems:MAX_OPS,description:"the SAME items you previewed",items:{type:"object"}},
+      items:{type:"array",minItems:1,maxItems:MAX_OPS,description:"the SAME items you previewed",items:ITEM_SCHEMA},
       only:{type:"string",enum:["ready"],description:"file the ready items and leave the rest"}}} },
   { name:"ask", title:"Ask the owner", owner:false, write:true, desc:"Asks the owner a question in a sentence or two (about: what it concerns). It waits with the owner until it is answered, and shows on `updates`.",
     schema:{type:"object",required:["question"],properties:{question:{type:"string",description:"what you want to ask"},about:{type:"string",description:"what it is about (a screen, an area, a doc)"},project:{type:"string",description:PROJECT_ARG},eval:{type:"boolean",description:"marks a suite row"}}} },
@@ -593,7 +593,7 @@ const MCP_TOOLS = [
   { name:"versions", title:"Versions", owner:false, project:true, desc:"The project's versions: why each exists, the current one, and what changed in each. v reads one; head: true answers only the current head.",
     schema:{type:"object",properties:{project:{type:"string",description:READ_PROJECT_RULE},v:{type:"string",description:"a version's number (12 or v12)"},cause:{type:"string",enum:["all","published","restored"]},head:{type:"boolean",description:"only the current head"}}} },
   // ---- files ----
-  { name:"save_file", title:"Save a file", owner:false, write:true, desc:"Saves a document or an HTML dump (content, title, group) and answers its id and a link you can cite; public: true serves it to anyone with the link. A picture of a screen is a render, filed through preview, not a file.",
+  { name:"save_file", title:"Save a file", owner:false, write:true, openWorld:true, desc:"Saves a document or an HTML dump (content, title, group) and answers its id and a link you can cite; public: true serves it on the open web to anyone with the link, signed in or not. A picture of a screen is a render, filed through preview, not a file.",
     schema:{type:"object",required:["content","title"],properties:{
       content:{type:"string"},title:{type:"string"},group:{type:"string",description:"which part of the system it belongs to"},public:{type:"boolean",description:"serve it at its link with no key"},
       screens:{type:"string",description:"comma-separated ids of the screens it shows, kept as text"},

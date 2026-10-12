@@ -70,7 +70,7 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   from `assets/fonts/card/` included: `tools/make-card-fonts.py` cuts them, the card inlines them as data: fonts); `tools/shots.mjs`
   screenshots the local app in both worlds.
 - `src/knowledge/schema.js` (`KINDS`) and `src/shapes.js` — the two registries (the kinds, the contribution shapes);
-  `src/formats.js` answers `formats` from them.
+  `src/formats.js` answers `formats` from them and generates `preview`'s and `file`'s item schema (`ITEM_SCHEMA`, sprint 17).
 - `src/preview.js` · `reach.js` · `previewtext.js` · `previewpage.js` · `previewcard.js` · `confirm.js` — preview then
   file: the plan without a write, what the items reach, the terminal text, the page, the card (the page's summary and
   the chat's `ui://sharingu/card`), the confirm (`preview {fileOnConfirm: true}`, MCP elicitation: on a stream, or an

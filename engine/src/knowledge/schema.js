@@ -35,6 +35,9 @@ export const goalStatusOf = (v) => GOAL_STATUS_OF[String(v).trim().toLowerCase()
 // a question's id (src/decisions.js re-exports it for the screens)
 export const QID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 export const MAX_OPS = 200;
+// the two ops a knowledge item takes, for every kind: upsert adds or changes (merging the fields sent), remove removes (planKnowledge;
+// the preview and file tools' item schema, src/formats.js ITEM_SCHEMA)
+export const KNOWLEDGE_OPS = ["upsert", "remove"];
 // M6: how many of a screen's takes its inspector lists (src/knowledge/screens.js TAKES_MAX says the same number)
 export const TAKES_SHOWN = 6;
 export const MAX_OPTIONS = 26;   // A..Z: a choice may name an option by its letter
@@ -836,7 +839,7 @@ export function planKnowledge(ops, stored = {}, { isOwner = false, role = null, 
     if (!isObj(op)) return bad(null, { error: "bad_op", note: 'Send each op as {kind, op: "upsert" | "remove", data: {…}}.' });
     const spec = KINDS[kind];
     if (!spec) return bad(null, { error: "unknown_kind", note: `Send kind as one of ${KNOWLEDGE_KINDS.join(", ")} (\`formats\` lists them, each in a line).` });
-    if (op.op !== "upsert" && op.op !== "remove") return bad(null, { error: "bad_op", note: 'Send op as "upsert" or "remove".' });
+    if (!KNOWLEDGE_OPS.includes(op.op)) return bad(null, { error: "bad_op", note: `Send op as ${KNOWLEDGE_OPS.map((x) => `"${x}"`).join(" or ")}.` });
     if (!isObj(op.data)) return bad(null, { error: "bad_op", note: `Send data as an object: a ${nounOf(kind, 1)} is {${fieldsOf(kind).join(", ")}}.${seeFormats(kind)}` });
     const data = withKeyDefaults(kind, op.data);
     const badKey = spec.key.find((c) => !keyOk(c, data[c.f]));

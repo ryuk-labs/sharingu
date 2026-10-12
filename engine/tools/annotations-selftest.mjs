@@ -73,5 +73,61 @@ for (const t of listed.filter((x) => x.annotations.readOnlyHint)) {
 }
 ok(readOnly >= 15, `only ${readOnly} read-only tools were called`);
 
+// 5 (sprint 17, 17.1): the open world is exactly the tools that reach outside the org: wrap_up's GitHub issue, save_file's
+// public link (anyone on the web)
+const openWorld = listed.filter((t) => t.annotations.openWorldHint).map((t) => t.name).sort();
+ok(JSON.stringify(openWorld) === JSON.stringify(["save_file", "wrap_up"]), `the open-world tools are save_file and wrap_up, not ${openWorld.join(", ")}`);
+
+// 6 (17.1): preview's and file's item is the schema src/formats.js generates from the door's registries, and it is TRUE: a valid
+// item of each of the four forms passes the schema and the door (previewed ready, then filed); a shape outside the four is
+// refused by both. Validated with ajv in strict mode (the MCP SDK's own validator): an unknown keyword is a failure too.
+const { ITEM_SCHEMA } = await import("../src/formats.js");
+const { KNOWLEDGE_KINDS, KNOWLEDGE_OPS } = await import("../src/knowledge/schema.js");
+const { SHAPE_KEYS } = await import("../src/shapes.js");
+const { GRADE_VERDICTS } = await import("../src/knowledge/checks.js");
+const { TX_LANES } = await import("../src/util.js");
+const { default: Ajv } = await import("ajv");
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+for (const n of ["preview", "file"]) {
+  const s = byName.get(n).inputSchema.properties.items;
+  ok(s.type === "array" && same(s.items, ITEM_SCHEMA), `${n}: items.items is ITEM_SCHEMA (${JSON.stringify(s.items).slice(0, 80)})`);
+}
+const [kS, cS, gS, aS] = ITEM_SCHEMA.anyOf || [];
+ok(!ITEM_SCHEMA.oneOf && (ITEM_SCHEMA.anyOf || []).length === 4 && same(ITEM_SCHEMA.anyOf.map((b) => b.required[0]), ["kind", "contribution", "grade", "answer"]) && JSON.stringify(ITEM_SCHEMA).indexOf("additionalProperties") < 0,
+  "the item is anyOf four forms, each requiring its own key, none closed (never stricter than the door)");
+ok(same(kS.properties.kind.enum, KNOWLEDGE_KINDS) && same(kS.properties.op.enum, KNOWLEDGE_OPS), "the knowledge form's kind and op are the registry's (KINDS, KNOWLEDGE_OPS)");
+ok(same(cS.properties.contribution.properties.lane.enum, SHAPE_KEYS) && same(SHAPE_KEYS, TX_LANES) && same(cS.properties.contribution.required, ["lane", "what", "why"]), "the contribution's lane is the shapes' (SHAPES = TX_LANES), lane, what and why required");
+ok(same(gS.properties.grade.properties.verdict.enum, GRADE_VERDICTS) && same(gS.properties.grade.required, ["checkId", "verdict"]) && same(aS.properties.answer.required, ["qid", "option"]), "the grade's verdict is GRADE_VERDICTS; grade and answer require what the door does");
+let valid = () => false;
+try { valid = new Ajv({ strict: true, allErrors: true }).compile(ITEM_SCHEMA); ok(true, "ajv compiles ITEM_SCHEMA in strict mode"); }
+catch (e) { ok(false, `ajv refuses ITEM_SCHEMA in strict mode: ${e.message}`); }
+const verdictOf = async (it) => { const r = await w.mcp("preview", { project: "alpha", items: [it] }, "owner-key"); return r.out && r.out.items ? r.out.items[0].verdict : `error ${JSON.stringify(r.out).slice(0, 120)}`; };
+const READY = ["files", "waits_for_owner"];
+const GOOD = [{ kind: "goal", op: "upsert", data: { id: "g2", parent: "g1", title: "G two" } },
+  { contribution: { lane: "leader", kind: "note", what: "We price per project", why: "A project is what teams buy." } },
+  { grade: { checkId: "AC.a.01", verdict: "proven", proof: "npm test -> exit 0, 12 passing" } },
+  { answer: { qid: "Q-a1", option: 0 } }];
+GOOD.push({ contribution: { lane: "leader", kind: "note", what: "An extra key rides beside", why: "The door takes it." }, note: "an extra key" });
+for (const it of GOOD) {
+  const v = await verdictOf(it);
+  ok(valid(it) && READY.includes(v), `a valid ${Object.keys(it)[0]} item: the schema ${valid(it) ? "takes it" : `refuses it ${JSON.stringify(valid.errors)}`}, the door previews it ${v}`);
+}
+const pg = await w.mcp("preview", { project: "alpha", items: GOOD }, "owner-key");
+const fg = pg.out && pg.out.previewId ? await w.mcp("file", { previewId: pg.out.previewId, items: GOOD }, "owner-key") : { out: pg.out };
+ok(fg.out && fg.out.complete, `the four forms together file through the door: ${JSON.stringify(fg.out).slice(0, 200)}`);
+// two forms in one item: under anyOf the schema takes it (two branches match), the DOOR refuses it (formOf: exactly one form)
+for (const [what, it] of Object.entries({ "two forms in one item": { contribution: GOOD[1].contribution, grade: GOOD[2].grade }, "a knowledge item with a contribution": { ...GOOD[0], contribution: GOOD[1].contribution } })) {
+  const v = await verdictOf(it);
+  ok(valid(it) && v === "needs", `${what}: the schema ${valid(it) ? "takes it (anyOf)" : "refuses it"}, the door previews it ${v} (its form)`);
+}
+const BAD = { "no form": { note: "x" }, "an empty item": {}, "an unknown kind": { kind: "widget", op: "upsert", data: { id: "w1" } }, "an unknown op": { kind: "goal", op: "delete", data: { id: "g2" } },
+  "a knowledge item without data": { kind: "goal", op: "upsert" }, "an unknown lane": { contribution: { lane: "poetry", what: "x", why: "y" } },
+  "a contribution without why": { contribution: { lane: "leader", what: "x" } }, "an unknown verdict": { grade: { checkId: "AC.a.01", verdict: "maybe" } },
+  "a grade without checkId": { grade: { verdict: "proven", proof: "x" } }, "an answer without option": { answer: { qid: "Q-a1" } } };
+for (const [what, it] of Object.entries(BAD)) {
+  const v = await verdictOf(it);
+  ok(!valid(it) && !READY.includes(v), `${what}: the schema ${valid(it) ? "TAKES it" : "refuses it"}, the door previews it ${v}`);
+}
+
 console.log(`${fail ? "✗" : "✓"} annotations: ${pass} pass, ${fail} fail (${listed.length} tools, ${readOnly} read-only called, each wrote 0 rows)`);
 process.exit(fail ? 1 : 0);

@@ -6,9 +6,10 @@
 //   formatsAnswer({})              -> the list: every kind and every shape, one line each
 //   formatsAnswer({ kind })        -> one kind: its fields, rules, example, where it shows, its checklist items
 //   formatsAnswer({ shape })       -> one shape: its fields, example, where it shows
-import { KINDS, KNOWLEDGE_KINDS, MAX_OPS, fieldDocs, nounOf } from "./knowledge/schema.js";
+import { KINDS, KNOWLEDGE_KINDS, KNOWLEDGE_OPS, KNOWLEDGE_FIELDS_DOC, MAX_OPS, fieldDocs, nounOf } from "./knowledge/schema.js";
 import { SHAPES, SHAPE_KEYS } from "./shapes.js";
 import { PROOF_FORMS } from "./transmission.js";
+import { GRADE_VERDICTS } from "./knowledge/checks.js";
 
 // ITEM_FORMS (D1b item 14): the two things people file that are neither a knowledge kind nor a contribution — a grade of a
 // check and an answer to a question — declared like a kind, so `formats {kind: "grade"}` answers how to file one instead of
@@ -18,7 +19,7 @@ export const ITEM_FORMS = {
     line: "a grade of one check of the project's register: proven, refused or incomplete, with the proof you observed",
     fields: [
       { name: "checkId", type: "text", required: true, hint: "a check's id (read {kind: \"check\"} lists them; an unknown id is refused unknown_check)" },
-      { name: "verdict", type: "text", required: true, values: ["proven", "refused", "incomplete"], hint: "what you observed: proven when the check holds, refused when it does not, incomplete when you could not tell" },
+      { name: "verdict", type: "text", required: true, values: GRADE_VERDICTS, hint: "what you observed: proven when the check holds, refused when it does not, incomplete when you could not tell" },
       { name: "proof", type: "text", hint: `P${PROOF_FORMS.slice(1)}. With proof the grade counts at once and lights every node the check names; without, it waits for the owner` },
     ],
     rules: ["the verdict is what YOU observed: never copy one from an example or an earlier grade", "a grade with proof counts at once; the owner can overturn any grade"],
@@ -40,6 +41,36 @@ export const ITEM_FORMS = {
   },
 };
 export const ITEM_FORM_KEYS = Object.keys(ITEM_FORMS);
+
+// ITEM_SCHEMA (sprint 17, 17.1): the JSON Schema of ONE item of `preview` and `file` (src/index.js MCP_TOOLS), GENERATED here at
+// load from the registries the door validates with, never typed: the knowledge kinds and their ops (KINDS, KNOWLEDGE_OPS; data's
+// fields per kind from KNOWLEDGE_FIELDS_DOC, data left open since the kinds differ: formats {kind} has each one's), the
+// contribution shapes (SHAPES: the lanes, the fields every shape requires, every field's type) and the grade and answer forms
+// (ITEM_FORMS). Never stricter than the door: anyOf (the tool-schema subset OpenAI takes; oneOf is outside it), each form
+// requiring its own key and closed to nothing, since the door takes an extra key beside the form key; an item's inner object
+// stays open too (a field the door reads that the registry does not list, a grade's clientRef, passes). The forms are disjoint
+// by their required keys: an item naming two forms matches two branches, and the door's src/preview.js formOf refuses it.
+// tools/annotations-selftest.mjs proves a valid item of each form passes both and a shape outside the four is refused.
+const JSON_TYPE = { text: "string", int: "integer", real: "number", bool: "boolean", list: "array", object: "object" };
+const propOf = (x) => ({ ...(JSON_TYPE[x.type] ? { type: JSON_TYPE[x.type] } : {}), ...(x.values ? { enum: x.values } : {}) });
+const formOf = (key, description, inner) => ({ type: "object", description, required: [key], properties: { [key]: inner } });
+const shapeFields = new Map();
+for (const s of SHAPE_KEYS) for (const x of SHAPES[s].fields) if (!shapeFields.has(x.name)) shapeFields.set(x.name, x);
+const formInner = (k) => ({ type: "object", required: ITEM_FORMS[k].fields.filter((x) => x.required).map((x) => x.name),
+  properties: Object.fromEntries(ITEM_FORMS[k].fields.map((x) => [x.name, propOf(x)])) });
+export const ITEM_SCHEMA = {
+  anyOf: [
+    { type: "object", description: `a knowledge item: kind, op (${KNOWLEDGE_OPS.join(" or ")}: upsert adds or changes, merging the fields sent; remove removes) and data, the kind's fields`,
+      required: ["kind", "op", "data"],
+      properties: { kind: { type: "string", enum: KNOWLEDGE_KINDS, description: "the knowledge kind (formats {kind} answers its fields, an example and where it shows)" }, op: { type: "string", enum: KNOWLEDGE_OPS },
+        data: { type: "object", description: `the kind's fields (a remove needs only its key): ${KNOWLEDGE_FIELDS_DOC}` } } },
+    formOf("contribution", `a contribution, in one of the shapes (its lane): ${SHAPE_KEYS.map((s) => `${s}: ${SHAPES[s].line}`).join("; ")}`,
+      { type: "object", required: [...shapeFields.values()].filter((x) => SHAPE_KEYS.every((s) => SHAPES[s].fields.some((y) => y.name === x.name && y.required))).map((x) => x.name),
+        properties: Object.fromEntries([...shapeFields.values()].map((x) => [x.name, x.name === "lane" ? { type: "string", enum: SHAPE_KEYS } : propOf(x)])) }),
+    formOf("grade", `a grade of a check: ${ITEM_FORMS.grade.line}`, formInner("grade")),
+    formOf("answer", `an answer to a question: ${ITEM_FORMS.answer.line}`, formInner("answer")),
+  ],
+};
 
 const whenWords = (w) => (!w ? null : w.is ? `${w.field} is ${w.is.join(" or ")}` : w.prefix ? `${w.field} starts with ${w.prefix}` : w.present ? `${w.field} is sent` : null);
 const tabWords = (p) => (p.tabFrom === "card_kind.tab" ? `its card kind's tab (default ${p.tab})` : p.tabFrom === "tab" ? `its own tab (default ${p.tab})` : p.tab);

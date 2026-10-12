@@ -154,7 +154,7 @@ export function instructionsFor(o) {
     "1. Call `whoami`: who you are, your projects, and where your writes land.",
     "2. Call `missing` with `project`: what that project still needs, each item with the preview call that fills it. An org with no project yet starts with `create_project` {key, name} (the admin); `whoami` says which.",
     "3. Call `formats`: how each kind of item is shaped.",
-    "4. Call `preview` with the items you extracted: it shows what will be filed, where it shows, how it is graded and what it reaches, and files nothing. Show the person its `text` as it is.",
+    "4. Call `preview` with the items you extracted: it shows what will be filed, where it shows, how it is graded and what it reaches, and files nothing (with `fileOnConfirm: true`, a client that supports confirmation asks the person and files on yes). Show the person its `text` as it is.",
     "5. Call `file` with the previewId and the same items.",
     FOUR_STEPS_LINE,
     `Every session: \`updates\` first (what changed for you and what waits on you). \`read\` {ref: "doc/${startHere}"} is the start-here guide; \`ask\` asks the owner; \`wrap_up\` hands over at the end.`,
@@ -187,7 +187,8 @@ export function hasWriteScope(person) {
 // cannot disagree (tools/annotations-selftest.mjs): readOnlyHint is "changes nothing" — no write flag and no `stores` (preview
 // keeps its plan for an hour); destructiveHint, idempotentHint and openWorldHint are the row's own flags (a write that can
 // replace, remove or overrule what is held, a check's grade included, is destructive, one that only adds is not; one whose
-// repeat has no further effect is idempotent; wrap_up may open a GitHub issue, the one open-world call). A read is
+// repeat has no further effect is idempotent; the open-world calls reach outside the org: wrap_up may open a GitHub issue,
+// save_file's public: true serves the file to anyone on the web). A read is
 // idempotent and never destructive. title is the row's title.
 export function annotationsOf(t) {
   const readOnly = !t.write && !t.stores;

@@ -8,7 +8,7 @@
 //
 //   node tools/make-reviewer-org.mjs --url <worker>
 //        (--local <persist dir> --config <wrangler config> | --live --config wrangler.jsonc --confirm-live <its D1 database name>)
-//        [--slug sharingu-review] [--name "sharingu review"] [--domain review.sharingu.invalid] [--reissue] [--sample-only] [--source-env]
+//        [--slug sharingu-review] [--name "sharingu review"] [--domain review.sharingu.xyz] [--reissue] [--sample-only] [--source-env]
 //
 // THE WORLD, every step checked before it is taken (a step already standing is said and skipped):
 //   1. the admin's account: the operator allows its email (tools/operator.mjs allowEmail, on the deployment's own database:
@@ -152,8 +152,11 @@ export function walkFilings(emails) {
       experiment: "does invoice checkout bring the business buyers back? it works at 10 invoice orders in a month", clientRef: "walkthrough-5-gtm" }),
   };
 }
+// the default --domain: a domain we own (sharingu.xyz's own subdomain), so no one else can hold an address under it; no mail
+// is ever sent to it (an account signs in with its code)
+export const DOMAIN = "review.sharingu.xyz";
 export const USAGE = "usage: node tools/make-reviewer-org.mjs --url <worker> (--local <persist dir> --config <wrangler config> | --live --config <wrangler config> --confirm-live <D1 database name>) " +
-  "[--slug sharingu-review] [--name \"sharingu review\"] [--domain review.sharingu.invalid] [--reissue] [--sample-only] [--source-env]";
+  `[--slug sharingu-review] [--name "sharingu review"] [--domain ${DOMAIN}] [--reissue] [--sample-only] [--source-env]`;
 const LOOPBACK = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/;
 
 // a sign-in code: 20 letters and digits in four groups (24 characters with the dashes; an account needs 12)
@@ -424,7 +427,7 @@ function importOne({ base, key, project, from, name, costFrom, costDir, log, sou
 export async function run(argv, { say = (s) => console.log(s), err = (s) => console.error(s), open, recordDir = RECORD_DIR, budget, costFrom = join(ENGINE, ".runs"), sources = sourcesOf } = {}) {
   const flag = (n) => { const i = argv.indexOf(n); return i >= 0 && i + 1 < argv.length && !String(argv[i + 1]).startsWith("--") ? argv[i + 1] : undefined; };
   const url = String(flag("--url") || "").replace(/\/+$/, ""), local = flag("--local"), live = argv.includes("--live"), cfgPath = flag("--config");
-  const slug = flag("--slug") || "sharingu-review", name = flag("--name") || "sharingu review", domain = String(flag("--domain") || "review.sharingu.invalid").toLowerCase();
+  const slug = flag("--slug") || "sharingu-review", name = flag("--name") || "sharingu review", domain = String(flag("--domain") || DOMAIN).toLowerCase();
   const reissue = argv.includes("--reissue"), sampleOnly = argv.includes("--sample-only"), sourceEnv = argv.includes("--source-env");
   if (!url || !cfgPath || !local === !live) { err(USAGE); return 2; }
   if (local && !LOOPBACK.test(url)) { err(`refused (nothing written): --local needs a loopback --url (http://127.0.0.1:<port>), not ${url}`); return 1; }
@@ -468,7 +471,7 @@ export async function run(argv, { say = (s) => console.log(s), err = (s) => cons
     const foreign = ROLES.filter((r) => standing[r].state === "foreign");
     if (foreign.length) {
       err(`refused (nothing written): the reviewer world makes fresh accounts and touches no other — ${foreign.map((r) => standing[r].why).join("; ")}. ` +
-        "Name accounts no one holds with --domain (the default review.sharingu.invalid can be no one's).");
+        `Name accounts no one holds with --domain (the default ${DOMAIN} is a domain we own: no one else can hold an address under it).`);
       return 1;
     }
     // each import's sources and their digest (13.3), read once: the record's entry is reused only while the digest holds

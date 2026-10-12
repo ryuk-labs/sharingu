@@ -616,6 +616,27 @@ and the AC eval both teach it); d1-hot's fixture lacked the org row the new sign
 socket failures under the shared Mini's spikes (patientFetch; s40's paced form creation). To S8's ledger: the
 account lockout, the per-seat grants epoch, and the squat's residual (`PLATFORM.md` §3).
 
+## Sprint 17 · OpenAI's scan (branch `sprint-17`, opened 2026-10-12; the owner's MCQs of the day)
+
+The spec: the OpenAI portal's automated scan of the live server flagged three tools — `preview` "claims capabilities that
+do not match its behavior", `preview` and `file` "execute operations that are not individually exposed", `save_file`
+"marked openWorldHint: false, but … interacts with an independently controlled external system" — and the owner ruled:
+spell it out in the schema, keep the one write door (preview, then file). And the reviewer accounts' domain.
+
+- [x] **17.1 · The write door spelled out.** `preview` and `file` share `ITEM_SCHEMA` (`src/formats.js`), generated at
+  load from the door's own registries (`KINDS` with `KNOWLEDGE_OPS`, `SHAPES`, `ITEM_FORMS`, `GRADE_VERDICTS`): an
+  `anyOf` of the four forms (a knowledge item, a contribution, a grade, an answer), each with its required key; never
+  stricter than the door on extra keys (no `additionalProperties`); `anyOf`, not `oneOf` (OpenAI's tool-schema subset).
+  Both descriptions name every operation; `preview` says it files nothing except with `fileOnConfirm: true`, where a
+  client that supports confirmation asks the person and files on yes (the start-here guide, the server instructions and
+  the release-note tool say the same). `save_file` is open-world (`public: true` serves it to anyone on the web).
+  tools/list 59.7 KB → 78.8 KB. annotations selftest 432/432 (the schema compiles under ajv strict; one valid item of
+  each form passes both, ten bad shapes are refused by both, a two-form item passes the schema and the door refuses it).
+- [x] **17.2 · The reviewer domain.** `make-reviewer-org.mjs`'s default is `review.sharingu.xyz` (a domain we own; no
+  mail is ever sent); `listing/SUBMISSION.md`'s reviewer access names it. Its selftest 35/35. Smoke 327/327, the gate
+  green.
+- [ ] **The sprint end.** Smoke and the gate; one PR; the ship; the site's `scan-flags` merged; the owner's Rescan.
+
 ## Sprint 16 · The stores' re-read (branch `sprint-16`, opened 2026-10-12; the owner's MCQ of the day) — SHIPPED 2026-10-12
 
 The spec: the stores' pages re-read on 2026-10-12 against the kit (the Claude connector and plugin pages loaded with

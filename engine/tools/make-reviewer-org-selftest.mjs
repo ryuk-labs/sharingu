@@ -179,11 +179,11 @@ for (const [what, seed, domain] of outside) {
   const worn = new Set(roles.flatMap((r) => (S[r] && S[r].hats) || []));
   const bad = roles.filter((r) => !S[r] || !["owner", "member", "partner"].includes(S[r].role) || !(S[r].hats || []).every((h) => H.HAT_KEYS.includes(h))
     || !["both", "sample"].includes(S[r].on) || (S[r].brief && !(S[r].hats || []).includes(S[r].brief)));
-  const mails = T.emailsOf("review.sharingu.invalid");
+  const mails = T.emailsOf(T.DOMAIN);
   ok(roles.length === 7 && J(roles) === J(Object.keys(S)) && !bad.length && ["management", "engineering", "gtm", "quality", "partner"].every((h) => worn.has(h))
     && S.admin.role === "owner" && roles.filter((r) => S[r].role === "owner").length === 1 && S.partner.role === "partner" && S.partner.on === "sample"
-    && roles.filter((r) => r !== "partner").every((r) => S[r].on === "both") && S.tester.hats.includes("quality") && roles.every((r) => !emailProblem(mails[r])),
-    `G6 seven seats, one per class: ${roles.map((r) => `${r} (${S[r] && S[r].role}${S[r] && S[r].hats.length ? `: ${S[r].hats.join("+")}` : ""})`).join(", ")}${bad.length ? ` — wrong: ${bad.join(",")}` : ""}`);
+    && roles.filter((r) => r !== "partner").every((r) => S[r].on === "both") && S.tester.hats.includes("quality") && roles.every((r) => !emailProblem(mails[r])) && T.DOMAIN === "review.sharingu.xyz",
+    `G6 seven seats, one per class, on the default domain ${T.DOMAIN}: ${roles.map((r) => `${r} (${S[r] && S[r].role}${S[r] && S[r].hats.length ? `: ${S[r].hats.join("+")}` : ""})`).join(", ")}${bad.length ? ` — wrong: ${bad.join(",")}` : ""}`);
 }
 
 // ---- G7 · the walkthrough is the door's (a tool without it fails here, never crashes the rest) ----
@@ -192,14 +192,14 @@ try {
   const ov = JSON.parse(readFileSync(join(ENGINE, "tools", "import", "overlays", "demo", "6-showcase.items.json"), "utf8")).items;
   const ids = new Set(ov.map((o) => o.kind === "node" ? o.data.id : o.kind === "goal" ? `goal/${o.data.id}` : o.kind === "question" ? `q/${o.data.qid}` : o.kind === "check" ? `check/${o.data.id}` : null).filter(Boolean));
   const goal = ov.find((o) => o.kind === "goal" && o.data.id === T.WALK_GOAL);
-  const F = T.walkFilings(T.emailsOf("review.sharingu.invalid"));
+  const F = T.walkFilings(T.emailsOf(T.DOMAIN));
   const filings = [F.proposal, F.code("T-20261010-001"), F.gtm("T-20261010-002")];
   const named = filings.flatMap((f) => [...(f.touches || []), ...(f.components || []), ...(f.depends || []), ...String(f.screens || "").split(",").filter(Boolean)]);
   const unknown = named.filter((x) => !ids.has(x));
   const shapes = filings.map((f) => checkShape(f)).filter(Boolean);
   const checks = T.WALK_CHECKS.map((c) => ov.find((o) => o.kind === "check" && o.data.id === c));
   ok(!!goal && J(filings.map((f) => f.lane)) === J(goal.data.dimensions) && filings.every((f) => f.goalRef === T.WALK_GOAL && f.clientRef) && F.proposal.kind === "proposal"
-    && F.proposal.next.who === "dev@review.sharingu.invalid" && !unknown.length && !shapes.length && F.decision.verdict === "approve"
+    && F.proposal.next.who === "dev@review.sharingu.xyz" && !unknown.length && !shapes.length && F.decision.verdict === "approve"
     && checks.every((c) => c && c.data.refs.includes(T.WALK_GOAL)) && F.grades.every((g) => g.verdict === "proven" && g.proof && g.clientRef && T.WALK_CHECKS.includes(g.checkId)),
     `G7 the walkthrough's filings ${filings.map((f) => `${f.lane}/${f.kind}`).join(", ")} = goal/${T.WALK_GOAL}'s dimensions ${goal && J(goal.data.dimensions)}; ${named.length} ids named, ${unknown.length} not in the overlay${unknown.length ? ` (${unknown.join(", ")})` : ""}; shapes ${shapes.length ? J(shapes) : "pass"}; the checks ${T.WALK_CHECKS.join(", ")} name the goal`);
 } catch (e) { ok(false, `G7 the walkthrough: ${String((e && e.message) || e).slice(0, 160)}`); }

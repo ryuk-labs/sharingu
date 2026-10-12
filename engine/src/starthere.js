@@ -40,7 +40,8 @@ no clone, no install, no repo. Five calls make you a working member.
 3. \`missing\` with \`project\` — what your project still needs, and for each item the exact call that fills it (most are
    \`preview\` items: the aim, goals, questions, checks, the map, docs). \`formats\` shows how every item is shaped.
 4. Contribute one thing. Preview it first: \`preview\` shows what will be filed, where it will show, how it is graded and
-   what it reaches, and files nothing; show the person its \`text\` as it is. Then \`file\` with the same items files it.
+   what it reaches, and files nothing (with \`fileOnConfirm: true\`, a client that supports confirmation asks the person
+   and files on yes); show the person its \`text\` as it is. Then \`file\` with the same items files it.
    The simplest is a plain note — what and why only: no touches, proof, screens or ids needed, and anyone may file it in
    lane "leader", whatever your own lane is:
    \`preview\` with \`{"project": "<one of your projects>", "items": [{"contribution": {"lane": "leader", "kind": "note", "what": "…", "why": "…"}}]}\`,
