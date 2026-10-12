@@ -175,7 +175,7 @@
   {
    "name": "file",
    "title": "File",
-   "description": "Files what a preview showed: previewId and the SAME items. Answers a receipt with each item's id and link; a retry files only what did not land. Refused when the items changed, the preview expired or an item is not ready (only: \\\"ready\\\" files the rest).",
+   "description": "Files exactly what a preview showed, by its previewId and the SAME items, the same four kinds: knowledge items (adding, changing or removing the project's aim, goals, questions, checks, cards, card kinds, Map nodes and edges, GTM template, docs, screen renders or styles), contributions, checks' grades and answers to open questions. Answers a receipt with each item's id and link; a retry files only what did not land. Refused when the items changed, the preview expired or an item is not ready (only: \\\"ready\\\" files the rest).",
    "owner": false,
    "write": true,
    "project": false,
@@ -364,7 +364,7 @@
   {
    "name": "preview",
    "title": "Preview a filing",
-   "description": "Shows what would be filed before anything is: for 1 to 200 items (a knowledge item {kind, op, data}, {contribution}, {grade} or {answer}), where each shows, how it is graded, what it reaches, and a text to show the person. It keeps the preview for an hour and files nothing. Then call file with the same items.",
+   "description": "Shows what filing 1 to 200 items would do (where each shows, how it is graded, what it reaches, and a text for the person) and keeps that preview for an hour; it files nothing, except with fileOnConfirm: true, where a client that supports confirmation asks the person and files on yes. An item is one of four kinds: a knowledge item {kind, op, data} that adds, changes or removes the project's aim, goals, questions, checks, cards, card kinds, Map nodes and edges, GTM template, docs, screen renders or styles; a {contribution}, a piece of work filed on Build; a check's {grade}; or an {answer} to an open question. Its answer carries the previewId that file takes.",
    "owner": false,
    "write": false,
    "project": true,
@@ -534,7 +534,7 @@
   {
    "name": "save_file",
    "title": "Save a file",
-   "description": "Saves a document or an HTML dump (content, title, group) and answers its id and a link you can cite; public: true serves it to anyone with the link. A picture of a screen is a render, filed through preview, not a file.",
+   "description": "Saves a document or an HTML dump (content, title, group) and answers its id and a link you can cite; public: true serves it on the open web to anyone with the link, signed in or not. A picture of a screen is a render, filed through preview, not a file.",
    "owner": false,
    "write": true,
    "project": false,
@@ -543,7 +543,7 @@
     "readOnlyHint": false,
     "destructiveHint": false,
     "idempotentHint": false,
-    "openWorldHint": false
+    "openWorldHint": true
    },
    "refusals": [
     "not-authenticated",
@@ -2983,7 +2983,7 @@
      "readOnlyHint": false,
      "destructiveHint": false,
      "idempotentHint": false,
-     "openWorldHint": false
+     "openWorldHint": true
     },
     "fails": [
      "not-authenticated",

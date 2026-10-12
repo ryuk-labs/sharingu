@@ -5110,19 +5110,29 @@
     "formats.js": {
       "constants": [
         {
-          "line": 50,
+          "line": 81,
           "name": "FORMATS_NEXT",
           "role": ""
         },
         {
-          "line": 16,
+          "line": 17,
           "name": "ITEM_FORMS",
           "role": "unknown_kind. They are filed through preview \u2192 file as {grade: {\u2026}} and {answer: {\u2026}} (src/preview.js)."
         },
         {
-          "line": 42,
+          "line": 43,
           "name": "ITEM_FORM_KEYS",
           "role": ""
+        },
+        {
+          "line": 61,
+          "name": "ITEM_SCHEMA",
+          "role": ""
+        },
+        {
+          "line": 54,
+          "name": "JSON_TYPE",
+          "role": "tools/annotations-selftest.mjs proves a valid item of each form passes both and a shape outside the four is refused."
         }
       ],
       "d1Queries": [],
@@ -5130,6 +5140,7 @@
         "FORMATS_NEXT",
         "ITEM_FORMS",
         "ITEM_FORM_KEYS",
+        "ITEM_SCHEMA",
         "formatsAll",
         "formatsAnswer",
         "formatsList",
@@ -5138,10 +5149,18 @@
       ],
       "imports": [
         {
+          "from": "./knowledge/checks.js",
+          "names": [
+            "GRADE_VERDICTS"
+          ]
+        },
+        {
           "from": "./knowledge/schema.js",
           "names": [
             "KINDS",
+            "KNOWLEDGE_FIELDS_DOC",
             "KNOWLEDGE_KINDS",
+            "KNOWLEDGE_OPS",
             "MAX_OPS",
             "fieldDocs",
             "nounOf"
@@ -7074,7 +7093,7 @@
         {
           "line": 513,
           "name": "MCP_TOOLS",
-          "role": "needs and what it answers, in at most three sentences. No tenant fact rides a description (check-brand.py guards this)."
+          "role": "what it needs and what it answers, in at most three sentences. No tenant fact rides a description (check-brand.py guards"
         },
         {
           "line": 218,
@@ -8969,52 +8988,52 @@
     "knowledge/schema.js": {
       "constants": [
         {
-          "line": 99,
+          "line": 102,
           "name": "ABSENCE_WHY_MAX",
           "role": "design\" are facts a project declares, not holes), null, or undefined (refused). why: the ruling, at most 400 characters."
         },
         {
-          "line": 252,
+          "line": 255,
           "name": "ARCH_PATHS_MAX",
           "role": ""
         },
         {
-          "line": 251,
+          "line": 254,
           "name": "ARCH_RULE",
           "role": "copy: off-screen (the write door's refusal hint)"
         },
         {
-          "line": 79,
+          "line": 82,
           "name": "ARTIFACT_ID",
           "role": ""
         },
         {
-          "line": 121,
+          "line": 124,
           "name": "BODY_BYTES",
           "role": ""
         },
         {
-          "line": 172,
+          "line": 175,
           "name": "BUDGET_FIELDS",
           "role": "undefined (refused)."
         },
         {
-          "line": 173,
+          "line": 176,
           "name": "BUDGET_SOURCE_MAX",
           "role": ""
         },
         {
-          "line": 65,
+          "line": 68,
           "name": "CAPSULE_DOC",
           "role": "a capsule is the doc capsules/<role>.md (src/knowledge/docs.js CAPSULE_PREFIX); `brief` serves one to an agent first"
         },
         {
-          "line": 191,
+          "line": 194,
           "name": "CARD_REF",
           "role": ""
         },
         {
-          "line": 190,
+          "line": 193,
           "name": "CARD_REFS_MAX",
           "role": "cardRefsOf(v) -> the list, repeats dropped, in the order sent | null (none) | undefined (refused)."
         },
@@ -9029,47 +9048,47 @@
           "role": "how sure a knowledge item is (docs/plan/MCP.md \u00a79 demand 7)"
         },
         {
-          "line": 174,
+          "line": 177,
           "name": "CURRENCY",
           "role": ""
         },
         {
-          "line": 74,
+          "line": 77,
           "name": "DAY",
           "role": ""
         },
         {
-          "line": 41,
+          "line": 44,
           "name": "DECISION_STATUSES",
           "role": ""
         },
         {
-          "line": 80,
+          "line": 83,
           "name": "DIM",
           "role": ""
         },
         {
-          "line": 73,
+          "line": 76,
           "name": "DOC_PATH",
           "role": ""
         },
         {
-          "line": 46,
+          "line": 49,
           "name": "EDGE_KINDS",
           "role": ""
         },
         {
-          "line": 226,
+          "line": 229,
           "name": "EDGE_WORD",
           "role": ""
         },
         {
-          "line": 206,
+          "line": 209,
           "name": "FRESH",
           "role": "and due date, a node its live / planned / retired). Optional; nothing ages yet (stale by age is B4)."
         },
         {
-          "line": 45,
+          "line": 48,
           "name": "GAP_STATUSES",
           "role": ""
         },
@@ -9084,29 +9103,34 @@
           "role": ""
         },
         {
-          "line": 48,
+          "line": 51,
           "name": "GTM_FIELDS",
           "role": ""
         },
         {
-          "line": 72,
+          "line": 75,
           "name": "ID",
           "role": "an id of a check, a card or a node: no spaces, no comma and no \"|\" (a composite key's ids are joined with \"|\")"
         },
         {
-          "line": 284,
+          "line": 287,
           "name": "KINDS",
           "role": ""
         },
         {
-          "line": 625,
+          "line": 628,
           "name": "KNOWLEDGE_FIELDS_DOC",
           "role": "the field list per kind, for the tool's schema text (a derived column is the door's, never sent)"
         },
         {
-          "line": 621,
+          "line": 624,
           "name": "KNOWLEDGE_KINDS",
           "role": ""
+        },
+        {
+          "line": 40,
+          "name": "KNOWLEDGE_OPS",
+          "role": "the preview and file tools' item schema, src/formats.js ITEM_SCHEMA)"
         },
         {
           "line": 37,
@@ -9114,52 +9138,52 @@
           "role": ""
         },
         {
-          "line": 40,
+          "line": 43,
           "name": "MAX_OPTIONS",
           "role": ""
         },
         {
-          "line": 47,
+          "line": 50,
           "name": "MEASURE_FIELDS",
           "role": ""
         },
         {
-          "line": 77,
+          "line": 80,
           "name": "NAME_OK",
           "role": "joined with \"|\"), no control character, no space at either end; \"\" is a render key's default (the screen as a whole)"
         },
         {
-          "line": 44,
+          "line": 47,
           "name": "NODE_STATUSES",
           "role": ""
         },
         {
-          "line": 43,
+          "line": 46,
           "name": "NODE_TYPES",
           "role": "architecture: one node per project carrying the architecture's summary, diagram {groups, nodes, edges} and crossing rule"
         },
         {
-          "line": 225,
+          "line": 228,
           "name": "NODE_WORD",
           "role": ""
         },
         {
-          "line": 120,
+          "line": 123,
           "name": "OPTION_TRADEOFF_MAX",
           "role": ""
         },
         {
-          "line": 119,
+          "line": 122,
           "name": "OPTION_WHAT_MAX",
           "role": "control character 6)"
         },
         {
-          "line": 235,
+          "line": 238,
           "name": "OWNED_BY_FORM",
           "role": "the org's projects table, never a read of the other project's data."
         },
         {
-          "line": 70,
+          "line": 73,
           "name": "PROJECT_KEY_RE",
           "role": "ownedBy names"
         },
@@ -9169,42 +9193,42 @@
           "role": "a question's id (src/decisions.js re-exports it for the screens)"
         },
         {
-          "line": 57,
+          "line": 60,
           "name": "ROLE_LIMITED",
           "role": "access hats their admin set, migrate-045; never the hats they picked themselves) or a bare role string (that one key)."
         },
         {
-          "line": 50,
+          "line": 53,
           "name": "RULING_FIELDS",
           "role": "the question fields that record a ruling: only the owner writes them (a member files open questions and their text)"
         },
         {
-          "line": 67,
+          "line": 70,
           "name": "SLUG",
           "role": ""
         },
         {
-          "line": 164,
+          "line": 167,
           "name": "SOURCE",
           "role": ""
         },
         {
-          "line": 147,
+          "line": 150,
           "name": "SOURCE_KINDS",
           "role": "{kind, ref, label?}. sourceListOf(v) -> the list normalized | null (none) | undefined (refused). Optional, shown quietly"
         },
         {
-          "line": 148,
+          "line": 151,
           "name": "SOURCE_MAX",
           "role": ""
         },
         {
-          "line": 149,
+          "line": 152,
           "name": "SOURCE_REF_MAX",
           "role": ""
         },
         {
-          "line": 78,
+          "line": 81,
           "name": "STATE_NAME",
           "role": ""
         },
@@ -9214,22 +9238,22 @@
           "role": "TAB_KEYS: the eight tabs (src/shell.js TABS; tools/knowledge-selftest.mjs holds the two in lockstep)"
         },
         {
-          "line": 227,
+          "line": 230,
           "name": "TAB_WORD",
           "role": ""
         },
         {
-          "line": 39,
+          "line": 42,
           "name": "TAKES_SHOWN",
           "role": "M6: how many of a screen's takes its inspector lists (src/knowledge/screens.js TAKES_MAX says the same number)"
         },
         {
-          "line": 122,
+          "line": 125,
           "name": "UTF8",
           "role": ""
         },
         {
-          "line": 218,
+          "line": 221,
           "name": "UTF8_",
           "role": "the preview's words (pure)"
         }
@@ -9251,6 +9275,7 @@
         "KINDS",
         "KNOWLEDGE_FIELDS_DOC",
         "KNOWLEDGE_KINDS",
+        "KNOWLEDGE_OPS",
         "MAX_OPS",
         "MAX_OPTIONS",
         "MEASURE_FIELDS",
@@ -11166,7 +11191,7 @@
           "role": ""
         },
         {
-          "line": 842,
+          "line": 843,
           "name": "NOT_YOURS_TO_CLAIM",
           "role": ""
         },
@@ -11176,17 +11201,17 @@
           "role": "respond and submit_grade file at once; each answer carries ONE line pointing at preview, which shows a filing first"
         },
         {
-          "line": 646,
+          "line": 647,
           "name": "RESOURCE_METHODS",
           "role": "wraps it in its own envelope"
         },
         {
-          "line": 519,
+          "line": 520,
           "name": "RES_PROJECT_HINT",
           "role": "RES_PROJECT_HINT \u2014 U-MCP D5 (Q0D506BBC): every brain:// resource reads one project, and takes ?project=<key> to pick it"
         },
         {
-          "line": 504,
+          "line": 505,
           "name": "RES_TEMPLATES",
           "role": "RES_PROJECT_HINT (U-MCP D5, additive)"
         },
@@ -11198,15 +11223,15 @@
       ],
       "d1Queries": [
         {
-          "line": 447,
+          "line": 448,
           "sql": "INSERT INTO artifacts (id,person_id,kind,title,r2_key,sha256,bytes,group_tag,cre"
         },
         {
-          "line": 451,
+          "line": 452,
           "sql": "INSERT INTO events (id,session_id,person_id,kind,payload_json,created_at,org) VA"
         },
         {
-          "line": 463,
+          "line": 464,
           "sql": "SELECT a.*, p.name AS by_name FROM artifacts a JOIN people p ON p.id=a.person_id"
         }
       ],
