@@ -8,11 +8,11 @@ pack as skills. The docs: https://www.sharingu.xyz/docs.html.
 This repository is its own marketplace (`.claude-plugin/marketplace.json` at its root lists this folder). In a terminal:
 
 ```
-claude plugin marketplace add ryukdev/sharingu-plugin
+claude plugin marketplace add ryuk-labs/sharingu-plugin
 claude plugin install sharingu@sharingu
 ```
 
-or inside Claude Code, `/plugin marketplace add ryukdev/sharingu-plugin`, then `/plugin install sharingu@sharingu`. A local
+or inside Claude Code, `/plugin marketplace add ryuk-labs/sharingu-plugin`, then `/plugin install sharingu@sharingu`. A local
 clone works the same way: `claude plugin marketplace add <path to the clone>`.
 
 The plugin adds one MCP server, `sharingu`, at `https://agent.sharingu.xyz/mcp`. It carries no key. The first time,

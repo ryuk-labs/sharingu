@@ -47,7 +47,7 @@
 ENGINE="$(cd "$(dirname "$0")/.." && pwd)"
 JSON=""; [ "${1:-}" = "--json" ] && JSON=1
 [ -f "${SHARINGU_ENV_PATH:-$HOME/.sharingu/env-sharingu.sh}" ] && { set -a; . "${SHARINGU_ENV_PATH:-$HOME/.sharingu/env-sharingu.sh}"; set +a; }
-UA="${AGENT_R_UA:-sharingu-agent-r-tools/1.0 (+https://github.com/ryukdev/sharingu)}"
+UA="${AGENT_R_UA:-sharingu-agent-r-tools/1.0 (+https://github.com/ryuk-labs/sharingu)}"
 API="https://api.cloudflare.com/client/v4"
 CF_PAID_MAX_OVERAGE_USD=5   # the paid refusal line: the period's overage so far, in dollars (the plan's own fee)
 

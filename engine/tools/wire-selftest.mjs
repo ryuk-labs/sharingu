@@ -2722,8 +2722,9 @@ function ctAudit(html, j, persona, o = {}) {
     if (attr(x[0], "data-input-exception") === "search") continue;
     if (attr(x[0], "data-input-exception") !== "admin" || !/name="(?:name|email|key)"/.test(x[0])) { fail("input", `a typed input outside the admin's provisioning (name, email, a project's key and name): ${x[0].slice(0, 90)}`); break; }
   }
-  // samples: the old artboard's typed content, never in the source nor on the page
-  const code = jsCodeOf(csrc);
+  // samples: the old artboard's typed content, never in the source nor on the page. One named exception: PLUGIN_MARKET is
+  // the plugin's real dist repo (ryuk-labs/sharingu-plugin since 2026-10-12, sprint 15), a deployment fact, not the sample person
+  const code = jsCodeOf(csrc).replace(/(const PLUGIN_MARKET = )"[^"]*"/, '$1""');
   for (const s_ of CT_SRC_SAMPLES) if (new RegExp(`["'\`>][^"'\`<\\n]*\\b${s_}\\b`, "i").test(code)) { fail("sample", `src/controlpage.js types the artboard's sample "${s_}"`); break; }
   const low = textOf(ctContent(html)).toLowerCase();
   for (const s_ of CT_PAGE_SAMPLES) if (low.includes(s_.toLowerCase())) { fail("sample", `the page draws the artboard's "${s_}"`); break; }

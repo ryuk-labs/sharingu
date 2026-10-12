@@ -2384,7 +2384,7 @@
   }
  ],
  "architecture": {
-  "summary": "sharingu is Agent R (QA78C4808) — engine/ is the whole product: a served console + a REST/MCP door (107 REST routes · 47 MCP tools, contracts/door.json), one Cloudflare Worker per org with its own D1 (15 tables, 38 migrations), R2 brain bucket and KV (M-ADR-094/013/027: org = hard-walled worker, project = soft scope inside it). ONE org worker is deployed today — ryuklabs-agent-r (engine/wrangler.jsonc; QC74D4892) — with its projects inside it as data; a new org gets its own worker from engine/wrangler.tenant.template.jsonc (tools/new-org.sh). There is no L agent: orchestrator/ is this repo's own native agentic SDLC (the crew files in .claude/agents/, the lane workflow, the land door, the gates, the run record), used only to build sharingu (QF281329F) — no org, user or stranger needs it, and no manifest is sent to orgs. It reaches R through one seam: contracts/door.json, GENERATED from R's own registries by engine/tools/make-door-contract.py — read, never R's source. GitHub (ryukdev/sharingu) hosts both lanes; CI is LOCAL (Q02FA9104): the land door runs the gates on the exact sha.",
+  "summary": "sharingu is Agent R (QA78C4808) — engine/ is the whole product: a served console + a REST/MCP door (107 REST routes · 47 MCP tools, contracts/door.json), one Cloudflare Worker per org with its own D1 (15 tables, 38 migrations), R2 brain bucket and KV (M-ADR-094/013/027: org = hard-walled worker, project = soft scope inside it). ONE org worker is deployed today — ryuklabs-agent-r (engine/wrangler.jsonc; QC74D4892) — with its projects inside it as data; a new org gets its own worker from engine/wrangler.tenant.template.jsonc (tools/new-org.sh). There is no L agent: orchestrator/ is this repo's own native agentic SDLC (the crew files in .claude/agents/, the lane workflow, the land door, the gates, the run record), used only to build sharingu (QF281329F) — no org, user or stranger needs it, and no manifest is sent to orgs. It reaches R through one seam: contracts/door.json, GENERATED from R's own registries by engine/tools/make-door-contract.py — read, never R's source. GitHub (ryuk-labs/sharingu) hosts both lanes; CI is LOCAL (Q02FA9104): the land door runs the gates on the exact sha.",
   "diagram": {
    "width": 680,
    "height": 420,
@@ -2500,7 +2500,7 @@
      "kind": "external",
      "service": "github",
      "title": "GitHub",
-     "sub": "ryukdev/sharingu — PRs; CI is local (Q02FA9104)",
+     "sub": "ryuk-labs/sharingu — PRs; CI is local (Q02FA9104)",
      "x": 500,
      "y": 260,
      "w": 150,

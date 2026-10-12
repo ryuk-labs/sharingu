@@ -132,7 +132,7 @@
     { "kind": "node", "op": "upsert", "data": { "id": "service:cloudflare-kv", "type": "service", "name": "Cloudflare KV", "data": { "owner": "per-org", "cost": "", "uses": [
       "Binding OAUTH_KV: the OAuth grants and tokens of the connector sign-in",
       "Nothing else is kept in KV" ] } } },
-    { "kind": "node", "op": "upsert", "data": { "id": "service:github", "type": "service", "name": "GitHub", "data": { "owner": "ryukdev", "cost": "", "uses": [
+    { "kind": "node", "op": "upsert", "data": { "id": "service:github", "type": "service", "name": "GitHub", "data": { "owner": "ryuk-labs", "cost": "", "uses": [
       "The monorepo: the engine, the contract and the plan",
       "One branch per sprint, one pull request merged at its end" ] } } },
     { "kind": "node", "op": "upsert", "data": { "id": "service:claude-code", "type": "service", "name": "Claude (Anthropic)", "data": { "owner": "each person", "cost": "", "uses": [

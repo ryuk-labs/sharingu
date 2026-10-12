@@ -47,7 +47,7 @@ Every write is `preview` → `file`; the door teaches the rest (`whoami`, then `
 
 | Client | Setup |
 |---|---|
-| **Claude Code** | the plugin: `claude plugin marketplace add ryukdev/sharingu-plugin`, then `claude plugin install sharingu@sharingu`; it signs in on connect, no key (a seat's key: `claude mcp add sharingu --transport http https://agent.sharingu.xyz/mcp --header "Authorization: Bearer <your-key>"`) |
+| **Claude Code** | the plugin: `claude plugin marketplace add ryuk-labs/sharingu-plugin`, then `claude plugin install sharingu@sharingu`; it signs in on connect, no key (a seat's key: `claude mcp add sharingu --transport http https://agent.sharingu.xyz/mcp --header "Authorization: Bearer <your-key>"`) |
 | **Claude Desktop / claude.ai** | Add to Claude (the site's button prefills the connector), or Settings → Connectors → add `https://agent.sharingu.xyz/mcp` → Connect → sign in on the platform's page (your account's passphrase: every org you have a seat in; a seat's key: that seat) |
 | **ChatGPT** | chatgpt.com/plugins → Add custom MCP server → `https://agent.sharingu.xyz/mcp` → sign in on the platform's page |
 | **Codex** | a streamable HTTP server: `https://agent.sharingu.xyz/mcp` + the `Authorization: Bearer` header |

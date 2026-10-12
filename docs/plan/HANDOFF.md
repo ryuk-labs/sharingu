@@ -1,7 +1,7 @@
 # HANDOFF — where sharingu stands (rewritten at every stop; git holds the history)
 
-**As of 2026-10-12: sprint 14 is LIVE (shipped 2026-10-12). Next: the live reviewer world is refreshed, then the owner
-submits to the stores (M4).**
+**As of 2026-10-12: sprint 14 is LIVE; the reviewer world is refreshed and its eight cases pass on live; the engine
+moved to ryuk-labs/sharingu (a fresh history). Next: ship sprint 15 (the move's references), then the owner's M4.**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
 and must not trust its own memory over this file. Read, in order: `README.md` (the model, how we work) → this file →
@@ -21,8 +21,8 @@ the kit's gaps in `listing/SUBMISSION.md`. No migration. Proofs on the branch: e
 evals 42/42, sims 10/10, tabs-verify 40/40 (on 5da011add); the follow-up description commit re-proved by smoke and gate.
 The ship, from the repo root, each step only when the one before is green:
    1. `set -a; . ~/.sharingu/env-sharingu.sh; set +a` (in every shell that pushes, calls `gh` or touches live)
-   2. `git push -u origin sprint-14`, then `gh pr create --repo ryukdev/sharingu --base main --head sprint-14 …`
-      (body from a file), then `gh pr merge <n> --repo ryukdev/sharingu --merge`; check it merged BEFORE anything else
+   2. `git push -u origin sprint-14`, then `gh pr create --repo ryuk-labs/sharingu --base main --head sprint-14 …`
+      (body from a file), then `gh pr merge <n> --repo ryuk-labs/sharingu --merge`; check it merged BEFORE anything else
       (`gh pr view <n> --json state`); then `git checkout main && git pull --ff-only`
    3. from `engine/`: `sh tools/ship-plan.sh ryuklabs --no-import` must end "✓ the plan is complete" (the import hook
       stays off: the projects' data is not on the road, and its measures are stale by design)
@@ -32,19 +32,25 @@ The ship, from the repo root, each step only when the one before is green:
    5. after "✓ SHIPPED": the live walk and verify-live (both commands under Traps), then record the ship in
       `SPRINTS.md` sprint 14 and in this file (the new version id, the rollback target), commit, push.
 
-**2 · Refresh the live reviewer world** (the owner's OK given 2026-10-12, "refresh now"; do it right after step 1, and
-always BEFORE any code goes into a store form: a later refresh resets every code and logs the reviewers out). From
-`engine/`, credentials sourced, codes NEVER on screen:
-   `umask 077; node tools/make-reviewer-org.mjs --url https://agent.sharingu.xyz --live --config wrangler.jsonc
-   --confirm-live ryuklabs-agent-r --reissue > ~/.sharingu/reviewer-credentials.new 2> .runs/reviewer-refresh.err`,
-   then check the new file holds 7 `code:` lines (count them, never print them) and move it over
-   `~/.sharingu/reviewer-credentials.txt` (mode 600). It writes about 18,000 rows to org 3 only (the fresh measure:
-   the dev-local run of 2026-10-12). Then walk `listing/test-cases.md`'s five positive and three negative cases on live,
-   each as the account it names. NO live walker exists (smoke case `s51` walks them on a local world only): either walk
-   them by hand through the browser as each account, or make `s51`'s walker take a `--url` and the codes file (a small
-   slice). Record what each case answered.
+**2 · Refresh the live reviewer world — DONE 2026-10-12.** Org 3 rebuilt on sprint 14's code with `--reissue` (the
+seven accounts sign in and read as their roles and hats may; the walkthrough's loop stands); the seven new codes live only
+in `~/.sharingu/reviewer-credentials.txt` (mode 600). `listing/test-cases.md` walked on live, 8/8 green
+(`node tools/listing-walk.mjs --url https://agent.sharingu.xyz --codes ~/.sharingu/reviewer-credentials.txt`); it left
+two notes and the goal `walk-20261012-yes` in the Sample project, as a reviewer's walk would. NEVER refresh again once a
+code is in a store form (every code resets and the reviewers are logged out). The recipe for a next refresh: from
+`engine/`, credentials sourced, load under 8, `umask 077; node tools/make-reviewer-org.mjs --url
+https://agent.sharingu.xyz --live --config wrangler.jsonc --confirm-live ryuklabs-agent-r --reissue >
+~/.sharingu/reviewer-credentials.new 2> .runs/reviewer-refresh.err`, count 7 `code:` lines (never print them), move the
+file over the old one. If it refuses "no rows-written measure holds" (the source changed since the last measure: any
+sprint that touches `contracts/door.json` or the code), take a fresh one first on a throwaway local org:
+`DEV_SLUG=measure14 DEV_PORT_BASE=8860 DEV_PROJECTS=sharingu sh tools/dev-local.sh up`, then `down` (17,028 rows on
+2026-10-12), and change nothing in the tree until the refresh lands.
 
-**3 · The owner's, then M4.** In this order: (a) sync the public plugin repo `ryukdev/sharingu-plugin` to 0.1.11 (it
+**2b · Ship sprint 15** (the owner's OK, as every ship): the repo move's references (live Control names the plugin repo),
+the live walker; then the site's branch `plugin-repo-move` merged and pushed through its wrapper; then archive
+ryukdev/sharingu on GitHub (private, read-only).
+
+**3 · The owner's, then M4.** In this order: (a) sync the public plugin repo `ryuk-labs/sharingu-plugin` to 0.1.12 (it
 is at 0.1.9; Claude's directory reads its `main`): the commands are step 10 of `sh tools/ship-plan.sh ryuklabs
 --no-import`; (b) connect `https://agent.sharingu.xyz/mcp` as a custom connector in Claude, run P1–P3, and check the
 Activity row of P1's filing reads "from Claude" (if it reads "another client", stop: the label needs a fix first);
@@ -66,14 +72,18 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   Undo: `sh engine/tools/ship.sh rollback e5dfd3c4-a4a2-401a-8bad-2aae0a92fd54` (code). The 080 Time Travel bookmark
   `00000ff3-00000000-00005101-2e32cfba286f19c2f08dd49dfd1c265d` (data; it restores EVERY org). Proofs: cross-org 10,332
   calls, 0 rows across; the walk 13/13 on the preview and on live; verify-live 28/28.
-- **The repo:** `main` = sprint 13 shipped plus the videos and the retakes (45d3ef180). `sprint-14` = its three slices
-  (5da011add) plus the description follow-up, not yet merged. `engine/.runs/` is machine-local (gitignored): the ship
+- **The repo:** `ryuk-labs/sharingu` (private) from 2026-10-12, one root commit (6e6918541: the tree of the old repo's
+  `main` at 22ed264d0, sprint 14 shipped); `sprint-15` on it = the repo move's references and the live walker. The old
+  repo `ryukdev/sharingu` is the `archive` remote (everything before; to be archived on GitHub after sprint 15 ships).
+  Rein (`reindev3`) is a `ryuk-labs` org ADMIN, so admin on both repos (the owner's call, 2026-10-12: fine for now,
+  changed later on github.com, org People). The plugin's dist repo moved to `ryuk-labs/sharingu-plugin` (a transfer:
+  the old path redirects). `engine/.runs/` is machine-local (gitignored): the ship
   logs, the video recorder (`engine/.runs/b12-videos/`: `record.mjs`, `compose-take.sh`, `sweep-take.sh`, `join.sh`).
 - **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at f3580e6, the privacy
   page naming which AI filed a contribution. Its tools page matches the engine's contract (`npm run check:mcp-tools`).
-- **The plugin:** this tree 0.1.11 (`claude plugin validate --strict ./plugin` passes); the public dist repo 0.1.9.
+- **The plugin:** this tree 0.1.12 (`claude plugin validate --strict ./plugin` passes); the public dist repo 0.1.9.
 - **The live reviewer world:** org 3 at `/sharingu-review`, seven active seats (admin, member, dev, bd, marketing,
-  tester, partner), the sharingu and Sample projects; its sharingu data from 2026-10-10 (refreshed in step 2). The codes
+  tester, partner), the sharingu and Sample projects; its sharingu data from sprint 14's code (refreshed 2026-10-12). The codes
   live only in `~/.sharingu/reviewer-credentials.txt` (mode 600).
 - **The listing kit:** `listing/SUBMISSION.md` (every form's fields, the release notes, allowed link URIs),
   `listing/test-cases.md` (5 + 3), `listing/carousel/` (four card PNGs, retaken 2026-10-12), `listing/icon/`,
@@ -152,7 +162,7 @@ end with the owner's OK. Clean all the way: no dead code, no dead docs; a finish
   platform road (2026-10-06).
 - **PROPRIETARY (MCQ 2026-10-09; overturns the 2026-10-05 MIT release):** © Ryuk Labs, all rights reserved; the
   engine's repo stays private for good; the beta is hosted-only (`docs/BETA-NOTE.md`: no SLA, feedback asked); the
-  plugin installs free from its own public distribution repo `ryukdev/sharingu-plugin`, the service is the priced
+  plugin installs free from its own public distribution repo `ryuk-labs/sharingu-plugin`, the service is the priced
   product (the plans; prices at billing time).
 - **The platform (2026-10-06; the whole design in `PLATFORM.md` §2):** one worker and one database for every org;
   the wall is org-carrying project keys; what happens in an org stays in the org (no staff seat in the app; only the
@@ -217,8 +227,9 @@ A shared Mac Mini (`ryuks-mac-mini`): other projects (bunny, siru, veil) run her
 folders. One heavy suite at a time, only when load is under 8. Local workers take ports 88xx: 8840 the ship candidate,
 8850–8879 builders, 8880–8899 smokes, 8930–8939 video worlds. Commit as the checkout's own git identity (plain
 `git commit`, never `-c user.name`). Credentials: `set -a; . ~/.sharingu/env-sharingu.sh; set +a` (never print a
-value). `gh` is logged in as an account that cannot see `ryukdev/sharingu`: run every `gh …` with those credentials
-sourced (its `GH_TOKEN` is the project's own). The site's pushes go through its own wrapper
-(`python3 scripts/with-env.py git push origin main` in `~/batcave_vm/sharingu_website`; its pre-push hook runs the
-full verify). Browser automation uses Playwright's bundled Chromium or the pinned Chrome for Testing, never the owner's
+value). `gh` is logged in as an account that cannot see `ryuk-labs/sharingu`: run every `gh …` with those credentials
+sourced (its `GH_TOKEN` is the project's own). The remotes: `origin` is `ryuk-labs/sharingu` (the repo from 2026-10-12),
+`archive` is `ryukdev/sharingu` (everything before; private, archived: fetched, never pushed to). The site's pushes
+go through its own wrapper (`python3 scripts/with-env.py git push origin main` in `~/batcave_vm/sharingu_website`; its
+pre-push hook runs the full verify). Browser automation uses Playwright's bundled Chromium or the pinned Chrome for Testing, never the owner's
 Chrome.

@@ -44,7 +44,7 @@
 # MINT_OWNER_EMAIL MINT_LEADER_EMAIL MINT_MEMBER_ID, which the suites sign in and aim with).
 
 MINT_DB="ryuklabs-agent-r"
-MINT_UA="sharingu-agent-r-mint/1.0 (+https://github.com/ryukdev/sharingu)"
+MINT_UA="sharingu-agent-r-mint/1.0 (+https://github.com/ryuk-labs/sharingu)"
 # NAMED GAP, proven live while testing this file (2026-09-22): `mint_cleanup` below iterates
 # `for _pid in $MINT_RUN_PIDS` UNQUOTED — correct under every REAL caller (`sh some-script.sh`, i.e.
 # bash 3.2 on this Mac, which word-splits on IFS as always) and the SAME idiom this file's own

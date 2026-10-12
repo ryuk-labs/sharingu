@@ -32,7 +32,7 @@ set -e
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 . "$ROOT/tools/lib-new-org.sh"
-UA="sharingu-agent-r-cloudkit/1.0 (+https://github.com/ryukdev/sharingu)"  # every HTTP call this tool makes to Cloudflare names itself
+UA="sharingu-agent-r-cloudkit/1.0 (+https://github.com/ryuk-labs/sharingu)"  # every HTTP call this tool makes to Cloudflare names itself
 NO_CREATED=0
 trap 'no_recover "$SLUG"' EXIT
 

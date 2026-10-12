@@ -88,7 +88,7 @@ export function liveBackend(bucket, env = process.env) {
   const token = env.CLOUDFLARE_API_TOKEN, account = env.CLOUDFLARE_ACCOUNT_ID;
   if (!token || !account) throw new Error("--live needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in the environment (source the deployment's credentials file)");
   const base = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/r2/buckets/${encodeURIComponent(bucket)}/objects`;
-  const headers = { authorization: `Bearer ${token}`, "user-agent": "sharingu-r2-org-keys/1.0 (+https://github.com/ryukdev/sharingu)" };
+  const headers = { authorization: `Bearer ${token}`, "user-agent": "sharingu-r2-org-keys/1.0 (+https://github.com/ryuk-labs/sharingu)" };
   // Every request is bounded (a stalled connection once hung a live copy for two hours) and retried on a transient answer
   // (timeout, network drop, 429, 5xx). Safe: every call is idempotent and every body is in-memory bytes.
   const TIMEOUT_MS = Number(env.R2_TIMEOUT_MS || 120000), TRIES = Number(env.R2_TRIES || 6);
