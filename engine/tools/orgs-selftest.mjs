@@ -134,8 +134,6 @@ const CASES = {
     const n = (W.one("SELECT id FROM org WHERE slug = 'ada-works'") || {}).id;
     out.push([f.status === 200 && !!key && W.one("SELECT key_hash FROM people WHERE org = ?", n).key_hash === sha(key) && !f.cookie && !f.location && f.cache === "no-store" && /class="wm-org">Ada Works</.test(f.text) && /data-region="first-project">Ada Works \(ada-works\)</.test(f.text) && !/o3--/.test(f.text) && /\/mcp/.test(f.text),
       `O2 · a form creation: ${f.status}, the made page with the owner key once (its hash the seat's), no cookie, no Location, no-store; the org's name in the wordmark, its project by name and slug (never o3--) and the MCP address`]);
-    const done = await W.call("GET", "/signup?done=1", { headers: { accept: "text/html" } });
-    out.push([done.status === 200 && /href="\/orgs\/new"/.test(done.text) && !/arrives soon/.test(done.text), `O2 · the sign-up's done page links to /orgs/new (${done.status})`]);
     const s0 = W.snap(), a0 = W.attempts(0) + W.attempts(1);
     const x = await W.call("POST", "/orgs", { form: { ...base({ email: "ada@fresh.test", slug: "cross-site" }), web: "1" }, headers: { "sec-fetch-site": "cross-site", origin: "https://evil.test" } });
     const xj = await W.call("POST", "/orgs", { body: base({ slug: "cross-site" }), headers: { "sec-fetch-site": "cross-site", origin: "https://evil.test" } });

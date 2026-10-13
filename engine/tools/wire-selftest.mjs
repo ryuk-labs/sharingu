@@ -157,7 +157,7 @@ import { readVersionsView, renderVersions, VERSIONS_REGIONS, TIMELINE_EMPTY, DIF
 import { versionsFixture, RULED_QID as V_RULED_QID } from "./fixtures/versions.mjs";
 import { tempoChip } from "../src/tempo.js";
 import { renderLogin, authPage, authBrand } from "../src/login.js";
-import { renderSignup, renderSignupDone, SIGNUP_REFUSED_WORDS } from "../src/signup.js";
+import { renderSignup, SIGNUP_REFUSED_WORDS } from "../src/signup.js";
 import { renderOrgNew, renderOrgMade } from "../src/orgpage.js";
 import { renderRequestAccess, renderRequestReceived, renderRequestAsked, renderRequestMissing, REQUEST_FIELD_WORDS } from "../src/requestpage.js";
 import { ORG_WORDS } from "../src/orgs.js";
@@ -748,15 +748,18 @@ const STANDALONE = {
   // sprint 7, 7.2: the sign-up's pages are the front door's own (one card, the shell's tokens, declared inputs)
   signup: [renderSignup({ brand: servedBrand }), "Northwind"],
   signupRefused: [renderSignup({ brand: servedBrand, error: SIGNUP_REFUSED_WORDS, email: "a@b.test" }), "Northwind"],
-  signupDone: [renderSignupDone({ brand: servedBrand }), "Northwind"],
   // sprint 21, 21.1: request access and the request's own pages are the front door's own too
   requestAccess: [renderRequestAccess({ brand: servedBrand }), "Northwind"],
   requestAccessRefused: [renderRequestAccess({ brand: servedBrand, error: REQUEST_FIELD_WORDS.email, values: { name: "Ada", email: "ada" } }), "Northwind"],
-  requestReceived: [renderRequestReceived({ brand: servedBrand, request: { name: "Ada", company: "Analytical" } }), "Northwind"],
-  requestAsked: [renderRequestAsked({ brand: servedBrand }), "Northwind"],
+  requestInLine: [renderRequestReceived({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "open" }, place: 3, count: { taken: 7, cap: 50 } }), "Northwind"],
+  requestApproved: [renderRequestReceived({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "approved" } }), "Northwind"],
+  requestDeclined: [renderRequestReceived({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "declined" } }), "Northwind"],
+  requestAsked: [renderRequestAsked({ brand: servedBrand, count: { taken: 7, cap: 50 } }), "Northwind"],
   requestMissing: [renderRequestMissing({ brand: servedBrand }), "Northwind"],
   // sprint 7, 7.3: the create-an-org pages: the platform's (the product's wordmark alone), and the made page the new org's
   orgNew: [renderOrgNew({ host: "agent.example.test" }), ""],
+  // sprint 21, 21.2: the org form a web sign-up answers, filled in from the approved request
+  orgNewPrefilled: [renderOrgNew({ host: "agent.example.test", values: { email: "a@b.test", name: "Analytical", you: "Ada" } }), ""],
   orgNewRefused: [renderOrgNew({ host: "agent.example.test", error: ORG_WORDS.org_name_taken, values: { email: "a@b.test", name: "Acme", slug: "acme" } }), ""],
   orgMade: [renderOrgMade({ origin: "https://agent.example.test", made: { org: { id: 3, name: "Acme", slug: "acme" }, project: { key: "o3--acme", name: "Acme" }, key: "0123456789abcdef0123456789abcdef01234567" } }), "Acme"],
   report: [renderReportShell("Backfilled Reports", "<h1>Backfilled</h1>"), null],
@@ -765,12 +768,13 @@ for (const [kind, [html, org]] of Object.entries(STANDALONE)) {
   const f = [...standaloneAudit(html, kind), ...(org === null ? [] : frontDoorAudit(html, kind, org))];
   ok(f.length === 0, `${kind} (standalone): the shell's own token block and faces, no em dash, reduced motion, declared inputs${org === null ? "" : ", the sharingu wordmark with the org as secondary text, no Agent R"}${f.length ? `\n      ${f.join("\n      ")}` : ""}`);
 }
-ok(/name="email"/.test(STANDALONE.signup[0]) && /name="code"/.test(STANDALONE.signup[0]) && /name="password"/.test(STANDALONE.signup[0]) && /name="confirm"/.test(STANDALONE.signup[0]) && /action="\/signup"/.test(STANDALONE.signup[0])
-  && /href="\/login"/.test(STANDALONE.signupDone[0]) && !/<form/.test(STANDALONE.signupDone[0]), "the sign-up keeps its fields (email · code · password · confirm, posting to /signup); its done page is a link to sign in, no form (sprint 7, 7.2)");
+ok(/name="email"/.test(STANDALONE.signup[0]) && /name="code"/.test(STANDALONE.signup[0]) && /name="password"/.test(STANDALONE.signup[0]) && /name="confirm"/.test(STANDALONE.signup[0]) && /action="\/signup"/.test(STANDALONE.signup[0]),
+  "the sign-up keeps its fields (email · code · password · confirm, posting to /signup) (sprint 7, 7.2)");
 ok(["email", "password", "name", "slug", "project", "you"].every((f) => new RegExp(`name="${f}"`).test(STANDALONE.orgNew[0])) && /action="\/orgs"/.test(STANDALONE.orgNew[0]) && /agent\.example\.test\//.test(STANDALONE.orgNew[0])
   && !/<form/.test(STANDALONE.orgMade[0]) && /data-secret="owner-key">0123456789abcdef/.test(STANDALONE.orgMade[0]) && /data-region="first-project">Acme \(acme\)</.test(STANDALONE.orgMade[0]) && !/o3--/.test(STANDALONE.orgMade[0]) && /\/mcp/.test(STANDALONE.orgMade[0])
-  && /href="\/orgs\/new"/.test(STANDALONE.signupDone[0]) && !/value="[^"]*passphrase/i.test(STANDALONE.orgNewRefused[0]),
-  "the create-an-org page keeps its fields (email · password · name · slug under the address's host · project · you, posting to /orgs); the made page shows the owner key, the first project (its name and slug, never o3--) and the MCP address, no form; the sign-up's done page links to it (sprint 7, 7.3)");
+  && !/value="[^"]*passphrase/i.test(STANDALONE.orgNewRefused[0])
+  && /id="name"[^>]*value="Analytical"/.test(STANDALONE.orgNewPrefilled[0]) && /id="you"[^>]*value="Ada"/.test(STANDALONE.orgNewPrefilled[0]) && /id="password"[^>]*autofocus/.test(STANDALONE.orgNewPrefilled[0]),
+  "the create-an-org page keeps its fields (email · password · name · slug under the address's host · project · you, posting to /orgs); the made page shows the owner key, the first project (its name and slug, never o3--) and the MCP address, no form; a web sign-up's answer holds the request's company and name, the passphrase focused (sprint 7, 7.3; sprint 21, 21.2)");
 ok(/name="email"/.test(STANDALONE.login[0]) && /name="password"/.test(STANDALONE.login[0]) && /name="web" value="1"/.test(STANDALONE.login[0]) && /name="next" value="\/home"/.test(STANDALONE.login[0]) && /name="oauth_req" value="e30="/.test(STANDALONE.oauthConsent[0]),
   "the sign-in keeps its fields (email · password · web=1 · next; the consent page's oauth_req): E233b and the OAuth flow read them");
 

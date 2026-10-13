@@ -1,13 +1,12 @@
 // src/signup.js — the sign-up pages (sprint 7, slice 7.2; docs/plan/PLATFORM.md §2 item 10): GET /signup (the form: email,
-// the operator's one-time code, the passphrase twice) and its done page (signed up, with no seat in the org this address
-// serves). The same front door as the sign-in (src/login.js authPage: one card, both worlds, the one accent), never a second
+// the operator's one-time code, the passphrase twice). The same front door as the sign-in (src/login.js authPage: one card, both worlds, the one accent), never a second
 // skin. No statement here: the sign-up itself is src/accounts.js signUp, the route POST /signup (src/index.js).
 //
 // signupProblem({ email, code, password, confirm }) -> "" or the field that is wrong (email · email_ascii: an address holding a
 // letter outside ASCII, src/accounts.js asciiEmail · code · passphrase · confirm),
 // checked BEFORE anything is read: it says nothing about which emails are allowed (an unallowed email and a wrong code are
 // one answer, src/accounts.js).
-// renderSignup({ error, brand, email }) · renderSignupDone({ brand }) -> the pages.
+// renderSignup({ error, brand, email }) -> the page (a sign-up with no seat answers the create-an-org page: src/orgpage.js).
 // THE INVITE PAGE (sprint 12, 12.3; src/accounts.js THE INVITE LINK): GET /signup?via=invite, the page an org's invite link opens
 // (<origin>/signup?via=invite#<token>). The token rides the URL's FRAGMENT, which the browser never sends: the page's script moves
 // it into the form (and drops it from the address bar and the history entry), and the form POSTs it. It sets no session: only the
@@ -81,19 +80,6 @@ export function renderSignup(opts) {
     body,
     footnote: `The email and code come from the person who invited you. Already signed up? <a href="/login">Sign in</a>`,
   });
-}
-
-// the done page: signed up, and no seat in the org this address serves (a new person: creating an org is the next step, GET
-// /orgs/new, sprint 7, 7.3)
-export function renderSignupDone(opts) {
-  const { brand = DEFAULT_BRAND } = opts || {};
-  const { title, wordmark } = brandOf(brand);
-  const body = `<div class="done" data-screen="signup-done" data-region="signed-up">
-      <p class="done-what">Your account is ready.</p>
-      <p class="done-why">It holds no seat in any org yet. Create your own org with it, or, if an org's admin adds you, <a href="/login">sign in</a> to reach theirs.</p>
-      <a class="done-action" href="/orgs/new">Create your org</a>
-    </div>`;
-  return authPage({ title: title.replace(/^Sign up/, "Signed up"), wordmark, lede: "You are signed up", body });
 }
 
 // ---- the invite page (sprint 12, 12.3) ----

@@ -5,7 +5,9 @@
 // creation is src/orgs.js createOrg, the routes src/index.js.
 //
 // renderOrgNew({ error, values, host }) · renderOrgMade({ made, origin }) -> the pages. `values` re-fills what was typed
-// (never the passphrase); `host` is the address the org's path will hang off (the request's own: nothing per deployment here).
+// (never the passphrase), or, as a web sign-up's answer (sprint 21, 21.2), the email and the approved request's company and name
+// (then the passphrase takes the focus); `host` is the address the org's path will hang off (the request's own: nothing per
+// deployment here).
 import { esc, errorState } from "./ui.js";
 import { DEFAULT_BRAND } from "./tenant.js";
 import { authPage, authBrand } from "./login.js";
@@ -26,11 +28,11 @@ export function renderOrgNew(opts) {
       <input type="hidden" name="web" value="1">
       <div class="field">
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" autocomplete="email" required autofocus value="${v("email")}" data-input-exception="auth">
+        <input type="email" id="email" name="email" autocomplete="email" required${values.email ? "" : " autofocus"} value="${v("email")}" data-input-exception="auth">
       </div>
       <div class="field">
         <label for="password">Account passphrase</label>
-        <input type="password" id="password" name="password" autocomplete="current-password" required data-input-exception="auth">
+        <input type="password" id="password" name="password" autocomplete="current-password" required${values.email ? " autofocus" : ""} data-input-exception="auth">
       </div>
       <div class="field">
         <label for="name">Org name</label>

@@ -97,8 +97,8 @@
 -- Sprint 13's 13.1, which AI filed it (2026-10-11): migrate-080.sql's transmission column (client: the one family word the
 -- filing client declares, NULL unknown) in the transmission table below.
 -- Sprint 21's 21.1, request access (2026-10-13): migrate-081.sql's access_requests table (a person's request for a beta place,
--- its profile and its private link's hash; a platform table: no org) in the tables' name order (first), and its two indexes
--- (idx_access_requests_line, idx_access_requests_open) in the export's name order; its re-made slug triggers (org_slug_on_insert,
+-- its profile and its private link's hash; a platform table: no org) in the tables' name order (first), and its three indexes
+-- (idx_access_requests_email, idx_access_requests_line, idx_access_requests_open) in the export's name order; its re-made slug triggers (org_slug_on_insert,
 -- org_slug_on_update: 'request-access' among the reserved names) in place at the END of this file.
 
 -- migrate-081: a person's request for a beta place (one open request per email; only its private link's hash is kept)
@@ -804,7 +804,10 @@ BEGIN
       no_outcome = no_outcome + excluded.no_outcome, awaiting = awaiting + excluded.awaiting;
 END;
 
--- migrate-081: the open requests in the order they came (the place in line), and one open request per email
+-- migrate-081: an email's requests by status (a sign-up's prefill), the open requests in the order they came (the place in
+-- line), and one open request per email
+CREATE INDEX IF NOT EXISTS idx_access_requests_email ON access_requests(email, status, approved_at);
+
 CREATE INDEX IF NOT EXISTS idx_access_requests_line ON access_requests(created_at) WHERE status = 'open';
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_access_requests_open ON access_requests(email) WHERE status = 'open';

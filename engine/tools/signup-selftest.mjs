@@ -5,8 +5,9 @@
 // operator's codes are minted by the operator's own function (tools/operator.mjs allowEmail), as its CLI does. Each case builds
 // a fresh world.
 //   S1 · (a) an allowed email with no account and its code: an account is made with that passphrase (the code spent: used,
-//        created); no seat at the address, so nothing is signed in (JSON signedIn false; a form lands on the done page, which
-//        says so); the new passphrase at /login is no_seat_here (right, no seat here)
+//        created); no seat at the address, so nothing is signed in (JSON signedIn false; a form answers 200 the create-an-org
+//        page, its email as typed, nothing else filled in, no cookie, never the passphrase: sprint 21, 21.2); the new passphrase
+//        at /login is no_seat_here (right, no seat here)
 //   S2 · (b) a migrated org-1 person (an account with NO passphrase, their seat's own secret): the account takes the new one,
 //        they are signed in to their org-1 seat; the new passphrase signs in at /login to that seat; the seat's own secret too
 //   S3 · (c) the operator-approved reset: an account WITH a passphrase, seated in org 1 and org 2, a live session on each seat:
@@ -29,6 +30,9 @@
 //        and a seat waiting for its yes signs up by JSON to NOTHING (signedIn false, no session minted, the note saying a seat
 //        waits and where it is answered); its new passphrase at /login asks (409 choose_org, its one active org) and signs in
 //        once `org` names it; a browser's sign-up is untouched (it lands on the picker with its session)
+//   S10 · (sprint 21, 21.2: "prefills the org at sign-up") a form sign-up with no seat, for an email with APPROVED requests,
+//        answers the org form with the newest one's company as the org's name and its name as yours; an email whose request is
+//        only OPEN, and an email beside another's approved request, get the email alone; the JSON answer unchanged (no page)
 // And the MUTATION PROOF: each named mutant (a scratch copy of src/) must turn its case(s) red.
 // Exit 1 on any failure. A gate step.
 import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync } from "node:fs";
@@ -89,9 +93,9 @@ const CASES = {
     out.push([l.status === 403 && l.error === "no_seat_here", `S1 · the new passphrase at /login: ${l.status} ${l.error} (right, and no seat at this address)`]);
     const b = await W.allow("form.person@fresh.test");
     const f = await W.call("POST", "/signup", { form: { email: "form.person@fresh.test", code: b.code, password: "form-passphrase-1", confirm: "form-passphrase-1", web: "1" } });
-    const done = await W.call("GET", "/signup?done=1", { headers: { accept: "text/html" } });
-    out.push([f.status === 302 && f.location === "/signup?done=1" && !f.cookie && done.status === 200 && /You are signed up/.test(done.text) && /no seat in any org yet/.test(done.text),
-      `S1 · a form sign-up with no seat lands on the done page (${f.status} -> ${f.location}), no cookie; the page says signed up, no seat here`]);
+    out.push([f.status === 200 && !f.location && !f.cookie && /data-screen="org-new"/.test(f.text) && /id="email"[^>]*value="form\.person@fresh\.test"/.test(f.text)
+      && /id="name"[^>]*value=""/.test(f.text) && /id="you"[^>]*value=""/.test(f.text) && !f.text.includes("form-passphrase-1"),
+      `S1 · a form sign-up with no seat answers the org form (${f.status}), its email as typed, nothing else filled in, no cookie, never the passphrase`]);
     return out;
   },
   async S2() {
@@ -250,6 +254,27 @@ const CASES = {
       `S9 · untouched: a browser's sign-up lands on the picker (${f.status} -> ${f.location}), its session cookie set`]);
     return out;
   },
+  async S10() {
+    const W = await world(), out = [];
+    // req(id, email, company, status, approvedAt): a request as the worker files it and the operator's allow --request approves it
+    const req = (id, email, company, status, at = null) => W.w.db.prepare("INSERT INTO access_requests (id, email, name, company, role, team_size, status, token_hash, created_at, updated_at, approved_at) " +
+      "VALUES (?, ?, ?, ?, 'Founder', '2-10', ?, ?, '2026-10-13T09:00:00.000Z', '2026-10-13T09:00:00.000Z', ?)").run(id, email, `Grace ${id}`, company, status, `th-${id}`, at);
+    req("q-old", "grace@fresh.test", "Old Co", "approved", "2026-10-13T10:00:00.000Z"); req("q-new", "grace@fresh.test", "Hopper Labs", "approved", "2026-10-13T11:00:00.000Z");
+    req("q-open", "waits@fresh.test", "Open Co", "open"); req("q-other", "other@fresh.test", "Not Yours", "approved", "2026-10-13T11:00:00.000Z");
+    const form = async (email, pass) => { const c = await W.allow(email); return W.call("POST", "/signup", { form: { email, code: c.code, password: pass, confirm: pass, web: "1" } }); };
+    const g = await form("Grace@Fresh.test", "grace-passphrase-1"), o = await form("waits@fresh.test", "waits-passphrase-1"), n = await form("nobody@fresh.test", "nobody-passphrase-1");
+    const val = (t, f) => (new RegExp(`id="${f}"[^>]*value="([^"]*)"`).exec(t) || [])[1];
+    out.push([g.status === 200 && /data-screen="org-new"/.test(g.text) && val(g.text, "email") === "Grace@Fresh.test" && val(g.text, "name") === "Hopper Labs" && val(g.text, "you") === "Grace q-new" && val(g.text, "slug") === ""
+      && /id="password"[^>]*autofocus/.test(g.text) && !g.text.includes("grace-passphrase-1"),
+      `S10 · an approved request: the org form holds the newest one's company (${val(g.text, "name")}) and name (${val(g.text, "you")}), the email as typed, the slug left to derive, the passphrase focused, never echoed`]);
+    out.push([o.status === 200 && val(o.text, "name") === "" && val(o.text, "you") === "" && n.status === 200 && val(n.text, "name") === "" && !/Not Yours|Open Co/.test(o.text + n.text),
+      `S10 · a request only open, and another email's approved one, fill in nothing but the email (${val(o.text, "name") === "" && val(n.text, "name") === ""})`]);
+    const j = await W.allow("json@fresh.test");
+    req("q-json", "json@fresh.test", "Json Co", "approved", "2026-10-13T11:00:00.000Z");
+    const js = await W.signup("json@fresh.test", j.code, "json-passphrase-1");
+    out.push([js.status === 200 && js.json && js.json.account === "created" && js.json.signedIn === false && !/Json Co/.test(js.text), `S10 · the JSON sign-up's answer is unchanged (${js.status} ${js.json && js.json.account})`]);
+    return out;
+  },
 };
 
 // ---- the mutants: each must turn its case(s) red ----
@@ -277,6 +302,11 @@ const MUTANTS = [
   // sprint 8, 8.3a (the sprint-7 review's A3): a valid code passes the lock
   { name: "a valid code meets the lock (no bypass: a stranger keeps the holder from signing up)", file: "src/accounts.js",
     from: "const locked = await lockOf(env, before ? before.id : null, e, out.client);", to: "const locked = await lockOf(env, before ? before.id : null, e, out.client);\n  if (locked) return { ...out, verdict: \"locked\" };", red: ["S5"] },
+  // sprint 21, 21.2: the org form a web sign-up answers is filled in from the email's newest APPROVED request only
+  { name: "the prefill reading an open request too", file: "src/requestaccess.js",
+    from: "WHERE email = ?1 AND status = 'approved' ORDER BY", to: "WHERE email = ?1 AND status IN ('approved', 'open') ORDER BY", red: ["S10"] },
+  { name: "the prefill from the oldest approval", file: "src/requestaccess.js",
+    from: "ORDER BY approved_at DESC LIMIT 1", to: "ORDER BY approved_at ASC LIMIT 1", red: ["S10"] },
   { name: "the sign-up without the same-origin guard", file: "src/index.js",
     from: "if (crossSiteLogin(request, url)) return isForm ? page(403, \"Cross-site sign-up refused.\") : json({ error: \"cross_site_signup\" }, 403);", to: "", red: ["S7"] },
 ];

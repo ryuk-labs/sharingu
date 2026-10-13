@@ -42,6 +42,17 @@
 //   O24 · BETA_ORG_CAP is one constant, 50, in src/beta.js under the owner's ruling (2026-10-10; sprint 21 moved it there, the one
 //        source the worker's request page reads too); the tool imports it; no other file of src/ names it (the worker does not
 //        enforce it)
+//   O25 · (sprint 21, 21.2) requests: the beta's places at its head, then the OPEN requests in line order (created_at, then id: two
+//        at the same instant in id order), each with its place, id, company, role, team size in words, name, email and when it
+//        was asked; an approved or declined request is not listed; no code. Each place equals the worker's REQUEST_PLACE_SQL
+//   O26 · allow --request <id>: the open request read, the same allow as --email <its email> (the code printed once, the cap's
+//        line), and in the SAME batch the request approved (status approved, approved_at = updated_at = the code's created_at);
+//        the next request moves up to place 1. RED then GREEN: the approval left out of the batch leaves the request open
+//   O27 · the refusals, nothing written (exit 1): an id that is no request, a malformed id, an approved and a declined request;
+//        at 50 places the cap refuses it and the request stays OPEN (--beyond-cap allows and approves it); an account with a
+//        passphrase without --reset. Usage (exit 2, nothing opened): --request with --email, --request with no id. A request
+//        decided between the read and the write: refused, nothing written (RED then GREEN: the guard removed mints a code for a
+//        request already declined)
 // Exit 1 on any failure. A gate step.
 import { DatabaseSync } from "node:sqlite";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -656,6 +667,79 @@ try {
       ok(OP.BETA_ORG_CAP === 50 && (beta.match(/export const BETA_ORG_CAP = /g) || []).length === 1 && /the owner's ruling, 2026-10-10[^\n]*\n(?:\/\/[^\n]*\n){0,3}export const BETA_ORG_CAP = 50;/.test(beta)
         && !/BETA_ORG_CAP = /.test(tool) && /from "\.\.\/src\/beta\.js"/.test(tool) && named.length === 0,
         `O24 · BETA_ORG_CAP is one constant (${OP.BETA_ORG_CAP}) in src/beta.js under the owner's ruling (2026-10-10); the tool imports it; no other file of src/ names it (${named.join(", ") || "none"})`);
+    }
+  }
+  // ======== sprint 21, 21.2 · the requests for a place: requests, allow --request (each guard RED on a mutant copy, then GREEN) ========
+  {
+    const { REQUEST_PLACE_SQL } = await import(pathToFileURL(join(ENGINE, "src", "requestaccess.js")).href);
+    // ask(db, id, email, at, status): one request as the worker files it (migrate-081's row; the token's hash a placeholder)
+    const ask = (db, id, email, at, status = "open") => db.prepare("INSERT INTO access_requests (id, email, name, company, role, team_size, status, token_hash, created_at, updated_at) " +
+      "VALUES (?, ?, ?, ?, 'Founder', '2-10', ?, ?, ?, ?)").run(id, email, `Name ${id}`, `Company ${id}`, status, `th-${id}`, at, at);
+    const line = (db) => {
+      ask(db, "r-b", "b@ask.test", "2026-10-13T10:00:00.000Z"); ask(db, "r-a", "a@ask.test", "2026-10-13T10:00:00.000Z");   // the same instant: id order
+      ask(db, "r-c", "c@ask.test", "2026-10-13T11:00:00.000Z"); ask(db, "r-0", "z@ask.test", "2026-10-13T09:00:00.000Z");
+      ask(db, "r-done", "done@ask.test", "2026-10-13T08:00:00.000Z", "approved"); ask(db, "r-no", "no@ask.test", "2026-10-13T08:30:00.000Z", "declined");
+      return db;
+    };
+    const reqOf = (db, id) => db.prepare("SELECT status, approved_at, updated_at FROM access_requests WHERE id = ?").get(id);
+    const placeOf = (db, id) => { const r = db.prepare("SELECT id, created_at FROM access_requests WHERE id = ?").get(id); return db.prepare(REQUEST_PLACE_SQL).get(r.created_at, r.id).place; };
+    // O25 · requests
+    {
+      const db = line(world());
+      const c = await cliRec(db, recDir)("requests", "--local", "DIR", "--config", "CFG");
+      const ids = c.said.slice(2).map((x) => (/^ {2}(\d+) {2}(\S+) /.exec(x) || []).slice(1, 3).join(":"));
+      ok(c.rc === 0 && /^the beta's places: /.test(c.said[0]) && /^4 open requests on test:db, in line order/.test(c.said[1]) && ids.join(" ") === "1:r-0 2:r-a 3:r-b 4:r-c",
+        `O25 · requests: the places at its head, then the open ones in line order, ties by id (${ids.join(" ")})`);
+      ok(c.said[3] === "  2  r-a  Company r-a · Founder · 2 to 10  Name r-a <a@ask.test>  asked 2026-10-13T10:00:00.000Z" && !c.said.some((x) => /r-done|r-no |code: /.test(x)),
+        `O25 · each line: place, id, company, role, team size in words, name, email, when asked; no approved or declined request, no code (${c.said[3]})`);
+      ok(["r-0", "r-a", "r-b", "r-c"].every((id, i) => placeOf(db, id) === i + 1), "O25 · each listed place equals the worker's REQUEST_PLACE_SQL");
+    }
+    // O26 · allow --request approves in the same batch
+    {
+      const db = line(world());
+      const c = await cliRec(db, recDir)("allow", "--request", "r-0", "--local", "DIR", "--config", "CFG");
+      const code = (/^ {2}code: (\S+)$/m.exec(c.said.join("\n")) || [])[1] || "";
+      const row = reqOf(db, "r-0"), minted = db.prepare("SELECT code_hash, created_at FROM signup_codes WHERE email = 'z@ask.test'").all();
+      ok(c.rc === 0 && /^ {2}request r-0: Name r-0, Company r-0 <z@ask\.test>, place 1 in line$/.test(c.said[0]) && c.said.filter((x) => /code: /.test(x)).length === 1 && CODE_RE.test(code)
+        && /request r-0 approved/.test(c.said.join(" ")) && c.said.some((x) => /the beta's places: \d+ of 50 left after this one/.test(x)) && !c.errs.some((x) => x.includes(code)),
+        `O26 · allow --request: the request said, the code printed once, the cap's line, "approved" (${c.rc})`);
+      ok(row.status === "approved" && minted.length === 1 && minted[0].code_hash === await signupCodeHash(code) && row.approved_at === minted[0].created_at && row.updated_at === row.approved_at,
+        `O26 · in the same batch: one code for the request's email, the request approved at the code's moment (${row.status} ${row.approved_at})`);
+      ok(placeOf(db, "r-a") === 1 && placeOf(db, "r-c") === 3, "O26 · the next request moves up to place 1");
+      const RED = await mutantOp([["  const res = await DB.batch(request ? [\n    DB.prepare(APPROVE_REQUEST_SQL).bind(request, at),\n", "  const res = await DB.batch(request ? [\n"]]);
+      const rdb = line(world());
+      const red = await RED.allowEmail(d1(rdb), "z@ask.test", { request: "r-0" });
+      ok(red.refused && reqOf(rdb, "r-0").status === "open", `O26 · RED: with the approval left out of the batch the request stays open and the allow is refused (${(red.refused || "").slice(0, 60)})`);
+    }
+    // O27 · the refusals
+    {
+      const db = line(world());
+      db.prepare("INSERT INTO accounts (id, email, pass_hash, pass_salt, created_at, updated_at) VALUES ('acc-k', 'c@ask.test', 'h', 's', '2026-10-01', '2026-10-01')").run();
+      const before = allText(db);
+      const run = (...a) => cliRec(db, recDir)("allow", ...a, "--local", "DIR", "--config", "CFG");
+      const r = { none: await run("--request", "r-nobody"), odd: await run("--request", "r'; DROP"), done: await run("--request", "r-done"), no: await run("--request", "r-no"), pass: await run("--request", "r-c") };
+      ok(Object.values(r).every((x) => x.rc === 1 && /^refused \(nothing written\)/.test(x.errs[0] || "") && !x.said.some((y) => /code: /.test(y))) && allText(db) === before
+        && /no request r-nobody/.test(r.none.errs[0]) && /not a request's id/.test(r.odd.errs[0]) && /is approved, not open/.test(r.done.errs[0]) && /is declined, not open/.test(r.no.errs[0]) && /--reset/.test(r.pass.errs[0]),
+        `O27 · no such id, a malformed id, approved, declined, a passphrase without --reset: each refused, nothing written (${Object.values(r).map((x) => x.rc).join("/")})`);
+      const u = [await cliRec(db, recDir)("allow", "--request", "r-a", "--email", "a@ask.test", "--local", "DIR", "--config", "CFG"), await cliRec(db, recDir)("allow", "--request", "--local", "DIR", "--config", "CFG")];
+      ok(u.every((x) => x.rc === 2 && x.opened === 0), `O27 · --request with --email, and --request with no id, are usage errors that open nothing (${u.map((x) => x.rc).join("/")})`);
+      // the cap: 50 places taken (49 outside orgs beside Acme's and one open code): refused, the request stays open; --beyond-cap approves
+      const full = line(world());
+      for (let i = 0; i < 49; i++) full.prepare("INSERT INTO org (id, name, created_at, updated_at) VALUES (?, ?, '2026-10-01', '2026-10-01')").run(200 + i, `Full ${i}`);
+      const fb = allText(full);
+      const capped = await cliRec(full, recDir)("allow", "--request", "r-a", "--local", "DIR", "--config", "CFG");
+      ok(capped.rc === 1 && /the beta's 50 places are taken/.test(capped.errs[0] || "") && reqOf(full, "r-a").status === "open" && allText(full) === fb,
+        `O27 · at 50 places the cap refuses allow --request (${capped.rc}); the request stays open, nothing written`);
+      const past = await cliRec(full, recDir)("allow", "--request", "r-a", "--beyond-cap", "--local", "DIR", "--config", "CFG");
+      ok(past.rc === 0 && reqOf(full, "r-a").status === "approved" && past.said.some((x) => /--beyond-cap: allowed PAST/.test(x)), `O27 · --beyond-cap allows and approves it (${past.rc})`);
+      // a request decided between the read and the write (declined meanwhile): the guarded batch writes nothing
+      const raced = (M, rdb) => { const DB = d1(rdb); return M.allowEmail({ prepare: (q) => DB.prepare(q), batch: async (st) => { rdb.prepare("UPDATE access_requests SET status = 'declined' WHERE id = 'r-0'").run(); return DB.batch(st); } }, "z@ask.test", { request: "r-0" }); };
+      const gdb = line(world()), g = await raced(OP, gdb);
+      ok(g.refused && /decided since it was read/.test(g.refused) && reqOf(gdb, "r-0").status === "declined" && rowsOf(gdb).length === 0, `O27 · a request declined between the read and the write: refused, no code (${rowsOf(gdb).length} rows)`);
+      const RED = await mutantOp([["\"WHERE EXISTS (SELECT 1 FROM access_requests r WHERE r.id = ?6 AND r.email = ?2 AND r.status = 'approved' AND r.approved_at = ?4)\";", "\"WHERE ?6 IS NOT NULL\";"]]);
+      const rdb = line(world());
+      await raced(RED, rdb);
+      ok(rowsOf(rdb).length === 1 && reqOf(rdb, "r-0").status === "declined", `O27 · RED: with the mint's guard removed a code is minted for a declined request (${rowsOf(rdb).length} row)`);
     }
   }
 } finally {

@@ -58,7 +58,7 @@ node tools/listing-walk.mjs --url <worker> --codes <the refresh's codes file>   
 sh tools/ship-plan.sh ryuklabs        # read-only: this ship's order — migrations, preflights, checks, rollback (--no-import: no import hook)
 sh tools/migrate.sh migrate-0NN.sql   # one migration on live, a Time Travel bookmark first
 sh tools/ship.sh ryuklabs             # the ONE deploy command, resumable by its run record (SHIP_PREVIEW_HOOK: a step on the preview)
-node tools/operator.mjs allow --email <e> --live --config wrangler.jsonc --confirm-live ryuklabs-agent-r   # the operator: a sign-up code (printed once), refused once the beta's 50 places are taken unless --beyond-cap (sprint 12); also list-orgs · set-plan · raise · suspend (sprint 8) · set-openai-challenge · clear-openai-challenge (sprint 11)
+node tools/operator.mjs allow --email <e> --live --config wrangler.jsonc --confirm-live ryuklabs-agent-r   # the operator: a sign-up code (printed once), refused once the beta's 50 places are taken unless --beyond-cap (sprint 12); also list-orgs · set-plan · raise · suspend (sprint 8) · set-openai-challenge · clear-openai-challenge (sprint 11) · requests · allow --request <id> (sprint 21: the open requests in line; approve one, its code printed once)
 node tools/org-undo.mjs plan --org <id> --live --config wrangler.jsonc --confirm-live ryuklabs-agent-r     # one org's export / restore / verify / delete
 ```
 

@@ -106,10 +106,9 @@ const ALL = [
   ["gtm-lists", "/gtm", true, { steps: [{ js: "(function(){var r=document.querySelector('[data-region=\"lists\"]');if(r)r.scrollIntoView();})()" }, { wait: 300 }] }],
   ["holes", "/missing", true],
   ["holes-public", "/missing", false],
-  // sprint 7, 7.2: the sign-up (signed out): the form, the one refusal (a code typed for an email it does not open), the done page
+  // sprint 7, 7.2: the sign-up (signed out): the form, the one refusal (a code typed for an email it does not open)
   ["signup", "/signup", false],
   ["signup-refused", "/signup", false, { steps: [{ js: "(function(){var f=document.querySelector('form[action=\"/signup\"]');if(!f)return;f.email.value='someone@example.org';f.code.value='ABCDE-FGHJK-MNPQR-STVWX';f.password.value='a passphrase';f.confirm.value='a passphrase';f.submit();})()" }, { wait: 900 }] }],
-  ["signup-done", "/signup?done=1", false],
   // sprint 21, 21.1: request access (signed out): the form
   ["request-access", "/request-access", false],
   // sprint 7, 7.3: create an org (signed out): the form, a refusal (an address the platform uses), and the made page. Each made-page

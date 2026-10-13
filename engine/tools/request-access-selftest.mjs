@@ -23,6 +23,15 @@
 //        404 page; the door under an org's address is not there (the platform's root only)
 //   R10 · the beta count: BETA_ORGS_SQL and BETA_CODES_SQL are each ONE aggregate (SELECT COUNT), and the worker's betaCount answers
 //        what the operator's betaPlaces answers over the same database ({cap 50, taken, left})
+//   R11 · (sprint 21, 21.2) you're in line: an open request's page says its place — 1 + the open requests before it, two at the
+//        same instant in id order (never one place twice), an approved or declined one never counted — and REQUEST_PLACE_SQL is
+//        one statement whose two counts each SEARCH the line index (the earlier ones by a COVERING range), never a scan; once the
+//        first is approved the next is place 1; APPROVED_PROFILE_SQL (a web sign-up's prefill) is ONE SEARCH on
+//        idx_access_requests_email (email and status), its order the index's (no temporary sort)
+//   R12 · the pages by status: open, the beta's count as betaCount answers it ("N of 50 places taken"; past the cap "All 50
+//        places taken"), what comes next and the walkthrough; approved, its place open, the way to /signup, no place and no
+//        count; declined, one sentence, no count, no company; the asked page, the count and the walkthrough; a count that cannot
+//        be read is left out of both (the page still 200), never a guess. betaWords' pure rules
 // And the MUTATION PROOF: each named mutant (a scratch copy of src/) must turn its case(s) red, by an assertion, never a crash.
 // Exit 1 on any failure. A gate step.
 import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync } from "node:fs";
@@ -133,7 +142,7 @@ const CASES = {
       [r.status === 303 && !!t && r.text === "", `R5 · a full request: ${r.status} -> ${r.location}`],
       [rows.length === 1 && row.email === "ada@analytical.test" && row.status === "open" && row.token_hash === sha(`sharingu-request:v1:${t}`) && !inRows && row.created_at === row.updated_at && row.approved_at === null,
         `R5 · one open row, the email lower-cased, only the link's hash kept (${rows.length} rows, ${row.email}, ${row.status})`],
-      [page.status === 200 && /data-screen="request-received"/.test(page.text) && /Ada Lovelace/.test(page.text) && /data-request-company>Analytical Engines</.test(page.text),
+      [page.status === 200 && /data-screen="request-in-line"/.test(page.text) && /Ada Lovelace/.test(page.text) && /data-request-company>Analytical Engines</.test(page.text),
         `R5 · the link's page names the person and the company (${page.status})`],
     ];
   },
@@ -224,6 +233,74 @@ const CASES = {
         `R10 · the worker's betaCount answers the operator's count (${JSON.stringify(worker)}; operator ${op.taken} taken, ${op.left} left)`],
     ];
   },
+  async R11() {
+    const { REQUEST_PLACE_SQL, APPROVED_PROFILE_SQL } = await mod("requestaccess.js");
+    const W = await world();
+    const db = W.w.db;
+    // put(id, at, status) -> its link's token: the row as the door files it, its token known (only its hash kept)
+    const put = (id, at, status = "open") => {
+      const token = createHash("sha256").update(id).digest("hex").slice(0, 48);
+      db.prepare("INSERT INTO access_requests (id, email, name, company, role, team_size, status, token_hash, created_at, updated_at) VALUES (?, ?, ?, ?, 'Founder', '2-10', ?, ?, ?, ?)")
+        .run(id, `${id}@line.test`, `Name ${id}`, `Company ${id}`, status, sha(`sharingu-request:v1:${token}`), at, at);
+      return token;
+    };
+    const t = { z: put("r-z", "2026-10-13T08:00:00.000Z", "approved"), y: put("r-y", "2026-10-13T08:30:00.000Z", "declined"), first: put("r-0", "2026-10-13T09:00:00.000Z"),
+      b: put("r-b", "2026-10-13T10:00:00.000Z"), a: put("r-a", "2026-10-13T10:00:00.000Z"), c: put("r-c", "2026-10-13T11:00:00.000Z") };
+    const placeOf = async (token) => {
+      const r = await W.call("GET", `/request-access/${token}`, { headers: { accept: "text/html" } });
+      return (/data-request-place>(\d+)</.exec(r.text) || [])[1] || (r.status === 200 ? "none" : `status ${r.status}`);
+    };
+    const before = [await placeOf(t.first), await placeOf(t.a), await placeOf(t.b), await placeOf(t.c)];
+    db.prepare("UPDATE access_requests SET status = 'approved', approved_at = ?1, updated_at = ?1 WHERE id = 'r-0'").run("2026-10-13T12:00:00.000Z");
+    const after = [await placeOf(t.first), await placeOf(t.a), await placeOf(t.c)];
+    const plan = db.prepare("EXPLAIN QUERY PLAN " + REQUEST_PLACE_SQL).all("x", "y").map((r) => r.detail);
+    const prefill = db.prepare("EXPLAIN QUERY PLAN " + APPROVED_PROFILE_SQL).all("x").map((r) => r.detail);
+    return [
+      [before.join(",") === "1,2,3,4", `R11 · the places in line: the first 1, two at the same instant in id order (2, 3), the last 4; an approved and a declined request never counted (${before.join(",")})`],
+      [after.join(",") === "none,1,3", `R11 · once the first is approved it has no place and the next is place 1 (${after.join(",")})`],
+      [plan.length === 5 && plan.filter((d) => /^SEARCH access_requests USING (?:COVERING )?INDEX idx_access_requests_line /.test(d)).length === 2 && /COVERING INDEX idx_access_requests_line \(created_at<\?\)/.test(plan.join("|")) && !plan.some((d) => /^SCAN access_requests/.test(d)),
+        `R11 · the place is one statement, its two counts each a SEARCH of the line index, the earlier ones COVERING (${plan.join(" | ")})`],
+      [prefill.length === 1 && /^SEARCH access_requests USING INDEX idx_access_requests_email \(email=\? AND status=\?\)$/.test(prefill[0]),
+        `R11 · the sign-up's prefill is one SEARCH on the email index, no sort (${prefill.join(" | ")})`],
+    ];
+  },
+  async R12() {
+    const { betaWords, WALKTHROUGH_URL } = await mod("requestpage.js");
+    const { betaCount } = await mod("accounts.js");
+    const W = await world();
+    const db = W.w.db;
+    for (let id = 2; id <= 4; id++) db.prepare("INSERT INTO org (id, name, created_at, updated_at, plan) VALUES (?, ?, ?, ?, 'free')").run(id, `Org ${id}`, T0, T0);
+    const a = await W.ask({ ...FULL, email: "open@one.test" }), d = await W.ask({ ...FULL, email: "late@one.test" }), p = await W.ask({ ...FULL, email: "yes@one.test" });
+    db.prepare("UPDATE access_requests SET status = 'declined' WHERE email = 'late@one.test'").run();
+    db.prepare("UPDATE access_requests SET status = 'approved', approved_at = updated_at WHERE email = 'yes@one.test'").run();
+    const get = (path) => W.call("GET", path, { headers: { accept: "text/html" } });
+    const open = await get(`/request-access/${W.tokenOf(a)}`), declined = await get(`/request-access/${W.tokenOf(d)}`), approved = await get(`/request-access/${W.tokenOf(p)}`), asked = await get("/request-access/asked");
+    const c = await betaCount({ DB: d1(db) });
+    const words = `${c.taken} of ${c.cap} places taken`;
+    const walk = `href="${WALKTHROUGH_URL}"`;
+    // the count's two statements fail (the batch), the request's own reads do not: the count is left out
+    const real = W.w.env.DB;
+    W.w.env.DB = { prepare: (q) => real.prepare(q), batch: async () => { throw new Error("D1 down for the count"); } };
+    const openDown = await get(`/request-access/${W.tokenOf(a)}`), askedDown = await get("/request-access/asked");
+    W.w.env.DB = real;
+    for (let id = 5; id <= 60; id++) db.prepare("INSERT INTO org (id, name, created_at, updated_at, plan) VALUES (?, ?, ?, ?, 'free')").run(id, `Org ${id}`, T0, T0);
+    const full = await get("/request-access/asked");
+    return [
+      [c.taken === 3 && open.status === 200 && open.text.includes(`data-beta-count>${words}<`) && /data-request-place>1</.test(open.text) && open.text.includes(walk) && /data-region="request-next"/.test(open.text)
+        && /We review the requests in the order they came/.test(open.text) && /we email a sign-up code to your address/.test(open.text) && /Thank you, Ada Lovelace/.test(open.text) && /data-request-company>Analytical Engines</.test(open.text),
+        `R12 · open: the place, the count as betaCount answers it (${words}), what comes next, the walkthrough (${open.status})`],
+      [approved.status === 200 && /data-screen="request-approved"/.test(approved.text) && /Your place is open/.test(approved.text) && /comes to your email/.test(approved.text) && /href="\/signup"/.test(approved.text)
+        && !/data-request-place|data-beta-count/.test(approved.text), `R12 · approved: its place open, the code by email, the way to /signup; no place, no count (${approved.status})`],
+      [declined.status === 200 && /data-screen="request-declined"/.test(declined.text) && (declined.text.match(/<p class="done-why">/g) || []).length === 1 && !/data-beta-count|places taken|Analytical Engines|data-request-place/.test(declined.text),
+        `R12 · declined: one sentence, no count, no company (${declined.status})`],
+      [asked.status === 200 && asked.text.includes(`data-beta-count>${words}<`) && asked.text.includes(walk) && full.text.includes("data-beta-count>All 50 places taken<"),
+        `R12 · the asked page: the count and the walkthrough; past the cap "All 50 places taken" (${asked.status})`],
+      [openDown.status === 200 && askedDown.status === 200 && !/data-beta-count|places taken/.test(openDown.text + askedDown.text) && /data-request-place>1</.test(openDown.text),
+        `R12 · a count that cannot be read is left out, the pages still 200 (${openDown.status}, ${askedDown.status})`],
+      [betaWords({ taken: 7, cap: 50 }) === "7 of 50 places taken" && betaWords({ taken: 0, cap: 50 }) === "0 of 50 places taken" && betaWords({ taken: 50, cap: 50 }) === "All 50 places taken"
+        && betaWords({ taken: 51, cap: 50 }) === "All 50 places taken" && betaWords(null) === "" && betaWords({}) === "" && betaWords({ taken: -1, cap: 50 }) === "", "R12 · betaWords: N of the cap, all taken at or past it, nothing for no count"],
+    ];
+  },
 };
 
 // ---- the mutants: each must turn its case(s) red ----
@@ -244,6 +321,12 @@ const MUTANTS = [
     from: "if (crossSiteLogin(request, url)) return isForm ? page(403, \"Cross-site request refused.\") : json({ error: \"cross_site_request_access\" }, 403);", to: "", red: ["R9"] },
   { name: "the sign-in without its request-access link", file: "src/login.js",
     from: ": action === \"/login\" ? REQUEST_ACCESS_LINK : \"\",", to: ": \"\",", red: ["R4"] },
+  { name: "the place without its tie (two at one instant share a place)", file: "src/requestaccess.js",
+    from: "AND created_at = ?1 AND id < ?2) AS place", to: "AND created_at = ?1 AND ?2 IS NULL) AS place", red: ["R11"] },
+  { name: "the count past the cap said as it is", file: "src/requestpage.js",
+    from: "return taken >= cap ? `All ${cap} places taken` : `${taken} of ${cap} places taken`;", to: "return `${taken} of ${cap} places taken`;", red: ["R12"] },
+  { name: "the count's failure not caught (the page answers 500)", file: "src/index.js",
+    from: "[placeInLine(env, r), betaCount(env).catch(() => null)]", to: "[placeInLine(env, r), betaCount(env)]", red: ["R12"] },
   { name: "the beta's codes counted expired too", file: "src/beta.js",
     from: "AND s.expires_at > ?1 ", to: "AND ?1 IS NOT NULL ", red: ["R10"] },
 ];

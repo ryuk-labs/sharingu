@@ -665,8 +665,13 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   nothing and lands on `/request-access/asked`. The cap and its two counts moved to `src/beta.js`, which
   `tools/operator.mjs` imports. request-access selftest 47/47; smoke 336/337, its one red the listing page generated
   from the contract (regenerated, `make-listing-docs --check` green).
-- [ ] **21.2 · You're in line.** The request's own page: its place, N of 50 live from D1, what comes next, the
-  walkthrough; `operator allow --request <id>` approves it and `/orgs/new` reads the profile.
+- [x] **21.2 · You're in line.** The private page: the place (1 + the open requests before it, on the line index), the
+  live "N of 50 places taken" (`betaCount`; left out if unread, never guessed), what comes next and the walkthrough; an
+  approved request's page says its place is open, a declined one says so plainly; the asked page shows the count.
+  `operator requests` lists the line; `operator allow --request <id>` does what `allow --email` does (the cap, the code
+  once) and approves the request in the same batch. A web sign-up with no seat answers the org form filled in from the
+  email's approved request (company, name; read only after the code is proven, on migrate-081's email index), so
+  `/signup?done=1` and its page are gone. operator 91/91, request-access 60/60, signup 51/51; smoke 341/341 (s63).
 - [ ] **21.3 · The showcase and the look.** `/` for an unsigned visitor (the splash: under 1.5 s, first visit only,
   skippable, off under reduced motion); `/login`, `/signup`, `/orgs/new` and the connect page in the website's look.
 - [ ] **21.4 · Google sign-in** (waits on the owner's OAuth client). Sign-up, sign-in and the connect page; matched by

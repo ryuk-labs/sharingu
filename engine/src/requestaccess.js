@@ -14,6 +14,13 @@
 // door answers a repeat with the asked page (REQUEST_ASKED_PATH): it says the email asked, which the owner accepted. Nothing reads
 // accounts: an account's email with no open request files a request as any other.
 // requestByToken(env, token) -> the request's row for its private page, or null (no such link: the one not-found).
+// placeInLine(env, request) -> an OPEN request's place in line (sprint 21, 21.2: 1 + the open requests that came before it), from
+// ONE statement on idx_access_requests_line: the earlier ones by a covering range count, the same instant's by id, so two at
+// once never share a place. Its rows read are the requests ahead of it, never the table.
+// approvedProfile(env, email) -> { name, company } of the email's newest APPROVED request, or null (sprint 21, 21.2: the org form a
+// web sign-up answers is filled in from it). The caller passes ONLY an email a sign-up's code just proved (src/index.js POST
+// /signup, after signUp's ok): the profile is the person's own, never read for an email someone merely typed. One SEARCH on
+// idx_access_requests_email (migrate-081), its order the index's.
 import { db } from "./data.js";
 import { uid, now, sha256, hex } from "./util.js";
 import { normEmail, asciiEmail } from "./accounts.js";
@@ -109,8 +116,22 @@ export async function fileRequest(env, r) {
   return ((res && res.meta && res.meta.changes) || 0) >= 1 ? token : null;
 }
 // the private page's one read, by the link's hash (a malformed token reads nothing)
-export const REQUEST_BY_TOKEN_SQL = "SELECT name, company, status, created_at FROM access_requests WHERE token_hash = ?1";
+export const REQUEST_BY_TOKEN_SQL = "SELECT id, name, company, status, created_at FROM access_requests WHERE token_hash = ?1";
 export async function requestByToken(env, token) {
   if (!REQUEST_TOKEN_RE.test(String(token == null ? "" : token))) return null;
   return (await db(env).prepare(REQUEST_BY_TOKEN_SQL).bind(await requestTokenHash(token)).first()) || null;
+}
+// the place: ?1 the request's created_at, ?2 its id (the two subqueries each held to the line index: INDEXED BY fails loudly if
+// it could not be used, never a quiet scan)
+export const REQUEST_PLACE_SQL = "SELECT 1 + (SELECT COUNT(*) FROM access_requests INDEXED BY idx_access_requests_line WHERE status = 'open' AND created_at < ?1) " +
+  "+ (SELECT COUNT(*) FROM access_requests INDEXED BY idx_access_requests_line WHERE status = 'open' AND created_at = ?1 AND id < ?2) AS place";
+export async function placeInLine(env, r) {
+  const row = await db(env).prepare(REQUEST_PLACE_SQL).bind(String(r.created_at), String(r.id)).first();
+  const n = Number(row && row.place);
+  return Number.isSafeInteger(n) && n >= 1 ? n : null;
+}
+export const APPROVED_PROFILE_SQL = "SELECT name, company FROM access_requests INDEXED BY idx_access_requests_email WHERE email = ?1 AND status = 'approved' ORDER BY approved_at DESC LIMIT 1";
+export async function approvedProfile(env, email) {
+  const row = await db(env).prepare(APPROVED_PROFILE_SQL).bind(normEmail(email)).first();
+  return row ? { name: String(row.name || ""), company: String(row.company || "") } : null;
 }

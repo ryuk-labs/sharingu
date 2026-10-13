@@ -1,6 +1,6 @@
 -- migrate-081.sql — request access (sprint 21, slice 21.1; docs/plan/SPRINTS.md 21.1; the owner's MCQs of 2026-10-13: request
 -- access is a worker page writing D1, with a profile; the site's waitlist button links to it, its Telegram-only form retires).
--- EXPAND ONLY (PLATFORM §5): one table and two indexes added, and migrate-072's two slug triggers re-created with one more reserved
+-- EXPAND ONLY (PLATFORM §5): one table and three indexes added, and migrate-072's two slug triggers re-created with one more reserved
 -- name; nothing renamed, no column or table dropped; the old code names none of it.
 --   1 · access_requests: ONE person's request for a place in the beta, before any account or org (a PLATFORM row: no org, as
 --       signup_codes). The profile as the person typed it, normalised at the door (src/requestaccess.js readRequest): name, email
@@ -12,6 +12,11 @@
 --       REQUEST STANDS (the owner's ruling, 2026-10-13): a repeat for an email whose request is open changes nothing.
 --   2 · idx_access_requests_open: at most ONE open request per email (the door's one insert does nothing on it: the repeat).
 --   3 · idx_access_requests_line: the open requests in the order they came (slice 21.2's place in line: one range count on it).
+--   3b · idx_access_requests_email (slice 21.2, added here before 081 shipped): an email's requests by status, newest approval
+--       first. What reads it: a web sign-up with no seat (POST /signup), whose code proved the email, answers the org form
+--       filled in from that email's newest APPROVED request (src/requestaccess.js approvedProfile: ONE SEARCH on (email, status),
+--       its order the index's; never read by an email no code proved). Write cost: one index entry per request, kept on the
+--       one status update the operator's allow --request makes.
 --   4 · THE RESERVED NAME: /request-access is a new first segment of the door's routes, so it is a name the platform uses
 --       (src/orgnames.js reservedNames). migrate-072's two default-slug triggers (org_slug_on_insert, org_slug_on_update) hold
 --       that list written out (SQL cannot derive it); they are dropped and re-created here, word for word but for
@@ -22,7 +27,7 @@
 --       shadowed by the route, and the check fails loudly on it.
 -- WHO WRITES IT: the worker's POST /request-access (src/requestaccess.js fileRequest, public: no session); the operator's
 -- `allow --request` (slice 21.2). Nothing reads accounts beside it: an email that holds an account files a request as any other.
--- WRITE COST on live: nothing (an empty table and its indexes; the triggers fire only on an org insert or an update to a NULL slug).
+-- WRITE COST on live: nothing (an empty table and its three indexes; the triggers fire only on an org insert or an update to a NULL slug).
 -- ORDER: BEFORE the code (the new code's POST /request-access writes it; the old code names neither the table nor the indexes).
 -- WRANGLER'S SPLITTER (engine/CLAUDE.md scars): the triggers as migrate-072 wrote them (no quoted two dashes, no "END)").
 -- Re-runnable: IF NOT EXISTS, and each trigger dropped IF EXISTS before it is made again — a replay changes nothing.
@@ -53,6 +58,8 @@ CREATE TABLE IF NOT EXISTS access_requests (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_access_requests_open ON access_requests(email) WHERE status = 'open';
 
 CREATE INDEX IF NOT EXISTS idx_access_requests_line ON access_requests(created_at) WHERE status = 'open';
+
+CREATE INDEX IF NOT EXISTS idx_access_requests_email ON access_requests(email, status, approved_at);
 
 -- 4 · the default slug's reserved names, one more (migrate-072's two triggers, re-created)
 DROP TRIGGER IF EXISTS org_slug_on_insert;

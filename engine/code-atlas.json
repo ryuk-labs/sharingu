@@ -7154,12 +7154,12 @@
           "role": "G2 M2: a saved file is served as an inert document (GET /artifact/:id): no script, nothing loaded from anywhere"
         },
         {
-          "line": 2044,
+          "line": 2060,
           "name": "BELOW_ROUTES_1",
           "role": ""
         },
         {
-          "line": 2296,
+          "line": 2312,
           "name": "BELOW_ROUTES_2",
           "role": ""
         },
@@ -7199,7 +7199,7 @@
           "role": ""
         },
         {
-          "line": 2520,
+          "line": 2536,
           "name": "OBSERVABLE_GETS",
           "role": "(it ends the session). Tested on the URL-normalised PATHNAME (installSelfPage), so a dot-segment path resolves first."
         },
@@ -7267,23 +7267,23 @@
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         },
         {
-          "line": 1436,
+          "line": 1452,
           "sql": "<dynamic: auditEventsSql(clauses)>"
         },
         {
-          "line": 1449,
+          "line": 1465,
           "sql": "SELECT project, id, name FROM k_nodes WHERE project = ? AND id IN (${ch.map(() ="
         },
         {
-          "line": 1940,
+          "line": 1956,
           "sql": "SELECT a.*, p.name AS by_name FROM artifacts a JOIN people p ON p.id = a.person_"
         },
         {
-          "line": 2055,
+          "line": 2071,
           "sql": "UPDATE tokens SET revoked = 1 WHERE token_hash = ? AND revoked = 0"
         },
         {
-          "line": 2670,
+          "line": 2686,
           "sql": "SELECT settings FROM org WHERE id = {org}"
         }
       ],
@@ -14353,84 +14353,106 @@
     "requestaccess.js": {
       "constants": [
         {
-          "line": 51,
+          "line": 133,
+          "name": "APPROVED_PROFILE_SQL",
+          "role": ""
+        },
+        {
+          "line": 58,
           "name": "PROFILES",
           "role": "the three profiles: the hosts their addresses live on, a handle's form, and the address built from a handle"
         },
         {
-          "line": 27,
+          "line": 34,
           "name": "REQUEST_ASKED_PATH",
           "role": "the repeat's page: a fixed path no token can be (a token is 48 hex characters), naming nothing the request typed"
         },
         {
-          "line": 112,
+          "line": 119,
           "name": "REQUEST_BY_TOKEN_SQL",
           "role": "the private page's one read, by the link's hash (a malformed token reads nothing)"
         },
         {
-          "line": 39,
+          "line": 46,
           "name": "REQUEST_FIELDS",
           "role": "the fields a form or a JSON body sends (web: the form's marker)"
         },
         {
-          "line": 102,
+          "line": 109,
           "name": "REQUEST_INSERT_SQL",
           "role": "the one write: a new open request, or nothing when the email's request is open (the first stands; its row reports no cha"
         },
         {
-          "line": 35,
+          "line": 42,
           "name": "REQUEST_MAX",
           "role": "each text field's longest form, after folding"
         },
         {
-          "line": 23,
+          "line": 30,
           "name": "REQUEST_PATH",
           "role": "the private link: 24 random bytes as 48 hex characters (192 bits), after the page's path; only its hash is kept"
         },
         {
-          "line": 24,
+          "line": 126,
+          "name": "REQUEST_PLACE_SQL",
+          "role": "it could not be used, never a quiet scan)"
+        },
+        {
+          "line": 31,
           "name": "REQUEST_TOKEN_BYTES",
           "role": ""
         },
         {
-          "line": 25,
+          "line": 32,
           "name": "REQUEST_TOKEN_RE",
           "role": ""
         },
         {
-          "line": 37,
+          "line": 44,
           "name": "REQUEST_TRAP",
           "role": "the honeypot: a field no person sees (src/requestpage.js hides it); a request that fills it is answered as any other and"
         },
         {
-          "line": 33,
+          "line": 40,
           "name": "TEAM_SIZES",
           "role": "the team sizes the form offers, value -> the words it shows"
         }
       ],
       "d1Queries": [
         {
-          "line": 106,
+          "line": 113,
           "sql": "<dynamic: REQUEST_INSERT_SQL>"
         },
         {
-          "line": 115,
+          "line": 122,
           "sql": "<dynamic: REQUEST_BY_TOKEN_SQL>"
+        },
+        {
+          "line": 129,
+          "sql": "<dynamic: REQUEST_PLACE_SQL>"
+        },
+        {
+          "line": 135,
+          "sql": "<dynamic: APPROVED_PROFILE_SQL>"
         }
       ],
       "exports": [
+        "APPROVED_PROFILE_SQL",
         "REQUEST_ASKED_PATH",
         "REQUEST_BY_TOKEN_SQL",
         "REQUEST_FIELDS",
         "REQUEST_INSERT_SQL",
         "REQUEST_MAX",
         "REQUEST_PATH",
+        "REQUEST_PLACE_SQL",
         "REQUEST_TOKEN_BYTES",
         "REQUEST_TOKEN_RE",
         "REQUEST_TRAP",
         "TEAM_SIZES",
+        "approvedProfile",
         "fileRequest",
         "newRequestToken",
+        "placeInLine",
         "readRequest",
         "requestByToken",
         "requestTokenHash",
@@ -14472,6 +14494,11 @@
     "requestpage.js": {
       "constants": [
         {
+          "line": 96,
+          "name": "LINE_CSS",
+          "role": "the in-line page's few rules on the front door's tokens: what comes next, a short numbered list"
+        },
+        {
           "line": 32,
           "name": "REQUEST_CSS",
           "role": "the form's own few rules on the front door's tokens: the team size's select as the inputs are, the honeypot out of sight"
@@ -14480,11 +14507,18 @@
           "line": 12,
           "name": "REQUEST_FIELD_WORDS",
           "role": ""
+        },
+        {
+          "line": 83,
+          "name": "WALKTHROUGH_URL",
+          "role": "the walkthrough while a person waits: the site's docs page, its one fixed section (sprint 18: the videos live there)"
         }
       ],
       "d1Queries": [],
       "exports": [
         "REQUEST_FIELD_WORDS",
+        "WALKTHROUGH_URL",
+        "betaWords",
         "renderRequestAccess",
         "renderRequestAsked",
         "renderRequestMissing",
@@ -15078,37 +15112,37 @@
     "signup.js": {
       "constants": [
         {
-          "line": 33,
+          "line": 32,
           "name": "EMAIL_RE",
           "role": "an email's form, the front door's one test (the sign-up's and the org creation's: src/orgs.js)"
         },
         {
-          "line": 104,
+          "line": 90,
           "name": "INVITE_FIELD_WORDS",
           "role": ""
         },
         {
-          "line": 117,
+          "line": 103,
           "name": "INVITE_JS",
           "role": "once it holds a token; with none, it stays for a pasted link)"
         },
         {
-          "line": 101,
+          "line": 87,
           "name": "INVITE_REFUSED_WORDS",
           "role": "the one refusal (no such open link: used, expired, replaced by a newer one, its seat removed or reissued): the same word"
         },
         {
-          "line": 103,
+          "line": 89,
           "name": "INVITE_STANDS_WORDS",
           "role": "an email whose account already stands (its own passphrase, or a seat in another org): the link changed nothing"
         },
         {
-          "line": 26,
+          "line": 25,
           "name": "SIGNUP_FIELD_WORDS",
           "role": "the field problems, in the words the page shows (nothing here depends on the allowlist)"
         },
         {
-          "line": 24,
+          "line": 23,
           "name": "SIGNUP_REFUSED_WORDS",
           "role": "the one refusal (an email not allowed; a wrong, used, expired or revoked code): the same words for every case"
         }
@@ -15124,7 +15158,6 @@
         "inviteProblem",
         "renderInvite",
         "renderSignup",
-        "renderSignupDone",
         "signupProblem"
       ],
       "imports": [

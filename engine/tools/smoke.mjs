@@ -67,6 +67,7 @@ import "./smoke/s54-client.mjs";   // sprint 13, 13.1: which AI filed it — a C
 import "./smoke/s60-split-door.mjs"; // sprint 19: the split door — preview never files; file_contribution, save_knowledge and remove_knowledge each file their own part (wrong tool, changed items, a grade refused; a repeat answers the first receipt); file is gone
 import "./smoke/s61-plain-note-default.mjs"; // sprint 21: in lane leader no kind is a plain note — a member's kind-less, touches-less leader contribution previews files, files, reads kind note; a code one still needs touches
 import "./smoke/s62-request-access.mjs"; // sprint 21, 21.1: request access, signed out — the form; a full profile 303s to its private link naming the company; a repeat changes nothing and 303s to the asked page (one row, the first profile, the first link still works); an account's email and the honeypot answer as a new request (the honeypot writes none); a bad email 422 naming the field; a wrong token 404
+import "./smoke/s63-in-line.mjs"; // sprint 21, 21.2: you're in line — two requests: the second's place the first's + 1, each as `operator requests` lists it, the beta's count the operator says, what comes next, the walkthrough; `operator allow --request` approves the first (the code once; its page says the place is open; the second moves up; the web sign-up answers the org form holding the company and the name, POST /orgs makes the org named the company); the asked page's count and walkthrough; a non-open id refused
 
 let failed = 0;
 for (const c of CASES) {

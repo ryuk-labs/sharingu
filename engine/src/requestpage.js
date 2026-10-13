@@ -1,8 +1,8 @@
 // src/requestpage.js — the request-access pages (sprint 21, slice 21.1; src/requestaccess.js reads and writes): GET /request-access
 // (the form: the profile, required and optional apart, a field no person sees as the honeypot), the request's own page at its
-// private link (GET /request-access/<token>: received, its name and company), the repeat's page (GET /request-access/asked) and
-// the one not-found for a link that opens no
-// request. The front door's card (src/login.js authPage: both worlds, the one accent), never a second skin. No statement here.
+// private link (GET /request-access/<token>: by its status — in line, its place open, or declined; sprint 21, 21.2), the repeat's
+// page (GET /request-access/asked) and the one not-found for a link that opens no request. The front door's card (src/login.js
+// authPage: both worlds, the one accent), never a second skin. No statement here: the route reads and hands each page its numbers.
 // REQUEST_FIELD_WORDS — each field problem in the words the form shows (readRequest names the field).
 import { esc, errorState } from "./ui.js";
 import { DEFAULT_BRAND } from "./tenant.js";
@@ -79,25 +79,77 @@ export function renderRequestAccess(opts) {
   });
 }
 
-// renderRequestReceived({ brand, request }) -> the request's own page: received, what it names, what comes next
+// the walkthrough while a person waits: the site's docs page, its one fixed section (sprint 18: the videos live there)
+export const WALKTHROUGH_URL = "https://www.sharingu.xyz/docs.html#walkthrough";
+// betaWords(count) -> the beta's places in words, from src/accounts.js betaCount's answer (read from D1 by the route), or "" when
+// there is none (the read failed: the page leaves the count out, never a guess). Past the cap (the operator may allow beyond it)
+// it says every place is taken, never "51 of 50".
+export function betaWords(count) {
+  const taken = Number(count && count.taken), cap = Number(count && count.cap);
+  if (!count || !Number.isSafeInteger(taken) || !Number.isSafeInteger(cap) || taken < 0 || cap < 1) return "";
+  return taken >= cap ? `All ${cap} places taken` : `${taken} of ${cap} places taken`;
+}
+// the count as one fact, or nothing
+const betaFact = (count) => { const w = betaWords(count); return w ? `<div class="fact"><span class="fact-k">The beta</span><span class="fact-v" data-beta-count>${esc(w)}</span></div>` : ""; };
+const walkLink = `<a class="done-action" href="${WALKTHROUGH_URL}" data-walkthrough>See the walkthrough</a>`;
+// the in-line page's few rules on the front door's tokens: what comes next, a short numbered list
+const LINE_CSS = `
+  .next{margin:0;padding:0 0 0 18px;display:flex;flex-direction:column;gap:6px;font:400 13.5px/1.5 var(--sans);color:var(--text)}
+`;
+
+// renderRequestReceived({ brand, request, place, count }) -> the request's own page, by its status (sprint 21, 21.2): OPEN, "you're
+// in line" (its place, the beta's count when it was read, what comes next, the walkthrough); APPROVED, its place is open (the
+// code comes by email, the way to sign up); DECLINED, one plain sentence (no reason, no count). place: src/requestaccess.js
+// placeInLine; count: src/accounts.js betaCount (null: left out).
 export function renderRequestReceived(opts) {
-  const { brand = DEFAULT_BRAND, request = {} } = opts || {};
-  const body = `<div class="done" data-screen="request-received" data-region="request-received">
-      <p class="done-what">Thank you, ${esc(request.name || "")}.</p>
-      <p class="done-why">We have your request for <b data-request-company>${esc(request.company || "")}</b>. We will email you a sign-up code when your place opens.</p>
+  const { brand = DEFAULT_BRAND, request = {}, place = null, count = null } = opts || {};
+  const status = String(request.status || "");
+  if (status === "approved") {
+    const body = `<div class="done" data-screen="request-approved" data-region="request-approved">
+      <p class="done-what">Your place is open, ${esc(request.name || "")}.</p>
+      <p class="done-why">Your sign-up code for <b data-request-company>${esc(request.company || "")}</b> comes to your email. With it, sign up: the org form comes filled in from your request.</p>
+      <a class="done-action" href="/signup">Sign up</a>
     </div>`;
-  return authPage({ ...brandOf(brand, "Request received"), lede: "Request received", body,
+    return authPage({ ...brandOf(brand, "Your place is open"), lede: "Your place is open", body });
+  }
+  if (status !== "open") {
+    const body = `<div class="done" data-screen="request-declined" data-region="request-declined">
+      <p class="done-why">We cannot offer you a place in this beta.</p>
+    </div>`;
+    return authPage({ ...brandOf(brand, "Request closed"), lede: "Request closed", body });
+  }
+  const body = `<div class="done" data-screen="request-in-line" data-region="request-in-line">
+      <p class="done-what">Thank you, ${esc(request.name || "")}.</p>
+      <p class="done-why">We have your request for <b data-request-company>${esc(request.company || "")}</b>.</p>
+      <div class="facts">
+        ${place ? `<div class="fact"><span class="fact-k">Your place in line</span><span class="fact-v" data-request-place>${esc(String(place))}</span></div>` : ""}
+        ${betaFact(count)}
+        <div class="fact"><span class="fact-k">What comes next</span>
+          <ol class="next" data-region="request-next">
+            <li>We review the requests in the order they came.</li>
+            <li>When your place opens, we email a sign-up code to your address.</li>
+            <li>With the code, sign up: the org form comes filled in from this request.</li>
+          </ol>
+        </div>
+      </div>
+      ${walkLink}
+    </div>`;
+  return authPage({ ...brandOf(brand, "You're in line"), lede: "You're in line", body, css: LINE_CSS,
     footnote: "Keep this page's address: it is your request's own page." });
 }
 
-// renderRequestAsked({ brand }) -> the repeat's page (the first request stands): it names nothing the repeat typed
+// renderRequestAsked({ brand, count }) -> the repeat's page (the first request stands): it names nothing the repeat typed; the
+// beta's count (public numbers only) and the walkthrough
 export function renderRequestAsked(opts) {
-  const { brand = DEFAULT_BRAND } = opts || {};
+  const { brand = DEFAULT_BRAND, count = null } = opts || {};
+  const fact = betaFact(count);
   const body = `<div class="done" data-screen="request-asked" data-region="request-asked">
       <p class="done-why">This email has already asked for a place. The link from your first request shows your place.</p>
-      <a class="done-action" href="/login">Sign in</a>
+      ${fact ? `<div class="facts">${fact}</div>` : ""}
+      ${walkLink}
     </div>`;
-  return authPage({ ...brandOf(brand, "Already asked"), lede: "Already asked", body });
+  return authPage({ ...brandOf(brand, "Already asked"), lede: "Already asked", body,
+    footnote: `Already have an account? <a href="/login">Sign in</a>` });
 }
 
 // renderRequestMissing({ brand }) -> the one not-found: a link that opens no request, whatever it held
