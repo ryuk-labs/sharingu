@@ -81,9 +81,9 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   changed later on github.com, org People). The plugin's dist repo moved to `ryuk-labs/sharingu-plugin` (a transfer:
   the old path redirects). `engine/.runs/` is machine-local (gitignored): the ship
   logs, the video recorder (`engine/.runs/b12-videos/`: `record.mjs`, `compose-take.sh`, `sweep-take.sh`, `join.sh`).
-- **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at 9edafe7: the install line naming
-  ryuk-labs/sharingu-plugin, the walkthrough section `docs.html#walkthrough` (four videos), the tools page at sprint 17's
-  contract (its sync to sprint 19's 37 tools is due). Its tools page matches the engine's contract (`npm run check:mcp-tools`).
+- **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at 9b8ecec: the install line naming
+  ryuk-labs/sharingu-plugin, the walkthrough section `docs.html#walkthrough` (four videos), the tools page at sprint 19's
+  contract (37 tools). Its tools page matches the engine's contract (`npm run check:mcp-tools`).
 - **The plugin:** this tree 0.1.12 (`claude plugin validate --strict ./plugin` passes); the public dist repo 0.1.15 (5b2fdf2, in sync; a team member on an older plugin updates: it still names `file`).
 - **The live reviewer world:** org 3 at `/sharingu-review` (rebuilt 2026-10-12 on `@review.sharingu.xyz`: the OpenAI
   portal's reviewer credentials and its connection use these), seven active seats (admin, member, dev, bd, marketing,
