@@ -616,7 +616,7 @@ and the AC eval both teach it); d1-hot's fixture lacked the org row the new sign
 socket failures under the shared Mini's spikes (patientFetch; s40's paced form creation). To S8's ledger: the
 account lockout, the per-seat grants epoch, and the squat's residual (`PLATFORM.md` §3).
 
-## Sprint 19 · The write door split (branch `sprint-19`, opened 2026-10-13; the owner's MCQs of the day)
+## Sprint 19 · The write door split (branch `sprint-19`, opened 2026-10-13; the owner's MCQs of the day) — SHIPPED 2026-10-13
 
 The spec: OpenAI's rescan after sprint 17 kept "operations that are not individually exposed" on `preview` and `file` and
 added "`preview` marked destructiveHint: false, but … material loss" (its confirm path filed, removes included). The
@@ -645,8 +645,11 @@ owner ruled: fix to the standard, split now, by what the write does; every write
 - [x] **19.4 · The smoke.** `tools/smoke/lib.mjs`'s `fileParts`/`fileWith`; every rule `file` held now runs on each write
   tool (the same items, not ready, expired, another's preview, the repeat, the read-only 403, the confirm on both
   revisions). Smoke 329/329.
-- [ ] **The sprint end.** The gate green and evals 42/42; one PR; the ship; the dist repo at 0.1.15; the ZIP; the
-  owner's Rescan.
+- [x] **The sprint end.** The gate green and evals 42/42; merged as ryuk-labs/sharingu#5 (930eb6b8b); shipped with the
+  owner's standing OK: `2468689c` → `91c7572a-b39a-4e00-a7c3-1472757f9cb0` at 100%, no migration (live stays at 080).
+  Proofs: the cross-org suite, the walk 13/13 on the preview and on live, verify-live 28/28; live's tools/list 37 tools,
+  no `file`, save_knowledge and remove_knowledge destructive. The dist repo at 0.1.15 (5b2fdf2, sync-check green); the
+  OpenAI ZIP 0.1.15 on the owner's Desktop. Next: the owner's upload, Reconnect and Rescan; team members update the plugin.
 
 ## Sprint 18 · The walkthrough (branch `sprint-18`, opened 2026-10-13; the owner's MCQ of the day) — DONE 2026-10-13
 
