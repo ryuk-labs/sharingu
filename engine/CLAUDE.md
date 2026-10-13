@@ -69,6 +69,9 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   `src/fonts.js` serves the self-hosted faces (`tools/make-fonts.mjs` builds `src/fontdata.js`, the MCP App card's cut faces
   from `assets/fonts/card/` included: `tools/make-card-fonts.py` cuts them, the card inlines them as data: fonts); `tools/shots.mjs`
   screenshots the local app in both worlds.
+- `tools/client-drive/` — drives a desktop AI client on the Mini (the ChatGPT app, the Claude app, Claude Code) through
+  `listing/test-cases.md` as one reviewer account, and records it (sprint 21; its README: the owner's one-time sign-ins,
+  the verbs, the traps). Screen verbs run inside the Mini's Terminal, which holds the Screen Recording grant.
 - `src/knowledge/schema.js` (`KINDS`) and `src/shapes.js` — the two registries (the kinds, the contribution shapes);
   `src/formats.js` answers `formats` from them and generates the item schemas of `preview` and the three write tools
   (`file_contribution`, `save_knowledge`, `remove_knowledge`; `WRITE_TOOLS`, sprint 19).
