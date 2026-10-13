@@ -2,19 +2,20 @@
 kind: workflow
 slug: build-mobile-app
 order: 8
-version: 2
+version: 3
 title: Build a mobile app
 purpose: From an idea to a mobile app in testers' hands and then in the stores, each step ending in a filed contribution.
-calls: whoami, updates, missing, preview, file, decisions, respond, ask, open_items, submit_grade, save_file, publish_version, wrap_up
+calls: whoami, updates, missing, preview, save_knowledge, file_contribution, decisions, respond, ask, open_items, submit_grade, save_file, publish_version, wrap_up
 ---
 
 # Build a mobile app
 
 The standard path from an idea to a released mobile app. It follows "Build a web app" and adds what a phone demands:
 platforms, devices, offline, permissions and a store review you do not control. Each step names the role that takes it
-and ends in a filed contribution. Every filing is a `preview {project, items}` the person sees, then
-`file {previewId, items}` with the same items. Every role starts its session with `whoami`, `updates` and `missing`,
-and ends it with `wrap_up`.
+and ends in a filed contribution. Every filing is a `preview {project, items}` the person sees,
+then each part with the tool its items name (`filesWith`): `save_knowledge {previewId, items}` the knowledge,
+`file_contribution {previewId, items}` the contributions, each with the same items of its part. Every role starts its
+session with `whoami`, `updates` and `missing`, and ends it with `wrap_up`.
 
 ## The steps
 

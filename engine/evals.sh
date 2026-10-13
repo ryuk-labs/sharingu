@@ -12,7 +12,7 @@
 #       answer -> the owner rules -> decided at once; a check -> a grade with proof -> the node lights;
 #   (d) rules nothing else proves: the doc door refuses a traversal; a saved HTML file serves sandboxed.
 # THE ORG starts the way the smoke starts (tools/lib.sh suite_local_up): a FRESH local org every run, its fixtures
-# (tools/suites/fixtures/) filed through preview then file; the cases read them (project sharingu, questions QSUITE1/QSUITE2).
+# (tools/suites/fixtures/) filed through preview then each part's write tool; the cases read them (project sharingu, questions QSUITE1/QSUITE2).
 # Every row a case files is eval-marked (tools/check-suite-marks.py, a gate step). The footer's self-clean and write_last_run
 # close the run. --live runs against the real worker after tools/cf-budget.sh; no fixture is filed there, so a case that
 # needs one skips by name.
@@ -43,7 +43,7 @@ SP="${SUITE_PROJECT:-sharingu}"   # the fixtures' project (tools/suites/fixtures
 export U TESTKEY
 # tc <key> <tool> <arguments json> -> the tool's answer, one JSON line ("_isError" beside its fields), through the MCP door
 tc() { DOOR_KEY="$1" U="$U" python3 "$DOORPY" tool "$2" "$3"; }
-# pf <key> <preview arguments json> -> preview then file with the same items: {step, isError, preview, receipt, id, route, status}
+# pf <key> <preview arguments json> -> preview, then each part's write tool with its items as previewed: {step, isError, preview, receipt, id, route, status}
 pf() { DOOR_KEY="$1" U="$U" python3 "$DOORPY" file "$2"; }
 # jf <dotted.path> -> one field of the JSON on stdin ('' when absent; true/false lowercase; a dict or list as JSON)
 jf() { python3 -c "import json,sys

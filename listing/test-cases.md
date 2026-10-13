@@ -55,27 +55,27 @@ session; an MCP call with a made-up bearer token (`Authorization: Bearer not-a-r
    nodes, each with a link.
 4. Open the org in a browser as the member. Expect: Home, Decisions and the Map show the same project.
 
-### P3 · File a contribution through preview, then file — account: member
+### P3 · File a contribution through preview, then file_contribution — account: member
 
 1. Ask: "In the Sample project, file a note in the leader lane: what 'A reviewer's first note', why 'the store's test
-   case'. Preview it first." Expect: the preview (the `preview` tool) shows the one item, "files at once", and says
-   nothing is filed yet.
-2. Ask: "File it." Expect: the receipt (the `file` tool) with the contribution's id, `T-` and the date and a number, and
-   its link.
+   case'. Preview it first." Expect: the preview (the `preview` tool) shows the one item, "files at once", names the
+   tool that files it, and says nothing is filed yet.
+2. Ask: "File it." Expect: the receipt (the `file_contribution` tool) with the contribution's id, `T-` and the date and
+   a number, and its link.
 3. Ask: "Read that contribution." (the `read` tool) Expect: what you filed, by Reviewer Member, in the Sample project.
 4. In the browser, open Build. Expect: the note is in the list.
 
 ### P4 · The confirm: nothing is filed until you say yes — account: admin
 
 1. Ask: "In the Sample project, add a goal 'A reviewer goal' under the goal 'Every contribution closes the loop', and
-   file it only after I confirm." (the `preview` tool, with its confirm) Expect: either your client asks you to confirm,
-   showing what would be filed, or (a client that shows no confirm prompt) sharingu answers that you were not asked, shows
-   the preview's text and files nothing.
+   file it only after I confirm." (the `preview` tool, then `save_knowledge` with its confirm) Expect: the preview shows
+   the goal and files nothing; then either your client asks you to confirm, showing what would be filed, or (a client
+   that shows no confirm prompt) sharingu answers that you were not asked and files nothing.
 2. Decline (or, where you were not asked, do not file). Expect: "The person declined: nothing was filed." where you
    were asked; nothing filed either way.
 3. Ask: "Read the goal 'A reviewer goal'." (the `read` tool) Expect: there is no such goal (`not_found`).
-4. Ask again and accept (or, where you were not asked, say "File it.": the `file` tool). Expect: the goal is filed; it reads back under
-   its parent, and the Goals tab shows it.
+4. Ask again and accept (or, where you were not asked, say "File it.": `save_knowledge` again, without the confirm).
+   Expect: the goal is filed; it reads back under its parent, and the Goals tab shows it.
 
 ### P5 · A partner works only where it is seated — account: partner
 
@@ -83,7 +83,7 @@ session; an MCP call with a made-up bearer token (`Authorization: Bearer not-a-r
 2. Ask: "Call whoami." (the `whoami` tool) Expect: the role `partner` and ONE project, the Sample project.
 3. Ask: "Show the Sample project's goals." (the `goals` tool) Expect: its goal tree.
 4. Ask: "In the Sample project, file a note in the leader lane: what 'A reviewer's first note', why 'the store's test
-   case'. Preview it, then file it." (`preview`, then `file`, as in P3) Expect: a receipt with its `T-` id.
+   case'. Preview it, then file it." (`preview`, then `file_contribution`, as in P3) Expect: a receipt with its `T-` id.
 
 ## Negative cases
 
@@ -92,11 +92,13 @@ Each is a request your AI should not carry out: why, then the refusal or the saf
 ### N1 · Nothing is deleted through the AI — account: admin
 
 Why: sharingu has no tool that deletes or archives a project; a project is the owner's to archive on Control, in the
-browser, and an archive is never a delete.
+browser, and an archive is never a delete. `remove_knowledge` removes a project's knowledge items (a goal, a doc, a Map
+node), never the project itself, and only items a preview showed first.
 
 1. Ask: "Delete the Sample project and everything in it." Expect: your AI says it cannot: no sharingu tool deletes a
    project. Nothing changes: whoami still lists both projects, and the Sample project's goals still read. If it offers to
-   remove the project's items one by one instead, that is a preview, which files nothing until you file it.
+   remove the project's items one by one instead, that starts with a preview, which removes nothing; and a project is
+   no item a preview can name (`unknown_kind`).
 
 ### N2 · A partner cannot read a project it has no seat on — account: partner
 

@@ -113,8 +113,8 @@ async function batchCase(src) {
     const pv = await w.mcp("preview", { project: "alpha", items, clientRef: "hand-batch-1" }, "imp-key");
     if (!pv.out || !pv.out.previewId) return { error: `preview: ${JSON.stringify(pv.out).slice(0, 200)}` };
     armed = true;
-    const f = await w.mcp("file", { previewId: pv.out.previewId, items }, "imp-key");
-    if (f.isError || (f.out && f.out.error)) return { error: `file: ${JSON.stringify(f.out).slice(0, 200)}` };
+    const f = await w.mcp("save_knowledge", { previewId: pv.out.previewId, items }, "imp-key");
+    if (f.isError || (f.out && f.out.error)) return { error: `save_knowledge: ${JSON.stringify(f.out).slice(0, 200)}` };
   } finally { globalThis.Date = RealDate; }
   const docs = w.db.prepare("SELECT path, created_by, updated_by, updated_at FROM k_docs WHERE project = 'alpha'").all();
   const rows = w.db.prepare("SELECT id, submitter, client_ref, touches, created_at, grade FROM transmission WHERE kind = 'knowledge'").all();

@@ -134,12 +134,12 @@ async function probeBroadcast(handler, label, assert) {
     return { status: r.status, j };
   };
   const item = (slug) => ({ lane: "leader", kind: "item", what: slug, why: "a kit the write door selftest publishes", touches: "skill", gapRefs: ["item/" + slug], proof: "https://src.example/" + slug });
-  // D5: a contribution files as any client files it, preview then file (POST /preview, POST /file: the tools' REST twins)
+  // D5: a contribution files as any client files it, preview then file_contribution (POST /preview, POST /preview/file-contribution: the tools' REST twins)
   const fileOne = async (c) => {
     const items = [{ contribution: c }];
     const pv = await post("/preview", bearer(SEAT_KEY), { items, eval: true });
     if (!pv.j || !pv.j.previewId) return { status: pv.status, j: pv.j, preview: pv.j };
-    const f = await post("/file", bearer(SEAT_KEY), { previewId: pv.j.previewId, items });
+    const f = await post("/preview/file-contribution", bearer(SEAT_KEY), { previewId: pv.j.previewId, items });
     const r0 = (f.j && f.j.results && f.j.results[0]) || {};
     return { status: f.status, j: f.j ? { ...f.j, id: r0.id || null } : f.j, preview: pv.j };
   };
@@ -178,7 +178,7 @@ async function probeBroadcast(handler, label, assert) {
   out.resCase = await fileOne(agent("Publish"));
   out.resSpace = await fileOne(agent(" EQUIP "));
   const pvBatch = await post("/preview", bearer(SEAT_KEY), { items: [{ contribution: { lane: "leader", kind: "note", what: "a plain note", why: "rides the same batch" } }, { contribution: agent("equip") }], eval: true });
-  out.resBatch = pvBatch.j && pvBatch.j.previewId ? await post("/file", bearer(SEAT_KEY), { previewId: pvBatch.j.previewId, items: [{ contribution: { lane: "leader", kind: "note", what: "a plain note", why: "rides the same batch" } }, { contribution: agent("equip") }] }) : pvBatch;
+  out.resBatch = pvBatch.j && pvBatch.j.previewId ? await post("/preview/file-contribution", bearer(SEAT_KEY), { previewId: pvBatch.j.previewId, items: [{ contribution: { lane: "leader", kind: "note", what: "a plain note", why: "rides the same batch" } }, { contribution: agent("equip") }] }) : pvBatch;
   out.resBatchPreview = pvBatch.j;
   const rpc = (kind) => ({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "preview", arguments: { items: [{ contribution: agent(kind) }], eval: true } } });
   const mcp = await post("/mcp", bearer(SEAT_KEY), rpc("publish"));
@@ -191,7 +191,7 @@ async function probeBroadcast(handler, label, assert) {
   out.nearFiled = w.filed() - f2;
   if (assert) {
     const pv = (r) => r.status === 200 && r.j && r.j.preview === true;
-    ok(out.item === 200 && !!id, `${label}: the seat files a draft (kind item) by POST /preview then POST /file: ${out.item} ${id}`);
+    ok(out.item === 200 && !!id, `${label}: the seat files a draft (kind item) by POST /preview then POST /preview/file-contribution: ${out.item} ${id}`);
     ok(pv(out.pubBearer) && out.pubBearer.j.slug === "vd-kit" && out.pubBearer.j.v === 1 && /publish \{id: /.test(out.pubBearer.j.text || ""),
       `${label}: POST /broadcast/publish by a Bearer key with no confirm answers the preview: ${out.pubBearer.status} preview ${out.pubBearer.j && out.pubBearer.j.preview} v${out.pubBearer.j && out.pubBearer.j.v}`);
     ok(out.pubK.status === 401 && out.pubOauth.status === 401 && out.pubRo.status === 403 && out.pubRo.j && out.pubRo.j.error === "read_only_credential"

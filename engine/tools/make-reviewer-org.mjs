@@ -19,7 +19,7 @@
 //      team's numbers, the ruled paid plan; free's 1,500 items a month cannot hold the sharingu import). free and team are
 //      never edited
 //   4. the sample project: Control's add-project `sample` ("Sample project")
-//   5. the data, through the MCP door (tools/import-brain.mjs, preview then file): `sample` from the demo overlays
+//   5. the data, through the MCP door (tools/import-brain.mjs, preview then each part's write tool): `sample` from the demo overlays
 //      (tools/import/overlays/demo/: "from the public sharingu website only"), `sharingu` from the ONE source list
 //      (tools/lib-import-sources.sh: this repo's code, its wireframes and overlays — what dev-local and the ship import);
 //      a missing input stops the run before it files (as tools/import-live.sh does). --sample-only files the sample alone
@@ -87,6 +87,7 @@ import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { allowEmail, raisePlan, localD1, emailProblem } from "./operator.mjs";
 import { readConfig, liveD1 } from "./org-undo.mjs";
+import { fileParts } from "./import/door.mjs";
 
 const ENGINE = dirname(dirname(fileURLToPath(import.meta.url)));
 export const RECORD_DIR = join(ENGINE, ".runs", "reviewer-org");
@@ -302,7 +303,13 @@ export function door(base) {
     let out = null; try { out = JSON.parse(res.content[0].text); } catch { out = res ? res.content : r.json; }
     return { status: r.status, out, isError: !res || !!res.isError };
   };
-  return { call, tool, base: B };
+  // file(key, previewAnswer, items) -> { isError, out, step }: each part the preview answers with its write tool and its items
+  // (tools/import/door.mjs fileParts: file_contribution, save_knowledge, remove_knowledge); out is the parts' receipts as one
+  const file = async (key, pv, items) => {
+    const f = await fileParts(async (n, a) => { const r = await tool(key, n, a); return { ok: !r.isError, out: r.out }; }, pv, items);
+    return { isError: !f.ok, out: f.out, step: f.step };
+  };
+  return { call, tool, file, base: B };
 }
 // no key, code or token ever leaves in a message
 const bare = (j) => JSON.stringify(j && typeof j === "object" ? { ...j, key: j.key ? "<key>" : undefined, token: j.token ? "<token>" : undefined } : j).slice(0, 300);
@@ -591,7 +598,7 @@ export async function run(argv, { say = (s) => console.log(s), err = (s) => cons
         const rp = await d.tool(key, "preview", { project: SAMPLE.slug, items });
         const ri = rp.out && rp.out.items && rp.out.items[0];
         if (rp.isError || !ri || !["files", "unchanged"].includes(ri.verdict)) throw new Error(`the admin's preview of goal/${WALK_GOAL} as its overlay has it: ${bare(ri || rp.out)}`);
-        if (ri.verdict === "files") { const rf = await d.tool(key, "file", { previewId: rp.out.previewId, items }); if (rf.isError) throw new Error(`the admin's filing of goal/${WALK_GOAL} as its overlay has it: ${bare(rf.out)}`); }
+        if (ri.verdict === "files") { const rf = await d.file(key, rp.out, items); if (rf.isError) throw new Error(`the admin's filing of goal/${WALK_GOAL} as its overlay has it: ${bare(rf.out)}`); }
         reopened = true;
         say(`  · goal/${WALK_GOAL} filed back as its overlay has it (${ri.verdict === "files" ? `status ${JSON.stringify(showcaseOf().status || null)}` : "it stood so: nothing filed"}), to be marked done again after the import`);
       }
@@ -647,7 +654,7 @@ export async function run(argv, { say = (s) => console.log(s), err = (s) => cons
         const pv = await d.tool(tok[r], "preview", { project: SAMPLE.slug, items });
         const it = pv.out && pv.out.items && pv.out.items[0];
         if (pv.isError || !it || !["files", "waits_for_owner", "unchanged"].includes(it.verdict)) throw new Error(`the ${r}'s preview of "${contribution.what}": ${bare(it || pv.out)}`);
-        const f = await d.tool(tok[r], "file", { previewId: pv.out.previewId, items });
+        const f = await d.file(tok[r], pv.out, items);
         const got = f.out && f.out.items && f.out.items[0] && f.out.items[0].filed;
         if (f.isError || !got || !got.id) throw new Error(`the ${r}'s filing of "${contribution.what}": ${bare(f.out)}`);
         // its route and decision as they stand (the operator's read: a replay's preview says only "unchanged")
@@ -695,13 +702,13 @@ export async function run(argv, { say = (s) => console.log(s), err = (s) => cons
     // the goal done: the walkthrough's last step, and again after a re-import of the sample (13.3: the overlay files the goal
     // "in progress", so a changed overlay would undo the loop's done; an unchanged goal previews as unchanged and files nothing)
     if (!walk.goalDone) {
-      // done: the loop completed the goal, so the admin (the owner) files its status (preview, then file), the goal as the
+      // done: the loop completed the goal, so the admin (the owner) files its status (preview, then save_knowledge), the goal as the
       // sample's own showcase overlay files it (the one this run imported)
       const items = [walkGoalDone(showcaseOf())];
       const gp = await d.tool(tok.admin, "preview", { project: SAMPLE.slug, items });
       const gi = gp.out && gp.out.items && gp.out.items[0];
       if (gp.isError || !gi || !["files", "unchanged"].includes(gi.verdict)) throw new Error(`the admin's preview of goal/${WALK_GOAL} done: ${bare(gi || gp.out)}`);
-      const gf = gi.verdict === "unchanged" ? { isError: false } : await d.tool(tok.admin, "file", { previewId: gp.out.previewId, items });
+      const gf = gi.verdict === "unchanged" ? { isError: false } : await d.file(tok.admin, gp.out, items);
       if (gf.isError) throw new Error(`the admin's filing of goal/${WALK_GOAL} done: ${bare(gf.out)}`);
       walk.goalDone = new Date().toISOString(); R.set({ walkthrough: walk });
       say(`  ✓ done: the admin marks goal/${WALK_GOAL} done${reopened ? " again, after the sample's re-import" : ""}${gi.verdict === "unchanged" ? " (it stood done: nothing filed)" : ""}`);

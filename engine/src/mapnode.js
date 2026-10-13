@@ -35,7 +35,7 @@ export const NODE_KINDS = ["screen", "api", "table", "entity", "gap", "flow", "d
 export const LAYER_OF = { screen: "surfaces", api: "doors", table: "data", entity: "data", gap: "gaps", goal: "goals" };
 export const EDGE_CAP = 20;
 export const LIGHTS = ["green", "amber", "red", "grey"];
-export const MAP_EMPTY = 'No screen or entity is filed for this project yet, so the canvas has nothing to draw: file them through preview then file (items of kind "node", type "screen" or "entity") and join them with items of kind "edge".';
+export const MAP_EMPTY = 'No screen or entity is filed for this project yet, so the canvas has nothing to draw: file them through preview then save_knowledge (items of kind "node", type "screen" or "entity") and join them with items of kind "edge".';
 export const MAP_DOWN = "The project's model could not be read, so nothing is drawn until it answers.";
 export const NO_CARD = "No question tracks this node yet.";
 
@@ -236,7 +236,7 @@ export async function readMapNode(env, reader, q = {}, o = {}) {
     const st = z.length ? { count: z.reduce((a, x) => a + x.stale, 0), at: z[0].at, by: z[0].by } : null;
     // takes (a screen only): [{ state, variant, format, take, hash, bytes, width, height, style, at, by: { id, name }, current,
     // restorable, url }], newest first, at most TAKES_MAX; restorable: a previous body (not the frame's current one), which
-    // render {screen, state, variant, hash} through preview then file (or POST /render/restore) makes the newest take again
+    // render {screen, state, variant, hash} through preview then save_knowledge (or POST /render/restore) makes the newest take again
     const tk = Array.isArray(takes) ? { takes: takes.map(({ held, styleHash, ...t }) => ({ ...t, restorable: !held, url: renderUrl(project, t.hash, t.format === "html" ? styleHash : null) })) } : {};
     // A2 (sprint 5): a WIREFRAME take is drawn, not a plain plate. Its body is the grammar as JSON (GET /render/:hash serves
     // it so, never as SVG — the route stays as the sprint-2 review hardened it), so it is drawn here, server-side, from
@@ -275,7 +275,7 @@ export const nodeHref = (ref) => orgPath("/map?node=") + encodeURIComponent(ref)
 // checksLine(node) -> what the checks that name the node say, or how to file the first one
 export function checksLine(n) {
   const c = n.checks || {};
-  if (!c.total) return `No check names it yet: file one through preview then file (an item of kind "check", refs ["${n.nodeId || ""}"]).`;
+  if (!c.total) return `No check names it yet: file one through preview then save_knowledge (an item of kind "check", refs ["${n.nodeId || ""}"]).`;
   return `${plural(c.total, "check")} name${c.total === 1 ? "s" : ""} it: ${c.graded} graded, ${c.passed} passed${c.failed ? `, ${c.failed} failed` : ""}.`;
 }
 // staleLine(node) -> the stale proof on the node (sprint 3, B4): "3 of 5 checks graded before the last change", when it changed,

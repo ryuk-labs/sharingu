@@ -95,7 +95,7 @@ export async function questionsNaming(env, project, refs) {
 // qid, question, status, choice, label, updated, severity, area, why, options [{what, tradeoff}], blocks, affects, whoOwes,
 // waitingOn, implStatus, supersededBy, rationale, decidedBy, decidedAt; frozen (callers copy to change).
 // copy: off-screen (the door's JSON note beside an empty read; the page says its own phrase)
-export const NO_QUESTIONS_NOTE = 'No question is filed for this project yet: file one through preview then file, an item {kind: "question", op: "upsert", data: {qid, question, options: [{what}, {what}]}} (an open question needs at least two options).';
+export const NO_QUESTIONS_NOTE = 'No question is filed for this project yet: file one through preview then save_knowledge, an item {kind: "question", op: "upsert", data: {qid, question, options: [{what}, {what}]}} (an open question needs at least two options).';
 export async function projectDecisionRows(env) {
   const project = (await projectOf(env)) || null;
   try { return { version: null, publishedAt: null, project, rows: await decisionRows(env, project) }; }

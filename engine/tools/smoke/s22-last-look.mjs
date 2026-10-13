@@ -13,7 +13,7 @@
 //   6 · at 390: a group's summary keeps its words whole; the Map's strip opens on whole columns
 //   7 · rows: What changed reads what each row changed (no walk one hop out); a batch of writes is one row
 //   8 · the proof rule: a named check with the number it reported is a result (the preview files it)
-import { smoke, expect, brief, http, mcp, html, ownerKey, control, kwrite } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, html, ownerKey, control, kwrite, fileParts } from "./lib.mjs";
 import { goalState } from "../../src/goals.js";
 import { happenedOf, kindWord } from "../../src/parts.js";
 import { renderLibraryPage } from "../../src/extractpage.js";
@@ -35,7 +35,7 @@ const invite = async (name, email, role, projects) => {
 const fileVia = async (key, items, project = P) => {
   const pv = await mcp(key, "preview", { project, items });
   expect(!pv.isError && pv.out.previewId, () => `preview: ${brief(pv.out)}`);
-  const f = await mcp(key, "file", { previewId: pv.out.previewId, items, only: "ready" });
+  const f = await fileParts((n, a) => mcp(key, n, a), pv.out, items, { only: "ready" });   // sprint 19: each part with its write tool
   expect(!f.isError, () => `file: ${brief(f.out)}`);
   return f.out;
 };

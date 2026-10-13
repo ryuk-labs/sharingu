@@ -37,7 +37,7 @@ import { toBatches, clientRefOf } from "./batch.mjs";
 import { validateAll } from "./validate.mjs";
 import { safeId, nodeId, ID_RE, sha256, op } from "./common.mjs";
 import { refsOf } from "./checks.mjs";
-import { pageOf, rowsOf } from "./door.mjs";
+import { pageOf, rowsOf, fileParts, partsOf, WRITE_TOOLS } from "./door.mjs";
 import { estimate, budgetLeft, verdict, mergeCost, LEDGER_ROWS } from "./cost.mjs";
 import { screenData, mapRenders, stateNamesOf, reprItems } from "./renders.mjs";
 import { readBoardHtml, imageSize } from "./read-renders.mjs";
@@ -125,14 +125,40 @@ try {
     === JSON.stringify(["table:t1", "table:t2", "door:GET:/x", "Q1"]), "refsOf: the {read, write} quirk expands, api → door, a question stays its qid");
   ok(pageOf({ items: [1, 2], next: "c" }).n === 2 && pageOf({ items: [1, 2], next: "c" }).next === "c" && pageOf({ project: "p", kind: "aim", items: [], next: null }).n === 0, "pageOf reads {items, next}");
 
+  // fileParts (the split door, sprint 19): each part with its tool and ITS items, in order; a refusal stops the rest; a part
+  // already filed counts with its first receipt; skipUnready calls no part that would file nothing; the receipts merge by index
+  {
+    const its = [{ kind: "goal", op: "upsert", data: { id: "a" } }, { contribution: { lane: "leader", what: "w", why: "y" } }, { kind: "goal", op: "remove", data: { id: "b" } }, { kind: "goal", op: "upsert", data: { id: "c" } }];
+    const pv = { previewId: "P-00000000000000aa", parts: [{ tool: "file_contribution", items: [2], ready: 1 }, { tool: "save_knowledge", items: [1, 4], ready: 2 }, { tool: "remove_knowledge", items: [3], ready: 0 }] };
+    const rec = (tool, idx, status = "filed") => ({ previewId: pv.previewId, tool, complete: true, items: idx.map((i) => ({ i, filed: { status, id: `T-${i}` } })), results: idx.map((i) => ({ i, n: i + 1, status, id: `T-${i}` })) });
+    const sent = [];
+    const fake = (answers) => async (tool, args) => { sent.push([tool, args]); const a = answers[tool]; return { ok: !(a && a.error), out: a, rows: { read: 1, written: 2, stmts: 1, unknown: 0, calls: 1, uncounted: 0 } }; };
+    const all = { file_contribution: rec("file_contribution", [1]), save_knowledge: rec("save_knowledge", [0, 3]), remove_knowledge: rec("remove_knowledge", [2], "unchanged") };
+    let f = await fileParts(fake(all), pv, its);
+    ok(f.ok && sent.map((x) => x[0]).join() === "file_contribution,save_knowledge,remove_knowledge" && JSON.stringify(sent[1][1]) === JSON.stringify({ previewId: pv.previewId, items: [its[0], its[3]] })
+      && f.out.results.map((x) => x.i).join() === "0,1,2,3" && f.out.complete && f.out.counts.filed === 3 && f.out.counts.unchanged === 1 && f.out.id === "T-0" && f.rows.written === 6 && f.out.tools.length === 3,
+      `fileParts: every part with its own items, in order, merged by index: ${JSON.stringify({ sent: sent.map((x) => x[0]), out: f.out.counts, rows: f.rows })}`);
+    sent.length = 0;
+    f = await fileParts(fake(all), pv, its, { skipUnready: true, only: "ready" });
+    ok(f.ok && sent.map((x) => x[0]).join() === "file_contribution,save_knowledge" && sent.every((x) => x[1].only === "ready"), `fileParts: skipUnready calls no part with nothing ready; only is passed on (${sent.map((x) => x[0])})`);
+    sent.length = 0;
+    f = await fileParts(fake({ ...all, file_contribution: { error: "preview_filed", receipt: rec("file_contribution", [1]) }, save_knowledge: { error: "preview_changed", note: "x" } }), pv, its);
+    ok(!f.ok && f.step === "save_knowledge" && f.out.error === "preview_changed" && sent.length === 2 && f.parts.length === 1 && f.parts[0].out.repeat === true,
+      `fileParts: a part filed before counts with its receipt; a refusal stops the rest, named by its tool (${f.step}, ${sent.length} calls)`);
+    ok(JSON.stringify(partsOf(pv, its).map((p) => p.items.length)) === "[1,2,1]" && partsOf({}, its).length === 0, "partsOf: each part's items picked by their numbers; no parts, nothing to file");
+  }
+
   // ---- 4. the CLI against the REAL door (src/index.js over SQLite: tools/fixtures/sqlite-worker.mjs) -------------------------
   // A small proxy stands between the CLI and the worker: it records each call (the tool, the rows the worker counted in its
   // own Server-Timing) and injects the two faults a selftest needs (a refusal at the Nth preview, a read-back that fails).
-  // Everything else is the worker's own answer: preview's verdicts, file's receipt, read's pages, its refusals.
+  // Everything else is the worker's own answer: preview's verdicts and parts, each write tool's receipt (file_contribution,
+  // save_knowledge, remove_knowledge: door.mjs fileParts), read's pages, its refusals. A batch counts as written once (its
+  // previewId), however many of its parts filed.
   const KEY = "sentinel-" + sha256(String(Math.random())).slice(0, 24);
   const { sqliteWorker } = await import("../fixtures/sqlite-worker.mjs");
-  const door = { w: null, writes: 0, calls: [], refuseAt: 0, auth: [], readFails: false, rows: [], byKind: {} };
-  const freshDoor = async () => { door.w = await sqliteWorker({ projects: ["alpha"], people: [["p-o", "Owen Owner", "owner", KEY, []]] }); door.writes = 0; door.calls = []; door.rows = []; door.byKind = {}; };
+  const door = { w: null, writes: 0, wrote: new Set(), calls: [], refuseAt: 0, auth: [], readFails: false, rows: [], byKind: {} };
+  const freshDoor = async () => { door.w = await sqliteWorker({ projects: ["alpha"], people: [["p-o", "Owen Owner", "owner", KEY, []]] }); door.writes = 0; door.wrote = new Set(); door.calls = []; door.rows = []; door.byKind = {}; };
+  const isWrite = (n) => WRITE_TOOLS.includes(n);
   await freshDoor();
   const costDir = join(td, "cost");
   process.env.IMPORT_COST_DIR = costDir;   // the runs below keep their measure here, never in engine/.runs
@@ -151,12 +177,12 @@ try {
       authorization: req.headers.authorization || "", ...(req.headers["x-count-rows"] ? { "x-count-rows": req.headers["x-count-rows"] } : {}) }, body }));
     const text = await r.text(), st = r.headers.get("server-timing");
     const got = rowsOf(st);
-    if (name === "preview" || name === "file") {
+    if (name === "preview" || isWrite(name)) {
       const kind = (Array.isArray(a.items) && a.items[0] && a.items[0].kind) || (door.lastKind || "?");
       if (name === "preview") door.lastKind = kind;
       door.rows.push(got ? got.written : NaN);
       (door.byKind[kind] ||= []).push(got ? got.written : NaN);
-      if (name === "file") { try { const o = JSON.parse(JSON.parse(text).result.content[0].text); if ((o.results || []).some((x) => x.status === "filed")) door.writes++; } catch { /* the CLI reads it */ } }
+      if (isWrite(name)) { try { const o = JSON.parse(JSON.parse(text).result.content[0].text); if ((o.results || []).some((x) => x.status === "filed") && !door.wrote.has(a.previewId)) { door.wrote.add(a.previewId); door.writes++; } } catch { /* the CLI reads it */ } }
     }
     res.statusCode = r.status;
     res.setHeader("content-type", r.headers.get("content-type") || "application/json");
@@ -192,7 +218,7 @@ try {
   // F10 · --max-batches files only the first batches (a probe) and reads nothing back; the full run then replays them
   await freshDoor(); door.refuseAt = 0;
   r = await run(["--url", url, "--max-batches", "1"], { SHARINGU_IMPORT_KEY: KEY });
-  ok(r.code === 0 && door.writes === 1 && door.calls[door.calls.length - 1] === "file" && /--max-batches 1: filed 1 of/.test(r.out), `cli: --max-batches 1 files one batch and reads nothing back (exit ${r.code}, writes ${door.writes})`);
+  ok(r.code === 0 && door.writes === 1 && isWrite(door.calls[door.calls.length - 1]) && /--max-batches 1: filed 1 of/.test(r.out), `cli: --max-batches 1 files one batch and reads nothing back (exit ${r.code}, writes ${door.writes})`);
   r = await run(["--url", url], { SHARINGU_IMPORT_KEY: KEY });
   ok(r.code === 0 && door.writes === batches.length && (r.out.match(/"replay":true/g) || []).length === 1, `cli: …and the full run replays that batch and files the rest (writes ${door.writes})`);
   // F9 · a kind that does not read back fails the run: "?" is never a pass (the ship hook's import-live.sh reads the exit code)
@@ -212,7 +238,7 @@ try {
   rmSync(costDir, { recursive: true, force: true });
   await freshDoor();
   r = await run(["--url", url], { SHARINGU_IMPORT_KEY: KEY });
-  // the worker's own count, summed by the proxy over every preview and file call (a fresh import: every batch writes)
+  // the worker's own count, summed by the proxy over every preview and write-tool call (a fresh import: every batch writes)
   const want7 = door.rows.reduce((a, c) => a + c, 0);
   const tot7 = (r.out.match(/rows written ([\d,]+) ·/) || [])[1];
   ok(r.code === 0 && want7 > 0 && door.rows.every(Number.isFinite) && tot7 && Number(tot7.replace(/,/g, "")) === want7,
@@ -229,14 +255,14 @@ try {
   r = await run(["--url", url], { SHARINGU_IMPORT_KEY: KEY });
   // a re-run previews every batch (each preview is one stored row) and files none: what it writes is the previews alone
   const rerun = door.rows.slice(before8), rerunRows = rerun.reduce((a, c) => a + c, 0);
-  ok(r.code === 0 && rerun.length === batches.length && door.calls.slice(-1)[0] !== "file" && new RegExp(`rows written ${rerunRows.toLocaleString("en-US")} ·`).test(r.out) && rerunRows <= 2 * batches.length && readFileSync(costFile, "utf8") === keptText,
+  ok(r.code === 0 && rerun.length === batches.length && !isWrite(door.calls.slice(-1)[0]) && new RegExp(`rows written ${rerunRows.toLocaleString("en-US")} ·`).test(r.out) && rerunRows <= 2 * batches.length && readFileSync(costFile, "utf8") === keptText,
     `rows: a re-run previews each batch, files none, writes only the previews (${rerunRows} rows for ${batches.length} batches) and leaves the measure as it was (exit ${r.code})`);
   // the budget: the seam refuses before anything is sent, naming the days and the kinds that fit today
   await freshDoor();
   const est7 = estimate(kept, batches).total;
   ok(Math.abs(est7 - want7) <= Object.keys(kept.kinds).length, `rows: the estimate from the measure (${est7}) is the measured run (${want7})`);
   r = await run(["--url", url], { SHARINGU_IMPORT_KEY: KEY, IMPORT_BUDGET_LEFT: String(Math.ceil(est7 * 0.6)) });   // over a day's budget, under two
-  ok(r.code === 3 && door.writes === 0 && !door.calls.includes("preview") && !door.calls.includes("file") && new RegExp(`this run will write about ${est7.toLocaleString("en-US")} rows`).test(r.out)
+  ok(r.code === 3 && door.writes === 0 && !door.calls.includes("preview") && !door.calls.some(isWrite) && new RegExp(`this run will write about ${est7.toLocaleString("en-US")} rows`).test(r.out)
     && /REFUSED: this run would write about/.test(r.out) && /split it over at least 2 days/.test(r.out) && /fits today: --only aim\b/.test(r.out),
     `rows: over the budget the run refuses (exit 3), files nothing, names the days and what fits today (exit ${r.code}): ${r.out.split("this run will write")[1]?.slice(0, 500)}`);
   r = await run(["--url", url], { SHARINGU_IMPORT_KEY: KEY, IMPORT_BUDGET_LEFT: String(est7) });

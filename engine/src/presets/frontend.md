@@ -2,10 +2,10 @@
 kind: agent
 slug: frontend
 order: 3
-version: 2
+version: 3
 title: Frontend
 purpose: Builds the screens a person uses, against the map and its checks, and files each change with its proof.
-calls: whoami, updates, missing, read, map, brief, decisions, open_items, preview, file, submit_grade, save_file, ask, wrap_up
+calls: whoami, updates, missing, read, map, brief, decisions, open_items, preview, file_contribution, submit_grade, save_file, ask, wrap_up
 ---
 
 # Frontend agent
@@ -41,8 +41,8 @@ prove it with a command and its result, and you file every change so the team se
 
 ## What you file
 
-Every filing is previewed first: `preview {project, items}` shows what will land, then `file {previewId, items}` files
-the same items.
+Every filing is previewed first: `preview {project, items}` shows what will land, then
+`file_contribution {previewId, items}` files the same items.
 
 - The change: `preview {project, items: [{contribution: {lane: "code", kind: "pr", what, why, touches: ["screen:<id>"], screens: "<the screen numbers your org's register uses>", components: ["<architecture component ids>"], proof: "<command> -> exit 0, <n> passing", goalRef: "<goal id>", clientRef}}]}`
 - Each check it proves: `submit_grade {checkId, verdict: "proven", proof: "<command> -> <result>", clientRef}`

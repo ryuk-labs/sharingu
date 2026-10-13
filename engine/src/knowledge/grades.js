@@ -1,6 +1,6 @@
 // src/knowledge/grades.js — a check's grade, filed: the ONLY code that writes check_results. gradeCheck is submit_grade and
-// POST /grade (one grade); gradeChecks is `file`'s grades (src/preview.js: many grades of one project in a fixed number
-// of statements). Both file through the ONE door (core.js fileTransmission / fileTransmissionsBatch, kind "grade"), then write
+// POST /grade (one grade); gradeChecks is regrade's (src/regrade.js: many grades of one project in a fixed number of
+// statements). Both file through the ONE door (core.js fileTransmission / fileTransmissionsBatch, kind "grade"), then write
 // the result row that lights every node the check names (src/knowledge/checks.js reads it). The project a grade counts
 // against is the request's read scope (project.js projectOf), and the filing's stamp must agree with it.
 import { db } from "../data.js";

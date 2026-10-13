@@ -133,7 +133,9 @@ export const BEATS = {
     await r.hover('[data-region="items"] li, [data-region="items"] .p-line', { ms: 600, nth: 3 }); await r.sleep(900);
     await r.hover('[data-region="reach"]', { ms: 700 }); await r.sleep(1400);
     await r.terminal(`${t.memberName} · terminal`, { caption: C["client-files"][2] });
-    const rc = await r.run(`node mcp-call.mjs file ${t.previewId} @take.json`, () => t.exec("member", ["mcp-call.mjs", "file", t.previewId, "@take.json"]), { after: 2600 });
+    // each part with its own write tool, in the preview's order (sprint 19): the contributions' receipt names the contribution
+    let rc = "";
+    for (const tool of t.tools.take) rc += await r.run(`node mcp-call.mjs ${tool} ${t.previewId} @take.json`, () => t.exec("member", ["mcp-call.mjs", tool, t.previewId, "@take.json"]), { after: 2600 }) + "\n";
     t.contribution = (/contribution .*?(T-\d{8}-\d+)/.exec(rc) || [])[1];
     if (!t.contribution) throw new Error("the receipt named no contribution: " + rc.slice(0, 300));
     await r.closeTerminal();
@@ -191,7 +193,8 @@ export const BEATS = {
     await r.terminal("Ryuk · terminal", { caption: C["change-stale"][0] });
     const pv = await r.run("node mcp-call.mjs preview @change.json", () => t.exec("owner", ["mcp-call.mjs", "preview", "@change.json"]), { after: 1200 });
     const pid = (/P-[0-9a-f]{16}/.exec(pv) || [])[0];
-    const rc = await r.run(`node mcp-call.mjs file ${pid} @change.json`, () => t.exec("owner", ["mcp-call.mjs", "file", pid, "@change.json"]), { after: 1800 });
+    let rc = "";
+    for (const tool of t.tools.change) rc += await r.run(`node mcp-call.mjs ${tool} ${pid} @change.json`, () => t.exec("owner", ["mcp-call.mjs", tool, pid, "@change.json"]), { after: 1800 }) + "\n";
     t.change = (/contribution .*?(T-\d{8}-\d+)/.exec(rc) || [])[1];
     if (!t.change) throw new Error("the change's receipt named no contribution: " + rc.slice(0, 300));
     await r.closeTerminal();

@@ -234,8 +234,8 @@ console.log("E · each item empty, partial and done, and the meter's arithmetic,
   h = await read();
   const gr = h.items.find((x) => x.piece === "grades");
   ok(h.areas.find((a) => a.area === "proof").applies && state(h, "checks-screens") === "partial 1/3" && state(h, "checks-doors") === "empty 0/1" && state(h, "grades") === "empty 0/1"
-    && gr.fillPath.tool === "preview" && gr.fillPath.args.items[0].grade.checkId === "AC.a" && gr.fill.startsWith('preview {"project":"alpha","items":[{"grade":') && meterOk(h),
-    `a check: the proof area appears; checks on screens 1/3, on doors 0/1, grades 0/1 with its submit_grade call (and its preview)`, show(gr));
+    && gr.fillPath.tool === "submit_grade" && gr.fillPath.args.checkId === "AC.a" && gr.fill.startsWith('submit_grade {"project":"alpha","checkId":"AC.a"') && meterOk(h),
+    `a check: the proof area appears; checks on screens 1/3, on doors 0/1, grades 0/1 with its submit_grade call (it files at once, sprint 19)`, show(gr));
   db.prepare("INSERT INTO check_results (project, pack_version, check_id, status, graded_by, graded_at) VALUES ('alpha','live','AC.a','proven','p-o',?)").run(T0);
   h = await read();
   ok(state(h, "grades") === "done 1/1" && h.filled.includes("grades"), "graded: grades done, filed under its sprint-1 name", show(h.filled));
@@ -244,7 +244,7 @@ console.log("E · each item empty, partial and done, and the meter's arithmetic,
   await w([{ kind: "node", op: "upsert", data: { id: "screen:a", name: "A, now with the annual plan" } }]);
   h = await read();
   const st = h.items.find((x) => x.piece === "grades");
-  ok(state(h, "grades") === "empty 0/1" && st && /^1 grade is stale since screen:a changed on \d{4}-\d{2}-\d{2}: regrade it first, first: A works\.$/.test(st.what) && st.first.id === "AC.a" && st.fillPath.args.items[0].grade.checkId === "AC.a" && meterOk(h),
+  ok(state(h, "grades") === "empty 0/1" && st && /^1 grade is stale since screen:a changed on \d{4}-\d{2}-\d{2}: regrade it first, first: A works\.$/.test(st.what) && st.first.id === "AC.a" && st.fillPath.tool === "submit_grade" && st.fillPath.args.checkId === "AC.a" && meterOk(h),
     `the screen changed after its grade: grades 0/1 (${st && st.what})`, show(st));
   // migrate-066 (the sprint-4 ship's live fault): the door's upsert carries ON CONFLICT DO UPDATE, and SQLite lets the
   // OUTER clause override a trigger's legacy OR IGNORE — so changing a node whose check is ALREADY stale failed the whole

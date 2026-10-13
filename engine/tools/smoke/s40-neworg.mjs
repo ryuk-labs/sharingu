@@ -96,13 +96,13 @@ smoke("neworg · the new owner's key files a contribution through /mcp into the 
   };
   const items = [{ contribution: { lane: "leader", kind: "note", what: `The first note of neworg ${TAG}`, why: "a new org files through the one door" } }];
   const pv = await mcp("preview", { items });
-  const f = pv.out && pv.out.previewId ? await mcp("file", { previewId: pv.out.previewId, items }) : { out: pv.out, isError: true };
+  const f = pv.out && pv.out.previewId ? await mcp("file_contribution", { previewId: pv.out.previewId, items }) : { out: pv.out, isError: true };
   await settle();
   const tx = rows(`SELECT id, project, org FROM transmission WHERE org = ${Number(N.org)}`);
   const me = (await http("GET", "/whoami", { key: N.key })).json || {};
   expect(!f.isError && tx.length === 1 && tx[0].project === N.project && tx[0].org === N.org && me.role === "owner",
     () => `the filing: ${brief(f.out)}; rows ${brief(tx)}; whoami ${brief(me.role)}`);
-  return `preview then file through /mcp: ${tx[0].id} in ${N.project} (org ${N.org}); whoami: owner`;
+  return `preview then file_contribution through /mcp: ${tx[0].id} in ${N.project} (org ${N.org}); whoami: owner`;
 });
 
 smoke("neworg · refused, nothing written: a reserved name, a taken name, a bad path name, a second org for one account, a wrong account passphrase, a seat's secret", async () => {

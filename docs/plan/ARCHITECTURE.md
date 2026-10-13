@@ -77,10 +77,13 @@ one org from blocking the rest; the budget stays at the free tier's scale: 5M ro
 
 ## 3. The MCP door — writes
 
-**Every write is previewed, then filed.** `preview` (and `POST /preview`) takes items in four forms — a knowledge op, a
-contribution, a grade, an answer — runs each through the same checks its write door runs, and writes only its own row in
-`previews`. `file` (and `POST /file`) takes the preview's id and the same items and files what is ready, through the
-write doors, in order:
+**Every write is previewed, then filed by its own tool** (sprint 19: OpenAI's scan asked that each write be its own tool).
+`preview` (and `POST /preview`) takes items in three forms — a contribution, a knowledge upsert, a knowledge remove —
+runs each through the same checks its write door runs, writes only its own row in `previews`, and answers for each item
+the tool that files it. `file_contribution`, `save_knowledge` and `remove_knowledge` (and `POST
+/preview/file-contribution`, `/preview/save-knowledge`, `/preview/remove-knowledge`) each take the preview's id and the
+same items of their part and file what is ready, through the write doors, in order (a grade goes through `submit_grade`,
+an answer through `respond`):
 
 | Write door | Who | Does |
 |---|---|---|
@@ -141,7 +144,7 @@ seat in the org a call names (`orgSlug`) or its current one, never an org it hol
 | Control | Members · Projects · Connect · Admin |
 
 Every tab carries its checklist chip and what changed since the project's version. Every empty state names the
-`preview` → `file` call that fills it. The look: `LOOK.md`.
+`preview` call that fills it (then the write tool the preview names). The look: `LOOK.md`.
 
 ## 7. Hooks — none outbound (owner, 2026-09-30)
 
@@ -163,7 +166,7 @@ issue on a wrap-up.
   its wireframes from the old brain, its overlays), siru, saruspay, bunny, and demo (no source: the website's pitch as
   overlays).
 - sharingu's history (its contributions and screen pictures) is filed after the import by
-  `engine/tools/ship/after-import.mjs`, through `preview` → `file`.
+  `engine/tools/ship/after-import.mjs`, through `preview` and the write tools.
 - An imported source is frozen (a read-only archive). The kit reader is `engine/tools/import/load.mjs`.
 
 ## 9. sharingu plans itself in sharingu

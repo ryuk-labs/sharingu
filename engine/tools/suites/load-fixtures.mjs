@@ -1,6 +1,7 @@
 // tools/suites/load-fixtures.mjs — the suites' fixtures, filed through the door the way any client files: for each
 // fixture file (one per project, tools/suites/fixtures/<project>.json: {project, name, eval?, items}), `preview` the items
-// as the org's owner, then `file` them with the preview's id and the SAME items. A fixture is never written to D1 or R2
+// as the org's owner, then each part the preview answers with its write tool (file_contribution, save_knowledge,
+// remove_knowledge), the preview's id and that part's items as previewed (tools/import/door.mjs fileParts). A fixture is never written to D1 or R2
 // directly, never published, never read from a brain. tools/lib.sh suite_local_up runs it once on every fresh suite org.
 //   node tools/suites/load-fixtures.mjs --url http://127.0.0.1:<port> --creds <org dir>/credentials.env [--dir <fixtures>]
 // The owner key is read from the org's own credentials.env (the *_AGENT_R_OWNER_KEY line, as tools/smoke/lib.mjs reads it)
@@ -8,6 +9,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { fileParts } from "../import/door.mjs";
 
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i > 0 ? process.argv[i + 1] : d; };
 const BASE = String(arg("url", "")).replace(/\/+$/, "");
@@ -47,15 +49,15 @@ for (const f of files) {
       const stuck = (pv.out.items || []).filter((it) => it.verdict === "needs" || it.verdict === "refused");
       if (stuck.length) throw new Error(`preview: ${stuck.length} item(s) not ready: ${brief(stuck.map((it) => ({ i: it.i, kind: it.kind, key: it.key, verdict: it.verdict, refusal: it.refusal, needs: it.needs, reasons: it.reasons })))}`);
       if (!pv.out.ready) { unchanged += part.length; continue; }   // every item already on file, unchanged: nothing to file
-      const fl = await tool("file", { previewId: pv.out.previewId, items: part });
-      if (fl.isError || !fl.out || fl.out.error) throw new Error(`file refused: ${brief(fl.out)}`);
+      const fl = await fileParts(async (n, a) => { const r = await tool(n, a); return { ok: !r.isError, out: r.out }; }, pv.out, part);
+      if (!fl.ok) throw new Error(`${fl.step} refused: ${brief(fl.out)}`);
       const res = fl.out.results || [];
       const bad = res.filter((x) => x.status !== "filed" && x.status !== "unchanged");
-      if (bad.length) throw new Error(`file: ${bad.length} item(s) did not land: ${brief(bad)}`);
+      if (bad.length) throw new Error(`${fl.out.tools.join(", ")}: ${bad.length} item(s) did not land: ${brief(bad)}`);
       filed += res.filter((x) => x.status === "filed").length;
       unchanged += res.filter((x) => x.status === "unchanged").length;
     }
-    console.log(`  (fixtures: ${fx.project} — ${filed} item(s) filed through preview then file${unchanged ? `, ${unchanged} already on file` : ""}, from ${f})`);
+    console.log(`  (fixtures: ${fx.project} — ${filed} item(s) filed through preview then each part's write tool${unchanged ? `, ${unchanged} already on file` : ""}, from ${f})`);
   } catch (e) {
     console.log(`  ✗ fixtures: ${fx.project} (${f}): ${e.message}`);
     failed++;

@@ -1,14 +1,15 @@
-// tools/smoke/s0-core.mjs — slice 0: the knowledge core, through the door every client uses (D5: preview then file for the
-// writes, `read` for the reads; their REST twins POST /preview, POST /file and GET /read), and the ledger row
-import { smoke, expect, brief, s, G, goalIds, http, mcp, toolsList, control, addPerson, personId, readOnlyOf, ownerKey, kwrite, kread, contribute } from "./lib.mjs";
+// tools/smoke/s0-core.mjs — slice 0: the knowledge core, through the door every client uses (D5: preview, then — sprint 19 —
+// each part's write tool for the writes, `read` for the reads; their REST twins POST /preview, POST
+// /preview/save-knowledge (and its two siblings) and GET /read), and the ledger row
+import { smoke, expect, brief, s, G, goalIds, http, mcp, toolsList, control, addPerson, personId, readOnlyOf, ownerKey, kwrite, kread, contribute, restFileParts } from "./lib.mjs";
 
 smoke("the fresh org serves the knowledge door", async () => {
   const names = await toolsList(ownerKey);
-  expect(["preview", "file", "read"].every((n) => names.includes(n)) , () => `tools/list: ${names.join(" ")}`);
+  expect(["preview", "file_contribution", "save_knowledge", "remove_knowledge", "read"].every((n) => names.includes(n)) && !names.includes("file"), () => `tools/list: ${names.join(" ")}`);
   const r = await http("GET", "/read?kind=goal", { key: ownerKey });
-  expect(r.status === 200 && r.json.project === "local" && Array.isArray(r.json.items) && r.json.items.length === 0 && /preview then file/.test(r.json.note || ""),
+  expect(r.status === 200 && r.json.project === "local" && Array.isArray(r.json.items) && r.json.items.length === 0 && /preview then save_knowledge/.test(r.json.note || ""),
     () => `GET /read?kind=goal: ${r.status} ${brief(r.json)}`);
-  return "preview, file and read listed, GET /read?kind=goal empty on the fresh project, its note names preview then file (every old name and address: s25-names)";
+  return "preview, the three write tools and read listed (no file), GET /read?kind=goal empty on the fresh project, its note names preview then save_knowledge (every old name and address: s25-names)";
 });
 
 smoke("a person with no seat cannot write a single-project org's knowledge", async () => {
@@ -103,13 +104,13 @@ smoke("a question carries its options; an open one needs two", async () => {
   return "open with 3 options in order; one option refused too_few_options";
 });
 
-// restPreviewFile(key, items, body) -> POST /preview then POST /file (the tools' REST twins), the two answers
+// restPreviewFile(key, items, body) -> POST /preview then each part's write twin (POST /preview/save-knowledge, …), the two answers
 const restPreviewFile = async (key, items, body = {}) => {
   const pv = await http("POST", "/preview", { key, body: { ...body, items } });
-  const f = pv.json && pv.json.previewId ? await http("POST", "/file", { key, body: { previewId: pv.json.previewId, items } }) : null;
+  const f = pv.json && pv.json.previewId ? await restFileParts(key, pv.json, items) : null;
   return { pv, f };
 };
-smoke("a seated member writes through POST /preview and POST /file, and cannot rule", async () => {
+smoke("a seated member writes through POST /preview and POST /preview/save-knowledge, and cannot rule", async () => {
   const { pv, f } = await restPreviewFile(s.member.key, [G("member-goal", "ship-the-loop")]);
   const res = (f && f.json && f.json.results) || [];
   expect(pv.status === 200 && pv.json.project === "smoke" && f && f.status === 200 && res.length === 1 && res[0].status === "filed", () => `${pv.status} ${brief(pv.json)} / ${f && f.status} ${brief(f && f.json)}`);
@@ -118,7 +119,7 @@ smoke("a seated member writes through POST /preview and POST /file, and cannot r
   const rule = await restPreviewFile(s.member.key, [{ kind: "question", op: "upsert", data: { qid: "Q-smoke-1", status: "decided", choice: 0 } }]);
   const it = (rule.pv.json && rule.pv.json.items && rule.pv.json.items[0]) || {};
   expect(it.verdict === "refused" && it.refusal && it.refusal.error === "owner_only" && rule.f && rule.f.status === 422 && rule.f.json.error === "not_ready", () => `${rule.pv.status} ${brief(rule.pv.json)}`);
-  return "200 and 200, the member's goal on the project; a member's ruling previews refused owner_only and file files nothing";
+  return "200 and 200, the member's goal on the project; a member's ruling previews refused owner_only and save_knowledge files nothing";
 });
 
 smoke("a person with no seat on the project is refused", async () => {
@@ -134,18 +135,18 @@ smoke("a person with no seat on the project is refused", async () => {
 
 smoke("a read-only credential reads but cannot write", async () => {
   const ro = readOnlyOf(s.member.key);
-  const w = await http("POST", "/file", { key: ro, body: { previewId: "P-0000000000000000", items: [G("read-only", "ship-the-loop")] } });
+  const w = await http("POST", "/preview/save-knowledge", { key: ro, body: { previewId: "P-0000000000000000", items: [G("read-only", "ship-the-loop")] } });
   expect(w.status === 403 && w.json.error === "read_only_credential", () => `${w.status} ${brief(w.json)}`);
   const r = await http("GET", "/read?kind=goal", { key: ro });
   expect(r.status === 200 && r.json.project === "smoke" && r.json.items.length === 4, () => `${r.status} ${brief(r.json)}`);
-  return "POST /file 403 read_only_credential; GET /read reads the member's project";
+  return "POST /preview/save-knowledge 403 read_only_credential; GET /read reads the member's project";
 });
 
 smoke("kind knowledge is reserved to the knowledge door", async () => {
   const w = await contribute(ownerKey, { project: "smoke", lane: "leader", kind: "knowledge", what: "a forged knowledge row", why: "to prove the door refuses it", touches: ["goal:file-it"] });
   const it = ((w.preview && w.preview.items) || [])[0] || {};
-  expect(w.isError && it.verdict === "refused" && it.refusal && it.refusal.error === "reserved_kind" && /preview then file/.test(it.refusal.note || ""), () => brief(w.preview));
-  return "a contribution of kind knowledge previews refused reserved_kind, its note naming preview then file; nothing filed";
+  expect(w.isError && it.verdict === "refused" && it.refusal && it.refusal.error === "reserved_kind" && /preview, then save_knowledge/.test(it.refusal.note || "") && /remove_knowledge/.test(it.refusal.note || ""), () => brief(w.preview));
+  return "a contribution of kind knowledge previews refused reserved_kind, its note naming preview then save_knowledge or remove_knowledge; nothing filed";
 });
 
 smoke("the ledger has one knowledge row per successful call, on Build", async () => {

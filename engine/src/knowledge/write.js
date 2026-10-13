@@ -1,4 +1,4 @@
-// src/knowledge/write.js — the knowledge write door: preview then file (MCP) and POST /file (REST) call
+// src/knowledge/write.js — the knowledge write door: save_knowledge and remove_knowledge (MCP) and their REST twins call
 // writeKnowledge. One call is one project's batch of 1-200 ops: every op is checked first (src/knowledge/schema.js
 // planKnowledge, against the stored rows it names), and only a batch with no error is applied, in ONE D1 batch that also
 // carries the call's ONE ledger row (lane leader, kind knowledge, filed through core.js fileTransmission), so the change

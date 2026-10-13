@@ -93,9 +93,12 @@ const ORG = { name: "Testorg" };
   ok(/^You are connected to sharingu, the shared brain of Testorg\./.test(String((r.result && r.result.instructions) || "")), "the first line names the product, sharingu");
   const ins = String((r.result && r.result.instructions) || "");
   const numbered = ins.split("\n").filter((l) => /^\d\. /.test(l));
-  // D5: the first-run guide, five numbered steps in order: whoami → missing → formats → preview → file
+  // D5: the first-run guide, five numbered steps in order: whoami → missing → formats → preview → the write tool each item names
+  // (sprint 19: file_contribution, save_knowledge, remove_knowledge, each its own operation of the preview)
   ok(numbered.length === 5, `instructions carry exactly five numbered lines -> ${numbered.length}`);
-  ok(FIRST_CALLS.join() === "whoami,missing,formats,preview,file" && FIRST_CALLS.every((t, i) => new RegExp(`^${i + 1}\\. Call \`${t}\``).test(numbered[i] || "")), `the steps are whoami, missing, formats, preview, file -> ${numbered.map((l) => l.slice(0, 22)).join(" | ")}`);
+  ok(FIRST_CALLS.join() === "whoami,missing,formats,preview,file_contribution,save_knowledge,remove_knowledge" && FIRST_CALLS.slice(0, 4).every((t, i) => new RegExp(`^${i + 1}\\. Call \`${t}\``).test(numbered[i] || ""))
+    && /^5\. Call the write tool each item names/.test(numbered[4] || "") && FIRST_CALLS.slice(4).every((t) => (numbered[4] || "").includes(`\`${t}\``)) && !/`file`/.test(ins),
+    `the steps are whoami, missing, formats, preview, then the write tool each item names (the three named; no \`file\`) -> ${numbered.map((l) => l.slice(0, 22)).join(" | ")}`);
   // W4 (B7b): the start-here doc always exists (the org's published copy, else the built-in text), so the line after the steps
   // names it even when nothing is published — and `read` answers it (tools/day1-reading-selftest.mjs proves the read)
   const after = ins.split("\n").slice(-1)[0] || "";

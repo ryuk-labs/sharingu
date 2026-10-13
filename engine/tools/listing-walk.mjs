@@ -3,8 +3,9 @@
 // walkCases() on its fresh local world; the operator runs this file on live after a refresh, against the codes file the
 // refresh wrote (its "<role> <email> code: <code>" lines), before any code goes into a store's form:
 //   node tools/listing-walk.mjs --url https://agent.sharingu.xyz --codes ~/.sharingu/reviewer-credentials.txt [--slug sharingu-review]
-// It files what a reviewer would (P3's and P5's notes, P4's accepted goal) into the Sample project; it prints each case's
-// verdict and never a code, a token or a key. Exit 0: all eight green; 1: a case red; 2: usage.
+// It files what a reviewer would (P3's and P5's notes, P4's accepted goal) into the Sample project, each part by the write tool
+// its preview names (sprint 19: file_contribution, save_knowledge); it prints each case's verdict and never a code, a token or a
+// key. Exit 0: all eight green; 1: a case red; 2: usage.
 import { readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -39,18 +40,23 @@ export async function walkCases({ base, codes, slug, goalTag = "s51", device = "
   const note = [{ contribution: { lane: "leader", kind: "note", what: "A reviewer's first note", why: "the store's test case" } }];
   const fileNote = async (t) => {
     const pv = await d.tool(t, "preview", { project: "sample", items: note });
-    expect(!pv.isError && pv.out.items && pv.out.items[0].effect === "files at once" && /nothing filed yet/.test(pv.out.text), () => `the preview: ${brief(pv.out)}`);
-    const f = await d.tool(t, "file", { previewId: pv.out.previewId, items: note });
+    expect(!pv.isError && pv.out.items && pv.out.items[0].effect === "files at once" && pv.out.items[0].filesWith === "file_contribution" && /nothing filed yet/.test(pv.out.text), () => `the preview: ${brief(pv.out)}`);
+    const f = await d.tool(t, "file_contribution", { previewId: pv.out.previewId, items: note });
     const id = f.out && f.out.items && f.out.items[0] && f.out.items[0].filed && f.out.items[0].filed.id;
     expect(!f.isError && /^T-\d{8}-\d{3,}$/.test(id || ""), () => `the receipt: ${brief(f.out)}`);
     return id;
   };
-  // the stateless revision's confirm (src/confirm.js): input_required, then the same call with the person's answer
-  const confirm = async (t, args, answer) => {
+  // P4's confirm (src/confirm.js; sprint 19: it rides the write tool): the preview first, which files nothing and names the
+  // item's tool; then that tool with fileOnConfirm on the stateless revision: input_required, then the same call with the
+  // person's answer
+  const confirm = async (t, items, answer) => {
+    const pv = await d.tool(t, "preview", { project: "sample", items });
+    expect(!pv.isError && pv.out.items[0].filesWith === "save_knowledge" && /nothing filed yet/.test(pv.out.text), () => `the preview: ${brief(pv.out)}`);
+    const args = { previewId: pv.out.previewId, items, fileOnConfirm: true };
     const meta = { "io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientCapabilities": { elicitation: {} } };
     const call = async (extra = {}) => {
       const r = await fetch(B + "/mcp", { method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream", authorization: "Bearer " + t,
-        "mcp-protocol-version": "2026-07-28", "mcp-method": "tools/call", "mcp-name": "preview" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "preview", arguments: args, ...extra, _meta: meta } }) });
+        "mcp-protocol-version": "2026-07-28", "mcp-method": "tools/call", "mcp-name": "save_knowledge" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "save_knowledge", arguments: args, ...extra, _meta: meta } }) });
       const j = await r.json();
       return { j, out: j.result && j.result.content ? JSON.parse(j.result.content[0].text) : null };
     };
@@ -82,10 +88,11 @@ export async function walkCases({ base, codes, slug, goalTag = "s51", device = "
       expect(!r.isError && r.out.item && r.out.item.by_name === "Reviewer Member", () => `read ${id}: ${brief(r.out)}`);
     }],
     P4: ["admin", async (t) => {
-      const no = await confirm(t, { project: "sample", items: [goal(`${goalTag}-no`)], fileOnConfirm: true }, "decline");
+      const no = await confirm(t, [goal(`${goalTag}-no`)], "decline");
       const gone = await d.tool(t, "read", { project: "sample", ref: `goal/${goalTag}-no` });
-      expect(no && no.confirm && no.confirm.filed === false && gone.isError && gone.out.error === "not_found", () => `decline: ${brief(no && no.confirm)}; the goal ${brief(gone.out)}`);
-      const yes = await confirm(t, { project: "sample", items: [goal(`${goalTag}-yes`)], fileOnConfirm: true }, "accept");
+      expect(no && no.confirm && no.confirm.filed === false && no.confirm.note === "The person declined: nothing was filed." && gone.isError && gone.out.error === "not_found",
+        () => `decline: ${brief(no && no.confirm)}; the goal ${brief(gone.out)}`);
+      const yes = await confirm(t, [goal(`${goalTag}-yes`)], "accept");
       const there = await d.tool(t, "read", { project: "sample", ref: `goal/${goalTag}-yes` });
       expect(yes && yes.confirm && yes.confirm.filed === true && !there.isError && there.out.item.parent === "contribution-loop", () => `accept: ${brief(yes && yes.confirm)}; the goal ${brief(there.out)}`);
     }],
@@ -96,14 +103,29 @@ export async function walkCases({ base, codes, slug, goalTag = "s51", device = "
       await fileNote(t);
     }],
     // N1: "Delete the Sample project and everything in it." — the door the AI sees holds no tool that deletes or archives a
-    // project (this worker's tools/list, the contract's tools), a made-up one is refused, and nothing changed
+    // project (this worker's tools/list, the contract's tools): a tool whose name removes anything is red unless its own
+    // schema in tools/list confines it to knowledge items, no project among their kinds (sprint 19: remove_knowledge, a
+    // goal, a doc, a Map node...); a project named as such an item is refused at the preview (unknown_kind) and its remove
+    // refused; a made-up delete tool is refused; and nothing changed
     N1: ["admin", async (t) => {
       const list = await d.call("POST", "/mcp", { key: t, body: { jsonrpc: "2.0", id: 1, method: "tools/list" } });
-      const names = ((list.json && list.json.result && list.json.result.tools) || []).map((x) => x.name);
+      const listed = (list.json && list.json.result && list.json.result.tools) || [], names = listed.map((x) => x.name);
       const contract = contractInventory().tools.map((x) => x.name);
-      const wipes = [...new Set([...names, ...contract])].filter((n) => /delete|archive|wipe|drop|purge|destroy|erase|remove/i.test(n));
+      const WIPE = /delete|archive|wipe|drop|purge|destroy|erase|remove/i, WHOLE = /project|org|seat|account|member/i;
+      // the kinds a tool's items may name, from its own tools/list schema (null: it takes no list of kinded items)
+      const kindsOf = (x) => { const k = (((((x && x.inputSchema) || {}).properties || {}).items || {}).items || {}).properties; return k && k.kind && Array.isArray(k.kind.enum) ? k.kind.enum : null; };
+      const wipes = [...new Set([...names, ...contract])].filter((n) => WIPE.test(n)).filter((n) => {
+        const ks = kindsOf(listed.find((x) => x.name === n));
+        return WHOLE.test(n) || !/knowledge/.test(n) || !ks || !ks.length || ks.some((k) => WHOLE.test(k));
+      });
       expect(names.length && names.every((n) => contract.includes(n)) && names.includes("create_project") && !wipes.length,
-        () => `tools/list ${list.status}: ${names.length} tools (${names.filter((n) => !contract.includes(n)).join(",") || "all the contract's"}), deleting ones: ${wipes.join(",") || "none"}`);
+        () => `tools/list ${list.status}: ${names.length} tools (${names.filter((n) => !contract.includes(n)).join(",") || "all the contract's"}), ones that may delete a project: ${wipes.join(",") || "none"}`);
+      const asItem = [{ kind: "project", op: "remove", data: { key: "sample" } }];
+      const pv = await d.tool(t, "preview", { project: "sample", items: asItem });
+      const pi = pv.out && pv.out.items && pv.out.items[0];
+      expect(!pv.isError && pi && pi.verdict === "needs" && pi.needs && pi.needs.error === "unknown_kind", () => `a project as a remove item: ${brief(pv.out)}`);
+      const rm = await d.tool(t, "remove_knowledge", { previewId: pv.out.previewId, items: asItem });
+      expect(rm.isError && rm.out.error === "not_ready", () => `remove_knowledge of that preview: ${brief(rm.out)}`);
       const del = await d.tool(t, "delete_project", { project: "sample" });
       const me = (await d.tool(t, "whoami")).out, g = await d.tool(t, "goals", { project: "sample" });
       expect(del.isError && /unknown tool/.test(JSON.stringify(del.out)) && me.writeProjects.length === 2 && me.writeProjects.some((p) => /--sample$/.test(p)) && !g.isError, () => `delete_project: ${del.status} ${brief(del.out)}; the projects ${brief(me.writeProjects)}; the sample's goals ${brief(g.out)}`);

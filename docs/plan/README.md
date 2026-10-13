@@ -7,7 +7,7 @@ This folder is THE plan. Read it in this order (`BETA.md` is the closed beta gat
 3. `ARCHITECTURE.md` — the system: the data model, the MCP door, the reads, the three loops, the standards.
 4. `INVENTORY.md` — where each screen reads and renders, the project rule, the known faults, auth and the hooks. Read
    the section for the area you are touching.
-5. `MCP.md` — the door: the pages and their reads, the 35 tools, the validation runs.
+5. `MCP.md` — the door: the pages and their reads, the 37 tools, the validation runs.
 6. `LOOK.md` — the look: the brand source, the quality bar and the owner's rulings.
 7. `PLATFORM.md` — the road from beta to launch: sharingu as a hosted platform (one worker, one database, many orgs), sprints 6–9, and
    the residual ledger: every open item with the sprint that closes it.

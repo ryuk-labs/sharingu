@@ -21,7 +21,7 @@
 # stamps a filing with the project it names and refuses an unknown one loudly · Control renders its projects region and the
 # org's row is read · What is missing renders and the `missing` answer is honest, every open item carrying the call that
 # fills it (a `preview`, or `rule_question` for the owner's rulings) · the Map renders · the door lists the first-run tools
-# (whoami, missing, create_project, preview, file) · with DAY0_PASS: the account passphrase signs in at the root and whoami
+# (whoami, missing, create_project, preview, file_contribution, save_knowledge, remove_knowledge) · with DAY0_PASS: the account passphrase signs in at the root and whoami
 # names the org among the account's orgs.
 #
 # SHAPE-AWARE (tools/lib-day0-shape.sh): D3, D6 and D11 assert a multi-SEAT owner's invariants (>=2 seats · lands on the
@@ -112,7 +112,8 @@ if [ -n "$P1" ]; then
   chk "D7 the picker stamps the session" 302 "$(code -b "$JAR" -X POST -d "key=$P1" "$A/project")"
   HOME_HTML=$(curl -s -b "$JAR" "$A/home")
   has "D8 project switcher on Home (the top bar's region)"  'data-region="project-switcher"' "$HOME_HTML"
-  # the one door (D5): POST /preview, then POST /file with its previewId and the same items — into an EVAL project this
+  # the one door (D5; split in sprint 19): POST /preview, then POST /preview/file-contribution (the contributions' write
+  # tool's REST twin) with its previewId and the same items — into an EVAL project this
   # script makes (an eval mark is accepted only there or from a test seat, G2): the org's own first project stays clean
   PE=$(curl -s -X POST -H "Authorization: Bearer $K" -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"create_project","arguments":{"key":"day0-eval","name":"day0 verify (test)","eval":true}}}' "$U/mcp" | python3 -c "import json,sys
 try: print(json.loads(json.load(sys.stdin)['result']['content'][0]['text'])['project']['key'])
@@ -121,7 +122,7 @@ except Exception: print('')" 2>/dev/null)
   D9I="[{\"contribution\":{\"eval\":true,\"lane\":\"code\",\"kind\":\"pr\",\"what\":\"day0 door stamp\",\"why\":\"day0 verify\",\"touches\":[\"day0\"],\"components\":[\"mind/evals\"],\"proof\":\"sh tools/day0-verify.sh -> exit 0\"}}]"
   PV=$(curl -s -X POST -H "Authorization: Bearer $K" -H 'content-type: application/json' -d "{\"eval\":true,\"project\":\"$PE\",\"items\":$D9I}" "$U/preview")
   PID=$(printf '%s' "$PV" | python3 -c "import json,sys;print(json.load(sys.stdin).get('previewId') or '')" 2>/dev/null)
-  T1=$(curl -s -X POST -H "Authorization: Bearer $K" -H 'content-type: application/json' -d "{\"previewId\":\"$PID\",\"items\":$D9I}" "$U/file")
+  T1=$(curl -s -X POST -H "Authorization: Bearer $K" -H 'content-type: application/json' -d "{\"previewId\":\"$PID\",\"items\":$D9I}" "$U/preview/file-contribution")
   TID=$(printf '%s' "$T1" | python3 -c "import json,sys;print(((json.load(sys.stdin).get('results') or [{}])[0]).get('id') or '')" 2>/dev/null)
   if [ -n "$TID" ]; then echo "  PASS  D9 the door files with an explicit project ($TID, eval-marked, into the eval project $PE)"; pass=$((pass+1)); else echo "  FAIL  D9 door filing ($(printf '%s' "$T1" | head -c 120))"; fail=$((fail+1)); fi
   P10=$(curl -s -H "Authorization: Bearer $K" "$U/contribution/$TID" | python3 -c "import json,sys
@@ -175,15 +176,15 @@ except Exception as e: print('unparsed: %s' % type(e).__name__)" "$P1" 2>/dev/nu
 else
   echo "  FAIL  D16-D17b not run: they need a project (D3a)"; fail=$((fail+1))
 fi
-# D18: the first run's path is on the door: whoami, missing, create_project, then preview and file
+# D18: the first run's path is on the door: whoami, missing, create_project, then preview and the three write tools
 TOOLS=$(mcp '{"jsonrpc":"2.0","id":91,"method":"tools/list","params":{}}' | python3 -c "import json,sys
 rpc=lambda t: json.loads(next((l[6:] for l in t.splitlines() if l.startswith('data: ')), t))   # a JSON answer or an SSE one
 try:
   names={t.get('name') for t in rpc(sys.stdin.read())['result']['tools']}
-  miss=[n for n in ('whoami','missing','create_project','preview','file') if n not in names]
+  miss=[n for n in ('whoami','missing','create_project','preview','file_contribution','save_knowledge','remove_knowledge') if n not in names]
   print('missing: '+', '.join(miss) if miss else 'ok %d tools' % len(names))
 except Exception as e: print('unparsed: %s' % type(e).__name__)" 2>/dev/null || echo "no answer")
-okv "D18 the door lists the first-run tools (whoami, missing, create_project, preview, file)" "$TOOLS"
+okv "D18 the door lists the first-run tools (whoami, missing, create_project, preview, file_contribution, save_knowledge, remove_knowledge)" "$TOOLS"
 if [ -n "$PASS" ]; then
   # the ACCOUNT (sprint 7, 7.1 and 7.5a): its own passphrase signs in at the root, and whoami with that session names the org
   A1BODY=$(EMAIL="$EMAIL" PASS="$PASS" python3 -c "import json,os;print(json.dumps({'email':os.environ['EMAIL'],'password':os.environ['PASS'],'device':'day0'}))")

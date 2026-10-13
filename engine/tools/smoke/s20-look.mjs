@@ -19,7 +19,7 @@
 //   L9 · the decide presses: present for the owner on a contribution that waits on them, absent for anyone else, absent on
 //        one that landed on its own and once it is ruled (pressed through the page's own form)
 //   L10 · Control's forms post and flash: the same fields, the page answers 200 with its flash and its regions
-import { smoke, expect, brief, http, mcp, html, ownerKey, control, BASE, contribute } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, html, ownerKey, control, BASE, contribute, fileParts } from "./lib.mjs";
 import { kindWord } from "../../src/parts.js";
 
 const TAG = String(process.env.S20_TAG || "").replace(/[^a-z0-9]/g, "");
@@ -35,7 +35,7 @@ const invite = async (name, email, role, projects) => {
 const fileVia = async (key, items, project = P) => {
   const pv = await mcp(key, "preview", { project, items });
   expect(!pv.isError && pv.out.previewId, () => `preview: ${brief(pv.out)}`);
-  const f = await mcp(key, "file", { previewId: pv.out.previewId, items, only: "ready" });
+  const f = await fileParts((n, a) => mcp(key, n, a), pv.out, items, { only: "ready" });   // sprint 19: each part with its write tool
   expect(!f.isError, () => `file: ${brief(f.out)}`);
   return f.out;
 };

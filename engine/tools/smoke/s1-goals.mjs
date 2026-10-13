@@ -57,15 +57,15 @@ smoke("one goal reads through GET /goals/:ref and the goal tool", async () => {
 
 // D2b (pristine copy, owner 2026-10-02): the JSON note names the call (an AI client needs it); the page's empty states are a
 // phrase and one button to What is missing, never the call
-smoke("a project with no goal: the JSON names preview then file, the page's empty states are a phrase", async () => {
+smoke("a project with no goal: the JSON names preview then save_knowledge, the page's empty states are a phrase", async () => {
   const j = await http("GET", "/goals?project=local", { key: ownerKey });
-  expect(j.status === 200 && j.json.declared === false && j.json.nodes.length === 0 && /preview then file/.test(j.json.note || "") && /"goal"/.test(j.json.note || ""), () => `${j.status} ${brief(j.json)}`);
+  expect(j.status === 200 && j.json.declared === false && j.json.nodes.length === 0 && /preview then save_knowledge/.test(j.json.note || "") && /"goal"/.test(j.json.note || ""), () => `${j.status} ${brief(j.json)}`);
   const p = await html("/goals?project=local");
   const tree = region(p.text, "goal-tree");
-  expect(/data-state="empty"/.test(tree) && /No goals yet/.test(tree) && !/preview then file/.test(tree) && /href="\/missing"/.test(tree), () => `goal-tree: ${tree.slice(0, 300)}`);
+  expect(/data-state="empty"/.test(tree) && /No goals yet/.test(tree) && !/preview then (file|save_knowledge)/.test(tree) && /href="\/missing"/.test(tree), () => `goal-tree: ${tree.slice(0, 300)}`);
   const h = await html("/home?project=local");
   const aim = region(h.text, "aim");
-  expect(/data-state="empty"/.test(aim) && /No aim yet/.test(aim) && !/preview then file/.test(aim), () => `aim: ${aim.slice(0, 300)}`);
+  expect(/data-state="empty"/.test(aim) && /No aim yet/.test(aim) && !/preview then (file|save_knowledge)/.test(aim), () => `aim: ${aim.slice(0, 300)}`);
   return `local: declared false, "${j.json.note}"; the page: "No goals yet", "No aim yet"`;
 });
 

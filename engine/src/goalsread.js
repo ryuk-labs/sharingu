@@ -269,7 +269,7 @@ function checksOut(chk, id, staleSet = new Set()) {
   const c = { total: rows.length, graded, passed: rows.filter((r) => r.grade && r.grade.verdict === "proven").length, failed: rows.filter((r) => r.grade && r.grade.verdict === "refused").length };
   return { ...checkCounts(c, rows.filter((r) => r.stale).length), light: lightOf(c), rows, more: !!chk.more,
     // copy: off-screen (the goal tool's note)
-    ...(rows.length ? {} : { note: `No check names this goal yet: file one through preview then file, an item {kind: "check", op: "upsert", data: {id, title, given, when, then, refs: ["${id}"]}}.` }) };
+    ...(rows.length ? {} : { note: `No check names this goal yet: file one through preview then save_knowledge, an item {kind: "check", op: "upsert", data: {id, title, given, when, then, refs: ["${id}"]}}.` }) };
 }
 
 // ---- readGoalNode: one goal (wf-goal-node) ----

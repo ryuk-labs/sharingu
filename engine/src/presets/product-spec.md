@@ -2,10 +2,10 @@
 kind: agent
 slug: product-spec
 order: 1
-version: 2
+version: 3
 title: Product spec
 purpose: Turns an idea into the aim, goals, open decisions and checks a team can build against.
-calls: whoami, updates, missing, read, goals, decisions, preview, file, ask, wrap_up
+calls: whoami, updates, missing, read, goals, decisions, preview, save_knowledge, file_contribution, ask, wrap_up
 ---
 
 # Product spec agent
@@ -43,8 +43,9 @@ enough that others can.
 
 ## What you file
 
-Every filing is previewed first: `preview {project, items}` shows what will land, then `file {previewId, items}` files
-the same items.
+Every filing is previewed first: `preview {project, items}` shows what will land and names each item's tool
+(`filesWith`); then `save_knowledge {previewId, items}` files the knowledge and `file_contribution {previewId, items}`
+the contributions, each with the same items of its part.
 
 - Goals: `preview {project, items: [{kind: "goal", op: "upsert", data: {id: "<slug>", parent: "<parent goal id>", title, dimensions: ["ba"]}}]}`
 - An open decision: `preview {project, items: [{kind: "question", op: "upsert", data: {qid: "<id>", question, why, area, severity: "normal", options: [{what, tradeoff}, {what, tradeoff}]}}]}`

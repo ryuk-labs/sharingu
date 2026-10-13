@@ -55,7 +55,8 @@ const pos = review.test_cases.positive, neg = review.test_cases.negative;
 ok(pos.length === 5 && neg.length === 3, `5 positive, 3 negative (${pos.length}, ${neg.length})`);
 const named = pos.map((c) => c.tools_triggered.split(", "));
 ok(named.every((n) => n.length && n.every((t) => tools.has(t))), `every tools_triggered a door tool: ${named.map((n) => n.join("+")).join(" · ")}`);
-ok(named[2].join() === "preview,file,read" && named[0].join() === "whoami", `P1 whoami, P3 preview+file+read, in the order named`);
+ok(named[2].join() === "preview,file_contribution,read" && named[3].join() === "preview,save_knowledge,read" && named[0].join() === "whoami",
+  `P1 whoami, P3 preview+file_contribution+read, P4 preview+save_knowledge+read (sprint 19: the confirm rides the write tool), in the order named`);
 ok(pos.every((c) => c.description && c.prompt && c.expected_behavior) && neg.every((c) => c.description && c.prompt && c.expected_behavior && Object.keys(c).sort().join() === "description,expected_behavior,prompt"),
   "each positive case carries its four fields, each negative its three (the guide's two and the refusal to expect) and no more");
 ok(pos.every((c) => !/`|\*\*/.test(JSON.stringify(c))) && neg.every((c) => !/`|\*\*/.test(JSON.stringify(c))), "no markdown backtick or bold leaks into a case");
@@ -64,19 +65,21 @@ ok(pos.every((c) => !/`|\*\*/.test(JSON.stringify(c))) && neg.every((c) => !/`|\
 const PIN = {
   P1: { description: "Connect and sign in (as the admin account)", prompt: "1) Add the MCP address to your client and sign in as the admin. 2) Call sharingu's whoami.",
     tools_triggered: "whoami", expected_behavior: "2) Your name (Reviewer Admin), the role owner, the org \"sharingu review\", and the two projects your writes can land in, sharingu and the Sample project." },
-  P3: { description: "File a contribution through preview, then file (as the member account)",
+  P3: { description: "File a contribution through preview, then file_contribution (as the member account)",
     prompt: "1) In the Sample project, file a note in the leader lane: what 'A reviewer's first note', why 'the store's test case'. Preview it first. 2) File it. 3) Read that contribution. 4) In the browser, open Build.",
-    tools_triggered: "preview, file, read",
-    expected_behavior: "1) The preview (the preview tool) shows the one item, \"files at once\", and says nothing is filed yet. 2) The receipt (the file tool) with the contribution's id, T- and the date and a number, and its link. 3) What you filed, by Reviewer Member, in the Sample project. 4) The note is in the list." },
-  // P4 holds in a client with a confirm prompt (Claude) and in one without (16.2: OpenAI's docs do not say ChatGPT asks)
+    tools_triggered: "preview, file_contribution, read",
+    expected_behavior: "1) The preview (the preview tool) shows the one item, \"files at once\", names the tool that files it, and says nothing is filed yet. 2) The receipt (the file_contribution tool) with the contribution's id, T- and the date and a number, and its link. 3) What you filed, by Reviewer Member, in the Sample project. 4) The note is in the list." },
+  // P4 holds in a client with a confirm prompt (Claude) and in one without (16.2: OpenAI's docs do not say ChatGPT asks); sprint 19:
+  // the preview files nothing, the confirm rides save_knowledge
   P4: { description: "The confirm: nothing is filed until you say yes (as the admin account)",
-    prompt: "1) In the Sample project, add a goal 'A reviewer goal' under the goal 'Every contribution closes the loop', and file it only after I confirm. 2) Decline (or, where you were not asked, do not file). 3) Read the goal 'A reviewer goal'. 4) Ask again and accept (or, where you were not asked, say \"File it.\": the file tool).",
-    tools_triggered: "preview, read, file",
-    expected_behavior: "1) Either your client asks you to confirm, showing what would be filed, or (a client that shows no confirm prompt) sharingu answers that you were not asked, shows the preview's text and files nothing. 2) \"The person declined: nothing was filed.\" where you were asked; nothing filed either way. 3) There is no such goal (not_found). 4) The goal is filed; it reads back under its parent, and the Goals tab shows it." },
+    prompt: "1) In the Sample project, add a goal 'A reviewer goal' under the goal 'Every contribution closes the loop', and file it only after I confirm. 2) Decline (or, where you were not asked, do not file). 3) Read the goal 'A reviewer goal'. 4) Ask again and accept (or, where you were not asked, say \"File it.\": save_knowledge again, without the confirm).",
+    tools_triggered: "preview, save_knowledge, read",
+    expected_behavior: "1) The preview shows the goal and files nothing; then either your client asks you to confirm, showing what would be filed, or (a client that shows no confirm prompt) sharingu answers that you were not asked and files nothing. 2) \"The person declined: nothing was filed.\" where you were asked; nothing filed either way. 3) There is no such goal (not_found). 4) The goal is filed; it reads back under its parent, and the Goals tab shows it." },
 };
 for (const [id, want] of Object.entries(PIN)) { const got = pos[Number(id[1]) - 1]; ok(JSON.stringify(got) === JSON.stringify(want), `${id} generated exactly: ${JSON.stringify(got)}`); }
 // OpenAI's negatives are prompts to the AI where the plugin should not act (not a sign-in); each says why, then the refusal or fallback
 ok(neg[0].prompt === "Delete the Sample project and everything in it." && /no sharingu tool deletes a project/.test(neg[0].expected_behavior)
+  && /remove_knowledge removes a project's knowledge items .*never the project itself/.test(neg[0].description) && /unknown_kind/.test(neg[0].expected_behavior)
   && neg[1].prompt === "Show the sharingu project's goals." && /project_forbidden/.test(neg[1].expected_behavior)
   && neg[2].prompt === "Create a project called Mine." && /owner_only/.test(neg[2].expected_behavior), `N1–N3 are asks of the AI with their refusal or fallback: ${neg.map((c) => c.prompt).join(" · ")}`);
 ok(neg.every((c) => / Why: \S/.test(c.description)) && !neg.some((c) => /sign in|bearer|code/i.test(c.prompt)), "each negative's description says why; no negative is a sign-in");
@@ -283,8 +286,9 @@ const rows = subMd.split("\n").filter((l) => /^\| `[a-z_]+` \|/.test(l));
 ok(rows.length === door.tools.length && door.tools.every((t) => rows.some((r) => r.startsWith(`| \`${t.name}\` | ${!!t.annotations.readOnlyHint}: `) && r.includes(` | ${!!t.annotations.destructiveHint}: `) && r.includes(` | ${!!t.annotations.openWorldHint}: `))),
   `one row per tool (${rows.length}), each hint's value the contract's`);
 const reads = door.tools.filter((t) => t.annotations.readOnlyHint).length, wipes = door.tools.filter((t) => t.annotations.destructiveHint && !t.annotations.readOnlyHint).map((t) => t.name);
-ok(reads === 18 && door.tools.length - reads === 17 && wipes.includes("submit_grade") && wipes.includes("regrade") && /^\| Reads or writes \| Both: 18 read-only tools and 17 writes; 11 of the writes are destructive \(.*`regrade`.*`submit_grade`\)/m.test(subMd),
-  `the row: 18 read-only, 17 writes, ${wipes.length} destructive with the two graders (${wipes.join(", ")})`);
+ok(reads === 18 && door.tools.length - reads === 19 && wipes.includes("submit_grade") && wipes.includes("regrade") && wipes.includes("save_knowledge") && wipes.includes("remove_knowledge") && !wipes.includes("file_contribution")
+  && /^\| Reads or writes \| Both: 18 read-only tools and 19 writes; 12 of the writes are destructive \(.*`regrade`.*`remove_knowledge`.*`save_knowledge`.*`submit_grade`\)/m.test(subMd),
+  `the row: 18 read-only, 19 writes (sprint 19: file_contribution only adds; save_knowledge and remove_knowledge are destructive), ${wipes.length} destructive with the two graders (${wipes.join(", ")})`);
 const R = (n) => T.reasonsOf(byName[n]);
 ok(R("whoami").readOnlyHint === "true: it only reads what the signed-in account may see, and writes nothing." && R("submit_grade").destructiveHint === "true: it can change what is already in the org's record: it grades one check."
   && R("preview").destructiveHint === "false: it only adds to the org's record and changes nothing already there." && /^true: it can reach beyond sharingu/.test(R("wrap_up").openWorldHint)
@@ -301,7 +305,7 @@ cpSync(T.CODEX_SOURCES.submission, w.submission);
 r = w.check(); ok(!r.ok && /SUBMISSION\.md: its annotations/.test(said(r)), `a hint moved in the contract: red (${said(r)})`);
 T.writePlugin({ skillsDir: join(w.pluginDir, "skills"), pluginDir: w.pluginDir, manifest: w.manifest, lock: w.lock, sources: w.sources });
 const rewritten = readFileSync(w.submission, "utf8");
-r = w.check(); ok(r.ok && /\| `publish` \| false: [^|]+\| true: it can change what is already in the org's record: it publishes/.test(rewritten) && /12 of the writes are destructive/.test(rewritten),
+r = w.check(); ok(r.ok && /\| `publish` \| false: [^|]+\| true: it can change what is already in the org's record: it publishes/.test(rewritten) && /13 of the writes are destructive/.test(rewritten),
   `writePlugin rewrites the row and the block from the contract, then green (${said(r) || "no drift"})`);
 writeFileSync(w.submission, rewritten.replace(T.ANNOTATIONS_END, ""));
 r = w.check(); ok(!r.ok && /no generated annotations block/.test(said(r)), `a lost marker: red (${said(r)})`);

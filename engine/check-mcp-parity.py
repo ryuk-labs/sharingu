@@ -58,7 +58,7 @@ NOT_TOOLS = {"/install", "/map", "/docs", "/home", "/projects", "/audit", "/logo
     "/artifacts",
     # D5: rank and round stay REST for their buttons, with no tool (decided by the plan's laws, HANDOFF D6)
     "/rank", "/round",
-    # M6: the Restore press on a screen's takes: a page's press over the item an agent files through preview then file
+    # M6: the Restore press on a screen's takes: a page's press over the item an agent files through preview then save_knowledge
     # (render {screen, state, variant, hash}, no body), the same write door; not a verb of its own
     "/render/restore"}
 TOOL_TO_CAP = {
@@ -68,8 +68,8 @@ TOOL_TO_CAP = {
     # What is missing: the page and its JSON, the same computeHoles
     "missing":"/missing",
     "formats":"/formats",
-    # preview, then file (sprint 3, B2; src/preview.js): each the twin of its REST door
-    "preview":"/preview", "file":"/file",
+    # preview, then the three write tools (sprint 3, B2; split in sprint 19; src/preview.js): each the twin of its REST door
+    "preview":"/preview", "file_contribution":"/preview/file-contribution", "save_knowledge":"/preview/save-knowledge", "remove_knowledge":"/preview/remove-knowledge",
     # ask: src/ask.js askOwner, one function for both
     "ask":"/ask",
     "respond":"/respond", "rule_question":"/questions/:qid/rule", "submit_grade":"/grade",

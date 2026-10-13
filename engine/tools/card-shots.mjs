@@ -8,8 +8,9 @@
 // sandbox), speaks the Apps bridge to it (answers ui/initialize with the theme and serverTools, sends tool-input with the
 // preview's arguments and tool-result with the preview's result) and records what the card asks of it. Checks, each a line:
 // the bridge's handshake; the card drawn from the result; the File button shown only with a host that proxies tools; a
-// press asks tools/call `file` with exactly the preview's id and items (the script then makes that call on the door and
-// hands the result back, as a host does); the receipt drawn; a link press asks ui/open-link. Shots: the card in Paper and
+// press asks tools/call of each part's write tool in turn (sprint 19: file_contribution, save_knowledge, remove_knowledge) with
+// exactly the preview's id and that part's items (the script makes each call on the door and hands the result back, as a host
+// does); the receipt drawn; a link press asks ui/open-link. Shots: the card in Paper and
 // Ink at 480 and 720 wide (<out>/card-<paper|ink>-<w>.png) and the receipt (<out>/card-receipt-<theme>-720.png).
 //
 //   node tools/card-shots.mjs --url http://127.0.0.1:<port> --creds <credentials.env> --carousel <dir> [--project sharingu] [--themes paper]
@@ -28,6 +29,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir, homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { partsOf } from "./import/door.mjs";
 
 const ENGINE = dirname(dirname(fileURLToPath(import.meta.url)));
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i > 0 ? process.argv[i + 1] : d; };
@@ -140,7 +142,7 @@ function sceneArgs(goals) {
       prompt: "Here are my notes from today's session on the card. File what's worth keeping.",
       args: { project: PROJECT, note: "From today's session notes", items: [
         { contribution: { lane: "code", kind: "pr", what: "The card hides File until the host can carry it", why: "a press with no host to carry it did nothing",
-          touches: ["screen:card", "door:MCP:preview", "door:MCP:file"], proof: "card-shots: 9 passed, 0 failed", ...(m4 ? { goalRef: m4 } : {}) } },
+          touches: ["screen:card", "door:MCP:preview", "door:MCP:file_contribution"], proof: "card-shots: 9 passed, 0 failed", ...(m4 ? { goalRef: m4 } : {}) } },
         { contribution: { lane: "code", kind: "pr", what: "The preview page and the card draw one summary block", why: "the two had drifted on the Reach card",
           touches: ["screen:preview", "screen:card", "door:GET:/preview/:id"], proof: "smoke: 320 passed, 0 failed" } },
         // the honest gap: the notes never said what this one touches, so the door asks for it (and files the rest at once)
@@ -244,19 +246,28 @@ for (const theme of ["paper", "ink"]) {
     const h = await shoot(s, `card-${theme}-${width}.png`, width);
     if (theme === "paper" && width === 480) ok(h > 150, `the host sized the frame from size-changed (${h}px)`);
     if (width === 720 && !receiptShot && answer.notReady === 0) {
-      // a link press asks the host to open it; the File press asks tools/call file with the preview's id and items
+      // a link press asks the host to open it; the File press asks tools/call of each part's write tool, in turn, with the
+      // preview's id and that part's items (the next asked once the host answers the one before)
       await evalCard(s, "(document.querySelector('a[data-open]')||{click(){}}).click()");
       await evalCard(s, "document.querySelector('[data-file]').click()");
       await sleep(300);
       const calls = await evalTop(s, "window.__calls");
       const link = (calls || []).find((c) => c.method === "ui/open-link");
       ok(link && /^http:\/\/127\.0\.0\.1:\d+\//.test(link.params.url), "a link press asks ui/open-link with the app's address", link && link.params.url);
-      const call = (calls || []).find((c) => c.method === "tools/call");
-      ok(call && call.params.name === "file" && call.params.arguments.previewId === answer.previewId && JSON.stringify(call.params.arguments.items) === JSON.stringify(args.items), "the File press asks tools/call `file` with exactly this preview's id and items", call && JSON.stringify(call.params).slice(0, 200));
-      if (call) {
+      const want = partsOf(answer, args.items);
+      const asked = [];
+      for (let k = 0; k < want.length; k++) {
+        const call = ((await evalTop(s, "window.__calls")) || []).filter((c) => c.method === "tools/call")[k];
+        if (!call) break;
+        asked.push(call);
+        if (call.params.name !== want[k].tool || call.params.arguments.previewId !== answer.previewId || JSON.stringify(call.params.arguments.items) !== JSON.stringify(want[k].items)) break;
         const filed = await rpc("tools/call", call.params);   // the host makes the call on the door (its own consent first)
         await evalTop(s, `window.__reply(${JSON.stringify(call.id)}, ${JSON.stringify(filed)})`);
-        await sleep(800);
+        await sleep(k + 1 < want.length ? 300 : 800);
+      }
+      const same = want.length > 0 && asked.length === want.length && asked.every((c, k) => c.params.name === want[k].tool && c.params.arguments.previewId === answer.previewId && JSON.stringify(c.params.arguments.items) === JSON.stringify(want[k].items));
+      ok(same, `the File press asks tools/call of each part's write tool (${want.map((p) => p.tool).join(", ")}), in turn, with exactly this preview's id and that part's items`, JSON.stringify(asked.map((c) => c.params)).slice(0, 200));
+      if (same) {
         const after = await evalCard(s, "(document.querySelector('[data-screen=card]')||{getAttribute(){return ''}}).getAttribute('data-state')");
         ok(after === "filed", "the receipt drawn in place (state filed)", after);
         await shoot(s, `card-receipt-${theme}-720.png`, 720);

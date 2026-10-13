@@ -9,8 +9,9 @@
 //
 // The items: tools/ship/after-import/<project>/*.items.json, in name order; each file is ONE batch
 // {project, clientRef, note?, items: [ … ]} (at most the door's 200 items and 256 KB of bodies a call). Each batch goes
-// through the door as any client's: `preview {project, clientRef, items}`, then `file {previewId, items}` with the SAME
-// items, `only: "ready"` so what the door says needs more is reported and left, never reworded. The batch clientRef and
+// through the door as any client's: `preview {project, clientRef, items}`, then each part it answers with its write tool
+// (file_contribution, save_knowledge, remove_knowledge: {previewId, items: that part's, as previewed}; import/door.mjs
+// fileParts), `only: "ready"` so what the door says needs more is reported and left, never reworded. The batch clientRef and
 // every contribution's own clientRef are stable, so a second run is a replay: the receipts say duplicate / replayed /
 // unchanged and nothing new is written.
 // The key: AFTER_IMPORT_KEY in the env, else the *_AGENT_R_OWNER_KEY line of --creds (never printed, never an argument).
@@ -19,6 +20,7 @@
 import { readFileSync, readdirSync, existsSync, appendFileSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
+import { fileParts } from "../import/door.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -69,11 +71,13 @@ for (const p of projects) {
     const verdicts = tally(pv.data.items, (x) => x.verdict);
     note({ file: f, step: "preview", previewId: pv.data.previewId, counts: verdicts, ready: pv.data.ready });
     if (DRY) { console.log(`  ${basename(f)}: preview ${pv.data.previewId} ${JSON.stringify(verdicts)} (dry run: not filed)`); continue; }
-    const fl = await tool("file", { previewId: pv.data.previewId, items, only: "ready" });
-    if (!fl.ok || !fl.data) { console.log(`  ✗ ${f}: file refused (${fl.status}) ${JSON.stringify(fl.data).slice(0, 300)}`); note({ file: f, step: "file", status: fl.status, answer: fl.data }); rc = 1; continue; }
-    // the receipt: results[] {i, status: filed | duplicate | replayed | unchanged | …, id}; counts {filed, unchanged, left, notFiled}
+    let status = null;
+    const fp = await fileParts(async (n, a) => { const r = await tool(n, a); status = r.status; return { ok: r.ok, out: r.data }; }, pv.data, items, { only: "ready" });
+    if (!fp.ok) { console.log(`  ✗ ${f}: ${fp.step} refused (${status}) ${JSON.stringify(fp.out).slice(0, 300)}`); note({ file: f, step: fp.step, status, answer: fp.out }); rc = 1; continue; }
+    const fl = { data: fp.out };
+    // the receipt (every part's, as one): results[] {i, status: filed | duplicate | replayed | unchanged | …, id}; counts {filed, unchanged, left, notFiled}
     const got = Array.isArray(fl.data.results) ? tally(fl.data.results, (x) => x.status || "?") : tally(fl.data.items, (x) => (x.filed && x.filed.status) || x.verdict || "?");
-    note({ file: f, step: "file", previewId: pv.data.previewId, counts: got, complete: fl.data.complete, receipt: fl.data });
+    note({ file: f, step: "file", tools: fl.data.tools, previewId: pv.data.previewId, counts: got, complete: fl.data.complete, receipt: fl.data });
     console.log(`  ${basename(f)}: preview ${JSON.stringify(verdicts)} → file ${JSON.stringify(got)}${fl.data.complete === false ? " (some left: see the receipt)" : ""}`);
   }
 }

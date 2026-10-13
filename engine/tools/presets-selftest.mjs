@@ -131,9 +131,10 @@ for (const p of items.filter((x) => x.kind === "workflow")) {
 for (const p of items.filter((x) => x.kind === "skill"))
   ok(/^## The procedure/m.test(p.body) && /`[a-z_]+ \{/.test(p.body), `skill ${p.slug}: a short procedure with the exact call`);
 // sprint 4 M7, the guided first fills (and sprint 12 12.4's two): the privacy rule, what the source does not decide filed as a
-// question, preview then file
+// question, preview then file (sprint 19: by the write tool each item names, save_knowledge or file_contribution)
 for (const p of items.filter((x) => ["draw-the-architecture", "file-the-screens", "fill-the-product-side", "fill-the-gtm-side"].includes(x.slug))) {
-  const b = p.body, iPrev = b.indexOf("`preview {"), iFile = b.indexOf("`file {");
+  const b = p.body, iPrev = b.indexOf("`preview {"), writes = ["`save_knowledge {", "`file_contribution {"].map((c) => b.indexOf(c)).filter((i) => i >= 0),
+    iFile = writes.length ? Math.min(...writes) : -1;
   ok(/no credential/i.test(b) && /token/.test(b) && /email/.test(b) && /phone/.test(b) && /internal host/.test(b) && /machine path/.test(b)
     && /kind: "question"/.test(b) && iPrev > 0 && iFile > iPrev, `skill ${p.slug}: the privacy rule, a question for what the source does not decide, preview then file`);
 }

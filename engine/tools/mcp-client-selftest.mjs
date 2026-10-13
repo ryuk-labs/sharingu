@@ -4,8 +4,9 @@
 //
 //   node tools/mcp-client-selftest.mjs --url http://127.0.0.1:<port> --creds <org dir>/credentials.env [--json <file>]
 //
-//   (a) a client that DECLARES elicitation: preview {fileOnConfirm: true} answers a text/event-stream whose first message is
-//       the server's elicitation/create (the preview's text, a one-boolean form); accept -> the receipt, the items filed;
+//   (a) a client that DECLARES elicitation: a write tool with fileOnConfirm: true (sprint 19: here save_knowledge, on a
+//       preview made first) answers a text/event-stream whose first message is the server's elicitation/create (the part's
+//       text, a one-boolean form); accept -> the receipt, the items filed;
 //       decline, cancel, accept with file:false -> nothing filed; never answering -> after the window, nothing filed;
 //       over the OAuth path (an mcp:write grant) the same accept files
 //   (b) a client that does NOT declare it: no session id, the same call answers JSON (no stream), nothing filed, the reason
@@ -13,7 +14,7 @@
 //   (c) the card: resources/read ui://sharingu/card is one self-contained HTML document (no external URL, no inline event
 //       handler, one script: the bridge, the declared CSP, within CARD_MAX bytes); a session that declared the Apps
 //       extension gets the card's fragment in the result's _meta, whose rows and ids equal the preview's JSON and whose
-//       File action names `file` and the preview's id; brain://card/<id> draws the same rows from the preview's row
+//       File action names each part's write tool, its items and the preview's id; brain://card/<id> draws the same rows
 //   (d) D3b, a MODERN client (2026-07-28: per-request _meta and the mirror headers, no initialize, no session): discover;
 //       tools/list; the confirm as an input_required answer whose retry with accept files and answers the receipt; a
 //       decline files nothing; the attacks over HTTP (a tampered state, another person's state, a replay: each 400 -32602);
@@ -25,8 +26,8 @@
 //   (f) sprint 7, 7.5b, publish and equip ask the SAME confirm: publish {id, publishOnConfirm} and equip {slug, v, project,
 //       equipOnConfirm}, on the handshake revision (a stream: decline publishes nothing and answers the preview again with the two
 //       calls named; accept publishes / equips exactly what was shown; a member answering is 400; the confirm's row is no preview:
-//       file and brain://card/<it> answer it as unknown) and on the stateless one (input_required titled by the verb; a retry with
-//       a changed call, a retry of `preview` with the verb's state, a member's retry, a replay: each 400 -32602, nothing
+//       the write tools and brain://card/<it> answer it as unknown) and on the stateless one (input_required titled by the verb; a
+//       retry with a changed call, a write tool's retry with the verb's state, a member's retry, a replay: each 400 -32602, nothing
 //       equipped; accept equips; decline nothing); a client without elicitation: the plain preview, nothing asked or done
 //   attacks (each answered 400, nothing recorded, nothing filed): an answer to someone else's elicitation (a member, a
 //       Partner), from another session of the same person, with a wrong nonce, by a read-only grant (OAuth mcp:read), a
@@ -144,6 +145,13 @@ async function oauth(email, password, scope) {
 const goal = (id) => ({ kind: "goal", op: "upsert", data: { id, title: `D3 ${id}`, parent: `${P}-root`, dimensions: [] } });
 const goalIds = async (c) => ((await tool(c, "read", { project: P, kind: "goal", limit: 100 })).out.items || []).map((g) => g.id);
 const nonceOf = (id) => String(id).split(":")[2];
+// sprint 19: the confirm is a write tool's: preview the items (a plain call), then save_knowledge {previewId, items, fileOnConfirm}
+// (o: the second call's options, a stream's onRequest or its accept header; args: its extra arguments, an orgSlug)
+const confirmVia = async (c, items, o, args = {}) => {
+  const pv = await tool(c, "preview", { project: P, items, eval: true, ...(args.orgSlug ? { orgSlug: args.orgSlug } : {}) });
+  if (!pv.out || !pv.out.previewId) return pv;
+  return { ...(await tool(c, "save_knowledge", { previewId: pv.out.previewId, items, fileOnConfirm: true, ...args }, o)), previewId: pv.out.previewId };
+};
 
 console.log(`mcp-client-selftest · ${BASE} · project ${P}`);
 const owner = new Client("owner", OWNER_KEY, FORM);
@@ -162,8 +170,8 @@ const cp = await tool(owner, "create_project", { key: P, name: `D3 ${TAG}`, eval
 ok(cp.out && cp.out.project && cp.out.project.key === P, "a throwaway eval project", JSON.stringify(cp.out).slice(0, 200));
 const rootItems = [{ kind: "goal", op: "upsert", data: { id: `${P}-root`, title: "D3 root", parent: null, dimensions: [] } }];
 const rootPv = await tool(owner, "preview", { project: P, items: rootItems, eval: true });
-const root = rootPv.out && rootPv.out.previewId ? await tool(owner, "file", { previewId: rootPv.out.previewId, items: rootItems }) : rootPv;
-ok(!root.out.error && root.out.complete, "its root goal (preview then file)", JSON.stringify(root.out).slice(0, 200));
+const root = rootPv.out && rootPv.out.previewId ? await tool(owner, "save_knowledge", { previewId: rootPv.out.previewId, items: rootItems }) : rootPv;
+ok(!root.out.error && root.out.complete, "its root goal (preview then save_knowledge)", JSON.stringify(root.out).slice(0, 200));
 const memberKey = await invite(`D3 Member ${TAG}`, `d3m-${TAG}@d3.local`, "member", [P]);
 const partnerKey = await invite(`D3 Partner ${TAG}`, `d3p-${TAG}@d3.local`, "partner", [P]);
 const member = new Client("member", memberKey, FORM); await member.initialize();
@@ -175,19 +183,19 @@ const tl = (await plain.call("tools/list", {})).result.tools;
 const tl2 = (await owner.call("tools/list", {})).result.tools;
 ok(JSON.stringify(tl) === JSON.stringify(tl2), "tools/list is identical with and without a session");
 const withMeta = tl.filter((t) => t._meta).map((t) => t.name).sort();
-ok(JSON.stringify(withMeta) === JSON.stringify(["equip", "file", "preview", "publish"]), "only preview, file, publish and equip carry _meta", withMeta.join(","));
+ok(JSON.stringify(withMeta) === JSON.stringify(["equip", "file_contribution", "preview", "publish", "remove_knowledge", "save_knowledge"]), "only preview, the three write tools, publish and equip carry _meta", withMeta.join(","));
 ok(tl.filter((t) => t._meta).every((t) => t._meta.ui && t._meta.ui.resourceUri === "ui://sharingu/card" && t._meta["ui/resourceUri"] === "ui://sharingu/card"), "their _meta is ui.resourceUri (and the deprecated flat key) naming ui://sharingu/card");
-ok(tl.find((t) => t.name === "preview").inputSchema.properties.fileOnConfirm.type === "boolean", "preview's schema has fileOnConfirm (boolean)");
+ok(!("fileOnConfirm" in tl.find((t) => t.name === "preview").inputSchema.properties) && ["file_contribution", "save_knowledge", "remove_knowledge"].every((n) => tl.find((t) => t.name === n).inputSchema.properties.fileOnConfirm.type === "boolean"), "preview takes no fileOnConfirm (it never files); each write tool's schema has it (boolean)");
 
 // (a0) the timeout case runs in the background (the window is 50 s): never answered -> nothing filed
 let timeoutElicit = null;
 const tStart = Date.now();
-const timeoutRun = tool(owner, "preview", { project: P, items: [goal(`${P}-t`)], fileOnConfirm: true, eval: true }, { onRequest: async (m) => { timeoutElicit = m; } });
+const timeoutRun = confirmVia(owner, [goal(`${P}-t`)], { onRequest: async (m) => { timeoutElicit = m; } });
 
 // (a1) accept
 {
   let el = null;
-  const r = await tool(owner, "preview", { project: P, items: [goal(`${P}-a`)], fileOnConfirm: true, eval: true }, { onRequest: async (m) => {
+  const r = await confirmVia(owner, [goal(`${P}-a`)], { onRequest: async (m) => {
     el = m;
     // attacks while it is open: someone else (member, Partner), another session of the owner, a wrong nonce
     ok((await member.respond(m.id, { action: "accept", content: { file: true } })) === 400, "attack: a member answering the owner's elicitation id is refused 400");
@@ -197,36 +205,36 @@ const timeoutRun = tool(owner, "preview", { project: P, items: [goal(`${P}-t`)],
     ok((await owner.respond(m.id, { action: "accept", content: { file: true } })) === 202, "the owner's own session answers accept: 202");
     ok((await owner.respond(m.id, { action: "accept", content: { file: true } })) === 400, "attack: a replayed accept is refused 400");
   } });
-  ok(r.type === "sse", "a declared client's preview with fileOnConfirm answers a text/event-stream", r.type);
+  ok(r.type === "sse", "a declared client's save_knowledge with fileOnConfirm answers a text/event-stream", r.type);
   ok(el && el.method === "elicitation/create" && /^sg-confirm:P-[0-9a-f]{16}:[0-9a-f]{32}$/.test(String(el.id)), "its first message is the server's elicitation/create request", el && el.id);
   const sch = el && el.params && el.params.requestedSchema;
-  ok(sch && sch.type === "object" && Object.keys(sch.properties).length === 1 && sch.properties.file.type === "boolean" && sch.properties.file.default === false && sch.required[0] === "file", "its form is ONE boolean (file), required, false by default");
-  ok(el && typeof el.params.message === "string" && /sharingu/.test(el.params.message) && el.params.message.length <= 4000, "its message is the preview's text render (bounded)", el && el.params.message.slice(0, 80));
+  ok(sch && sch.type === "object" && Object.keys(sch.properties).length === 1 && sch.properties.file.type === "boolean" && sch.properties.file.default === false && sch.required[0] === "file" && sch.properties.file.title === "Save", "its form is ONE boolean (file), required, false by default, titled Save");
+  ok(el && typeof el.params.message === "string" && /sharingu/.test(el.params.message) && el.params.message.length <= 4000, "its message is the part's text render (bounded)", el && el.params.message.slice(0, 80));
   ok(r.out && r.out.confirm && r.out.confirm.answer === "accept" && r.out.confirm.filed === true && r.out.complete === true, "accept -> the tools/call result is the receipt, filed", JSON.stringify(r.out && r.out.confirm));
   ok(r.out && r.out.previewId === String(el.id).split(":")[1], "the receipt is of exactly the preview the elicitation named");
   ok((await goalIds(owner)).includes(`${P}-a`), "the item is in the project (read back)");
-  const again = await tool(owner, "file", { previewId: r.out.previewId, items: [goal(`${P}-a`)] });
-  ok(again.out && again.out.error === "preview_filed", "file with the same id after the confirm: preview_filed, nothing doubled", again.out && again.out.error);
+  const again = await tool(owner, "save_knowledge", { previewId: r.out.previewId, items: [goal(`${P}-a`)] });
+  ok(again.out && again.out.error === "preview_filed", "save_knowledge with the same id after the confirm: preview_filed, nothing doubled", again.out && again.out.error);
 }
 // (a2) decline / cancel / accept with file:false / a JSON-RPC error
 for (const [label, answer, err] of [["decline", { action: "decline" }], ["cancel", { action: "cancel" }], ["accept with file:false", { action: "accept", content: { file: false } }], ["a JSON-RPC error", null, { code: -32601, message: "no elicitation here" }]]) {
   const gid = `${P}-${label.replace(/[^a-z]/g, "").slice(0, 10)}`;
-  const r = await tool(owner, "preview", { project: P, items: [goal(gid)], fileOnConfirm: true, eval: true }, { onRequest: async (m) => { ok((await owner.respond(m.id, answer, err)) === 202, `${label}: recorded 202`); } });
+  const r = await confirmVia(owner, [goal(gid)], { onRequest: async (m) => { ok((await owner.respond(m.id, answer, err)) === 202, `${label}: recorded 202`); } });
   ok(r.out && r.out.confirm && r.out.confirm.asked === true && r.out.confirm.filed === false, `${label} -> nothing filed, and said`, JSON.stringify(r.out && r.out.confirm));
   ok(!(await goalIds(owner)).includes(gid), `${label}: the item is not in the project`);
 }
 // (b) no elicitation declared: JSON, nothing asked, nothing filed
 {
-  const r = await tool(plain, "preview", { project: P, items: [goal(`${P}-plain`)], fileOnConfirm: true, eval: true });
-  ok(r.type === "json" && r.out.previewId && r.out.confirm && r.out.confirm.asked === false, "a client that did not declare elicitation: a plain JSON preview, confirm.asked false", JSON.stringify(r.out.confirm));
+  const r = await confirmVia(plain, [goal(`${P}-plain`)]);
+  ok(r.type === "json" && r.out.previewId && r.out.filed === false && r.out.confirm && r.out.confirm.asked === false, "a client that did not declare elicitation: JSON, confirm.asked false, nothing filed", JSON.stringify(r.out.confirm));
   ok(!(await goalIds(owner)).includes(`${P}-plain`), "…and nothing filed");
   const bare = await tool(plain, "preview", { project: P, items: [goal(`${P}-plain2`)], eval: true });
   ok(bare.type === "json" && !("confirm" in bare.out) && !bare.result._meta, "a preview without fileOnConfirm is today's answer (no confirm key, no _meta for a client without the extension)");
-  const ns = await tool(owner, "preview", { project: P, items: [goal(`${P}-nostream`)], fileOnConfirm: true, eval: true }, { accept: "application/json" });
+  const ns = await confirmVia(owner, [goal(`${P}-nostream`)], { accept: "application/json" });
   ok(ns.type === "json" && ns.out.confirm && ns.out.confirm.asked === false && /stream/.test(ns.out.confirm.note), "a declared client whose request does not accept a stream: not asked, said", ns.out.confirm && ns.out.confirm.note);
-  const nr = await tool(owner, "preview", { project: P, items: [goal(`${P}-ready`), { contribution: { lane: "code", what: "x" } }], fileOnConfirm: true, eval: true });
-  ok(nr.type === "json" && nr.out.confirm && nr.out.confirm.asked === false && nr.out.notReady > 0, "a preview with an item not ready: not asked (file would refuse it), said", nr.out.confirm && nr.out.confirm.note);
-  const pf = await tool(partner, "preview", { project: `${P}x`, items: [goal(`${P}-pf`)], fileOnConfirm: true, eval: true });
+  const nr = await confirmVia(owner, [{ kind: "goal", op: "upsert", data: { id: `${P}-ready`, title: "D3 not ready", parent: `${P}-no-such-parent`, dimensions: [] } }]);
+  ok(nr.type === "json" && nr.out && nr.out.error === "not_ready", "a part with an item not ready: refused not_ready as the plain call is, nothing asked", nr.out && nr.out.error);
+  const pf = await tool(partner, "preview", { project: `${P}x`, items: [goal(`${P}-pf`)], eval: true });
   ok(pf.type === "json" && pf.out.error, "a Partner's confirm on a project they hold no seat on: refused before anything is asked", pf.out.error);
 }
 // OAuth: an mcp:write grant files through the confirm; an mcp:read grant asks nothing and cannot answer
@@ -237,13 +245,14 @@ if (OWNER_EMAIL) {
     const ow = new Client("oauth-write", wTok, FORM); const oi = await ow.initialize();
     const orr = new Client("oauth-read", rTok, FORM); await orr.initialize();
     ok(/^sg1e\./.test(oi.sid || ""), "the OAuth path: initialize answers the session id too");
-    const r = await tool(ow, "preview", { project: P, items: [goal(`${P}-oauth`)], fileOnConfirm: true, eval: true }, { onRequest: async (m) => {
+    const r = await confirmVia(ow, [goal(`${P}-oauth`)], { onRequest: async (m) => {
       ok((await orr.respond(m.id, { action: "accept", content: { file: true } })) === 400, "attack: a read-only grant (mcp:read) answering is refused 400");
       ok((await ow.respond(m.id, { action: "accept", content: { file: true } })) === 202, "the OAuth mcp:write grant's accept: 202");
     } });
     ok(r.type === "sse" && r.out.confirm && r.out.confirm.filed === true, "OAuth (mcp:write): accept files", JSON.stringify(r.out && r.out.confirm));
-    const ro = await tool(orr, "preview", { project: P, items: [goal(`${P}-ro`)], fileOnConfirm: true, eval: true });
-    ok(ro.type === "json" && ro.out.previewId === null && ro.out.confirm && ro.out.confirm.asked === false, "a read-only grant's confirm: nothing stored, nothing asked", JSON.stringify(ro.out.confirm));
+    const roPv = await tool(owner, "preview", { project: P, items: [goal(`${P}-ro`)], eval: true });
+    const ro = await tool(orr, "save_knowledge", { previewId: roPv.out && roPv.out.previewId, items: [goal(`${P}-ro`)], fileOnConfirm: true });
+    ok(ro.type === "json" && ro.out && ro.out.error === "insufficient_scope" && !(await goalIds(owner)).includes(`${P}-ro`), "a read-only grant's confirm: refused insufficient_scope, nothing asked or filed", JSON.stringify(ro.out));
   } catch (e) { ok(false, "the OAuth path", e.message); }
 } else ok(false, "the OAuth path", "no owner.email beside the credentials");
 
@@ -260,7 +269,7 @@ if (OWNER_EMAIL) {
   const handlers = html.match(/<[^>]+\son[a-z]+\s*=/gi) || [];
   ok(!handlers.length, "no inline event handler attribute", handlers.slice(0, 2).join(" "));
   ok((html.match(/<script\b/gi) || []).length === 1 && /ui\/initialize/.test(html), "exactly one script, the Apps bridge");
-  ok(/http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'/.test(html), "its own CSP: no network, inline style and script only");
+  ok(/http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'/.test(html), "its own CSP: no network, inline style and script only, data: images and fonts (sprint 12, 12.6: the inlined faces)");
   ok(!/Bearer|AGENT_R|authorization|__Host-|sg1[eu]*\.[0-9a-f]{32}/i.test(html), "it carries no key, no session, no cookie name");
   const prev = await tool(apps, "preview", { project: P, items: [goal(`${P}-card1`), goal(`${P}-card2`)], leftOut: [{ what: "a side thread", why: "no fact in it" }], eval: true });
   const card = prev.result && prev.result._meta && prev.result._meta["sharingu/card"] && prev.result._meta["sharingu/card"].html;
@@ -269,7 +278,7 @@ if (OWNER_EMAIL) {
   const rows = card ? [...card.matchAll(/data-i="(\d+)" data-verdict="([a-z_]+)"/g)].map((m) => `${m[1]}:${m[2]}`) : [];
   ok(JSON.stringify(rows) === JSON.stringify(prev.out.items.map((it) => `${it.i}:${it.verdict}`)), "its rows equal the preview's items and verdicts", rows.join(","));
   ok(card && /data-region="left-out"/.test(card) && card.includes("a side thread"), "it shows what was left out");
-  ok(card && new RegExp(`data-file data-tool="file" data-preview-id="${prev.out.previewId}"`).test(card), "its File action names the tool `file` and this preview's id");
+  ok(card && new RegExp(`data-file data-tool="parts" data-parts="\\[\\{&quot;tool&quot;:&quot;save_knowledge&quot;,&quot;items&quot;:\\[1,2\\]\\}\\]" data-preview-id="${prev.out.previewId}"`).test(card), "its File action names the part's write tool (save_knowledge), its items and this preview's id");
   ok(card && !/href="\/(?!\/)/.test(card) && /href="http:\/\/127\.0\.0\.1:\d+\/[a-z0-9-]+\/preview\//.test(card), "its links are absolute (opened through the host), with the preview page among them (under the org's address: sprint 7, 7.4)");
   const fr = await apps.call("resources/read", { uri: `brain://card/${prev.out.previewId}` });
   const fh = fr.result && fr.result.contents && fr.result.contents[0] && fr.result.contents[0].text;
@@ -277,10 +286,10 @@ if (OWNER_EMAIL) {
   ok(JSON.stringify(rows2) === JSON.stringify(rows), "brain://card/<id> draws the same rows from the preview's row (the page's read)");
   const other = await member.call("resources/read", { uri: `brain://card/${prev.out.previewId}` });
   const oh = other.result && other.result.contents && other.result.contents[0] && other.result.contents[0].text;
-  ok(oh && !/\sdata-file\s/.test(oh), "a seated member reads the card (as the page) with no File action (file is the author's)");
-  const fl = await tool(apps, "file", { previewId: prev.out.previewId, items: prev.out.items.map((_, i) => goal(`${P}-card${i + 1}`)) });
+  ok(oh && !/\sdata-file\s/.test(oh), "a seated member reads the card (as the page) with no File action (filing is the author's)");
+  const fl = await tool(apps, "save_knowledge", { previewId: prev.out.previewId, items: prev.out.items.map((_, i) => goal(`${P}-card${i + 1}`)) });
   const rc = fl.result && fl.result._meta && fl.result._meta["sharingu/card"] && fl.result._meta["sharingu/card"].html;
-  ok(fl.out && fl.out.complete && rc && /data-state="filed"/.test(rc) && !/\sdata-file\s/.test(rc), "file's own result carries the receipt as a card (filed, no File action)");
+  ok(fl.out && fl.out.complete && rc && /data-state="filed"/.test(rc) && !/\sdata-file\s/.test(rc), "save_knowledge's own result carries the receipt as a card (filed, no File action)");
   const plainFile = await tool(plain, "preview", { project: P, items: [goal(`${P}-card3`)], eval: true });
   ok(!plainFile.result._meta, "a client without the extension gets no card in the result");
   if (OUT) writeFileSync(OUT.replace(/\.json$/, "") + "-card.json", JSON.stringify({ answer: prev.out, fragment: card, receipt: fl.out, receiptFragment: rc }, null, 2));
@@ -294,12 +303,15 @@ if (OWNER_EMAIL) {
   ok(d.status === 200 && d.result && d.result.resultType === "complete" && d.result.supportedVersions.includes(MODERN) && d.result._meta["io.modelcontextprotocol/serverInfo"].name === init.result.serverInfo.name && d.result.instructions === init.result.instructions && !d.sid, "modern: server/discover answers the versions, initialize's name and instructions, no session id", JSON.stringify(d.result || d.error).slice(0, 200));
   const tlm = await mo.call("tools/list", {});
   ok(tlm.status === 200 && tlm.result.resultType === "complete" && JSON.stringify(tlm.result.tools) === JSON.stringify(tl2), "modern: tools/list, the same tools as the handshake revision's, resultType complete");
-  const ask = async (gid) => mo.call("tools/call", { name: "preview", arguments: { project: P, items: [goal(gid)], fileOnConfirm: true, eval: true } });
-  const retry = async (c, gid, state, answer) => c.call("tools/call", { name: "preview", arguments: { project: P, items: [goal(gid)], fileOnConfirm: true, eval: true }, requestState: state, inputResponses: { file: answer } });
+  // sprint 19: the preview first (a plain call), then save_knowledge {fileOnConfirm} answers input_required; its retry the answer
+  const pidOf = new Map();
+  const ask = async (gid) => { const pv = await tool(owner, "preview", { project: P, items: [goal(gid)], eval: true }); pidOf.set(gid, pv.out && pv.out.previewId);
+    return mo.call("tools/call", { name: "save_knowledge", arguments: { previewId: pidOf.get(gid), items: [goal(gid)], fileOnConfirm: true } }); };
+  const retry = async (c, gid, state, answer) => c.call("tools/call", { name: "save_knowledge", arguments: { previewId: pidOf.get(gid), items: [goal(gid)], fileOnConfirm: true }, requestState: state, inputResponses: { file: answer } });
   const outOf = (r) => { try { return JSON.parse(r.result.content[0].text); } catch { return null; } };
   const a = await ask(`${P}-m1`);
   const el = a.result && a.result.inputRequests && a.result.inputRequests.file;
-  ok(a.status === 200 && a.result.resultType === "input_required" && el && el.method === "elicitation/create" && el.params.mode === "form" && el.params.requestedSchema.properties.file.type === "boolean" && /^sg2\./.test(a.result.requestState), "modern: preview {fileOnConfirm} answers input_required: one elicitation (form) and a requestState", JSON.stringify(a.result || a.error).slice(0, 300));
+  ok(a.status === 200 && a.result.resultType === "input_required" && el && el.method === "elicitation/create" && el.params.mode === "form" && el.params.requestedSchema.properties.file.type === "boolean" && /^sg2\./.test(a.result.requestState), "modern: save_knowledge {fileOnConfirm} answers input_required: one elicitation (form) and a requestState", JSON.stringify(a.result || a.error).slice(0, 300));
   const st = a.result.requestState;
   const tam = await retry(mo, `${P}-m1`, st.replace(/.$/, (c) => (c === "0" ? "1" : "0")), { action: "accept", content: { file: true } });
   ok(tam.status === 400 && tam.error.code === -32602 && /confirm_not_open/.test(tam.error.message), "modern attack: a tampered state: 400 -32602", JSON.stringify(tam.error));
@@ -371,15 +383,17 @@ if (OWNER_EMAIL) {
       "account grant: whoami as the member's seat, its account's orgs (here, current); the greeting and the note say a call takes orgSlug", JSON.stringify(aw.out && aw.out.orgs));
     const ax = await tool(ac, "preview", { project: P, items: [goal(`${P}-ag-x`)], orgSlug: ghost, eval: true });
     const pv = await tool(ac, "preview", { project: P, items: [goal(`${P}-ag`)], orgSlug: here, eval: true });
-    const fl = pv.out && pv.out.previewId ? await tool(ac, "file", { previewId: pv.out.previewId, items: [goal(`${P}-ag`)], orgSlug: here }) : pv;
+    const fl = pv.out && pv.out.previewId ? await tool(ac, "save_knowledge", { previewId: pv.out.previewId, items: [goal(`${P}-ag`)], orgSlug: here }) : pv;
     ok(ax.out && ax.out.error === "org_unreachable" && fl.out && fl.out.complete && (await goalIds(owner)).includes(`${P}-ag`) && !(await goalIds(owner)).includes(`${P}-ag-x`),
-      "account grant: orgSlug of an org it holds no seat in is refused; naming its own, preview then file lands the item", `${ax.out && ax.out.error} / ${JSON.stringify(fl.out).slice(0, 160)}`);
+      "account grant: orgSlug of an org it holds no seat in is refused; naming its own, preview then save_knowledge lands the item", `${ax.out && ax.out.error} / ${JSON.stringify(fl.out).slice(0, 160)}`);
     // the modern revision: the confirm's retry carries the call's org too (checked before it files)
     const am = new ModernClient("modern-account-grant", aTok, FORM);
-    const ask = await am.call("tools/call", { name: "preview", arguments: { project: P, items: [goal(`${P}-agm`)], fileOnConfirm: true, orgSlug: here, eval: true } });
+    const apv = await tool(ac, "preview", { project: P, items: [goal(`${P}-agm`)], orgSlug: here, eval: true });
+    const apid = apv.out && apv.out.previewId;
+    const ask = await am.call("tools/call", { name: "save_knowledge", arguments: { previewId: apid, items: [goal(`${P}-agm`)], fileOnConfirm: true, orgSlug: here } });
     const st = ask.result && ask.result.requestState;
-    const bad = st ? await am.call("tools/call", { name: "preview", arguments: { project: P, items: [goal(`${P}-agm`)], fileOnConfirm: true, orgSlug: ghost, eval: true }, requestState: st, inputResponses: { file: { action: "accept", content: { file: true } } } }) : {};
-    const good = st ? await am.call("tools/call", { name: "preview", arguments: { project: P, items: [goal(`${P}-agm`)], fileOnConfirm: true, orgSlug: here, eval: true }, requestState: st, inputResponses: { file: { action: "accept", content: { file: true } } } }) : {};
+    const bad = st ? await am.call("tools/call", { name: "save_knowledge", arguments: { previewId: apid, items: [goal(`${P}-agm`)], fileOnConfirm: true, orgSlug: ghost }, requestState: st, inputResponses: { file: { action: "accept", content: { file: true } } } }) : {};
+    const good = st ? await am.call("tools/call", { name: "save_knowledge", arguments: { previewId: apid, items: [goal(`${P}-agm`)], fileOnConfirm: true, orgSlug: here }, requestState: st, inputResponses: { file: { action: "accept", content: { file: true } } } }) : {};
     const badOut = (() => { try { return JSON.parse(bad.result.content[0].text); } catch { return null; } })();
     const goodOut = (() => { try { return JSON.parse(good.result.content[0].text); } catch { return null; } })();
     ok(st && badOut && badOut.error === "org_unreachable" && goodOut && goodOut.confirm && goodOut.confirm.filed === true && (await goalIds(owner)).includes(`${P}-agm`),
@@ -394,7 +408,7 @@ if (OWNER_EMAIL) {
     const draft = async (n) => {
       const items = [{ contribution: { lane: "leader", kind: "item", what: `D3 kit ${n}`, why: "a kit the confirm selftest publishes", touches: ["skill"], gapRefs: [`item/${slug}`], proof: `https://example.invalid/${slug}/${n}` } }];
       const pv = await tool(owner, "preview", { project: P, items, eval: true });
-      const f = pv.out && pv.out.previewId ? await tool(owner, "file", { previewId: pv.out.previewId, items }) : pv;
+      const f = pv.out && pv.out.previewId ? await tool(owner, "file_contribution", { previewId: pv.out.previewId, items }) : pv;
       const id = f.out && f.out.results && f.out.results[0] && f.out.results[0].id;
       if (!id) throw new Error(`no draft filed: ${JSON.stringify(f.out).slice(0, 200)}`);
       return id;
@@ -417,9 +431,9 @@ if (OWNER_EMAIL) {
     ok(dec.out && dec.out.confirm && dec.out.confirm.answer === "decline" && dec.out.confirm.filed === false && dec.out.preview === true && dec.out.verb === "publish" && /confirm: true/.test(dec.out.confirm.note) && (await nextV(d1)) === 1,
       "verbs · decline: nothing published; the answer is the preview again, its note naming the two calls", JSON.stringify(dec.out && dec.out.confirm));
     const rowId = el ? String(el.id).split(":")[1] : "";
-    const asFile = await tool(owner, "file", { previewId: rowId, items: [goal(`${P}-verbrow`)] });
+    const asFile = await tool(owner, "save_knowledge", { previewId: rowId, items: [goal(`${P}-verbrow`)] });
     const asCard = await owner.call("resources/read", { uri: `brain://card/${rowId}` });
-    ok(asFile.out && asFile.out.error === "preview_not_found" && asCard.error, "verbs · the confirm's row is no preview: file answers preview_not_found, brain://card/<it> not found", `${asFile.out && asFile.out.error} / ${JSON.stringify(asCard.error)}`);
+    ok(asFile.out && asFile.out.error === "preview_not_found" && asCard.error, "verbs · the confirm's row is no preview: save_knowledge answers preview_not_found, brain://card/<it> not found", `${asFile.out && asFile.out.error} / ${JSON.stringify(asCard.error)}`);
     const acc = await tool(owner, "publish", { id: d1, publishOnConfirm: true, eval: true }, { onRequest: async (m) => { await owner.respond(m.id, { action: "accept", content: { file: true } }); } });
     ok(acc.out && acc.out.confirm && acc.out.confirm.answer === "accept" && acc.out.confirm.filed === true && acc.out.slug === slug && acc.out.v === 1 && (await nextV(d1)) === "already_published",
       "verbs · accept: the draft is published (v1), exactly the one shown", JSON.stringify(acc.out).slice(0, 200));
@@ -451,10 +465,10 @@ if (OWNER_EMAIL) {
     const st = ea.result && ea.result.requestState;
     const accept = { file: { action: "accept", content: { file: true } } };
     const changed = await mo.call("tools/call", { name: "equip", arguments: { slug, v: 1, project: P, equipOnConfirm: true, eval: true }, requestState: st, inputResponses: accept });
-    const cross = await mo.call("tools/call", { name: "preview", arguments: { project: P, items: [goal(`${P}-x`)], fileOnConfirm: true, eval: true }, requestState: st, inputResponses: accept });
+    const cross = await mo.call("tools/call", { name: "save_knowledge", arguments: { previewId: String(st || "").split(".")[1] || "", items: [goal(`${P}-x`)], fileOnConfirm: true }, requestState: st, inputResponses: accept });
     const other = await mm.call("tools/call", { name: "equip", arguments: { slug, v: 2, project: P, equipOnConfirm: true, eval: true }, requestState: st, inputResponses: accept });
     ok([changed, cross, other].every((r) => r.status === 400 && r.error && r.error.code === -32602) && !(await goalIds(owner)).includes(`${P}-x`) && (await fromOf(2)) === 1,
-      "verbs · modern attacks on equip's retry: a changed call, a `preview` retry with equip's state, a member's retry — each 400 -32602, nothing done", [changed, cross, other].map((r) => r.status).join(","));
+      "verbs · modern attacks on equip's retry: a changed call, a save_knowledge retry with equip's state, a member's retry — each 400 -32602, nothing done", [changed, cross, other].map((r) => r.status).join(","));
     const ey = await mo.call("tools/call", { name: "equip", arguments: { slug, v: 2, project: P, equipOnConfirm: true, eval: true }, requestState: st, inputResponses: accept });
     const eyo = outOf(ey);
     const rep = await mo.call("tools/call", { name: "equip", arguments: { slug, v: 2, project: P, equipOnConfirm: true, eval: true }, requestState: st, inputResponses: accept });

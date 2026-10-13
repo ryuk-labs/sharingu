@@ -199,7 +199,9 @@ smoke("F5: a key in the URL signs no one in: every write door answers ?k= 401, n
   expect(!bad.length, () => `a key in the URL was taken: ${bad.map(([p, r]) => `${p} ${r.status} ${brief(r.json)}`).join(" · ")}`);
   expect((await versions()) === before, "a version was made through ?k=");
   // below the gate too: 401, nothing written
-  const below = [["/preview", { project: P, items: [doc("s5/by-url.md", { body: "x" })] }], ["/file", { previewId: "P-0000000000000000", items: [doc("s5/by-url.md", { body: "x" })] }], ["/grade", { project: P, checkId: "AC.none", verdict: "proven", proof: "x" }],
+  const below = [["/preview", { project: P, items: [doc("s5/by-url.md", { body: "x" })] }], ["/preview/save-knowledge", { previewId: "P-0000000000000000", items: [doc("s5/by-url.md", { body: "x" })] }],
+    ["/preview/remove-knowledge", { previewId: "P-0000000000000000", items: [{ kind: "doc", op: "remove", data: { path: "s5/by-url.md" } }] }],
+    ["/preview/file-contribution", { previewId: "P-0000000000000000", items: [{ contribution: { lane: "leader", kind: "note", what: "s5 by url", why: "x" } }] }], ["/grade", { project: P, checkId: "AC.none", verdict: "proven", proof: "x" }],
     ["/questions/Q-smoke-1/rule", { project: P, choice: 0 }]];
   const belowR = [];
   for (const [path, body] of below) belowR.push([path, await http("POST", path + k, { body })]);

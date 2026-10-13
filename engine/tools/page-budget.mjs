@@ -16,6 +16,7 @@
 // browser loads them (the base read off the first page's <html data-org-base>); without it, at the root as a script does (a
 // bearer answers there from its own org). The MCP reads are at the one /mcp either way.
 import { readFileSync, writeFileSync } from "node:fs";
+import { partsOf } from "./import/door.mjs";
 
 const BASE = String(process.env.BUDGET_URL || "http://127.0.0.1:8895").replace(/\/+$/, "");
 const CREDS = process.env.BUDGET_CREDS || ".runs/r-local/dev-local/credentials.env";
@@ -136,18 +137,19 @@ for (const project of ORG_ONLY ? [] : projects) {
   rows.push(["mcp impact {contribution}", ids.change ? await call("impact", { contribution: ids.change }, project) : null]);
   // D5: impact {refs} with its history , on the project's first node
   rows.push(["mcp impact refs {node}", node ? await call("impact", { refs: [node.id] }, project) : null]);
-  // sprint 3 B2: preview, its page and file, on ONE eval-marked plain note (screens never show it): the preview reads the
-  // write doors' own rows and its reach, and writes its one row; the page reads that row; file writes the note
+  // sprint 3 B2: preview, its page and the write, on ONE eval-marked plain note (screens never show it): the preview reads the
+  // write doors' own rows and its reach, and writes its one row; the page reads that row; each part's write tool (sprint 19:
+  // the note's is file_contribution, measured as its own row) writes the note
   // only with --write-probe (the tool is read-only by default)
   if (WRITE_PROBE) {
-    const note = [{ contribution: { lane: "leader", kind: "note", what: "page-budget: a measured note", why: "the row budget of preview and file", eval: true } }];
+    const note = [{ contribution: { lane: "leader", kind: "note", what: "page-budget: a measured note", why: "the row budget of preview and its write tool", eval: true } }];
     const pv = await call("preview", { items: note, eval: true }, project);
     rows.push(["mcp preview (1 note)", pv]);
-    const pid = (toolJson(pv.body) || {}).previewId;
+    const pva = toolJson(pv.body) || {}, pid = pva.previewId;
     if (pid) {
       rows.push(["/preview/{id}", await get(`/preview/${pid}`, project, "text/html")]);
-      rows.push(["mcp file (1 note)", await call("file", { previewId: pid, items: note }, project)]);
-    } else rows.push(["/preview/{id}", null], ["mcp file (1 note)", null]);
+      for (const p of partsOf(pva, note)) rows.push([`mcp ${p.tool} (1 note)`, await call(p.tool, { previewId: pid, items: p.items }, project)]);
+    } else rows.push(["/preview/{id}", null], ["mcp file_contribution (1 note)", null]);
   }
   out[project] = { ids };
   for (const [label, r] of rows) {

@@ -765,7 +765,7 @@ for (const k of KNOWLEDGE_KINDS.filter((x) => x !== "edge" && x !== "render")) {
 // rows are the SAME rows: the same 50 bodies filed one at a time through the single door (fileTransmission, whose statements this
 // slice leaves alone) on a twin database land identical filings, mirrors, refs and tallies (the moments aside: created_at and the
 // grade's stagedAt).
-// And `file` reads the clientRefs ONCE: fileItems' own `landed` read, the batch door told which refs it found unfiled.
+// And file_contribution reads the clientRefs ONCE: filePart's own `landed` read, the batch door told which refs it found unfiled.
 {
   const core = await imp("src/core.js");
   const { REFS_BATCH_SQL } = await imp("src/refs.js");
@@ -828,7 +828,7 @@ for (const k of KNOWLEDGE_KINDS.filter((x) => x !== "edge" && x !== "render")) {
   ok(rh.every((r) => r.id) && Number(D.prepare("SELECT COUNT(*) AS n FROM transmission").get().n) === 60 && hs >= 2
     && D.prepare("SELECT COUNT(*) AS n FROM transmission WHERE length(digest) = 7990 AND length(proof) = 3990").get().n === 60,
     `10 · 60 filings of ~12 KB each (a digest and a proof at their caps) are cut into ${hs} statements under the cap, every row whole`);
-  // `file`: the clientRefs read once (fileItems' landed read), not again by the batch door
+  // file_contribution: the clientRefs read once (filePart's landed read), not again by the batch door
   const E = twin(), ce = counted(E);
   const items = Array.from({ length: 50 }, (_, i) => ({ contribution: { lane: "leader", kind: "note", what: `filed ${i}`, why: "w" } }));
   const pv = await P.previewItems(owner, { project: "alpha", items }, ce.env);
@@ -847,13 +847,13 @@ for (const k of KNOWLEDGE_KINDS.filter((x) => x !== "edge" && x !== "render")) {
   const [qa, qb] = (qd && qd.items) || [];
   ok(qa && qa.verdict === "files" && qa.rationale === "One review covers both." && /together\? 2 options, decided$/.test(qa.line) && qb && !("rationale" in qb),
     `10 · a decided question's preview item carries its rationale ("${qa && qa.rationale}", "${qa && qa.line}"); an open one none`, show(qd && (qd.error ? qd : qd.items.map((x) => ({ v: x.verdict, r: x.rationale, why: x.reasons })))));
-  const fl = await P.fileItems(owner, { previewId: pv.previewId, items }, ce.env);
+  const fl = await P.filePart(owner, { previewId: pv.previewId, items }, ce.env, { tool: "file_contribution" });
   const refReads = ce.log.slice(from).filter((x) => /client_ref IN \(SELECT value FROM json_each/.test(x.sql)).length;
   ok(pv.previewId && fl.complete === true && fl.counts.filed === 50 && refReads === 1 && Number(E.prepare("SELECT COUNT(*) AS n FROM transmission WHERE kind <> 'knowledge'").get().n) === 50,
-    `10 · file of 50 contributions reads the clientRefs ONCE (${refReads}); all 50 filed`, show({ complete: fl.complete, counts: fl.counts, error: fl.error }));
+    `10 · file_contribution of 50 contributions reads the clientRefs ONCE (${refReads}); all 50 filed`, show({ complete: fl.complete, counts: fl.counts, error: fl.error }));
   // the replay still holds: the same file again files nothing (the preview is filed) and a raced ref is still the replay (section 5)
-  const again = await P.fileItems(owner, { previewId: pv.previewId, items }, ce.env);
-  ok(again.error === "preview_filed" && Number(E.prepare("SELECT COUNT(*) AS n FROM transmission WHERE kind <> 'knowledge'").get().n) === 50, "10 · the same file again files nothing (preview_filed)");
+  const again = await P.filePart(owner, { previewId: pv.previewId, items }, ce.env, { tool: "file_contribution" });
+  ok(again.error === "preview_filed" && Number(E.prepare("SELECT COUNT(*) AS n FROM transmission WHERE kind <> 'knowledge'").get().n) === 50, "10 · the same file_contribution again files nothing (preview_filed)");
 }
 
 // ---- 11. the questions that name a node (sprint 8, 8.3b; PLATFORM §3: "the Map's inspector reads every question to find the

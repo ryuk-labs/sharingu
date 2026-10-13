@@ -9,7 +9,7 @@
 //   · brief for the engineering hat and for the screen;
 //   · the Library page and a search on it load, the Goals tab carries "changed since v1", What changed loads;
 //   · a Partner seated on the project reads it; a Partner seated nowhere is refused everywhere.
-import { smoke, expect, brief, http, mcp, html, ownerKey, control } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, html, ownerKey, control, fileParts } from "./lib.mjs";
 
 const TAG = String(process.env.S16_TAG || "").replace(/[^a-z0-9]/g, "");
 const P = "s16" + TAG;
@@ -24,7 +24,7 @@ const invite = async (name, email, role, projects) => {
 const fileVia = async (key, items) => {
   const pv = await mcp(key, "preview", { project: P, items });
   expect(!pv.isError && pv.out.previewId, () => `preview: ${brief(pv.out)}`);
-  const f = await mcp(key, "file", { previewId: pv.out.previewId, items, only: "ready" });
+  const f = await fileParts((n, a) => mcp(key, n, a), pv.out, items, { only: "ready" });   // sprint 19: each part with its write tool
   expect(!f.isError && f.out.complete === true, () => `file: ${brief(f.out)}`);
   return f.out;
 };

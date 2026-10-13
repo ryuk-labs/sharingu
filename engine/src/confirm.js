@@ -1,13 +1,15 @@
 // src/confirm.js — the confirm prompt (sprint 3, D3; docs/plan/MCP.md §4 "How the person sees it": one preview, three
-// renders; the confirm is MCP elicitation). ONE tool call from the person's side, still two steps inside: `preview` with
-// fileOnConfirm: true writes its preview row as always, then — only for a client that DECLARED elicitation at initialize —
-// the answer to that tools/call is a Server-Sent Events stream whose first message is the server's `elicitation/create`
-// request (the preview's own text render, bounded, and a one-boolean form). The client answers on ANOTHER POST (the
-// JSON-RPC response, with the session id); that answer is recorded on the preview's row; the open stream reads the row
-// and, on accept, files exactly what was previewed through the SAME `file` path (callTool "file": the write scope, the
-// read-only refusal, the author's project scope, the digest), then sends the tools/call result and closes. Decline,
-// cancel, a JSON-RPC error, a timeout or a closed stream file nothing and say so. The two calls (preview, then file)
-// stay exactly as they were: the fallback every client can use.
+// renders; the confirm is MCP elicitation; sprint 19: asked by the write tools, never by preview). ONE tool call from the
+// person's side, still two steps inside: a write tool (file_contribution, save_knowledge, remove_knowledge: src/formats.js
+// WRITE_TOOLS) with fileOnConfirm: true runs every check of its filing and files nothing (src/preview.js filePart, check), writes
+// the confirm's binding into the preview's row (storePartConfirm), then — only for a client that DECLARED elicitation at
+// initialize — the answer to that tools/call is a Server-Sent Events stream whose first message is the server's
+// `elicitation/create` request (the part's own text render, bounded, and a one-boolean form). The client answers on ANOTHER POST
+// (the JSON-RPC response, with the session id); that answer is recorded on the preview's row; the open stream reads the row
+// and, on accept, files exactly what was previewed through the SAME tool (callTool with that tool's name: the write scope, the
+// read-only refusal, the author's project scope, the part's digest), then sends the tools/call result and closes. Decline,
+// cancel, a JSON-RPC error, a timeout or a closed stream file nothing and say so. The plain call (the tool without
+// fileOnConfirm) stays exactly as it was: the fallback every client can use.
 //
 // Spec: MCP 2025-06-18 (client/elicitation, basic/transports "Streamable HTTP"); notes in engine/.runs/d3/SPEC-NOTES.md.
 //
@@ -19,12 +21,13 @@
 // The id a sprint-13 door mints does not match an older door's pattern: after a rollback such a client reads as session-less
 // (the capability fallback) until it initializes again — never a 404. The flag in the id
 // only decides whether the door MAY ask; it grants nothing: a forged id gets a stream the client cannot answer, and the
-// filing is still the bearer's own `file`. A malformed id is treated as no session (never a 404: the door keeps no sessions
+// filing is still the bearer's own write tool. A malformed id is treated as no session (never a 404: the door keeps no sessions
 // to lose).
 //
 // Correlation (no shared memory between requests on Workers): the preview row IS the state. Its stored summary carries
-// confirm: { key, until } where key = sha256(<nonce>:<session id>) and the nonce is 128 random bits that ride ONLY inside
-// the elicitation request's JSON-RPC id (sg-confirm:<previewId>:<nonce>). An answer is recorded by ONE conditional UPDATE:
+// confirm: { key, until, tool } where key = sha256(<nonce>:<session id>) and the nonce is 128 random bits that ride ONLY inside
+// the elicitation request's JSON-RPC id (sg-confirm:<previewId>:<nonce>); each new confirm on the row (one per part) replaces
+// the last, and the stream reads an answer only under its OWN key, so a yes to one part never files another. An answer is recorded by ONE conditional UPDATE:
 // the same person as the preview's author, the same session id, the same nonce, before `until`, not answered before, not
 // filed — so an answer to someone else's id, from another session, after the window, or a second (replayed) answer changes
 // nothing and is refused 400. What is recorded is one word (accept · decline · cancel · error); nothing else of the
@@ -33,17 +36,17 @@
 // Limits (stated, not hidden): the stream stays open at most CONFIRM_WINDOW_MS (under the 60-second request timeout the
 // MCP TypeScript SDK sets by default, so a client is not left with a cut-off call), reading the row on a backing-off
 // schedule (CONFIRM_POLLS, then one read after the window: at most 19 reads of one row each, by its primary key) and sending
-// a keep-alive comment between. The stream adds those reads to the call's own D1 statements (the preview's, then the file's
-// on accept); Workers Paid allows 1,000 statements a request, the free plan 50 (measured on a 50-item preview: the preview
-// 18, the file 160 — a free-plan limit the plain `file` call meets the same way). The door asks only when every item is
-// ready (a not-ready item would refuse the file): otherwise it answers the preview and says why it did not ask.
+// a keep-alive comment between. The stream adds those reads to the call's own D1 statements (the check's, then the filing's
+// on accept); Workers Paid allows 1,000 statements a request, the free plan 50 — a free-plan limit the plain call meets the same
+// way. The door asks only when the part would file (every refusal of the plain call is answered as it is, and a part that files
+// nothing, every item unchanged, is answered without asking, saying why).
 //
 // D3b: the same confirm on the 2026-07-28 revision (MRTR, basic/patterns/mrtr; notes in engine/.runs/d3b/SPEC-NOTES.md). No
 // session and no stream: a request that declares form elicitation in its own `_meta` clientCapabilities is answered
 // `resultType: "input_required"` with ONE input request (`file`: the same message and the same one-boolean form) and a
 // `requestState` of sg2.<previewId>.<nonce>. The client retries the call with that state and its answer; the retry is recorded
-// by the same ONE conditional UPDATE, keyed sha256(<nonce>:<person id>:mrtr) (the person in place of the session), inside
-// MRTR_WINDOW_MS, then an accept files through the same `file` path. The state is opaque to the client and grants nothing by
+// by the same ONE conditional UPDATE, keyed sha256(<nonce>:<person id>:mrtr) (the person in place of the session) and bound to
+// the tool retried (confirm.tool), inside MRTR_WINDOW_MS, then an accept files through the same tool. The state is opaque to the client and grants nothing by
 // itself: it names a row, and only the row's author, able to write, inside the window, once, can use it; a tampered state
 // matches no row. The retry reads one row (the UPDATE) where the stream read it up to 19 times.
 //
@@ -55,7 +58,7 @@
 // same elicitation (a stream on the handshake revision; "input required" and its retry on the stateless one). On accept the row
 // is CLAIMED (claimVerb: one read, one conditional DELETE: the author's, unfiled, answered accept — once) and the verb runs with
 // confirm: true through the same callTool, as its author, with the args the person saw; decline, cancel, a timeout or a closed
-// stream run nothing. A verb's row is never a preview of items: `file` and the preview page answer it as unknown
+// stream run nothing. A verb's row is never a preview of items: the write tools and the preview page answer it as unknown
 // (src/preview.js). The two calls (the verb, then the verb with confirm: true) stay as they were: the fallback every client can
 // use, and what a client that declines every confirm on its own (Claude Code desktop: BETA line 3) gets — the answer says so.
 import { db } from "./data.js";
@@ -112,12 +115,21 @@ export function sessionOf(request) {
 // acceptsStream(request) -> the client said it takes text/event-stream (Streamable HTTP: a client MUST list both types)
 export const acceptsStream = (request) => /text\/event-stream/i.test(String((request && request.headers && request.headers.get("accept")) || ""));
 
-// confirmSchema(n, project) -> the smallest form the spec allows: ONE boolean, required, false by default
-// (7.5b) a verb's form says what it does: title the verb, description its preview's line (the key stays `file`: the one answer)
-export function confirmSchema(n, project, verb = null) {
-  const title = verb ? verb.title : "File", description = verb ? verb.line : `File ${n} item${n === 1 ? "" : "s"} into ${projectSlug(project) || "the org"}`;
-  return { type: "object", properties: { file: { type: "boolean", title, description, default: false } }, required: ["file"] };
+// confirmSchema({ title, line }) -> the smallest form the spec allows: ONE boolean, required, false by default, titled by what it
+// does (a write tool's part, 7.5b's verbs) and described by its line (the key stays `file`: the one answer)
+export function confirmSchema(what) {
+  return { type: "object", properties: { file: { type: "boolean", title: what.title, description: what.line, default: false } }, required: ["file"] };
 }
+// sprint 19: each write tool's confirm — its form's title and the line of its part (n items into a project)
+export const PART_CONFIRM = {
+  file_contribution: { title: "File", line: (n, p) => `File ${n} contribution${n === 1 ? "" : "s"} into ${p}` },
+  save_knowledge: { title: "Save", line: (n, p) => `Save ${n} knowledge item${n === 1 ? "" : "s"} in ${p}` },
+  remove_knowledge: { title: "Remove", line: (n, p) => `Remove ${n} knowledge item${n === 1 ? "" : "s"} from ${p}` },
+};
+// partAsk(check, confirm) -> the elicitation for a write tool's part: the part's terminal text and the one-boolean form; key: the
+// confirm's own binding, under which alone the stream reads an answer
+export const partAsk = (out, confirm) => ({ id: out.previewId, key: confirm.key, until: confirm.until, message: confirmMessage(out.text),
+  schema: confirmSchema({ title: PART_CONFIRM[out.tool].title, line: PART_CONFIRM[out.tool].line(Number(out.ready) || 0, projectSlug(out.project) || "the org") }) });
 // confirmMessage(text) -> the preview's own text render, at most MESSAGE_MAX characters (a cut says so on its own line)
 export function confirmMessage(t) {
   const s = String(t || "");
@@ -156,15 +168,16 @@ export async function recordAnswer(env, who, session, msg, { canWrite }) {
 // recordWord(env, previewId, personId, key, answer) -> the ONE conditional UPDATE both revisions record an answer with: the row
 // by its primary key, its author, not filed, the confirm's key, no answer yet, inside `until`
 export const NOT_OPEN = { error: "confirm_not_open", note: "No open confirm of yours has this id: nothing was recorded or filed." };
-// bind (7.5b, the stateless retry only): { verb, digest } — the row must be of the tool retried (verb NULL: a preview of items;
-// "publish" / "equip": that verb's) and, for a verb, of the call as sent (digest), so a requestState never crosses tools
+// bind (7.5b, the stateless retry only): { verb, digest, tool } — the row must be of the tool retried (verb NULL: a preview of
+// items, its confirm asked by that write tool, sprint 19; "publish" / "equip": that verb's) and, for a verb, of the call as sent
+// (digest), so a requestState never crosses tools
 export const RECORD_WORD_SQL = "UPDATE previews SET summary = json_set(summary, '$.confirm.answer', ?1, '$.confirm.at', ?2) WHERE id = ?3 AND person = ?4 AND filed_at IS NULL" +
   " AND json_extract(summary, '$.confirm.key') = ?5 AND json_extract(summary, '$.confirm.answer') IS NULL AND json_extract(summary, '$.confirm.until') > ?2";
 async function recordWord(env, previewId, personId, key, answer, bind = null) {
   const at = now();
   const r = bind
-    ? await db(env).prepare(RECORD_WORD_SQL + " AND json_extract(summary, '$.verb') IS ?6 AND (?7 IS NULL OR digest = ?7)")
-      .bind(answer, at, previewId, personId, key, bind.verb || null, bind.digest || null).run()
+    ? await db(env).prepare(RECORD_WORD_SQL + " AND json_extract(summary, '$.verb') IS ?6 AND (?7 IS NULL OR digest = ?7) AND (?8 IS NULL OR json_extract(summary, '$.confirm.tool') = ?8)")
+      .bind(answer, at, previewId, personId, key, bind.verb || null, bind.digest || null, bind.tool || null).run()
     : await db(env).prepare(RECORD_WORD_SQL).bind(answer, at, previewId, personId, key).run();
   const changed = Number(r && r.meta && r.meta.changes) || 0;
   // one refusal for every miss (another person's id, another session, a wrong nonce, too late, answered before, filed):
@@ -173,47 +186,52 @@ async function recordWord(env, previewId, personId, key, answer, bind = null) {
   return { recorded: true, previewId, answer };
 }
 
-// readAnswer(env, previewId) -> the recorded answer word, or null (ONE row read by its primary key)
-async function readAnswer(env, previewId) {
-  const r = await db(env).prepare("SELECT json_extract(summary, '$.confirm.answer') AS a FROM previews WHERE id = ?").bind(previewId).first();
-  return r && ANSWERS.includes(r.a) ? r.a : null;
+// readAnswer(env, previewId, key) -> the recorded answer word, or null (ONE row read by its primary key); with key, only an
+// answer to THAT confirm (a later confirm on the same row, another part's, replaced it: its answer is not this one's)
+async function readAnswer(env, previewId, key = null) {
+  const r = await db(env).prepare("SELECT json_extract(summary, '$.confirm.answer') AS a, json_extract(summary, '$.confirm.key') AS k FROM previews WHERE id = ?").bind(previewId).first();
+  return r && ANSWERS.includes(r.a) && (key == null || r.k === key) ? r.a : null;
 }
 const sleep = (ms) => new Promise((res) => setTimeout(res, Math.max(0, ms)));
 
-// confirmPlan(preview) -> null when the door may ask (a stored preview, every item ready, at least one to file), else the
-// reason it does not, in words for the agent
+// confirmPlan(check) -> null when the door may ask (a write tool's part that passed every check and files at least one item),
+// else the reason it does not, in words for the agent (a refused check is answered as the refusal it is)
 export function confirmPlan(p) {
-  if (!isObj(p) || p.error) return "The preview was refused, so there is nothing to confirm.";
-  if (!p.previewId) return "Nothing was stored (a read-only credential previews and never files).";
-  if (Number(p.notReady) > 0) return "Not every item is ready, so the person was not asked: fix the items and preview again, or file with only: \"ready\".";
-  if (!(Number(p.ready) > 0)) return "Nothing in it files (every item is unchanged).";
+  if (!(Number(p && p.ready) > 0)) return "Nothing in it files (every item is unchanged), so the person was not asked.";
   return null;
+}
+// storePartConfirm(env, previewId, personId, confirm) -> true when the confirm's binding { key, until, tool } is written into the
+// preview's row: ONE conditional UPDATE (its author, not filed whole), replacing any earlier confirm of the row (another part's)
+export async function storePartConfirm(env, previewId, personId, confirm) {
+  const r = await db(env).prepare("UPDATE previews SET summary = json_set(summary, '$.confirm', json(?1)) WHERE id = ?2 AND person = ?3 AND filed_at IS NULL")
+    .bind(JSON.stringify({ key: String(confirm.key), until: String(confirm.until), tool: String(confirm.tool) }), previewId, personId).run();
+  return (Number(r && r.meta && r.meta.changes) || 0) === 1;
 }
 
 // what the call says when the person's answer files nothing (both revisions)
+// (sprint 19: a write tool's; "the call" is that tool, sent again without fileOnConfirm)
+const AGAIN = "then, on their yes, send the same call again without fileOnConfirm";
 export const ANSWER_NOTE = {
   decline: "The person declined: nothing was filed.",
   cancel: "The person dismissed the confirm: nothing was filed.",
-  error: "The client could not ask the person: nothing was filed. Show them text, then call file.",
-  timeout: "No answer came in time: nothing was filed. Show the person text, then call file.",
+  error: `The client could not ask the person: nothing was filed. Show them text, ${AGAIN}.`,
+  timeout: `No answer came in time: nothing was filed. Show the person text, ${AGAIN}.`,
 };
 export const NOT_ASKED = {
-  capability: "This client did not declare elicitation, so the person was not asked here: show them text, then call file with the previewId and the same items.",
-  stream: "This request does not accept a stream (Accept: text/event-stream), so the person was not asked: show them text, then call file.",
-  batch: "A confirm cannot ride a JSON-RPC batch: show the person text, then call file.",
+  capability: `This client did not declare elicitation, so the person was not asked here and nothing was filed: show them text, ${AGAIN}.`,
+  stream: `This request does not accept a stream (Accept: text/event-stream), so the person was not asked and nothing was filed: show them text, ${AGAIN}.`,
+  batch: `A confirm cannot ride a JSON-RPC batch, so nothing was filed: show the person text, ${AGAIN}.`,
   // sprint 7's review (C4): an account connection acting in another org than its own, on the handshake revision (src/mcp.js)
-  org: "A confirm is asked only in this connection's own org (the person's answer would come back naming none), so the person was not asked here: show them text, then call file with the previewId and the same items.",
+  org: `A confirm is asked only in this connection's own org (the person's answer would come back naming none), so the person was not asked here and nothing was filed: show them text, ${AGAIN}.`,
 };
 
-// confirmStream({ preview, args, who, env, ctx, session, rpcId, fileCall }) -> a text/event-stream Response: the
-// elicitation request, keep-alives, then the tools/call result. fileCall(items, previewId) runs the ordinary `file` tool
-// (callTool "file") as the caller. The stream's own work runs under ctx.waitUntil.
-// o.ask (7.5b, a verb): { id: the confirm row, message, schema, until } in place of the preview's own; o.base: what a call that
-// files nothing answers (the verb's preview), else the preview without its window
+// confirmStream({ ask, base, env, ctx, rpcId, nonce, fileCall, toResult, verb? }) -> a text/event-stream Response: the
+// elicitation request, keep-alives, then the tools/call result. ask: { id: the row, key?: the confirm's own binding (an answer
+// is read only under it), message, schema, until } (partAsk, verbAsk); base: what a call that files nothing answers (the part's
+// check, the verb's preview); fileCall(rowId) runs the plain call as the caller (callTool: a write tool without fileOnConfirm, a
+// verb with confirm: true). The stream's own work runs under ctx.waitUntil.
 export function confirmStream(o) {
-  const { preview, args, env, ctx, session, rpcId, fileCall, toResult } = o;
-  const ask = o.ask || { id: preview.previewId, message: confirmMessage(preview.text), until: preview.confirmUntil,
-    schema: confirmSchema(Number(preview.ready) || (Array.isArray(args.items) ? args.items.length : 0), preview.project) };
+  const { ask, env, ctx, rpcId, fileCall, toResult } = o;
   const enc = new TextEncoder();
   const { readable, writable } = new TransformStream();
   const w = writable.getWriter();
@@ -221,7 +239,6 @@ export function confirmStream(o) {
   const send = async (s) => { if (!open) return false; try { await w.write(enc.encode(s)); return true; } catch { open = false; return false; } };
   const message = (obj) => send(`event: message\ndata: ${JSON.stringify(obj)}\n\n`);
   const result = (out, failed) => message({ jsonrpc: "2.0", id: rpcId, result: toResult(out, failed) });
-  const items = Array.isArray(args.items) ? args.items : [];
   const run = (async () => {
     try {
       const elicitId = `sg-confirm:${ask.id}:${o.nonce}`;
@@ -238,7 +255,7 @@ export function confirmStream(o) {
           if (Date.now() - lastBeat >= KEEPALIVE_MS) { if (!(await send(": keep-alive\n\n"))) return; lastBeat = Date.now(); }
         }
         polls++;
-        answer = await readAnswer(env, ask.id);
+        answer = await readAnswer(env, ask.id, ask.key);
         if (answer) break;
       }
       // the window closed: one last read after `until`, so an answer recorded in its last moment is seen (recordAnswer
@@ -247,10 +264,9 @@ export function confirmStream(o) {
         const until = Date.parse(ask.until);
         if (Number.isFinite(until) && Date.now() < until) await sleep(until - Date.now() + 50);
         polls++;
-        answer = await readAnswer(env, ask.id);
+        answer = await readAnswer(env, ask.id, ask.key);
       }
-      const base = o.base || { ...preview };
-      delete base.confirmUntil;
+      const base = o.base;
       if (answer !== "accept") {
         const word = answer || "timeout";
         await result({ ...base, confirm: { asked: true, answer: word, filed: false, polls, note: answerNote(word, o.verb) } }, false);
@@ -258,13 +274,13 @@ export function confirmStream(o) {
       }
       // accept: the stream must still be there to carry the receipt; a closed stream files nothing (the person can file)
       if (!(await send(": filing\n\n"))) return;
-      const out = await fileCall(items, ask.id);
+      const out = await fileCall(ask.id);
       const failed = !!(out && out.error);
       await result({ ...(out && typeof out === "object" ? out : { answer: out }), confirm: { asked: true, answer: "accept", filed: !failed, polls } }, failed);
     } catch (e) {
       // a D1 failure mid-way: the call ends as an error, nothing more is filed by this stream
       try { await result(o.verb ? { error: "confirm_failed", note: `The confirm could not finish; nothing more was ${o.verb.done}. ${o.verb.retry}` }
-        : { error: "confirm_failed", note: "The confirm could not finish; nothing more was filed. Call file with the previewId and the same items.", previewId: preview.previewId }, true); } catch { /* the stream is gone */ }
+        : { error: "confirm_failed", note: "The confirm could not finish; nothing more was filed. Send the same call again without fileOnConfirm: it files only what did not land.", previewId: ask.id }, true); } catch { /* the stream is gone */ }
     } finally {
       open = false;
       try { await w.close(); } catch { /* already closed */ }
@@ -274,7 +290,8 @@ export function confirmStream(o) {
   return new Response(readable, { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-cache, no-store", "x-accel-buffering": "no" } });
 }
 
-// confirmState(nonce, session) -> what previewItems stores in the row's summary (and the window's end, for the stream)
+// confirmState(nonce, session) -> the confirm's binding a write tool stores in the row (storePartConfirm) and a verb in its own
+// confirm row (and the window's end, for the stream)
 export async function confirmState(nonce, session, at = Date.now()) {
   return { key: await confirmKey(nonce, session.id), until: new Date(at + CONFIRM_WINDOW_MS).toISOString() };
 }
@@ -287,7 +304,7 @@ export const MRTR_WINDOW_MS = 10 * 60 * 1000;
 export const MRTR_INPUT = "file";   // the one inputRequests key
 export const REQUEST_STATE_RE = /^sg2\.(P-[0-9a-f]{16})\.([0-9a-f]{32})$/;
 export const mrtrKey = (nonce, personId) => sha256(`${nonce}:${personId}:mrtr`);
-// mrtrState(nonce, personId) -> what previewItems stores in the row's summary: the key binds the nonce to the person
+// mrtrState(nonce, personId) -> the binding stored as confirmState's is: the key binds the nonce to the person
 export async function mrtrState(nonce, personId, at = Date.now()) {
   return { key: await mrtrKey(nonce, personId), until: new Date(at + MRTR_WINDOW_MS).toISOString() };
 }
@@ -297,10 +314,9 @@ export function parseRequestState(v) {
   const m = typeof v === "string" ? REQUEST_STATE_RE.exec(v) : null;
   return m ? { previewId: m[1], nonce: m[2] } : null;
 }
-// inputRequiredOf(preview, nonce) -> the interim result: the preview's text and the one-boolean form, as ONE input request
-// ask (7.5b, a verb): { id, message, schema } in place of the preview's own
-export function inputRequiredOf(preview, nonce, ask = null) {
-  const a = ask || { id: preview.previewId, message: confirmMessage(preview.text), schema: confirmSchema(Number(preview.ready) || 0, preview.project) };
+// inputRequiredOf(nonce, ask) -> the interim result: the ask's text and its one-boolean form, as ONE input request (ask: a
+// write tool's part, partAsk; a verb's, verbAsk)
+export function inputRequiredOf(nonce, a) {
   return { resultType: "input_required",
     inputRequests: { [MRTR_INPUT]: { method: "elicitation/create", params: { mode: "form", message: a.message, requestedSchema: a.schema } } },
     requestState: requestStateOf(a.id, nonce) };
@@ -313,12 +329,13 @@ export function inputWord(responses) {
 }
 // recordInput(env, who, requestState, answer, { canWrite }) -> { recorded: true, previewId, answer } | { error, note }: the
 // retry's answer, recorded by the same conditional UPDATE as a legacy answer (recordWord), keyed by the person
-// bind (7.5b): { verb, digest } — the row must be the retried tool's (a preview's: verb null; a verb's: that verb, the same call)
-export async function recordInput(env, who, requestState, answer, { canWrite, verb = null, digest = null }) {
+// bind (7.5b): { verb, digest, tool } — the row must be the retried tool's (a preview's: verb null, its confirm the write tool's
+// own, sprint 19; a verb's: that verb, the same call)
+export async function recordInput(env, who, requestState, answer, { canWrite, verb = null, digest = null, tool = null }) {
   if (!canWrite) return { error: "read_only_credential", note: "This credential cannot file, so it cannot answer a confirm. Nothing was filed." };
   const st = parseRequestState(requestState);
   if (!st) return { ...NOT_OPEN };
-  return await recordWord(env, st.previewId, who.id, await mrtrKey(st.nonce, who.id), answer, { verb, digest });
+  return await recordWord(env, st.previewId, who.id, await mrtrKey(st.nonce, who.id), answer, { verb, digest, tool });
 }
 
 // ---- 7.5b: the verbs' confirm (publish, equip) ----
@@ -349,7 +366,7 @@ export function verbConfirmPlan(out, verb) {
   return null;
 }
 // verbAsk(out, verb) -> the elicitation for a verb's preview: its terminal text, the one-boolean form titled by the verb
-export const verbAsk = (out, verb) => ({ id: out.confirmRow, message: confirmMessage(out.text), until: out.confirmUntil, schema: confirmSchema(0, out.project || "", { title: verb.title, line: String(out.line || verb.title).slice(0, 200) }) });
+export const verbAsk = (out, verb) => ({ id: out.confirmRow, message: confirmMessage(out.text), until: out.confirmUntil, schema: confirmSchema({ title: verb.title, line: String(out.line || verb.title).slice(0, 200) }) });
 // verbBase(out) -> the verb's preview as the call answers it (the confirm row's id and window are never part of an answer)
 export function verbBase(out) {
   const { confirmRow, confirmUntil, ...rest } = isObj(out) ? out : { answer: out };
@@ -376,7 +393,7 @@ export async function claimVerb(env, rowId, person, verb) {
     .bind(rowId, person.id, verb.name).run();
   return (Number(r && r.meta && r.meta.changes) || 0) === 1 ? sum.args : null;
 }
-// the words of a verb's answers (a file's are ANSWER_NOTE and NOT_ASKED, unchanged)
+// the words of a verb's answers (a write tool's are ANSWER_NOTE and NOT_ASKED)
 const TWO_CALLS = (verb) => `Show the person text, then, on their yes, ${verb.retry.charAt(0).toLowerCase()}${verb.retry.slice(1)}`;
 export function answerNote(word, verb) {
   if (!verb) return ANSWER_NOTE[word];

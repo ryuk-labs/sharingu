@@ -35,10 +35,11 @@ import { getTenantConfig, PRODUCT } from "./tenant.js";
 import { json, uid, now, isEvalMark, evalView } from "./util.js";
 import { forgetReqMemo } from "./reqmemo.js";
 import { formatsAnswer } from "./formats.js";
-import { previewItems, fileItems, readPreviewView, PREVIEW_ID_RE } from "./preview.js";
+import { previewItems, filePart, readPreviewView, PREVIEW_ID_RE } from "./preview.js";
+import { WRITE_TOOL_NAMES } from "./formats.js";   // sprint 19: the three write tools that file a preview, each its own operation
 // sprint 3, D3: the confirm prompt (elicitation, src/confirm.js) and the card (MCP Apps, src/previewcard.js)
 import { SESSION_HEADER, sessionFor, sessionOf, acceptsStream, isResponse, recordAnswer, confirmPlan, confirmStream, confirmState, newNonce, NOT_ASKED, ANSWER_NOTE, elicitsForm, rendersCard, mrtrState, inputRequiredOf, inputWord, recordInput,
-  verbOf, verbArgs, verbDigest, verbConfirmPlan, verbAsk, verbBase, claimVerb, answerNote, notAskedNote } from "./confirm.js";   // 7.5b: publish and equip confirm too
+  storePartConfirm, partAsk, verbOf, verbArgs, verbDigest, verbConfirmPlan, verbAsk, verbBase, claimVerb, answerNote, notAskedNote } from "./confirm.js";   // 7.5b: publish and equip confirm too; sprint 19: the write tools ask
 import { CARD_URI, CARD_MIME, CARD_META_KEY, CARD_FRAGMENT_PREFIX, CARD_TOOLS, CARD_TOOL_META, CARD_RESOURCE_META, cardTemplate, cardFragment } from "./previewcard.js";
 import { impactAnswer } from "./impact.js";
 import { pickUp } from "./pickup.js";
@@ -137,7 +138,7 @@ import { START_HERE_DOC, libraryFor, docFor, roleBriefFor } from "./docread.js";
 // read by its exact id after mayReadArtifact admitted the reader)
 const fileText = async (env, row) => { const o = await storeOfRow(env, row).get(row.r2_key); return o ? await o.text() : null; };
 // instructionsFor({ org, startHere }) — pure: the `instructions` string initialize carries, the first-run guide. One line
-// before five numbered steps (whoami → missing → formats → preview → file), one line after (each session: updates, the
+// before five numbered steps (whoami → missing → formats → preview → the write tool each item names), one line after (each session: updates, the
 // start-here guide, ask, wrap_up). Only the tool names of the registry (src/index.js MCP_TOOLS).
 // sprint 3 S3b: the product is "sharingu" to every connecting client, whatever a served manifest names (PRODUCT, src/tenant.js)
 // sprint 12, 12.2: one line after the five calls names a new team's four steps (the same on the site's docs page, docs/INSTALL.md
@@ -154,8 +155,8 @@ export function instructionsFor(o) {
     "1. Call `whoami`: who you are, your projects, and where your writes land.",
     "2. Call `missing` with `project`: what that project still needs, each item with the preview call that fills it. An org with no project yet starts with `create_project` {key, name} (the admin); `whoami` says which.",
     "3. Call `formats`: how each kind of item is shaped.",
-    "4. Call `preview` with the items you extracted: it shows what will be filed, where it shows, how it is graded and what it reaches, and files nothing (with `fileOnConfirm: true`, a client that supports confirmation asks the person and files on yes). Show the person its `text` as it is.",
-    "5. Call `file` with the previewId and the same items.",
+    "4. Call `preview` with the items you extracted (contributions, knowledge upserts, knowledge removes): it shows what will be filed, where it shows, how it is graded and what it reaches, and which write tool files each item (`filesWith`); it files nothing. Show the person its `text` as it is.",
+    "5. Call the write tool each item names (`filesWith`) with the previewId and that tool's items as previewed: `file_contribution` the contributions, `save_knowledge` the knowledge upserts, `remove_knowledge` the knowledge removes (with `fileOnConfirm: true`, a client that supports confirmation asks the person and files on yes). A grade is `submit_grade`, an answer `respond`: each files at once.",
     FOUR_STEPS_LINE,
     `Every session: \`updates\` first (what changed for you and what waits on you). \`read\` {ref: "doc/${startHere}"} is the start-here guide; \`ask\` asks the owner; \`wrap_up\` hands over at the end.`,
     ...orgs,
@@ -163,9 +164,6 @@ export function instructionsFor(o) {
 }
 // serverNameOf(org) -> what an MCP client shows as the server: the product and the org (its row's name), in words
 export const serverNameOf = (org) => { const o = String(org || "").trim(); return o && o.toLowerCase() !== PRODUCT ? `${PRODUCT} — ${o}` : PRODUCT; };
-// respond and submit_grade file at once; each answer carries ONE line pointing at preview, which shows a filing first
-export const PREVIEW_TIP = "Next time, preview {project, items} first: it shows what will be filed, where it shows, how it is graded and what it reaches, then file writes it.";
-const withPreviewTip = (out) => (out && typeof out === "object" && !Array.isArray(out) && !out.error ? { ...out, tip: PREVIEW_TIP } : out);
 const rpcErr = (id, code, message) => json({ jsonrpc:"2.0", id, error:{ code, message } });
 // slimLists(answer) -> the answer with each list's cards cut to what a list row says (D2b item 10: gtm answered 28.6 KB
 // on ryuklabs, most of it the lists' cards in full)
@@ -328,11 +326,11 @@ async function runTool(name, a, person, env, url, tools, reg, scope) {
       return await computeHoles(env, person, await tenantOf(), { includeEval: evalView(a.eval, person.id) });
     // the standard (sprint 3, B1): the two registries, the same for every project; no seat and no project (src/formats.js)
     case "formats": return formatsAnswer({ kind: a.kind, shape: a.shape });
-    // preview, then file (sprint 3, B2; src/preview.js): the project scope ran above (project:true) for preview; file scopes
-    // the preview's own project itself (its author only), after spec.write refused a read-only grant.
-    // sprint 3, D3: reg.previewOpts.confirm is the confirm's binding (src/confirm.js), stored in the preview's own row
-    case "preview": return await previewItems(person, a, env, { via: "mcp", origin: url && url.origin, ...(reg && reg.previewOpts ? reg.previewOpts : {}) });
-    case "file": return await fileItems(person, a, env, { via: "mcp", origin: url && url.origin });
+    // preview, then the write tools (sprint 3, B2; split in sprint 19; src/preview.js): the project scope ran above (project:true)
+    // for preview; each write tool scopes the preview's own project itself (its author only), after spec.write refused a read-only
+    // grant, and files only its own operation of the preview
+    case "preview": return await previewItems(person, a, env, { via: "mcp", origin: url && url.origin });
+    case "file_contribution": case "save_knowledge": case "remove_knowledge": return await filePart(person, a, env, { via: "mcp", origin: url && url.origin, tool: name });
     case "ask": {
       const { status, ...out } = await askOwner(person, env, a);
       return out;
@@ -340,12 +338,12 @@ async function runTool(name, a, person, env, url, tools, reg, scope) {
     case "respond": {
       // the option-only door (QBDD22130): the SAME respondOptions POST /respond runs
       const { status, ...out } = await respondOptions(person, entriesFrom(a), env, { via: "mcp" });
-      return withPreviewTip(out);
+      return out;
     }
     case "rule_question":
       // the twin of POST /questions/:qid/rule: owner only (spec.owner above, and ruleQuestion checks again)
       return await ruleQuestion(person, env, { project: a.project, qid: a.qid, choice: a.choice, rationale: a.rationale, eval: a.eval, via: "mcp" });
-    case "submit_grade": return withPreviewTip(await gradeCheck(person, env, a));
+    case "submit_grade": return await gradeCheck(person, env, a);
     // R1: regrade from the pages, the SAME function POST /regrade calls (src/regrade.js)
     case "regrade": { const { http, ...out } = await regradeAnswer(env, person, a, { via: "mcp" }); return out; }
     case "decide_contribution":
@@ -491,7 +489,7 @@ async function runTool(name, a, person, env, url, tools, reg, scope) {
       const pw = projectWords(r.name, r.key);
       return { project: { key: r.key, name: r.name }, created: !r.existed, reactivated: r.reactivated, ...(r.eval ? { eval: true } : {}),
         note: r.reactivated ? `Project ${pw} was archived and is active again.` : r.existed ? `Project ${pw} already exists and is active: nothing new was created.` : `Project ${pw} is created and active. You read it as the admin; seat people on it from Control.`,
-        next, tip: `Fill it: send each call through preview, then file. \`missing\` with project "${projectSlug(r.key)}" lists every item.` };
+        next, tip: `Fill it: send each call through preview, then the write tool each item names. \`missing\` with project "${projectSlug(r.key)}" lists every item.` };
     }
     // the twins of POST /versions/publish and POST /versions/restore: owner only (spec.owner above, and the seam checks again)
     case "publish_version": return await publishVersion(person, { project: a.project, title: a.title, eval: a.eval }, env, { via: "mcp" });
@@ -590,26 +588,23 @@ async function handleOne(rq, request, env, ctx, url, deps, o = {}) {
     const gate = await callGate(nm, env, MCP_TOOLS);
     if (gate.refusal) return withStatus(rpc(id, toolResult(gate.refusal, true, { card: false, tool: nm, origin: url.origin })), 429, retryHeaders(gate.refusal));
     const resultOf = (out, failed) => toolResult(withPlanWarning(out, env), failed, { card: !!(session && session.ui), tool: nm, origin: url.origin });
-    if (nm === "preview" && args && typeof args === "object" && args.fileOnConfirm === true) {
+    if (WRITE_TOOL_NAMES.includes(nm) && isObj(args) && args.fileOnConfirm === true) {
       // the confirm (src/confirm.js): asked only of a client that declared elicitation, on a stream, outside a batch, in the
-      // connection's own org (C4)
+      // connection's own org (C4). The call with fileOnConfirm runs every check of the filing and files nothing (src/preview.js
+      // filePart); a refusal is answered as it is, and a part that would file asks the person, then files through the plain call
       const why = o.inBatch ? "batch" : !(session && session.elicit) ? "capability" : !acceptsStream(request) ? "stream" : offOrg ? "org" : null;
-      if (!why) {
-        const nonce = newNonce();
-        const out = await callTool(nm, args, who, env, url, MCP_TOOLS, { CAPABILITIES, previewOpts: { confirm: await confirmState(nonce, session) } });
-        const reason = confirmPlan(out);
-        if (!reason) {
-          return confirmStream({ preview: out, args, env, ctx, session, rpcId: id, nonce,
-            fileCall: (items, previewId) => callTool("file", { previewId, items }, who, env, url, MCP_TOOLS, { CAPABILITIES }),
-            toResult: resultOf });
-        }
-        const { confirmUntil, ...plain } = out && typeof out === "object" ? out : { answer: out };
-        const failed = !!(out && out.error);
-        return rpc(id, resultOf(failed ? out : { ...plain, confirm: { asked: false, note: reason } }, failed));
-      }
       const out = await callTool(nm, args, who, env, url, MCP_TOOLS, { CAPABILITIES });
       const failed = !!(out && out.error);
-      return rpc(id, resultOf(failed ? out : { ...out, confirm: { asked: false, note: NOT_ASKED[why] } }, failed));
+      if (failed || why) return rpc(id, resultOf(failed ? out : { ...out, confirm: { asked: false, note: NOT_ASKED[why] } }, failed));
+      const { confirm: notAsked, filed, ...check } = out;
+      const reason = confirmPlan(check);
+      if (reason) return rpc(id, resultOf({ ...check, filed: false, confirm: { asked: false, note: reason } }, false));
+      const nonce = newNonce();
+      const bind = { ...(await confirmState(nonce, session)), tool: nm };
+      if (!(await storePartConfirm(env, check.previewId, who.id, bind))) return rpc(id, resultOf({ error: "preview_filed", previewId: check.previewId, note: "This preview was filed meanwhile: nothing was asked or filed again." }, true));
+      const { fileOnConfirm, ...plainArgs } = args;
+      return confirmStream({ ask: partAsk(check, bind), base: { ...check, filed: false }, env, ctx, rpcId: id, nonce,
+        fileCall: () => callTool(nm, plainArgs, who, env, url, MCP_TOOLS, { CAPABILITIES }), toResult: resultOf });
     }
     // sprint 7, 7.5b: publish {publishOnConfirm: true} / equip {equipOnConfirm: true} — the same confirm, on the call's own stream
     const verb = verbOf(nm);
@@ -621,8 +616,8 @@ async function handleOne(rq, request, env, ctx, url, deps, o = {}) {
         const out = await callTool(nm, plainArgs, who, env, url, MCP_TOOLS, { CAPABILITIES, previewOpts: { confirm: { ...(await confirmState(nonce, session)), digest: await verbDigest(verb, args) } } });
         const reason = verbConfirmPlan(out, verb);
         if (!reason) {
-          return confirmStream({ preview: out, args: {}, env, ctx, session, rpcId: id, nonce, verb, ask: verbAsk(out, verb), base: verbBase(out),
-            fileCall: async (_items, rowId) => verbOnYes(verb, rowId, who, env, url, deps), toResult: resultOf });
+          return confirmStream({ env, ctx, rpcId: id, nonce, verb, ask: verbAsk(out, verb), base: verbBase(out),
+            fileCall: async (rowId) => verbOnYes(verb, rowId, who, env, url, deps), toResult: resultOf });
         }
         const failed = !!(out && out.error);
         return rpc(id, resultOf(failed ? out : { ...verbBase(out), confirm: { asked: false, note: reason } }, failed));
@@ -881,8 +876,8 @@ async function handleModern(rq, request, env, ctx, url, deps) {
   return r.error ? fail(r.error.code === -32002 || r.error.code === -32003 ? -32602 : r.error.code, r.error.message, 200) : ok(r.result, CACHE_PRIVATE);
 }
 
-// modernToolCall: tools/call on the stateless revision. The same callTool as the handshake revision; the confirm (preview
-// {fileOnConfirm: true}) is an "input required" answer and its retry (src/confirm.js, MRTR) instead of a stream.
+// modernToolCall: tools/call on the stateless revision. The same callTool as the handshake revision; the confirm (a write tool
+// with fileOnConfirm: true) is an "input required" answer and its retry (src/confirm.js, MRTR) instead of a stream.
 async function modernToolCall(rq, caps, who, env, url, deps, { ok, fail }) {
   const { MCP_TOOLS, CAPABILITIES } = deps;
   const p = rq.params, nm = p.name, args = p.arguments ?? {};
@@ -927,9 +922,10 @@ async function modernToolCall(rq, caps, who, env, url, deps, { ok, fail }) {
     const out = await callTool(nm, plainArgs, who, env, url, MCP_TOOLS, { CAPABILITIES, previewOpts: { confirm: { ...(await mrtrState(nonce, who.id)), digest: await verbDigest(verb, args) } } });
     const reason = verbConfirmPlan(out, verb);
     if (reason) { const failed = !!(out && out.error); return ok(resultOf(failed ? out : { ...verbBase(out), confirm: { asked: false, note: reason } }, failed)); }
-    return ok(inputRequiredOf(out, nonce, verbAsk(out, verb)));
+    return ok(inputRequiredOf(nonce, verbAsk(out, verb)));
   }
-  if (nm === "preview" && p.requestState !== undefined) {
+  const writer = WRITE_TOOL_NAMES.includes(nm);
+  if (writer && p.requestState !== undefined) {
     // sprint 7, 7.5a: the retry files without callTool's own check, so the call's org is checked here first (orgArgRefused)
     const orgRefused = await orgArgRefused(isObj(args) ? args.orgSlug : undefined, who, env);
     if (orgRefused) return ok(resultOf(orgRefused, true));
@@ -938,24 +934,32 @@ async function modernToolCall(rq, caps, who, env, url, deps, { ok, fail }) {
     if (!elicitsForm(caps)) return fail(-32021, "Missing required client capability: elicitation (form) answers a confirm", 400, { requiredCapabilities: { elicitation: { form: {} } } });
     const word = inputWord(p.inputResponses);
     if (!word) return fail(-32602, "bad_answer: send inputResponses.file, the person's answer (accept, decline or cancel). Nothing was recorded or filed.");
-    // 7.5b: bound to a preview of items (verb null): a verb's confirm row is never answered by a preview's retry
-    const r = await recordInput(env, who, p.requestState, word, { canWrite: !who.readOnly && hasWriteScope(who), verb: null });
-    if (!r.recorded) return fail(-32602, `${r.error}: ${r.note} Preview again, then call file with the previewId it answers and the same items.`);
-    if (word !== "accept") return ok({ ...asText({ previewId: r.previewId, url: orgUrl(url.origin, `/preview/${r.previewId}`), confirm: { asked: true, answer: word, filed: false, note: ANSWER_NOTE[word] } }), isError: false });
-    // accept: the SAME file path as the two calls (the write scope, the author's project scope, the digest: items that differ
-    // from the preview's are refused there)
-    const out = await callTool("file", { previewId: r.previewId, items: args.items }, who, env, url, MCP_TOOLS, { CAPABILITIES });
+    // 7.5b: bound to a preview of items (verb null) and (sprint 19) to the write tool that asked: a verb's confirm row, or
+    // another tool's confirm, is never answered by this retry
+    const r = await recordInput(env, who, p.requestState, word, { canWrite: !who.readOnly && hasWriteScope(who), verb: null, tool: nm });
+    if (!r.recorded) return fail(-32602, `${r.error}: ${r.note} Call ${nm} again with fileOnConfirm: true for a new confirm, or without it once the person said yes.`);
+    if (word !== "accept") return ok({ ...asText({ previewId: r.previewId, tool: nm, url: orgUrl(url.origin, `/preview/${r.previewId}`), filed: false, confirm: { asked: true, answer: word, filed: false, note: ANSWER_NOTE[word] } }), isError: false });
+    // accept: the SAME plain call (the write scope, the author's project scope, the part's digest: items that differ from the
+    // preview's are refused there)
+    // the preview the state names, never another the retry might name: the person confirmed that one's part
+    const { fileOnConfirm, ...plainArgs } = isObj(args) ? args : {};
+    const out = await callTool(nm, { ...plainArgs, previewId: r.previewId }, who, env, url, MCP_TOOLS, { CAPABILITIES });
     const failed = !!(out && out.error);
     return ok(resultOf({ ...(isObj(out) ? out : { answer: out }), confirm: { asked: true, answer: "accept", filed: !failed } }, failed));
   }
-  if (nm === "preview" && isObj(args) && args.fileOnConfirm === true) {
-    // asked only of a request that declared form elicitation (never an input request it did not declare)
-    if (!elicitsForm(caps)) return plainOf(await callTool(nm, args, who, env, url, MCP_TOOLS, { CAPABILITIES }), NOT_ASKED.capability);
+  if (writer && isObj(args) && args.fileOnConfirm === true) {
+    // the check (src/preview.js filePart: every refusal of the filing, nothing filed); asked only of a request that declared
+    // form elicitation (never an input request it did not declare)
+    const out = await callTool(nm, args, who, env, url, MCP_TOOLS, { CAPABILITIES });
+    if (!isObj(out) || out.error) return ok(resultOf(out, true));
+    if (!elicitsForm(caps)) return ok(resultOf(out, false));
+    const { confirm: notAsked, filed, ...check } = out;
+    const reason = confirmPlan(check);
+    if (reason) return plainOf({ ...check, filed: false }, reason);
     const nonce = newNonce();
-    const out = await callTool(nm, args, who, env, url, MCP_TOOLS, { CAPABILITIES, previewOpts: { confirm: await mrtrState(nonce, who.id) } });
-    const reason = confirmPlan(out);
-    if (reason) return plainOf(out, reason);
-    return ok(inputRequiredOf(out, nonce));
+    const bind = { ...(await mrtrState(nonce, who.id)), tool: nm };
+    if (!(await storePartConfirm(env, check.previewId, who.id, bind))) return ok(resultOf({ error: "preview_filed", previewId: check.previewId, note: "This preview was filed meanwhile: nothing was asked or filed again." }, true));
+    return ok(inputRequiredOf(nonce, partAsk(check, bind)));
   }
   const out = await callTool(nm, args, who, env, url, MCP_TOOLS, { CAPABILITIES });
   const failed = !!(out && out.error);

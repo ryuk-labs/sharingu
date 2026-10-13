@@ -183,7 +183,7 @@ smoke("R5: one active project: a Partner with no seat on it reads no project at 
 
 // D5 Part 4 (a): the attack — a Partner seated on no active project, in an org with ONE active project (R5 left it so), files
 // with no project: the one project rule (core.js doorProject) used to stamp the org's only project; the fence now refuses it
-// project_forbidden on the tool, POST /preview and POST /file, and nothing is filed. A question for the owner (ask) still lands
+// project_forbidden on the tool and POST /preview (and the write tool, sprint 19, finds no preview of theirs), and nothing is filed. A question for the owner (ask) still lands
 // at the org level, never in the project.
 smoke("R5b: one active project: a Partner with no seat on it files nothing into it (preview, POST /preview, file); ask stays org-level", async () => {
   const before = (await contributions(ownerKey, P, { eval: true })).length;
@@ -193,11 +193,11 @@ smoke("R5b: one active project: a Partner with no seat on it files nothing into 
     const pv = await mcp(key, "preview", { items: [item] });
     const rp = await http("POST", "/preview", { key, body: { items: [item] } });
     const named = await mcp(key, "preview", { project: P, items: [item] });
-    const fl = await mcp(key, "file", { previewId: "P-0000000000000000", items: [item] });
+    const fl = await mcp(key, "file_contribution", { previewId: "P-0000000000000000", items: [item] });
     if (!(pv.isError && pv.out.error === "project_forbidden" && /hold a seat on/.test(pv.out.note || ""))) bad.push(`${who} tool ${brief(pv.out).slice(0, 160)}`);
     if (!(rp.status === 403 && rp.json.error === "project_forbidden")) bad.push(`${who} POST /preview ${rp.status} ${brief(rp.json).slice(0, 120)}`);
     if (!(named.isError && named.out.error === "project_forbidden")) bad.push(`${who} named ${brief(named.out).slice(0, 120)}`);
-    if (!fl.isError) bad.push(`${who} file ${brief(fl.out).slice(0, 120)}`);
+    if (!(fl.isError && fl.out.error === "preview_not_found")) bad.push(`${who} file_contribution ${brief(fl.out).slice(0, 120)}`);
     const ask = await mcp(key, "ask", { question: `S9 ${who} asks the owner` });
     if (ask.isError || ask.out.asked !== true) bad.push(`${who} ask ${brief(ask.out).slice(0, 120)}`);
   }

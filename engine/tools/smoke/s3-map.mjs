@@ -156,7 +156,7 @@ smoke("the MCP reads equal their GET twins", async () => {
   return "map {ref} == GET /map/node, map {plane: data} == GET /map/data (regions and v), map {plane: screens} == GET /map/screens";
 });
 
-smoke("a project with no model draws EMPTY, naming preview then file", async () => {
+smoke("a project with no model draws EMPTY, naming preview then save_knowledge", async () => {
   await control({ action: "add-project", key: "empty-map", name: "Empty map" });
   const sys = await html("/map?project=empty-map");
   const canvas = region(sys.text, "canvas");
@@ -165,9 +165,9 @@ smoke("a project with no model draws EMPTY, naming preview then file", async () 
   const flows = await mcp(ownerKey, "map", { project: "empty-map", plane: "flows" });
   const node = await http("GET", "/map/node?project=empty-map&gap=1", { key: ownerKey });
   const cv = await http("GET", "/canvas.json?project=empty-map", { key: ownerKey });
-  expect(sys.status === 200 && /data-state="empty"/.test(canvas) && /preview then file/.test(canvas) && !/id="mx-data"/.test(sys.text)
-    && data.status === 200 && data.json.regions["table-list"].length === 0 && /No screen or entity is filed for this project yet[\s\S]*?preview then file/.test(dataPage.text)
+  expect(sys.status === 200 && /data-state="empty"/.test(canvas) && /preview then save_knowledge/.test(canvas) && !/id="mx-data"/.test(sys.text)
+    && data.status === 200 && data.json.regions["table-list"].length === 0 && /No screen or entity is filed for this project yet[\s\S]*?preview then save_knowledge/.test(dataPage.text)
     && !flows.isError && flows.out.regions.swimlanes.length === 0 && node.status === 404 && node.json.error === "unknown_node" && cv.status === 200 && cv.json.screens.length === 0,
   () => `map ${sys.status} ${canvas.slice(0, 200)} / data ${data.status} / flows ${brief(flows.out)} / node ${node.status} ${brief(node.json)}`);
-  return "the Map's canvas region EMPTY naming preview then file (on /map and on /map/data); /map/data 200 with no table; flows []; ?gap=1 404 unknown_node";
+  return "the Map's canvas region EMPTY naming preview then save_knowledge (on /map and on /map/data); /map/data 200 with no table; flows []; ?gap=1 404 unknown_node";
 });

@@ -3,7 +3,7 @@
 //   · a handshake client whose initialize clientInfo is "Claude Code" (no flag declared) holds a session id carrying its family
 //     word (sg1.claude-code.<hex>); its preview then file stores the row as claude-code — the word, never the raw name;
 //   · a stateless (2026-07-28) client whose _meta clientInfo is "codex-mcp-client" files a row stored codex;
-//   · a key on the REST API (POST /file, no client signal) files a row stored api;
+//   · a key on the REST API (POST /preview/file-contribution, no client signal) files a row stored api;
 //   · Activity shows it: changes {org: true, list: true} answers each item's client, and GET /audit?all=1 says "from Claude Code"
 import { randomBytes } from "node:crypto";
 import { smoke, expect, ownerKey, d1rows as rows, BASE, patientFetch, http, brief } from "./lib.mjs";
@@ -21,11 +21,11 @@ async function post(body, headers = {}) {
 const outOf = (j) => { try { return JSON.parse(j.result.content[0].text); } catch { return null; } };
 const clientOf = (id) => (rows(`SELECT client FROM transmission WHERE id = ${q(id)}`)[0] || {}).client;
 const item = (what) => [{ contribution: { lane: "leader", kind: "note", what, why: "the smoke files it to see which AI is stamped" } }];
-// fileWith(call) -> the filed row's id: preview then file through `call(name, args)`
+// fileWith(call) -> the filed row's id: preview then file_contribution through `call(name, args)`
 async function fileWith(call, what) {
   const items = item(what);
   const pv = await call("preview", { project: P, items });
-  const f = pv && pv.previewId ? await call("file", { previewId: pv.previewId, items }) : pv;
+  const f = pv && pv.previewId ? await call("file_contribution", { previewId: pv.previewId, items }) : pv;
   const id = f && f.results && f.results[0] && f.results[0].id;
   expect(id, () => `${what}: ${brief(f)}`);
   return id;
@@ -44,7 +44,7 @@ smoke("client · 13.1 which AI filed it: a Claude Code session files claude-code
     { "mcp-protocol-version": V, "mcp-method": "tools/call", "mcp-name": name })).json);
   const cx = await fileWith(modern, `S54 from Codex ${TAG}`);
   // a key on REST, no client signal
-  const rest = async (name, args) => (await http("POST", name === "preview" ? "/preview" : "/file", { key: ownerKey, body: args })).json;
+  const rest = async (name, args) => (await http("POST", name === "preview" ? "/preview" : "/preview/file-contribution", { key: ownerKey, body: args })).json;
   const api = await fileWith(rest, `S54 from a script ${TAG}`);
   const stored = { [cc]: clientOf(cc), [cx]: clientOf(cx), [api]: clientOf(api) };
   expect(stored[cc] === "claude-code" && stored[cx] === "codex" && stored[api] === "api", () => `stored: ${brief(stored)}`);

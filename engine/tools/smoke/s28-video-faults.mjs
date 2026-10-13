@@ -6,8 +6,9 @@
 //        "Owed by" dash)
 //   · 3  a preview that says "files" files: 30 touches plus a screens list of 21 screens on the Map (51 index tokens; the refs
 //        index bound 2 parameters a token, D1 takes 100) answered not_filed after its preview said "files at once"
-//   · 4  the contract: GET /map/node and map {ref} answer parent (null on a node that has none); POST /file {} answers
-//        preview_id_required and its registry row declares it
+//   · 4  the contract: GET /map/node and map {ref} answer parent (null on a node that has none); each write twin's POST {}
+//        (POST /preview/file-contribution, /save-knowledge, /remove-knowledge; sprint 19) answers preview_id_required and its
+//        registry row declares it; POST /file is gone (404)
 //   · 6  What is missing: an item's Copy is a link to the item (script off) and the shell's copy handler says "Copied" for two
 //        seconds (the behaviour is client-side: the markup and the script are checked)
 // Fault 5 (the terminal text's fixed columns) is tools/preview-selftest.mjs's, with the rehearsal's goal row.
@@ -90,16 +91,24 @@ smoke("video faults · 3 a preview that says it files, files: 31 touches and a s
   return `${it.filed.id}: 31 touches + 21 screens previewed "files" and filed; the 21st screen's history finds it; the take filed ${t.out.items[0].filed.id}`;
 });
 
-smoke("video faults · 4 the contract: a node with no parent answers parent null (GET /map/node, map {ref}); POST /file {} answers preview_id_required, which its registry row declares", async () => {
+smoke("video faults · 4 the contract: a node with no parent answers parent null (GET /map/node, map {ref}); each write twin's POST {} answers preview_id_required, which its registry row declares", async () => {
   const r = await http("GET", `/map/node?project=${P}&ref=${encodeURIComponent(SCREENS[0])}`, { key: ownerKey });
   expect(r.status === 200 && r.json && "parent" in r.json && r.json.parent === null, () => `GET /map/node ${r.status}: ${Object.keys(r.json || {}).join(", ")}`);
   const m = await mcp(ownerKey, "map", { project: P, ref: SCREENS[0] });
   expect(!m.isError && m.out && "parent" in m.out && m.out.parent === null, () => `map {ref}: ${Object.keys(m.out || {}).join(", ")}`);
-  const f = await http("POST", "/file", { key: ownerKey, body: {} });
-  const row = (JSON.parse(readFileSync(CONTRACT, "utf8")).rest || []).find((x) => x.method === "POST" && x.path === "/file");
-  expect(f.status === 422 && f.json && f.json.error === "preview_id_required", () => `POST /file {}: ${f.status} ${brief(f.json)}`);
-  expect(row && /\b422 preview_id_required\b/.test(row.does) && /\b422 items_required\b/.test(row.does), () => `the registry row: ${row && row.does.slice(0, 200)}`);
-  return "parent: null on GET /map/node and map {ref}; POST /file {} 422 preview_id_required, declared on its row with items_required";
+  // sprint 19: the three write tools' twins (file is gone); the two knowledge rows declare the contribution row's refusals
+  const rows = JSON.parse(readFileSync(CONTRACT, "utf8")).rest || [];
+  const declares = (d) => /\b422 preview_id_required\b/.test(d) && /\b422 items_required\b/.test(d);
+  for (const path of ["/preview/file-contribution", "/preview/save-knowledge", "/preview/remove-knowledge"]) {
+    const f = await http("POST", path, { key: ownerKey, body: {} });
+    const row = rows.find((x) => x.method === "POST" && x.path === path);
+    expect(f.status === 422 && f.json && f.json.error === "preview_id_required", () => `POST ${path} {}: ${f.status} ${brief(f.json)}`);
+    expect(row && (declares(row.does) || (path !== "/preview/file-contribution" && /the same refusals as POST \/preview\/file-contribution/.test(row.does))), () => `the registry row ${path}: ${row && row.does.slice(0, 200)}`);
+  }
+  expect(declares((rows.find((x) => x.method === "POST" && x.path === "/preview/file-contribution") || {}).does || ""), "POST /preview/file-contribution declares preview_id_required and items_required");
+  const gone = await http("POST", "/file", { key: ownerKey, body: {} });
+  expect(gone.status === 404 && !rows.some((x) => x.path === "/file"), () => `POST /file: ${gone.status} (a retired door)`);
+  return "parent: null on GET /map/node and map {ref}; POST /preview/{file-contribution,save-knowledge,remove-knowledge} {} 422 preview_id_required, each declared on its row with items_required; POST /file 404";
 });
 
 smoke("video faults · 6 What is missing: an item's Copy is a link to the item (script off), and a pressed Copy reads \"Copied\" for two seconds", async () => {

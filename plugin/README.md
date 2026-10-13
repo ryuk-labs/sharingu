@@ -44,7 +44,8 @@ the goal), Activity across every project, and the skill `weekly-review` for the 
 1. `whoami`: your name, your orgs and projects, and where your writes land;
 2. `missing` with `project`: what that project still needs, each item with the call that fills it;
 3. `preview`: every write, shown before it lands (`formats` gives each kind's shape);
-4. `file` with the `previewId` and the same items: it files them, and the app shows them at once.
+4. the write tool each item names (`filesWith`: `file_contribution`, `save_knowledge` or `remove_knowledge`), with the
+   `previewId` and the same items of its part: it files them, and the app shows them at once.
 
 The skill `fill-a-project` walks a new project through these calls to its first filed contribution.
 

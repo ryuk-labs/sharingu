@@ -12,11 +12,13 @@
 //      bodies are the legacy bodies; a resource not found or a project refused is -32602, never -32002/-32003
 //   3. the legacy revision is unchanged by the modern one (initialize, tools/call without resultType, an unknown method
 //      still 200 + -32601, ping)
-//   4. the confirm as MRTR (src/confirm.js): input_required with ONE elicitation (form) and the state; the row keyed
-//      sha256(nonce:person:mrtr) for 10 minutes; accept files exactly that preview (one UPDATE read of the row before file);
-//      decline, cancel and accept with file:false file nothing; the attacks: a tampered state, another person's state, a
-//      replay, an expired state, other items (refused by the digest), a retry without elicitation declared, a retry with no
-//      answer; a client without elicitation and a read-only grant are never asked; the card's _meta for the Apps extension
+//   4. the confirm as MRTR (src/confirm.js; sprint 19: asked by the write tools, here save_knowledge): input_required with ONE
+//      elicitation (form) and the state; the row keyed sha256(nonce:person:mrtr) for 10 minutes; accept files exactly that
+//      preview's part (one UPDATE of the row's confirm before the filing); decline, cancel and accept with file:false file
+//      nothing; the attacks: a tampered state, another person's state, a replay, an expired state, other items (refused by the
+//      digest), another preview's id on the retry (the state's preview is filed), another write tool retrying the state, a
+//      retry without elicitation declared, a retry with no answer; a client without elicitation, a part not ready and a
+//      read-only grant are never asked; the card's _meta for the Apps extension
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -76,7 +78,7 @@ const SERVER = (j) => j && j.result && j.result._meta && j.result._meta[M.META_S
 {
   const items = [{ kind: "goal", op: "upsert", data: { id: "g-root", title: "Root", parent: null, dimensions: [] } }];
   const pv = textOf((await send({ jsonrpc: "2.0", id: ++n, method: "tools/call", params: { name: "preview", arguments: { project: "alpha", items } } })).j);
-  const fl = textOf((await send({ jsonrpc: "2.0", id: ++n, method: "tools/call", params: { name: "file", arguments: { previewId: pv.previewId, items } } })).j);
+  const fl = textOf((await send({ jsonrpc: "2.0", id: ++n, method: "tools/call", params: { name: "save_knowledge", arguments: { previewId: pv.previewId, items } } })).j);
   if (!fl || !fl.complete) { console.log("setup: the root goal did not file", JSON.stringify(fl).slice(0, 300)); process.exit(1); }
 }
 
@@ -193,16 +195,20 @@ console.log("3 · the handshake revision");
 
 // ===================== 4 · the confirm as MRTR =====================
 console.log("4 · the confirm (MRTR)");
-const ask = async (gid, o = {}) => call("preview", { project: "alpha", items: [goal(gid)], fileOnConfirm: true }, o);
-const retry = async (gid, state, answer, o = {}) => call("preview", { project: "alpha", items: o.items || [goal(gid)], fileOnConfirm: true }, { caps: o.caps || FORM, key: o.key, extra: { requestState: state, ...(answer === undefined ? {} : { inputResponses: { file: answer } }) } });
+// ask: preview the goal (a plain call), then save_knowledge {previewId, items, fileOnConfirm: true}; retry: the same call with the
+// state and the answer (the previewId the state names, unless o.pid says another)
+const pids = new Map();
+const ask = async (gid, o = {}) => { const pv = await call("preview", { project: "alpha", items: o.items || [goal(gid)] }, { caps: FORM }); pids.set(gid, pv.out && pv.out.previewId);
+  return call("save_knowledge", { previewId: pv.out && pv.out.previewId, items: o.items || [goal(gid)], fileOnConfirm: true }, o); };
+const retry = async (gid, state, answer, o = {}) => call(o.tool || "save_knowledge", { previewId: o.pid || pids.get(gid), items: o.items || [goal(gid)], fileOnConfirm: true }, { caps: o.caps || FORM, key: o.key, extra: { requestState: state, ...(answer === undefined ? {} : { inputResponses: { file: answer } }) } });
 const YES = { action: "accept", content: { file: true } };
 const summaryOf = (pid) => JSON.parse(db.prepare("SELECT summary FROM previews WHERE id = ?").get(pid).summary);
 {
   const a = await ask("g-yes");
   const r = a.j && a.j.result;
-  ok(a.status === 200 && r && r.resultType === "input_required" && SERVER(a.j), "a declared client's preview {fileOnConfirm}: resultType input_required (and the server's name)", a.j);
+  ok(a.status === 200 && r && r.resultType === "input_required" && SERVER(a.j), "a declared client's save_knowledge {fileOnConfirm}: resultType input_required (and the server's name)", a.j);
   const req = r && r.inputRequests && r.inputRequests.file;
-  ok(req && Object.keys(r.inputRequests).length === 1 && req.method === "elicitation/create" && req.params.mode === "form" && req.params.requestedSchema.properties.file.type === "boolean" && req.params.requestedSchema.required[0] === "file" && /sharingu/.test(req.params.message), "ONE input request: elicitation/create, form mode, the one-boolean form, the preview's text", req);
+  ok(req && Object.keys(r.inputRequests).length === 1 && req.method === "elicitation/create" && req.params.mode === "form" && req.params.requestedSchema.properties.file.type === "boolean" && req.params.requestedSchema.required[0] === "file" && /sharingu/.test(req.params.message) && req.params.requestedSchema.properties.file.title === "Save", "ONE input request: elicitation/create, form mode, the one-boolean form titled Save, the part's text", req);
   ok(r && /^sg2\.P-[0-9a-f]{16}\.[0-9a-f]{32}$/.test(r.requestState) && !("ttlMs" in r) && !("content" in r), "the requestState sg2.<previewId>.<nonce>; no caching hint, no content on an interim answer");
   const st = C.parseRequestState(r.requestState);
   const sm = summaryOf(st.previewId);
@@ -222,6 +228,8 @@ const summaryOf = (pid) => JSON.parse(db.prepare("SELECT summary FROM previews W
   ok(t4.status === 400 && t4.j.error.code === -32021 && t4.j.error.data.requiredCapabilities.elicitation, "a retry that does not declare elicitation: 400 -32021, nothing recorded", t4.j);
   const t5 = await retry("g-yes", r.requestState, undefined);
   ok(t5.status === 400 && t5.j.error.code === -32602 && /^bad_answer/.test(t5.j.error.message), "a retry with no answer: 400 -32602 bad_answer, nothing recorded", t5.j);
+  const t6 = await retry("g-yes", r.requestState, YES, { tool: "remove_knowledge", items: [{ kind: "goal", op: "remove", data: { id: "g-root" } }] });
+  ok(t6.status === 400 && t6.j.error.code === -32602 && /^confirm_not_open: /.test(t6.j.error.message), "attack: the state retried on another write tool (remove_knowledge): refused, nothing recorded", t6.j);
   ok(!summaryOf(st.previewId).confirm.answer && !goalIds().includes("g-yes"), "…after every refusal: no answer recorded, nothing filed");
   // the answer: one UPDATE of the row, then the same file path
   const at = log.length;
@@ -229,7 +237,7 @@ const summaryOf = (pid) => JSON.parse(db.prepare("SELECT summary FROM previews W
   const previewsSql = log.slice(at).filter((s) => /\bpreviews\b/.test(s));
   ok(y.status === 200 && y.j.result.resultType === "complete" && y.out && y.out.complete === true && y.out.confirm && y.out.confirm.asked === true && y.out.confirm.answer === "accept" && y.out.confirm.filed === true, "accept: the receipt, filed", y.j && (y.j.error || y.out && y.out.confirm));
   ok(y.out && y.out.previewId === st.previewId && goalIds().includes("g-yes"), "exactly the preview the state named; the goal is in the project");
-  ok(previewsSql.length >= 1 && /^UPDATE previews SET summary/.test(previewsSql[0]) && previewsSql.filter((s) => /^UPDATE previews SET summary/.test(s)).length === 1, `the answer is ONE conditional UPDATE of the row (then file's own reads): ${previewsSql.length} previews statements in all, ${previewsSql.length - 1} of them file's`);
+  ok(previewsSql.length >= 1 && /^UPDATE previews SET summary/.test(previewsSql[0]) && previewsSql.filter((s) => /^UPDATE previews SET summary/.test(s)).length === 1, `the answer is ONE conditional UPDATE of the row (then the filing's own reads): ${previewsSql.length} previews statements in all, ${previewsSql.length - 1} of them the filing's`);
   const replay = await retry("g-yes", r.requestState, YES);
   ok(replay.status === 400 && replay.j.error.code === -32602 && /^confirm_not_open/.test(replay.j.error.message), "attack: a replay of the state: refused, nothing filed twice", replay.j);
   ok(db.prepare("SELECT COUNT(*) AS c FROM k_goals WHERE id = 'g-yes'").get().c === 1, "…the goal is filed once");
@@ -254,22 +262,30 @@ for (const [label, answer, word] of [["decline", { action: "decline" }, "decline
   // other items than the preview's: the answer is recorded, file refuses them by the digest, nothing is filed
   const b = await ask("g-orig");
   const other = await retry("g-orig", b.j.result.requestState, YES, { items: [goal("g-swapped")] });
-  ok(other.status === 200 && other.j.result.isError === true && other.out && other.out.error === "preview_changed" && other.out.confirm && other.out.confirm.filed === false, "attack: a retry carrying other items: file refuses them (preview_changed), nothing filed", other.out);
+  ok(other.status === 200 && other.j.result.isError === true && other.out && other.out.error === "preview_changed" && other.out.confirm && other.out.confirm.filed === false, "attack: a retry carrying other items: the filing refuses them (preview_changed), nothing filed", other.out);
   ok(!goalIds().includes("g-orig") && !goalIds().includes("g-swapped"), "…neither the previewed nor the swapped goal is in the project");
+  // another preview's id on the retry: the state's own preview is the one filed (the person confirmed that one)
+  const c1 = await ask("g-named");
+  await ask("g-elsewhere");
+  const sw = await retry("g-named", c1.j.result.requestState, YES, { pid: pids.get("g-elsewhere") });
+  ok(sw.out && sw.out.complete === true && sw.out.previewId === pids.get("g-named") && goalIds().includes("g-named") && !goalIds().includes("g-elsewhere"), "attack: a retry naming another preview's id: the state's own preview is filed, never the other", sw.out && { previewId: sw.out.previewId, error: sw.out.error });
   // never asked: a client without elicitation, a preview not ready, a read-only grant
   const plain = await ask("g-plain", { caps: {} });
-  ok(plain.status === 200 && plain.j.result.resultType === "complete" && plain.out.confirm && plain.out.confirm.asked === false && plain.out.confirm.note === C.NOT_ASKED.capability && plain.out.previewId && !("confirmUntil" in plain.out), "a client that did not declare elicitation: the plain preview, not asked, said (never an inputRequests)", plain.out && plain.out.confirm);
-  ok(!summaryOf(plain.out.previewId).confirm, "…its row holds no confirm");
-  const nr = await call("preview", { project: "alpha", items: [goal("g-nr"), { contribution: { lane: "code", what: "x" } }], fileOnConfirm: true });
-  ok(nr.j.result.resultType === "complete" && nr.out.confirm && nr.out.confirm.asked === false && nr.out.notReady > 0, "a preview with an item not ready: not asked, said", nr.out.confirm);
-  const ro = await M.handleMcp({ json: async () => modern("tools/call", { name: "preview", arguments: { project: "alpha", items: [goal("g-ro")], fileOnConfirm: true } }, FORM), headers: new Headers({ "mcp-protocol-version": V, "mcp-method": "tools/call", "mcp-name": "preview" }) },
-    env, { props: { personId: "p-o", scope: ["mcp:read"], cred: await credEpoch(db.prepare("SELECT key_hash, pass_hash FROM people WHERE id = 'p-o'").get()) } }, new URL("https://org.test/mcp"), { MCP_TOOLS: [{ name: "preview", project: true, stores: true }, { name: "file", write: true }], VERSION: "t", workerName: "w" });
+  ok(plain.status === 200 && plain.j.result.resultType === "complete" && plain.out.confirm && plain.out.confirm.asked === false && plain.out.confirm.note === C.NOT_ASKED.capability && plain.out.filed === false && plain.out.previewId && !("confirmUntil" in plain.out), "a client that did not declare elicitation: not asked, nothing filed, said (never an inputRequests)", plain.out && plain.out.confirm);
+  ok(!summaryOf(plain.out.previewId).confirm && !goalIds().includes("g-plain"), "…its row holds no confirm, and the goal is not in the project");
+  const nrItems = [{ kind: "goal", op: "upsert", data: { id: "g-nr", title: "g-nr", parent: "g-missing", dimensions: [] } }];
+  const nr = await ask("g-nr", { items: nrItems });
+  ok(nr.j.result.resultType === "complete" && nr.j.result.isError === true && nr.out && nr.out.error === "not_ready" && !summaryOf(pids.get("g-nr")).confirm, "a part with an item not ready: refused not_ready as the plain call is, nothing asked", nr.out);
+  const TOOLS_RO = [{ name: "preview", project: true, stores: true }, { name: "save_knowledge", write: true }];
+  const pRo = await call("preview", { project: "alpha", items: [goal("g-ro")] }, { caps: FORM });
+  const ro = await M.handleMcp({ json: async () => modern("tools/call", { name: "save_knowledge", arguments: { previewId: pRo.out.previewId, items: [goal("g-ro")], fileOnConfirm: true } }, FORM), headers: new Headers({ "mcp-protocol-version": V, "mcp-method": "tools/call", "mcp-name": "save_knowledge" }) },
+    env, { props: { personId: "p-o", scope: ["mcp:read"], cred: await credEpoch(db.prepare("SELECT key_hash, pass_hash FROM people WHERE id = 'p-o'").get()) } }, new URL("https://org.test/mcp"), { MCP_TOOLS: TOOLS_RO, VERSION: "t", workerName: "w" });
   const roj = await ro.json();
   const roOut = JSON.parse(roj.result.content[0].text);
-  ok(roj.result.resultType === "complete" && roOut.previewId === null && roOut.confirm && roOut.confirm.asked === false, "a read-only grant (OAuth mcp:read): nothing stored, nothing asked", roOut.confirm);
+  ok(roj.result.resultType === "complete" && roj.result.isError === true && roOut.error === "insufficient_scope" && !summaryOf(pRo.out.previewId).confirm, "a read-only grant (OAuth mcp:read): save_knowledge refused, nothing stored, nothing asked", roOut);
   const c = await ask("g-ro2");
-  const roRetry = await M.handleMcp({ json: async () => modern("tools/call", { name: "preview", arguments: { project: "alpha", items: [goal("g-ro2")], fileOnConfirm: true }, requestState: c.j.result.requestState, inputResponses: { file: YES } }, FORM), headers: new Headers({ "mcp-protocol-version": V, "mcp-method": "tools/call", "mcp-name": "preview" }) },
-    env, { props: { personId: "p-o", scope: ["mcp:read"], cred: await credEpoch(db.prepare("SELECT key_hash, pass_hash FROM people WHERE id = 'p-o'").get()) } }, new URL("https://org.test/mcp"), { MCP_TOOLS: [{ name: "preview", project: true, stores: true }, { name: "file", write: true }], VERSION: "t", workerName: "w" });
+  const roRetry = await M.handleMcp({ json: async () => modern("tools/call", { name: "save_knowledge", arguments: { previewId: pids.get("g-ro2"), items: [goal("g-ro2")], fileOnConfirm: true }, requestState: c.j.result.requestState, inputResponses: { file: YES } }, FORM), headers: new Headers({ "mcp-protocol-version": V, "mcp-method": "tools/call", "mcp-name": "save_knowledge" }) },
+    env, { props: { personId: "p-o", scope: ["mcp:read"], cred: await credEpoch(db.prepare("SELECT key_hash, pass_hash FROM people WHERE id = 'p-o'").get()) } }, new URL("https://org.test/mcp"), { MCP_TOOLS: TOOLS_RO, VERSION: "t", workerName: "w" });
   const rrj = await roRetry.json();
   ok(roRetry.status === 400 && rrj.error.code === -32602 && /^read_only_credential/.test(rrj.error.message) && !summaryOf(C.parseRequestState(c.j.result.requestState).previewId).confirm.answer, "attack: the same person's read-only grant answering their own state: refused, nothing recorded", rrj);
   // the card rides a modern result for a request that declared the Apps extension

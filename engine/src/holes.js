@@ -9,7 +9,7 @@
 // never counted. Filing a call moves the item on the very next read, with no other step.
 //
 // Kept for every caller (additive since sprint 1): items[] with piece (the sprint-1 piece name where one maps 1:1, else the
-// item's id), status "open", what, count, countText, fillPath ({tool, args}: preview then file, rule_question or submit_grade,
+// item's id), status "open", what, count, countText, fillPath ({tool, args}: preview then save_knowledge, rule_question or submit_grade,
 // sent as it is) and shows; filled; next; summary.open / summary.filled. New: id, area, state, have, want, first, fill (the
 // call as one line: a knowledge write or a grade as its preview; the first OPEN_DETAIL items), meter, areas, notApplicable,
 // checklist (every item, compact).
@@ -52,7 +52,7 @@ export const offeredTo = (reader, id) => {
 export const INTAKE = [
   "Call `missing` first, with `project`: the meter says how filled the project is, and every open item says what is missing (`what`), the first missing thing (`first`) and the call that fills it (`fill`, and `fillPath` as {tool, args}).",   // vocab:allow
   "Put the real facts in the call's <placeholders>, from where the person's input lives (docs, code, chat, screenshots); never invent what the source does not say: file a question instead.",
-  "Send it: fillPath is a `preview` with its items; show the person the preview's text, then `file` the same items with its previewId. A ruling is rule_question, the owner's alone.",
+  "Send it: a fillPath that is a `preview` carries its items; show the person the preview's text, then call the write tool each item names (`filesWith`: `save_knowledge` for these) with its previewId and the same items. A grade is submit_grade (it files at once); a ruling is rule_question, the owner's alone.",
   "Read `missing` again: a filled item moves on the very next read, and it shows where `shows` says. Repeat until nothing is open.",   // vocab:allow
   // sprint 12, 12.2: the four steps' 3 and 4 — the two fill skills walk a whole side with these same calls
   "To fill a whole side at once, run the skill `fill-the-product-side` (from the code, docs and tickets you can read) or `fill-the-gtm-side` (from the person's mail, chats, meetings and CRM: summaries and links only); each walks these same calls, every item through `preview` first.",

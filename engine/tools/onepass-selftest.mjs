@@ -169,7 +169,9 @@ const plan = (sql, args) => db.prepare("EXPLAIN QUERY PLAN " + sql).all(...args)
   for (const it of C.CHECKLIST) {
     const f = C.fillOf({ id: it.id }, "alpha");
     const fp = f.fillPath;
-    ok(fp === null ? it.id === "agents-equipped" : fp.tool === "preview" ? C.callText(fp).startsWith("preview {") && Array.isArray(fp.args.items) && /then file/.test(fp.then) : fp.tool === "rule_question",
+    // sprint 19: a knowledge fill is a preview whose `then` names save_knowledge; a grade's is submit_grade (it files at once)
+    ok(fp === null ? it.id === "agents-equipped" : fp.tool === "preview" ? C.callText(fp).startsWith("preview {") && Array.isArray(fp.args.items) && /then save_knowledge/.test(fp.then)
+      : fp.tool === "submit_grade" ? it.id === "grades" && C.callText(fp).startsWith("submit_grade {") && typeof fp.args.checkId === "string" : fp.tool === "rule_question",
       `${it.id}: its fillPath is ${fp ? fp.tool : "an Equip press"}, and its fill line says the same call`);
   }
   ok(C.meterWords({ done: 4, total: 14, pct: 50 }) === "4 of 14 complete · 50% by depth", "the meter's words say what the % is: depth");

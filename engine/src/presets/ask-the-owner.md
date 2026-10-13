@@ -2,10 +2,10 @@
 kind: skill
 slug: ask-the-owner
 order: 12
-version: 2
+version: 3
 title: Ask the owner
 purpose: Put a question to the owner the right way: a quick ask, or a decision with options on Decisions.
-calls: ask, preview, file, decisions, respond, updates, open_items
+calls: ask, preview, save_knowledge, decisions, respond, updates, open_items
 ---
 
 # Ask the owner
@@ -22,8 +22,8 @@ work that does not depend on the answer.
    It shows in `updates` as "with the owner" until it is answered.
 3. **A decision between options:** file it on Decisions, where the owner rules it:
    `preview {project, items: [{kind: "question", op: "upsert", data: {qid: "<id>", question, why, area, severity: "normal", options: [{what, tradeoff}, {what, tradeoff}]}}]}`,
-   then `file {previewId, items}` with the same items. Give two or three real options, each with its trade-off. Write
-   the options so either could be chosen.
+   then `save_knowledge {previewId, items}` with the same items. Give two or three real options, each with its
+   trade-off. Write the options so either could be chosen.
 4. **Your own pick, if you have one:** `respond {qid, option: 0}` records it (0 is A). It waits with the owner; the
    question stays open until the owner rules.
 5. **Remember you are waiting:** `open_items {title: "Waiting on the owner: <question>", ref: "q/<id>"}`, and close it

@@ -11,7 +11,7 @@
 # What a page draws (its regions, its copy, its view bar) is tools/smoke.sh's (the look cases) and the selftests'; the
 # project scoping across two projects is the smoke's (R5, the authority cases). Nothing here pins page text.
 # THE ORG starts the way the smoke starts (tools/lib.sh suite_local_up): a fresh local org, its fixtures
-# (tools/suites/fixtures/) filed through preview then file. The seats are minted by tools/lib-mint-seat.sh into the suites'
+# (tools/suites/fixtures/) filed through preview then each part's write tool. The seats are minted by tools/lib-mint-seat.sh into the suites'
 # own org (sprint 6: its MINT_OWNER_EMAIL, RYUKLABS_EVALSEAT_EMAIL and MINT_LEADER_EMAIL are who signs in; a fixed seat's
 # passphrase IS its key for the run); nothing is read from disk; a passphrase never rides argv. --live: the hosted worker,
 # after tools/cf-budget.sh. The output contract: PASS/FAIL/SKIP lines, "tabs-verify: N passed, N failed, N skipped", and

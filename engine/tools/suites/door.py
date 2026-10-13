@@ -5,8 +5,11 @@
         -> the tool's answer as one line of JSON; a dict answer carries "_isError" (the result's isError) beside its fields,
            any other answer is {"_text": <it>, "_isError": ...}; {} when the door did not answer JSON-RPC at all
     DOOR_KEY=<key> U=<worker url> python3 tools/suites/door.py file '<preview arguments json>'
-        -> preview, then file with the preview's id and the SAME items (the folded write: MCP.md, engine/tools/names.json):
-           {"step": "preview"|"file", "isError", "preview": <the preview's answer>, "receipt": <file's answer>,
+        -> preview, then each part it answers with its write tool (sprint 19: file_contribution, save_knowledge,
+           remove_knowledge), the preview's id and that part's items as previewed (file_parts below, the JS tools' twin:
+           tools/import/door.mjs fileParts):
+           {"step": "preview"|"file", "tool": the write tool that refused (or null), "isError", "preview": <the preview's
+            answer>, "receipt": <every part's receipt as one: items, results, complete, counts, receipts by tool>,
             "id", "route", "status": the first filed item's (or null)}
 
 The key comes from the environment (DOOR_KEY, never argv) and is never printed. Every argument a suite sends carries its own
@@ -49,6 +52,32 @@ def call(name, args):
     return out
 
 
+WRITE_TOOLS = ("file_contribution", "save_knowledge", "remove_knowledge")
+
+
+def file_parts(pv, items, only=None):
+    """each part of a preview's answer ({tool, items: their numbers from 1}) filed with its tool and ITS items, in order ->
+    (receipt, refused tool or None). The first refusal stops the rest (its answer is the receipt); a part already filed on
+    this previewId (preview_filed) counts with its first receipt."""
+    done = []
+    for p in pv.get("parts") or []:
+        args = {"previewId": pv["previewId"], "items": [items[n - 1] for n in p.get("items") or []]}
+        if only:
+            args["only"] = only
+        out = call(p.get("tool"), args) or {}
+        if out.get("error") == "preview_filed" and isinstance(out.get("receipt"), dict):
+            out = dict(out["receipt"], repeat=True)
+        elif out.get("_isError") or out.get("error") or not out:
+            return out, p.get("tool")
+        done.append((p.get("tool"), out))
+    by_i = lambda k: sorted([x for _, o in done for x in (o.get(k) or [])], key=lambda x: x.get("i", 0))
+    res = by_i("results")
+    st = lambda s: len([x for x in res if x.get("status") == s])
+    return {"previewId": pv.get("previewId"), "tools": [t for t, _ in done], "complete": all(o.get("complete") is True for _, o in done),
+            "items": by_i("items"), "results": res, "counts": {"filed": st("filed"), "unchanged": st("unchanged"), "left": st("left"), "notFiled": st("not_filed")},
+            "receipts": {t: o for t, o in done}}, None
+
+
 def main():
     if not BASE or not KEY or len(sys.argv) < 3:
         print("{}"); return
@@ -61,11 +90,11 @@ def main():
         args = json.loads(sys.argv[2])
         pv = call("preview", args) or {}
         if pv.get("_isError") or not pv.get("previewId"):
-            print(json.dumps({"step": "preview", "isError": True, "preview": pv, "receipt": None, "id": None, "route": None, "status": None})); return
-        fl = call("file", {"previewId": pv["previewId"], "items": args.get("items") or []}) or {}
+            print(json.dumps({"step": "preview", "tool": None, "isError": True, "preview": pv, "receipt": None, "id": None, "route": None, "status": None})); return
+        fl, refused = file_parts(pv, args.get("items") or [])
         first = ((fl.get("items") or [{}])[0] or {}).get("filed") or {}
         res0 = (fl.get("results") or [{}])[0] or {}
-        print(json.dumps({"step": "file", "isError": bool(fl.get("_isError") or fl.get("error")), "preview": pv, "receipt": fl,
+        print(json.dumps({"step": "file", "tool": refused, "isError": bool(refused or fl.get("_isError") or fl.get("error")), "preview": pv, "receipt": fl,
                           "id": first.get("id") or res0.get("id"), "route": first.get("route"), "status": first.get("status") or res0.get("status")}))
     else:
         print("{}")

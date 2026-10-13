@@ -231,7 +231,7 @@ const CASES = {
       `O7 · the new owner reads its org alone: whoami ${me.role} of org 3; Control lists ${(ppl.people || []).length} person; org 1's project refused (${JSON.stringify(alpha.out).slice(0, 60)})`]);
     const items = [{ contribution: { lane: "leader", kind: "note", what: "The first note of Ada Works", why: "the new org files through the door" } }];
     const pv = await W.mcp(key, "preview", { items });
-    const fl = pv.out && pv.out.previewId ? await W.mcp(key, "file", { previewId: pv.out.previewId, items }) : { out: null };
+    const fl = pv.out && pv.out.previewId ? await W.mcp(key, "file_contribution", { previewId: pv.out.previewId, items }) : { out: null };
     const tx = W.q("SELECT id, project, org FROM transmission WHERE org = 3");
     out.push([tx.length === 1 && tx[0].project === "o3--web" && tx[0].org === 3, `O7 · the owner's key files a contribution through /mcp into o3--web (${JSON.stringify(tx)})`]);
     const add = async (name, email) => { const a = await W.call("POST", "/control", { key, form: { action: "add-person", name, email } }); return (/API key\): ([0-9a-f]{40})/.exec(a.text) || [])[1]; };

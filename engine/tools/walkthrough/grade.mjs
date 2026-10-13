@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // tools/walkthrough/grade.mjs — grade a project's SCREEN checks by observing them on a LOCAL org, then file the grades
-// through the door (preview, then file). The walkthrough's terminal runs it for real (beat 6: one check; beat 7: every check
+// through the door (submit_grade, one call a check: sprint 19, a grade files at once, without a preview). The walkthrough's terminal runs it for real (beat 6: one check; beat 7: every check
 // a change put in question); it works on any local org.
 //
 //   SHARINGU_URL=<local org> SHARINGU_KEY=<a seat's key, env only> node tools/walkthrough/grade.mjs <checkId>... [options]
@@ -14,7 +14,7 @@
 // a signed-in browser fetches it (a session cookie from the app's own POST /login with this seat's key, never printed), and
 // the check is proven when the page answers 200 with that data-screen and every region named before "when it has them".
 // The proof filed is the exact command (the cookie as $COOKIE) and what came back. A check of any other kind is said and
-// left ungraded. Prints one line per check, then the door's receipt. Exit 0 when every check was observed and filed; 1 when
+// left ungraded. Prints one line per check, then the door's answer for each grade filed. Exit 0 when every check was observed and filed; 1 when
 // one was refused, left or not a screen check; 2 on a usage error.
 import { call, show, isLocal } from "./mcp-call.mjs";
 import { pathToFileURL } from "node:url";
@@ -130,11 +130,18 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
     for (const c of left) console.log(`  · ${String(c.title || c.id).slice(0, 66)}`);
   };
   if (!items.length || argv.includes("--dry")) { sayLeft(); process.exit(items.length ? rc : 1); }
-  const pv = await call(BASE, KEY, "preview", { project: P, clientRef: `walkthrough-grade-${Date.now()}`, items });
-  if (pv.error || pv.isError || !pv.out.previewId) { console.log(show("preview", pv)); process.exit(1); }
-  const f = await call(BASE, KEY, "file", { previewId: pv.out.previewId, items });
+  // each grade with submit_grade (its own clientRef: a retry files nothing twice)
+  const ref = `walkthrough-grade-${Date.now()}`;
+  const answers = [];
+  let bad = false;
   console.log("");
-  console.log(argv.includes("--json") ? JSON.stringify(f.out) : show("file", f));
+  for (const [n, it] of items.entries()) {
+    const g = await call(BASE, KEY, "submit_grade", { project: P, ...it.grade, clientRef: `${ref}-${n + 1}` });
+    answers.push(g.out);
+    if (g.error || g.isError || !g.out || g.out.error) { bad = true; if (!argv.includes("--json")) console.log(show("submit_grade", g)); continue; }
+    if (!argv.includes("--json")) console.log(`${g.out.checkId}: ${g.out.verdict}, filed ${g.out.transmission}. ${g.out.note}`);
+  }
+  if (argv.includes("--json")) console.log(JSON.stringify(answers));
   sayLeft();
-  process.exit(f.error || f.isError ? 1 : rc);
+  process.exit(bad ? 1 : rc);
 }

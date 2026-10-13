@@ -52,6 +52,7 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileParts } from "./import/door.mjs";
 
 // ============ THE NAME TABLE: the only lines the rename slice edits ============
 // role -> the tool's name on the door today, and who must see it on their own tools/list (admin or member)
@@ -61,7 +62,9 @@ export const TOOLS = {
   formats:       { name: "formats",        holder: "member" },
   createProject: { name: "create_project", holder: "admin" },
   preview:       { name: "preview",        holder: "member" },
-  file:          { name: "file",           holder: "member" },
+  fileContribution: { name: "file_contribution", holder: "member" },
+  saveKnowledge: { name: "save_knowledge", holder: "member" },
+  removeKnowledge: { name: "remove_knowledge", holder: "member" },
   decisions:     { name: "decisions",      holder: "member" },
   respond:       { name: "respond",        holder: "member" },
   rule:          { name: "rule_question",  holder: "admin" },
@@ -79,7 +82,7 @@ export const TOOLS = {
 // the REST doors and pages the walk opens ({id} {qid} {ref} are filled in)
 export const ROUTES = {
   login: "/login", whoami: "/whoami", profile: "/profile", control: "/control", people: "/control/people", measures: "/control/measures",
-  previewPage: "/preview/{id}", previewPost: "/preview", filePost: "/file",
+  previewPage: "/preview/{id}", previewPost: "/preview", fileContributionPost: "/preview/file-contribution",
   home: "/home", homeSummary: "/home/summary", goals: "/goals", goal: "/goals/{ref}", decisions: "/decisions", render: "/render/{hash}",
   question: "/question/{qid}", map: "/map", mapNode: "/map/node", mapScreens: "/map/screens", library: "/library",
   build: "/build", gtm: "/gtm", broadcast: "/broadcast", missing: "/missing", changes: "/changes", search: "/search",
@@ -373,11 +376,22 @@ async function main() {
   const measuresNow = async () => { const m = (await req("GET", ROUTES.measures, { key: ownerKey, who: "admin" })).json || {}; return JSON.stringify((m.measures || []).map((x) => [x.key, x.value])); };
   const projectsNow = async () => ((await people()).workspaces || []).map((w) => w.key).sort();
   const peopleNow = async () => ((await people()).people || []).map((p) => p.email).filter(Boolean).sort();
+  // fileWith(key, previewAnswer, items, who, o) -> { isError, out, step }: each part the preview answers, with its write tool and
+  // its items (tools/import/door.mjs fileParts; out: the parts' receipts as one, or the refusal and the tool that made it)
+  const WRITE_ROLE = { file_contribution: "fileContribution", save_knowledge: "saveKnowledge", remove_knowledge: "removeKnowledge" };
+  const fileWith = async (key, pvOut, items, who, o = {}) => {
+    const f = await fileParts(async (n, a) => {
+      must(WRITE_ROLE[n], () => `the preview names write tools the walk knows (${n})`);
+      const r = await tool(key, WRITE_ROLE[n], a, who);
+      return { ok: !r.isError, out: r.out };
+    }, pvOut, items, o);
+    return { isError: !f.ok, out: f.out, step: f.step };
+  };
   const fileVia = async (key, items, who, extra = {}) => {
     const pv = await tool(key, "preview", { project: P, items, ...EV, ...extra }, who);
-    must(!pv.isError && pv.out && pv.out.previewId, () => `preview answers a previewId`);
-    const f = await tool(key, "file", { previewId: pv.out.previewId, items }, who);
-    must(!f.isError && f.out, () => `file files the previewed items`);
+    must(!pv.isError && pv.out && pv.out.previewId && Array.isArray(pv.out.parts), () => `preview answers a previewId and its parts`);
+    const f = await fileWith(key, pv.out, items, who);
+    must(!f.isError && f.out, () => `each part's write tool files the previewed items (${f.step || "all"})`);
     return { pv: pv.out, f: f.out };
   };
   const invite = async (name, email, role) => {
@@ -482,7 +496,7 @@ async function main() {
     return `items built from tools/walk/fixtures/: repo ${n.repo} (${st.input.repo.screens.length} screens, ${st.input.repo.doors.length} doors, ${st.input.repo.tables.length} tables, ${st.input.repo.checks.length} checks), brief ${n.doc} (aim, ${st.input.brief.goals.length} goals, start-here), screenshot 1 (a ${readFileSync(join(FIXTURES, "screenshot-pricing.png")).length}-byte png), discussion ${n.discussion} (open and ruled)`;
   });
 
-  step("e", "preview → the verdicts and the text → the preview page → file → every tab shows it → the meter moved", async () => {
+  step("e", "preview → the verdicts and the text → the preview page → each part filed with its write tool → every tab shows it → the meter moved", async () => {
     const m = need("member", "a"); const input = need("input", "d");
     const pv = await tool(m.key, "preview", { project: P, items: input.all, note: "From the Tea Shop repo, its brief, a screenshot and the pricing call.", ...EV }, "member");
     must(!pv.isError && /^P-/.test(pv.out.previewId || ""), () => `preview answers a previewId`);
@@ -510,16 +524,16 @@ async function main() {
       rulings.push({ qid: it.data.qid, choice });
       return [{ ...it, data: { ...open, status: "open" } }];
     });
-    let pvId = pv.out.previewId;
+    let pvAns = pv.out;
     if (notFiles.length) {
       const pv2 = await tool(m.key, "preview", { project: P, items: mine, note: "The same input; the ruling filed open for the admin, the start-here handed to the admin.", ...EV }, "member");
       const v2 = ((pv2.out && pv2.out.items) || []).filter((x) => x.verdict !== "files");
       must(!pv2.isError && pv2.out.previewId && !v2.length, () => `the re-shaped items all file at once; not: ${JSON.stringify(v2.map((x) => [x.verdict, x.reasons]))}`);
-      pvId = pv2.out.previewId;
+      pvAns = pv2.out;
     }
-    const f = await tool(m.key, "file", { previewId: pvId, items: mine }, "member");
+    const f = await fileWith(m.key, pvAns, mine, "member");
     const filed = (f.out.items || []).map((x) => x.filed && x.filed.status);
-    must(!f.isError && f.out.complete === true && filed.every((s) => s === "filed"), () => `file files every item (complete: true)`);
+    must(!f.isError && f.out.complete === true && filed.length === mine.length && filed.every((s) => s === "filed"), () => `each part's write tool (${(pvAns.parts || []).map((p) => p.tool).join(", ")}) files every item (complete: true)${f.step ? `; ${f.step} refused` : ""}`);
     st.filed = true;
     st.knowledgeLedger = ((f.out.items || []).find((x) => x.filed && /^T-/.test(String(x.filed.id || ""))) || {}).filed;
     if (toAdmin.length) {
@@ -698,12 +712,12 @@ async function main() {
     out.push(`member rules: ${mr.out.error || brief(mr.out, 80)}, ${openQ.data.qid} still open`);
     const ro = readOnlyOf(m.key);
     const roPv = await req("POST", ROUTES.previewPost, { key: ro, body: { project: P, items: [{ contribution: { lane: "leader", kind: "note", what: "a read-only write", why: "the walk's probe" } }], ...EV }, who: "member read-only" });
-    const roFile = await req("POST", ROUTES.filePost, { key: ro, body: { previewId: "P-0000000000000000", items: [{ contribution: { lane: "leader", kind: "note", what: "a read-only write", why: "the walk's probe" } }] }, who: "member read-only" });
-    const roMcp = await req("POST", "/mcp", { key: ro, body: { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: st.names.file, arguments: { previewId: "P-0000000000000000", items: [] } } }, who: "member read-only" });
+    const roFile = await req("POST", ROUTES.fileContributionPost, { key: ro, body: { previewId: "P-0000000000000000", items: [{ contribution: { lane: "leader", kind: "note", what: "a read-only write", why: "the walk's probe" } }] }, who: "member read-only" });
+    const roMcp = await req("POST", "/mcp", { key: ro, body: { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: st.names.fileContribution, arguments: { previewId: "P-0000000000000000", items: [{ contribution: { lane: "leader", kind: "note", what: "a read-only write", why: "the walk's probe" } }] } } }, who: "member read-only" });
     const roMcpRefused = roMcp.status === 401 || roMcp.status === 403 || (roMcp.json && (roMcp.json.error || (roMcp.json.result && roMcp.json.result.isError)));
     must(roPv.status === 200 && roPv.json && roPv.json.previewId === null && (roPv.json.items || []).every((x) => x.verdict === "refused") && roFile.status === 403 && roFile.json && roFile.json.error === "read_only_credential" && roMcpRefused,
-      () => `the member's read-only credential: preview stores nothing and refuses every item (${roPv.status}), POST /file 403 read_only_credential (${roFile.status}), /mcp file refused (${roMcp.status})`);
-    out.push(`read-only: preview stores nothing (every item refused), POST /file 403 read_only_credential, /mcp ${roMcp.status}`);
+      () => `the member's read-only credential: preview stores nothing and refuses every item (${roPv.status}), POST /preview/file-contribution 403 read_only_credential (${roFile.status}), /mcp file_contribution refused (${roMcp.status})`);
+    out.push(`read-only: preview stores nothing (every item refused), POST /preview/file-contribution 403 read_only_credential, /mcp file_contribution ${roMcp.status}`);
     return out.join("; ");
   });
 
@@ -749,7 +763,7 @@ async function main() {
           });
           try {
             const pv = await tool(ownerKey, "preview", { project: P, items: rm, ...EV }, "admin");
-            const f = pv.out && pv.out.previewId ? await tool(ownerKey, "file", { previewId: pv.out.previewId, items: rm, only: "ready" }, "admin") : null;
+            const f = pv.out && pv.out.previewId ? await fileWith(ownerKey, pv.out, rm, "admin", { only: "ready" }) : null;
             const left = (f && f.out && f.out.items || []).filter((x) => !(x.filed && /filed|unchanged/.test(x.filed.status))).length;
             notes.push(f && !f.isError ? `${rm.length - left} of ${rm.length} knowledge items removed` : `the knowledge removal was refused (${brief(pv.out || (f && f.out), 200)})`);
           } catch (e) { notes.push(`the knowledge removal failed: ${String(e.message || e).slice(0, 200)}`); }

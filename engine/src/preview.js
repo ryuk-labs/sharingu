@@ -1,19 +1,24 @@
-// src/preview.js — preview, then file (sprint 3, B2; docs/plan/MCP.md §4 "Two directions", BETA.md Stage B). The owner's
-// rule: every filing is previewed first. `preview` (MCP) and POST /preview (REST) take the items a person's own AI client
-// extracted, run every one through the SAME checks and planning the real write runs, and answer per item: its line, where
-// it will show, how it will be graded, why, and what the whole set reaches. Nothing is written to the project: the ONE write
-// a preview makes is its own row in `previews` (migrate-048), and a read-only key's preview writes not even that.
-// `file` (MCP) and POST /file (REST) take the preview's id and the SAME items again (bodies are never stored with a
-// preview), and file what is ready through the EXISTING write doors, in order: the knowledge ops (writeKnowledge, ONE call,
-// all or nothing), the contributions (fileTransmissionsBatch, the batch door: one D1 batch), the grades (gradeChecks:
-// gradeCheck's rules over the batch door, one batch of filings and one of result rows), the answers (respondOptions, one
-// call). The answer is a receipt in the preview's own shape.
+// src/preview.js — preview, then file (sprint 3, B2; docs/plan/MCP.md §4 "Two directions", BETA.md Stage B; split in sprint 19
+// by the owner's ruling of 2026-10-13, "by what the write does"). The owner's rule: every filing is previewed first. `preview`
+// (MCP) and POST /preview (REST) take the items a person's own AI client extracted, run every one through the SAME checks and
+// planning the real write runs, and answer per item: its line, where it will show, how it will be graded, why, what the whole
+// set reaches, and which write tool files it (filesWith). Nothing is written to the project: the ONE write a preview makes is its
+// own row in `previews` (migrate-048), and a read-only key's preview writes not even that. It never files.
+// Three write tools file a preview, each ONE operation of it (src/formats.js WRITE_TOOLS): file_contribution (MCP) and POST
+// /preview/file-contribution its contributions, save_knowledge and POST /preview/save-knowledge its knowledge upserts, remove_knowledge and POST
+// /preview/remove-knowledge its knowledge removes. Each takes the preview's id and that operation's items AGAIN, as previewed and in their
+// order (bodies are never stored with a preview: the row keeps each operation's digest), refuses an item of another operation
+// (naming the tool that files it), and files what is ready through the EXISTING write doors: the knowledge ops through
+// writeKnowledge (ONE call, all or nothing), the contributions through fileTransmissionsBatch (the batch door: one D1 batch). Each
+// part files once: the row records each part's receipt, and a repeat of a filed part answers it. The answer is a receipt in the
+// preview's own shape.
 //
-// The four item forms, each exactly the body its old door takes:
-//   { kind, op, data }                          a knowledge op           (preview then file's op)
-//   { contribution: { lane, kind, what, ... } } a contribution           (file's body, every shape field)
-//   { grade: { checkId, verdict, proof } }      a grade                  (submit_grade's)
-//   { answer: { qid, option, provisional? } }   an answer to a question  (respond's)
+// The three item forms a preview shows, each exactly the body its door takes:
+//   { contribution: { lane, kind, what, ... } } a contribution           (file_contribution's; every shape field)
+//   { kind, op: "upsert", data }                a knowledge upsert       (save_knowledge's)
+//   { kind, op: "remove", data }                a knowledge remove       (remove_knowledge's)
+// A grade ({grade}) and an answer ({answer}) are refused per item, pointing at their own doors (submit_grade, respond), which
+// file at once.
 //
 // Verdicts: files (it files at once) · waits_for_owner (it files, and waits in the owner's queue) · needs (one more thing:
 // the field, its hint and the formats call) · unchanged (it is stored already, the same) · refused (the door's own refusal).
@@ -25,11 +30,9 @@
 //     of a single-project org, whom the old direct write stamped into the one project, is refused here (narrower);
 //   · knowledge: writeKnowledge's own project rule (a seat, or the owner), the ruling rule and the role rule (planKnowledge);
 //   · a contribution: the batch door's every check (reserved kinds, the lane, the shape, the project stamp, the parent);
-//   · a grade: gradeCheck's (the verdict, the check in this project's register, the grade's project equal to the filing's);
-//   · an answer: respondOptions' (the read scope of the project, an option of an OPEN question; the owner's answer rules it);
 //   · a read-only key (or an OAuth grant without mcp:write) previews, writes NOTHING (no preview row), and every item is
-//     refused for filing; file refuses it (the REST gate and callTool refuse it before this module, and fileItems again);
-//   · a previewId is not a capability: file reads the row only for its own author (another person's id is the same
+//     refused for filing; a write tool refuses it (the REST gate and callTool refuse it before this module, and filePart again);
+//   · a previewId is not a capability: a write tool reads the row only for its own author (another person's id is the same
 //     preview_not_found as a missing one) and re-checks the author's right to the project now, then every write door checks
 //     again as it always does;
 //   · a preview reveals nothing the caller could not read: its reads are the write doors' own, on the caller's project; a
@@ -40,13 +43,9 @@ import { KINDS, MAX_OPS, previewLine, showsOf, encodeValue, withKeyDefaults, ROL
 import { planKnowledgeCall, replan, writeKnowledge } from "./knowledge/write.js";
 import { SHAPES, shapePreviewLine, shapeShowsOf, happenedAtOf } from "./shapes.js";
 import { planTransmissionsBatch, fileTransmissionsBatch, seatsOnce, doorProject, evalMarkRefused, refDigestOf, CLIENT_REF_CLASH_NOTE } from "./core.js";
+import { WRITE_TOOLS, WRITE_TOOL_NAMES, OP_OF_TOOL, OP_WORDS, OTHER_DOORS, itemForm, opOf } from "./formats.js";   // sprint 19: the split door's one table
 import { resolveProject, projectSlug } from "./project.js";   // sprint 13 (13.2): a note names a project by its slug, never its org-prefixed key
-import { gateGrade, PROOF_FORMS, GTM_PROOF_FORMS } from "./transmission.js";
-import { checkOptionAnswers, entriesFrom } from "./decisions.js";
-import { decisionRows } from "./knowledge/decisions.js";
-import { respondOptions } from "./qnaire.js";
-import { gradeChecks, gradeFilingBody, gradeNorm } from "./knowledge/grades.js";
-import { GRADE_VERDICTS } from "./knowledge/checks.js";
+import { PROOF_FORMS, GTM_PROOF_FORMS } from "./transmission.js";
 import { goalTree } from "./knowledge/goals.js";
 import { collectRefs, readReach, reachWords } from "./reach.js";
 import { previewText } from "./previewtext.js";
@@ -56,6 +55,7 @@ import { now, sha256, isEvalMark, isD1Quota } from "./util.js";
 import { getTenantConfig } from "./tenant.js";
 import { checklistFor, meterChangeWords } from "./checklist.js";
 import { orgPath } from "./orgpath.js";   // sprint 7, 7.4: every URL under the org of its address
+import { NOT_ASKED } from "./confirm.js";   // sprint 19: a write tool's fileOnConfirm the door could not ask
 
 export const PREVIEW_MAX = MAX_OPS;            // items a preview (and a file) takes
 export const PREVIEW_TTL_MS = 60 * 60 * 1000;  // a preview expires an hour after it is made
@@ -69,52 +69,37 @@ export const BATCH_REF_RE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,47}$/;
 // a contribution's route at the gate (src/transmission.js gateGrade) -> its verdict
 export const ROUTE_VERDICT = { auto: "files", owner: "waits_for_owner", incomplete: "needs" };
 export const VERDICT_WORDS = { files: "files at once", waits_for_owner: "waits for the owner", needs: "needs one more thing", unchanged: "unchanged", refused: "refused" };
-export const FILE_NEXT = 'file {previewId, items} files what is ready (send the SAME items); only: "ready" files the ready ones and leaves the rest.';
 const READ_ONLY_REASON = "This key is read-only: it can preview, never file. Use your full key.";
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const clip = (v, n) => { const s = String(v ?? "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
 // formOf(item) -> "knowledge" | "contribution" | "grade" | "answer" | null (none, or more than one form in one item)
-export function formOf(it) {
-  if (!isObj(it)) return null;
-  const hits = [isObj(it.contribution) && "contribution", isObj(it.grade) && "grade", isObj(it.answer) && "answer",
-    ("kind" in it || "op" in it || "data" in it) && "knowledge"].filter(Boolean);
-  return hits.length === 1 ? hits[0] : null;
-}
+export const formOf = itemForm;
+// numbers(list) -> "1, 3 and 4": item numbers as the text and the page print them
+const numbers = (ns) => (ns.length > 1 ? `${ns.slice(0, -1).join(", ")} and ${ns[ns.length - 1]}` : String(ns[0] ?? ""));
+// partsOf(summary) -> [{ tool, idx }] in WRITE_TOOLS' order: each write tool and the preview's item indices it files
+export const partsOf = (summary) => WRITE_TOOL_NAMES.filter((t) => isObj(summary && summary.parts) && Array.isArray(summary.parts[t]) && summary.parts[t].length).map((t) => ({ tool: t, idx: summary.parts[t] }));
+// nextOf(previewId, parts) -> the answer's `next`: each write tool with the items it files
+export const nextOf = (parts) => `${parts.map((p) => `${p.tool} {previewId, items} files item${p.idx.length === 1 ? "" : "s"} ${numbers(p.idx.map((i) => i + 1))}`).join("; ")} (send each tool its items as previewed, in their order); only: "ready" files a part's ready items and leaves the rest.`;
 // canon(v) -> v as JSON with every object's keys sorted (arrays keep their order): the digest's input
 export const canon = (v) => (Array.isArray(v) ? `[${v.map(canon).join(",")}]` : isObj(v) ? `{${Object.keys(v).sort().filter((k) => v[k] !== undefined).map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(",")}}` : JSON.stringify(v === undefined ? null : v));
-// digestOf(items) -> the sha256 of the items as sent, canonical: file sends the same items and must match it
+// digestOf(items) -> the sha256 of the items as sent, canonical: a write tool sends its part's items and must match its digest
 export const digestOf = (items) => sha256(canon(items));
 const newId = () => { const b = new Uint8Array(8); crypto.getRandomValues(b); return "P-" + [...b].map((x) => x.toString(16).padStart(2, "0")).join(""); };
-// the clientRef file names each part by, so a retry finds what already landed (each door's own idempotency)
+// the clientRef a write tool names each part by, so a retry finds what already landed (each door's own idempotency): a
+// contribution c<index>; the knowledge upserts k, the removes kr (one writeKnowledge call each)
 export const refOf = (previewId, part, i) => `pv:${previewId}:${part}${i == null ? "" : i}`;
+const KNOWLEDGE_PART = { upsert: "k", remove: "kr" };
 
-const PART_LETTER = { contribution: "c", grade: "g", answer: "a" };
-// itemOwnRef(raw, form) -> the clientRef an item carries itself (a contribution's or a grade's), or null
-function itemOwnRef(it, form) { const c = form === "contribution" ? it && it.contribution && it.contribution.clientRef : form === "grade" ? it && it.grade && it.grade.clientRef : null; return c != null && String(c).trim() ? String(c).trim().slice(0, 60) : null; }
-// ownRefLanded(env, personId, refs) -> Map(ref -> { id, route, rd }): what this person already filed under these clientRefs (an
-// item's own: a contribution's or a grade's), with the content digest each stored (G2 item 7), ONE statement
-export async function ownRefLanded(env, personId, refs) {
-  const list = [...new Set(refs.filter(Boolean))];
-  if (!list.length) return new Map();
-  const rows = (await db(env).prepare("SELECT id, client_ref, route, json_extract(grade, '$.refDigest') AS rd FROM transmission WHERE submitter = ?1 AND client_ref IN (SELECT value FROM json_each(?2))")
-    .bind(personId, JSON.stringify(list)).all()).results || [];
-  return new Map(rows.map((r) => [r.client_ref, r]));
-}
-// ownDigestOf(item, form) -> the content digest the door will store for an item's own clientRef (a contribution: its body as
-// sent; a grade: the filing gradeChecks makes of it)
-export async function ownDigestOf(it, form) {
-  if (form === "contribution") return refDigestOf(it.contribution);
-  if (form === "grade") { const g = gradeNorm(it.grade.checkId, it.grade.verdict, it.grade.proof); return refDigestOf(gradeFilingBody(g.checkId, g.verdict, g.proof)); }
-  return null;
-}
+// itemOwnRef(raw) -> the clientRef a contribution carries itself, or null
+function itemOwnRef(it) { const c = it && isObj(it.contribution) ? it.contribution.clientRef : null; return c != null && String(c).trim() ? String(c).trim().slice(0, 60) : null; }
 // ---- a batch clientRef names CONTENT, not only a slot (D1b item 7) ----
-// A batch clientRef used to name each part by its slot alone (<ref>:c0, <ref>:k), so a re-filed batch whose item CHANGED got
+// A batch clientRef used to name each part by its slot alone (<ref>:c0, <ref>:k; the removes' <ref>:kr since sprint 19), so a re-filed batch whose item CHANGED got
 // the first filing's receipt ("filed") while nothing was written. Now each part's ref carries the first six hex of its own
 // content's digest (<ref>:c0~1a2b3c, <ref>:k~4d5e6f; at most 60 characters with the longest batch ref): the same item filed
 // again finds what landed and files nothing twice; a CHANGED knowledge part has a new ref and files as the update it is (an
-// upsert merges); a CHANGED contribution, grade or answer in a slot that already filed is refused, saying so, at the preview
-// and again at file. A part filed before this rule (<ref>:c0, no digest) is taken as the same content, as it was.
+// upsert merges); a CHANGED contribution in a slot that already filed is refused, saying so, at the preview and again at
+// file_contribution. A part filed before this rule (<ref>:c0, no digest) is taken as the same content, as it was.
 export const CLASH_NOTE = "This clientRef already filed different content in this place of the batch: use a new clientRef (or leave it out) to file it as new.";
 export const slotOf = (ref) => String(ref).replace(/~[0-9a-f]{6}$/, "");
 export async function partDigest(v) { return (await digestOf(v)).slice(0, 6); }
@@ -389,69 +374,6 @@ async function contributionPart(who, env, project, list, out, ctx) {
   });
 }
 
-// grades: gradeCheck's own checks, one read for every check named; the filing each grade would make graded by the gate
-async function gradePart(who, env, project, list, out, ctx) {
-  // G2 item 7: a grade's own clientRef already used: the same grade is unchanged, another one is refused saying so
-  const landedOwn = await ownRefLanded(env, who.id, list.map((p) => itemOwnRef(p.raw, "grade")));
-  const ids = [...new Set(list.map((p) => String(p.raw.grade.checkId || "").trim().slice(0, 120)).filter(Boolean))];
-  const rows = ids.length ? ((await db(env).prepare("SELECT id, title, refs FROM k_checks WHERE project = ?1 AND id IN (SELECT value FROM json_each(?2))").bind(project, JSON.stringify(ids)).all()).results || []) : [];
-  const byId = new Map(rows.map((r) => { let refs = []; try { refs = JSON.parse(r.refs || "[]"); } catch { refs = []; } return [String(r.id), { title: r.title, refs: Array.isArray(refs) ? refs.map(String) : [] }]; }));
-  for (const p of list) {
-    const g = p.raw.grade, checkId = String(g.checkId || "").trim().slice(0, 120), verdict = String(g.verdict || "").toLowerCase();
-    const proof = g.proof == null ? "" : String(g.proof).trim().slice(0, 4000);
-    const c = byId.get(checkId);
-    const places = showsOf("check", { id: checkId, refs: c ? c.refs : [] });
-    const base = { i: p.i, type: "grade", kind: "grade", kindWord: "grade", line: `Grade: ${clip((c && c.title) || checkId || "a check", 60)}, ${verdict || "no verdict"}${proof ? ", with proof" : ", no proof"}`, places, tab: tabOf(places), ...(checkId ? { key: checkId } : {}) };
-    if (!checkId) { out[p.i] = item(base, "needs", { reasons: ["Send checkId: the id of one of the project's checks."], needs: { field: "checkId", hint: "the id of a check (read {kind: \"check\"} lists them)", formats: { kind: "check" } }, effect: "needs checkId" }); continue; }
-    if (!GRADE_VERDICTS.includes(verdict)) { out[p.i] = item(base, "needs", { reasons: [`Send verdict as one of ${GRADE_VERDICTS.join(", ")}.`], needs: { field: "verdict", hint: `one of ${GRADE_VERDICTS.join(", ")}`, formats: {} }, effect: "needs verdict" }); continue; }
-    if (!c) { out[p.i] = item(base, "needs", { reasons: [`No check "${checkId}" in ${projectSlug(project)}: read {kind: "check"} lists the project's checks.`], needs: { field: "checkId", hint: "the id of a check of this project", formats: { kind: "check" } }, effect: "needs checkId" }); continue; }
-    // the filing gradeCheck makes, graded by the same gate
-    const body = { lane: "ba", kind: "grade", what: `grade ${checkId}: ${verdict}`, why: proof ? `check ${checkId}, with proof` : `check ${checkId}, no proof sent: for the owner`, touches: [`check:${checkId}`], ...(proof ? {} : { risk: "owner" }) };
-    const { route, grade } = gateGrade(body, () => ({ list: [], valid: [], unknown: [], reserved: [], ok: true }), null);
-    const reasons = [proof ? "It counts at once: every node the check names lights from it." : "No proof was sent: it is not counted, and the filing waits for the owner.", ...(proof ? (grade.ownerReasons || []).map(reasonWords) : [])];
-    ctx.gradeRefs.set(p.i, c.refs);
-    const own = itemOwnRef(p.raw, "grade"), was = own && landedOwn.get(own);
-    if (was) {
-      const d = await ownDigestOf(p.raw, "grade");
-      if (was.rd && was.rd !== d) { out[p.i] = item(base, "refused", { reasons: [CLIENT_REF_CLASH_NOTE], refusal: { error: "client_ref_taken", note: CLIENT_REF_CLASH_NOTE, filed: was.id } }); continue; }
-      out[p.i] = item(base, "unchanged", { reasons: [`Already filed under this clientRef as ${was.id}: filing it again files nothing.`], effect: "unchanged" }); out[p.i].existing = was.id; continue;
-    }
-    out[p.i] = item(base, route === "owner" ? "waits_for_owner" : "files", { reasons, effect: route === "owner" ? undefined : "counts at once" });
-    ctx.gradeReady.push(p.i);
-  }
-}
-
-// answers: respondOptions' own checks: the read scope of the project, then each answer an option of an OPEN question (the
-// project's questions read once, memoized)
-async function answerPart(who, env, project, list, out, ctx) {
-  const sc = await resolveProject(who, project, await seatsOnce(env, who.id), env);
-  const rows = sc.error ? [] : await decisionRows(sc.env, project);
-  const byQid = new Map(rows.map((r) => [r.qid, r]));
-  for (const p of list) {
-    const a = p.raw.answer, qid = String(a.qid ?? "").trim();
-    const q = byQid.get(qid);
-    const places = showsOf("question", { qid });
-    const base = { i: p.i, type: "answer", kind: "answer", kindWord: "answer", line: `Answer: ${clip(q ? q.question : qid || "a question", 60)}`, places, tab: tabOf(places), ...(qid ? { key: qid } : {}) };
-    if (sc.error) { out[p.i] = item(base, "refused", { reasons: [sc.note], refusal: { error: sc.error, note: sc.note } }); continue; }
-    const [e] = entriesFrom({ qid: a.qid, option: a.option, provisional: a.provisional, project, ...(a.answer !== undefined ? { answer: a.answer } : {}), ...(a.item !== undefined ? { item: a.item } : {}) });
-    const chk = await checkOptionAnswers(sc.env, [e]);
-    if (chk.error) {
-      if (chk.error === "not_open") { out[p.i] = item(base, "refused", { reasons: [chk.note], refusal: { error: chk.error, note: chk.note } }); continue; }
-      const field = chk.error === "unknown_qid" ? "qid" : "option";
-      out[p.i] = item(base, "needs", { reasons: [chk.note], needs: { field, hint: chk.note, formats: { kind: "question" } }, effect: `needs ${field}` });
-      continue;
-    }
-    const pick = chk.picked[0], ans = chk.answers[0];
-    base.line = `Answer: ${clip(q ? q.question : qid, 40)}: ${pick.letter}. ${clip(pick.what, 40)}`;
-    const { route, grade } = gateGrade({ lane: "leader", kind: "answer", what: `${qid} — ${ans.answer.slice(0, 400)}`, why: "answer", touches: ["decisions"], gapRefs: [`q/${qid}`] }, () => ({ list: [], valid: [], unknown: [], reserved: [], ok: true }), null);
-    ctx.answerAffects.set(p.i, q ? q.affects : []);
-    ctx.answerReady.push(p.i);
-    if (route === "owner") { out[p.i] = item(base, "waits_for_owner", { reasons: (grade.ownerReasons || []).map(reasonWords) }); continue; }
-    if (who.role === "owner" && !pick.provisional) { out[p.i] = item(base, "files", { reasons: ["You are the owner: your answer rules the question at once."], effect: "rules it at once" }); continue; }
-    out[p.i] = item(base, "waits_for_owner", { reasons: [pick.provisional ? "A provisional answer: the question stays open." : "Your answer is recorded; the question stays open until the owner rules it."] });
-  }
-}
-
 // counts(items) -> { byVerdict, byKind }
 export function countsOf(items) {
   const byVerdict = {}, byKind = {};
@@ -480,10 +402,13 @@ export function fitSummary(s) {
 
 // previewItems(person, args, env, { via, origin }) — args { project?, items, leftOut?, note?, eval? }. -> the preview (below)
 // | a refusal (items_required · too_many_items · project_forbidden · project_required). Writes ONE previews row (none for a
-// read-only key), nothing else.
+// read-only key), nothing else; it never files.
+const FORMS_WORDS = "{contribution: {lane, what, why, ...}}, {kind, op: \"upsert\", data} (a knowledge upsert) or {kind, op: \"remove\", data} (a knowledge remove)";
+// a grade or an answer in a preview: refused, pointing at the tool that files it at once
+const OTHER_DOOR_REASON = { grade: "A grade is not previewed: submit_grade {checkId, verdict, proof} files it at once.", answer: "An answer is not previewed: respond {qid, option} files it at once." };
 export async function previewItems(person, args, env, o = {}) {
   const a = isObj(args) ? args : {};
-  if (!Array.isArray(a.items) || !a.items.length) return { error: "items_required", note: `Send items: 1 to ${PREVIEW_MAX}, each ONE of {kind, op, data} (a knowledge item), {contribution: {lane, what, why, ...}}, {grade: {checkId, verdict, proof}} or {answer: {qid, option}}. formats has every kind and shape.` };
+  if (!Array.isArray(a.items) || !a.items.length) return { error: "items_required", note: `Send items: 1 to ${PREVIEW_MAX}, each ONE of ${FORMS_WORDS}. formats has every kind and shape.` };
   if (a.items.length > PREVIEW_MAX) return { error: "too_many_items", max: PREVIEW_MAX, got: a.items.length, note: `Send at most ${PREVIEW_MAX} items in one preview: split them.` };
   const batchRef = a.clientRef == null || a.clientRef === "" ? null : typeof a.clientRef === "string" && BATCH_REF_RE.test(a.clientRef.trim()) ? a.clientRef.trim() : undefined;
   if (batchRef === undefined) return { error: "bad_field", field: "clientRef", hint: "1 to 48 letters, digits, . _ : -", note: "Nothing was previewed: send clientRef as 1 to 48 letters, digits, . _ : - (your key for the whole batch), or leave it out." };
@@ -499,47 +424,57 @@ export async function previewItems(person, args, env, o = {}) {
   // G2: the eval mark only on an eval project or from a test seat (src/core.js evalMarkRefused) — with a knowledge item among
   // the items, on an eval project alone (its rows carry their project's mark): refused whole, nothing stored
   if (isEvalMark(a.eval)) { const er = await evalMarkRefused(person, project, penv, { knowledge: a.items.some((x) => formOf(x) === "knowledge") }); if (er) return er; }
-  const digest = await digestOf(a.items);   // before any door prepares a body (a prepared body rides a symbol, never JSON)
   const out = new Array(a.items.length);
-  const ctx = { eval: isEvalMark(a.eval), knowledgeReady: [], contributionReady: [], gradeReady: [], answerReady: [], gradeRefs: new Map(), answerAffects: new Map() };
-  const parsed = a.items.map((raw, i) => ({ i, raw, form: formOf(raw) }));
+  const ctx = { eval: isEvalMark(a.eval), knowledgeReady: [], contributionReady: [] };
+  const parsed = a.items.map((raw, i) => ({ i, raw, form: formOf(raw), op: opOf(raw) }));
+  // the parts: each write tool and the indices of the items it files (every item of its operation, ready or not: the tool is
+  // sent them all, as previewed), kept whole like verdicts; each part's digest (canon JSON by its tool) goes in the row's digest
+  // column, taken before any door prepares a body
+  const parts = Object.fromEntries(WRITE_TOOL_NAMES.map((t) => [t, parsed.filter((p) => WRITE_TOOLS[p.op] === t).map((p) => p.i)]).filter(([, l]) => l.length));
+  const digests = {};
+  for (const [t, idx] of Object.entries(parts)) digests[t] = await digestOf(idx.map((i) => a.items[i]));
   for (const p of parsed.filter((x) => !x.form)) {
     out[p.i] = item({ i: p.i, type: null, kind: "item", kindWord: "item", line: "An item of no known form", places: [], tab: "" }, "needs",
-      { reasons: ["Send each item as ONE of {kind, op, data} (a knowledge item), {contribution: {...}}, {grade: {...}} or {answer: {...}}."], needs: { field: "item", hint: "one of the four forms", formats: {} }, effect: "needs its form" });
+      { reasons: [`Send each item as ONE of ${FORMS_WORDS}.`], needs: { field: "item", hint: "one of the three forms", formats: {} }, effect: "needs its form" });
+  }
+  // sprint 19: a grade or an answer files through its own tool, at once; the preview refuses it and names that tool
+  for (const p of parsed.filter((x) => OTHER_DOORS[x.form])) {
+    const key = p.form === "grade" ? String(p.raw.grade.checkId ?? "").trim() : String(p.raw.answer.qid ?? "").trim();
+    out[p.i] = item({ i: p.i, type: p.form, kind: p.form, kindWord: p.form, line: `${p.form === "grade" ? "Grade" : "Answer"}: ${clip(key || `a ${p.form === "grade" ? "check" : "question"}`, 60)}`, places: [], tab: "", ...(key ? { key: clip(key, 120) } : {}) },
+      "refused", { reasons: [OTHER_DOOR_REASON[p.form]], refusal: { error: "wrong_tool", tool: OTHER_DOORS[p.form], note: OTHER_DOOR_REASON[p.form] } });
   }
   const of = (form) => parsed.filter((x) => x.form === form);
   if (of("knowledge").length) await knowledgePart(who, penv, project, of("knowledge"), out, ctx);
   if (of("contribution").length) await contributionPart(who, penv, project, of("contribution"), out, ctx);
-  if (of("grade").length) await gradePart(who, penv, project, of("grade"), out, ctx);
-  if (of("answer").length) await answerPart(who, penv, project, of("answer"), out, ctx);
   // D1b item 7: a batch clientRef whose slot already filed DIFFERENT content refuses that item now, before anything is filed
   if (batchRef) {
     const landed = await batchLanded(penv, person.id, batchRef);
-    // G2 item 7: the knowledge part's slot too — the knowledge that would file now, against what the slot filed before
-    const kNow = parsed.filter((p) => p.form === "knowledge" && out[p.i] && out[p.i].verdict === "files");
-    const kGot = kNow.length ? landed.get(`${batchRef}:k`) : null;
-    if (kGot) {
+    // G2 item 7: each knowledge part's slot too (the upserts' k, the removes' kr) — the knowledge that would file now, against
+    // what the slot filed before
+    for (const op of ["upsert", "remove"]) {
+      const kNow = parsed.filter((p) => p.op === op && out[p.i] && out[p.i].verdict === "files");
+      const kGot = kNow.length ? landed.get(`${batchRef}:${KNOWLEDGE_PART[op]}`) : null;
+      if (!kGot) continue;
       const kd = await partDigest(kNow.map((p) => p.raw));
       if (!kGot.some((x) => x.d === kd || x.d === null)) for (const p of kNow) out[p.i] = { ...out[p.i], verdict: "refused", effect: "refused", wouldBe: out[p.i].verdict, reasons: [CLASH_NOTE, ...(out[p.i].reasons || [])], refusal: { error: "client_ref_taken", note: CLASH_NOTE, filed: kGot[0].id } };
     }
     if (landed.size) for (const p of parsed) {
-      if (!p.form || p.form === "knowledge" || !out[p.i] || out[p.i].verdict === "refused") continue;
-      if (itemOwnRef(p.raw, p.form)) continue;
-      const got = landed.get(`${batchRef}:${PART_LETTER[p.form]}${p.i}`);
+      if (p.form !== "contribution" || !out[p.i] || out[p.i].verdict === "refused") continue;
+      if (itemOwnRef(p.raw)) continue;
+      const got = landed.get(`${batchRef}:c${p.i}`);
       if (!got) continue;
       const d = await partDigest(p.raw);
       if (got.some((x) => x.d === d || x.d === null)) continue;
       out[p.i] = { ...out[p.i], verdict: "refused", effect: "refused", wouldBe: out[p.i].verdict, reasons: [CLASH_NOTE, ...(out[p.i].reasons || [])], refusal: { error: "client_ref_taken", note: CLASH_NOTE, filed: got[0].id } };
     }
   }
-  let items = out;
+  // which write tool files each item (sprint 19): the item's operation's (src/formats.js WRITE_TOOLS)
+  let items = out.map((it, i) => (WRITE_TOOLS[parsed[i].op] ? { ...it, filesWith: WRITE_TOOLS[parsed[i].op] } : it));
   if (readOnly) items = items.map((it) => ({ ...it, verdict: "refused", effect: "refused", wouldBe: it.verdict, reasons: [READ_ONLY_REASON, ...it.reasons], refusal: { error: "read_only_credential", note: READ_ONLY_REASON } }));
 
   // what it reaches: every item but a refused one
-  const reachIn = parsed.filter((p) => p.form && out[p.i] && out[p.i].verdict !== "refused").map((p) => p.form === "knowledge" ? { type: "knowledge", op: p.raw }
-    : p.form === "contribution" ? { type: "contribution", body: p.raw.contribution }
-    : p.form === "grade" ? { type: "grade", checkId: String(p.raw.grade.checkId || "").trim(), refs: ctx.gradeRefs.get(p.i) || [] }
-    : { type: "answer", qid: String(p.raw.answer.qid ?? "").trim(), affects: ctx.answerAffects.get(p.i) || [] });
+  const reachIn = parsed.filter((p) => (p.form === "knowledge" || p.form === "contribution") && out[p.i] && out[p.i].verdict !== "refused")
+    .map((p) => (p.form === "knowledge" ? { type: "knowledge", op: p.raw } : { type: "contribution", body: p.raw.contribution }));
   const reach = await readReach(penv, project, collectRefs(reachIn));
   const { statements: reachStatements, ...reachOut } = reach;
 
@@ -548,13 +483,15 @@ export async function previewItems(person, args, env, o = {}) {
   const counts = countsOf(items);
   const tenant = await getTenantConfig(penv).catch(() => ({}));
   const org = (tenant && tenant.brand && tenant.brand.org) || "";
-  const summary = { v: 1, project, org, by: { id: person.id, name: person.name || "" }, items, counts, reach: reachOut, reachLine: reachWords(reachOut), leftOut,
-    ...(note ? { note } : {}), ...(ctx.eval ? { eval: true } : {}), ...(batchRef ? { clientRef: batchRef } : {}), verdicts: items.map((it) => it.verdict),
+  const summary = { v: 2, project, org, by: { id: person.id, name: person.name || "" }, items, counts, reach: reachOut, reachLine: reachWords(reachOut), leftOut,
+    ...(note ? { note } : {}), ...(ctx.eval ? { eval: true } : {}), ...(batchRef ? { clientRef: batchRef } : {}), verdicts: items.map((it) => it.verdict), parts,
     // D2b item 7: an unchanged item's id (a contribution already filed under its clientRef), kept whole like verdicts, so a
     // replay's receipt maps every clientRef to its contribution even when the summary is stored grouped
     ...(items.some((it) => it.existing) ? { existing: Object.fromEntries(items.filter((it) => it.existing).map((it) => [it.i, it.existing])) } : {}) };
   const ready = items.filter((it) => it.verdict === "files" || it.verdict === "waits_for_owner").length;
   const notReady = items.filter((it) => it.verdict === "needs" || it.verdict === "refused").length;
+  const shownParts = partsOf(summary);
+  const partsOut = shownParts.map((p) => ({ tool: p.tool, items: p.idx.map((i) => i + 1), ready: p.idx.filter((i) => ["files", "waits_for_owner"].includes(items[i].verdict)).length }));
   if (readOnly) {
     const ans = { previewId: null, expiresAt: null, url: null, readOnly: true, project, ...strip(summary), ready: 0, notReady: items.length,
       note: "Nothing was stored: a read-only key previews, and never files." };
@@ -562,41 +499,76 @@ export async function previewItems(person, args, env, o = {}) {
   }
   const id = newId(), at = now(), expiresAt = new Date(Date.now() + PREVIEW_TTL_MS).toISOString();
   const stored = fitSummary(summary);
-  // sprint 3, D3 (src/confirm.js): a preview the person will confirm in their client carries the confirm's binding in its row
-  // ({ key: sha256(nonce:session), until }), written in this same INSERT; it is never part of the answer
-  const confirm = o.confirm && o.confirm.key && o.confirm.until ? { key: String(o.confirm.key), until: String(o.confirm.until) } : null;
   await db(penv).prepare("INSERT INTO previews (id, project, person, created_at, expires_at, digest, summary) VALUES (?, ?, ?, ?, ?, ?, ?)")
-    .bind(id, project, person.id, at, expiresAt, digest, JSON.stringify(confirm ? { ...stored, confirm } : stored)).run();
+    .bind(id, project, person.id, at, expiresAt, canon(digests), JSON.stringify(stored)).run();
   const url = (o.origin || "") + orgPath(`/preview/${id}`);
-  const ans = { previewId: id, expiresAt, url, project, ...strip(summary), ready, notReady, ...(stored.grouped ? { storedGrouped: true } : {}), next: FILE_NEXT };
-  return { ...ans, text: previewText(ans, { mode: "preview", org, url, previewId: id }), ...(confirm ? { confirmUntil: confirm.until } : {}), ...(o.debug ? { reachStatements } : {}) };
+  const ans = { previewId: id, expiresAt, url, project, ...strip(summary), parts: partsOut, ready, notReady, ...(stored.grouped ? { storedGrouped: true } : {}),
+    ...(shownParts.length ? { next: nextOf(shownParts) } : {}) };
+  return { ...ans, text: previewText(ans, { mode: "preview", org, url, previewId: id, parts: partsOut }), ...(o.debug ? { reachStatements } : {}) };
 }
-const strip = (s) => { const { v, by, verdicts, org, ...rest } = s; return rest; };
+const strip = (s) => { const { v, by, verdicts, org, parts, ...rest } = s; return rest; };
 
-// ---- file ----
+// ---- the write tools: file_contribution, save_knowledge, remove_knowledge (sprint 19) ----
 const notFound = (id) => ({ error: "preview_not_found", previewId: String(id || "").slice(0, 40), note: "No preview of yours with this id: preview the items again (preview) and file with the id it answers." });
 const parse = (v) => { try { return v ? JSON.parse(v) : null; } catch { return null; } };
 export const PREVIEW_ROW_SQL = "SELECT id, project, person, created_at, expires_at, filed_at, digest, summary, filed FROM previews WHERE id = ?";
 // isVerbRow(row) -> the row holds a publish's or an equip's confirm (src/confirm.js storeVerbConfirm), not a preview of items
 const isVerbRow = (row) => { const sm = parse(row && row.summary); return !!(sm && typeof sm.verb === "string"); };
+const isReady = (v) => v === "files" || v === "waits_for_owner";
+const plural = (n, one, many) => (n === 1 ? one : many);
+// partCalls(parts) -> each part as the answers name it: { tool, items: [numbers] }
+const partCalls = (parts) => parts.map((p) => ({ tool: p.tool, items: p.idx.map((i) => i + 1) }));
+// restOf(parts, filed, tool) -> the other parts not filed yet (complete), each with its tool and its items
+const restOf = (parts, filed, tool) => partCalls(parts.filter((p) => p.tool !== tool && !(isObj(filed) && isObj(filed.parts) && isObj(filed.parts[p.tool]) && filed.parts[p.tool].complete)));
 
-// fileItems(person, args, env, { via, origin }) — args { previewId, items, only?: "ready", clientRef? } -> the receipt
-// { previewId, project, complete, filedAt, items: [... each with filed: { status: filed | unchanged | left | not_filed, id?,
-// route?, note? }], counts, text, url } | a refusal: preview_id_required · items_required · read_only_credential ·
-// preview_not_found · project_forbidden · preview_filed (with the receipt) · preview_expired · preview_changed · not_ready.
-// ORDER and ATOMICITY: the knowledge ops are ONE writeKnowledge call (all of them, with its one ledger row, or none); then
-// the contributions, ONE batch-door call (one D1 batch: every one that passes its checks, or none); then the grades (gradeChecks:
-// gradeCheck's rules, the filings in one batch, then the result rows in one more); then the answers (ONE respondOptions call: its records,
-// then one D1 batch of filings; the owner's answer then rules each question). A later part that fails leaves the earlier
-// parts landed: the receipt names each item's own status, and the preview stays unfiled. A retry of file with the same
-// previewId reads which parts already landed by their clientRefs (one statement; each part is filed under
-// pv:<previewId>:<part><index>, or the item's own clientRef) and files only the rest; each door's own clientRef replay
-// stands behind that.
-export async function fileItems(person, args, env, o = {}) {
+// filedView(filed, summary) -> the row's `filed` as ONE receipt over every part: { at (the newest part's), complete (every part
+// of the preview filed whole), items (each part's), meterNote? }, or null when nothing was filed. A row filed before the split
+// (sprint 19: { at, complete, items }, one file call for every item) is read as it was stored.
+export function filedView(filed, summary) {
+  if (!isObj(filed)) return null;
+  if (!isObj(filed.parts)) return Array.isArray(filed.items) ? filed : null;
+  const ps = Object.values(filed.parts).filter(isObj);
+  if (!ps.length) return null;
+  const all = partsOf(summary);
+  const meter = ps.map((p) => p.meterNote).filter(Boolean);
+  return { at: ps.map((p) => String(p.at || "")).sort().pop(), complete: all.length > 0 && all.every((p) => isObj(filed.parts[p.tool]) && filed.parts[p.tool].complete),
+    items: ps.flatMap((p) => (Array.isArray(p.items) ? p.items : [])).sort((x, y) => x.i - y.i), ...(meter.length ? { meterNote: meter.join("; ") } : {}) };
+}
+
+// filePart(person, args, env, { via, origin, tool, check }) — one write tool's filing of its part of a preview (tool:
+// file_contribution, save_knowledge or remove_knowledge; its operation is src/formats.js OP_OF_TOOL's). args { previewId, items
+// (the preview's items of this operation, as previewed and in their order), only?: "ready", fileOnConfirm? } -> the part's
+// receipt { previewId, project, tool, complete, filedAt, items: [... each with filed: { status: filed | unchanged | left |
+// not_filed, id?, route?, note? }], counts, results, rest (the other parts still to file, each with its tool), text, url } | a
+// refusal: preview_id_required · items_required · wrong_tool (an item of another operation, each named with the tool that files
+// it) · read_only_credential · preview_not_found · project_forbidden · nothing_to_file (the preview holds none of this operation)
+// · preview_filed (this part, with its first receipt) · preview_expired · preview_changed · not_ready.
+// check: true (the confirm, src/mcp.js) runs every refusal and files nothing, answering the part as the person is asked it;
+// args.fileOnConfirm: true reaching here (a client the door could not ask, or the REST twin) is that same check, saying the
+// person was not asked.
+// ORDER and ATOMICITY: save_knowledge's upserts and remove_knowledge's removes are each ONE writeKnowledge call (all of the part,
+// with its one ledger row, or none); file_contribution's contributions are ONE batch-door call (one D1 batch: every one that
+// passes its checks, or none). The part's receipt is recorded on the row under its tool (one UPDATE; the row counts as filed once
+// every part is); a part that did not land whole is retried with the same previewId and files only what did not land: it reads
+// which items already landed by their clientRefs (one statement; a contribution is filed under pv:<previewId>:c<index>, or its own
+// clientRef; the upserts under pv:<previewId>:k, the removes under pv:<previewId>:kr), each door's own clientRef replay standing
+// behind that.
+export async function filePart(person, args, env, o = {}) {
+  const tool = o.tool, op = OP_OF_TOOL[tool];
+  if (!op) throw new Error(`filePart: ${String(tool)} is no write tool`);
   const a = isObj(args) ? args : {};
+  const words = OP_WORDS[op];
   const previewId = typeof a.previewId === "string" ? a.previewId.trim() : "";
-  if (!PREVIEW_ID_RE.test(previewId)) return { error: "preview_id_required", note: "Send previewId (the id preview answered) and the same items." };
-  if (!Array.isArray(a.items) || !a.items.length || a.items.length > PREVIEW_MAX) return { error: "items_required", note: `Send items: the SAME 1 to ${PREVIEW_MAX} items you previewed.` };
+  if (!PREVIEW_ID_RE.test(previewId)) return { error: "preview_id_required", note: `Send previewId (the id preview answered) and the preview's ${words[1]} as items, as previewed.` };
+  if (!Array.isArray(a.items) || !a.items.length || a.items.length > PREVIEW_MAX) return { error: "items_required", note: `Send items: the preview's ${words[1]} (1 to ${PREVIEW_MAX}), as previewed and in their order.` };
+  // an item of another operation is refused before anything is read, each named with the tool that files it
+  const wrong = a.items.map((it, j) => ({ n: j + 1, op: opOf(it) })).filter((x) => x.op !== op);
+  if (wrong.length) {
+    const toolOf = (x) => WRITE_TOOLS[x] || OTHER_DOORS[x] || null;
+    const said = (x) => (x.op ? `item ${x.n} is a ${(OP_WORDS[x.op] || [x.op])[0]}, filed by ${toolOf(x.op)}` : `item ${x.n} is of no known form`);
+    return { error: "wrong_tool", tool, items: wrong.map((x) => ({ n: x.n, ...(x.op ? { is: (OP_WORDS[x.op] || [x.op])[0] } : {}), filesWith: toolOf(x.op) })),
+      note: `${tool} files only ${words[1]}: ${wrong.slice(0, 5).map(said).join("; ")}${wrong.length > 5 ? `; and ${wrong.length - 5} more` : ""}. Nothing was filed.` };
+  }
   if (person.readOnly || !hasWriteScope(person)) return { error: "read_only_credential", note: READ_ONLY_REASON };
   const row = await db(env).prepare(PREVIEW_ROW_SQL).bind(previewId).first();
   // sprint 7, 7.5b: a publish's or an equip's confirm row (src/confirm.js storeVerbConfirm) is no preview of items: unknown here
@@ -605,138 +577,146 @@ export async function fileItems(person, args, env, o = {}) {
   const sc = await projectCallScope(person, row.project, env);
   if (sc.error) return sc;
   const penv = sc.env, who = sc.person, project = row.project;
-  const done = parse(row.filed);
-  if (row.filed_at) return { error: "preview_filed", previewId, filedAt: row.filed_at, receipt: done, note: `This preview was filed at ${row.filed_at}; nothing was filed again. Its receipt is in receipt.` };
-  if (!done && Date.parse(row.expires_at) < Date.now()) return { error: "preview_expired", previewId, expiredAt: row.expires_at, note: "This preview expired (a preview lives an hour) and nothing of it was filed: preview the items again, then file." };
-  if ((await digestOf(a.items)) !== row.digest) return { error: "preview_changed", previewId, note: "The items differ from what was previewed, so nothing was filed: preview them again, then file with the new previewId." };
   const summary = parse(row.summary) || {};
+  const digests = parse(row.digest);
+  // a preview made before the split keeps one digest for every item: preview again (a preview lives an hour)
+  if (!isObj(summary.parts) || !isObj(digests)) return { error: "preview_changed", previewId, note: "This preview was made before each operation was filed by its own tool, so nothing was filed: preview the items again, then file each part with the tool its items name." };
+  const parts = partsOf(summary);
+  const part = parts.find((p) => p.tool === tool);
+  if (!part) return { error: "nothing_to_file", previewId, tool, parts: partCalls(parts),
+    note: `This preview holds no ${words[1]}, so nothing was filed${parts.length ? `: ${parts.map((p) => `${p.tool} files ${plural(p.idx.length, "item", "items")} ${numbers(p.idx.map((i) => i + 1))}`).join("; ")}` : ""}.` };
+  const idx = part.idx;
+  const done = parse(row.filed);
+  const was = isObj(done) && isObj(done.parts) && isObj(done.parts[tool]) ? done.parts[tool] : null;
+  if (was && was.complete) return { error: "preview_filed", previewId, tool, filedAt: was.at, receipt: receiptOf(summary, was, { previewId, project, origin: o.origin, tool, idx, rest: restOf(parts, done, tool) }),
+    note: `This preview's ${words[1]} were filed at ${was.at}; nothing was filed again. Their receipt is in receipt.` };
+  if (!was && Date.parse(row.expires_at) < Date.now()) return { error: "preview_expired", previewId, expiredAt: row.expires_at, note: `This preview expired (a preview lives an hour) and none of its ${words[1]} was filed: preview the items again, then file.` };
+  if ((await digestOf(a.items)) !== digests[tool]) return { error: "preview_changed", previewId, tool, items: idx.map((i) => i + 1),
+    note: `The items differ from the preview's ${words[1]} (${plural(idx.length, "item", "items")} ${numbers(idx.map((i) => i + 1))}, in that order), so nothing was filed: send them as previewed, or preview again and file with the new previewId.` };
   const verdicts = Array.isArray(summary.verdicts) ? summary.verdicts : [];
   const ev = !!summary.eval;
-  const notReady = verdicts.map((v, i) => [v, i]).filter(([v]) => v === "needs" || v === "refused").map(([v, i]) => ({ i, n: i + 1, verdict: v }));
+  const notReady = idx.filter((i) => verdicts[i] === "needs" || verdicts[i] === "refused").map((i) => ({ i, n: i + 1, verdict: verdicts[i] }));
   const only = a.only === "ready";
   if (notReady.length && !only) {
-    return { error: "not_ready", previewId, notReady, note: `${notReady.length} item${notReady.length === 1 ? " of this preview is" : "s of this preview are"} not ready (needs one more thing, or refused), so nothing was filed. Fix ${notReady.length === 1 ? "it" : "them"} and preview again, or file again with only: "ready" to file the rest and leave ${notReady.length === 1 ? "it" : "them"}.` };
+    return { error: "not_ready", previewId, tool, notReady, note: `${notReady.length} of this preview's ${words[1]} ${notReady.length === 1 ? "is" : "are"} not ready (needs one more thing, or refused), so nothing was filed. Fix ${notReady.length === 1 ? "it" : "them"} and preview again, or call ${tool} again with only: "ready" to file the rest and leave ${notReady.length === 1 ? "it" : "them"}.` };
   }
-  const forms = a.items.map(formOf);
-  const ready = (i) => verdicts[i] === "files" || verdicts[i] === "waits_for_owner";
-  const ownRef = (i) => itemOwnRef(a.items[i], forms[i]);
+  // the item as sent, by its index in the preview (the digest held: the part's items, in their order)
+  const sentAt = new Map(idx.map((i, j) => [i, a.items[j]]));
+  const ready = (i) => isReady(verdicts[i]);
+  if (o.check || a.fileOnConfirm === true) {
+    const keep = new Set(idx);
+    const shown = { project, items: (summary.items || []).filter((it) => keep.has(it.i)), leftOut: [], reachLine: summary.reachLine, counts: countsOf((summary.items || []).filter((it) => keep.has(it.i))) };
+    const n = idx.filter(ready).length;
+    const out = { previewId, project, tool, items: shown.items, ready: n, left: idx.length - n, notReady: 0, counts: shown.counts, text: previewText(shown, { mode: "preview", org: summary.org, url: (o.origin || "") + orgPath(`/preview/${previewId}`) }) };
+    return o.check ? out : { ...out, filed: false, confirm: { asked: false, note: NOT_ASKED.capability } };
+  }
+  const isK = op !== "contribution";
   // the batch clientRef the preview was given (the one-pass fix 9) names every part; else the preview's own id does. D1b item
   // 7: under a batch ref each part's ref carries its content's digest, so a changed item is never answered with the receipt
   // of what was filed before it (batchLanded, CLASH_NOTE)
   const batchRef = typeof summary.clientRef === "string" && BATCH_REF_RE.test(summary.clientRef) ? summary.clientRef : null;
-  const kItems = a.items.filter((_, i) => forms[i] === "knowledge" && verdicts[i] === "files");
-  const digests = batchRef ? await Promise.all(a.items.map((it, i) => (forms[i] && forms[i] !== "knowledge" ? partDigest(it) : null))) : [];
+  const ownRef = (i) => (isK ? null : itemOwnRef(sentAt.get(i)));
+  const cDigest = new Map();
+  if (batchRef && !isK) for (const i of idx) cDigest.set(i, await partDigest(sentAt.get(i)));
+  const kItems = isK ? idx.filter((i) => verdicts[i] === "files").map((i) => sentAt.get(i)) : [];
   const kDigest = batchRef && kItems.length ? await partDigest(kItems) : null;
-  const partRef = (part, i, d) => (batchRef ? `${batchRef}:${part}${i == null ? "" : i}${d ? "~" + d : ""}` : refOf(previewId, part, i));
-  const refFor = (i) => ownRef(i) || partRef(PART_LETTER[forms[i]], i, digests[i]);
-  const kRef = partRef("k", null, kDigest);
+  const partRef = (letter, i, d) => (batchRef ? `${batchRef}:${letter}${i == null ? "" : i}${d ? "~" + d : ""}` : refOf(previewId, letter, i));
+  const refFor = (i) => ownRef(i) || partRef("c", i, cDigest.get(i));
+  const kSlot = KNOWLEDGE_PART[op];
+  const kRef = isK ? partRef(kSlot, null, kDigest) : null;
   const existing = (summary && summary.existing) || {};
-  const status = verdicts.map((v, i) => (v === "unchanged" ? { status: "unchanged", ...(existing[i] ? { id: existing[i] } : {}) } : ready(i) ? null : { status: "left", note: "Not filed: it was not ready (only: \"ready\")." }));
-  // what already landed: one statement over every clientRef this file would use (and, under a batch ref, every part of the
+  const status = new Map(idx.map((i) => [i, verdicts[i] === "unchanged" ? { status: "unchanged", ...(existing[i] ? { id: existing[i] } : {}) } : ready(i) ? null : { status: "left", note: "Not filed: it was not ready (only: \"ready\")." }]));
+  // what already landed: one statement over every clientRef this call would use (and, under a batch ref, every part of the
   // batch: a slot that filed under another digest is a clash, a slot filed before digests is the same content)
-  const refs = [kRef, ...a.items.map((_, i) => (ready(i) && forms[i] !== "knowledge" ? refFor(i) : null)).filter(Boolean)];
+  const refs = isK ? [kRef] : idx.filter(ready).map(refFor);
   const landed = new Map(((await db(penv).prepare("SELECT id, client_ref, route, json_extract(grade, '$.refDigest') AS rd FROM transmission WHERE submitter = ?1 AND client_ref IN (SELECT value FROM json_each(?2))").bind(person.id, JSON.stringify(refs)).all()).results || [])
     .map((r) => [r.client_ref, r]));
-  // G2 item 7: an item's OWN clientRef that already filed DIFFERENT content is never answered "filed": not_filed, saying so
-  for (let i = 0; i < a.items.length; i++) {
-    const own = ready(i) && ownRef(i), was = own && landed.get(own);
-    if (!was || !was.rd) continue;
-    if (was.rd !== await ownDigestOf(a.items[i], forms[i])) { status[i] = { status: "not_filed", note: CLIENT_REF_CLASH_NOTE, clash: was.id }; landed.delete(own); }
+  // G2 item 7: a contribution's OWN clientRef that already filed DIFFERENT content is never answered "filed": not_filed, saying so
+  if (!isK) for (const i of idx) {
+    const own = ready(i) && ownRef(i), w = own && landed.get(own);
+    if (!w || !w.rd) continue;
+    if (w.rd !== await refDigestOf(sentAt.get(i).contribution)) { status.set(i, { status: "not_filed", note: CLIENT_REF_CLASH_NOTE, clash: w.id }); landed.delete(own); }
   }
   if (batchRef) {
     const bl = await batchLanded(penv, person.id, batchRef);
     const legacy = (slot) => (bl.get(slot) || []).find((x) => x.d === null);
-    if (kDigest && !landed.has(kRef) && legacy(`${batchRef}:k`)) landed.set(kRef, legacy(`${batchRef}:k`));
-    // G2 item 7: the knowledge slot filed OTHER knowledge before: nothing of this batch's knowledge is written, saying so
-    const kOther = kDigest && !landed.has(kRef) ? (bl.get(`${batchRef}:k`) || [])[0] : null;
-    if (kOther) a.items.forEach((_, i) => { if (forms[i] === "knowledge" && verdicts[i] === "files") status[i] = { status: "not_filed", note: CLASH_NOTE, clash: kOther.id }; });
-    a.items.forEach((_, i) => {
-      if (!ready(i) || forms[i] === "knowledge" || ownRef(i)) return;
+    if (isK && kDigest) {
+      const slot = `${batchRef}:${kSlot}`;
+      if (!landed.has(kRef) && legacy(slot)) landed.set(kRef, legacy(slot));
+      // G2 item 7: the knowledge slot filed OTHER knowledge before: nothing of this part is written, saying so
+      const kOther = !landed.has(kRef) ? (bl.get(slot) || [])[0] : null;
+      if (kOther) for (const i of idx) if (verdicts[i] === "files") status.set(i, { status: "not_filed", note: CLASH_NOTE, clash: kOther.id });
+    }
+    if (!isK) for (const i of idx) {
+      if (!ready(i) || ownRef(i)) continue;
       const ref = refFor(i), slot = slotOf(ref);
-      if (landed.has(ref)) return;
+      if (landed.has(ref)) continue;
       const old = legacy(slot);
-      if (old) { landed.set(ref, old); return; }
+      if (old) { landed.set(ref, old); continue; }
       const other = (bl.get(slot) || [])[0];
-      if (other) status[i] = { status: "not_filed", note: CLASH_NOTE, clash: other.id };
-    });
-  }
-  const via = o.via || "mcp";
-  const fail = (i, note) => { status[i] = { status: "not_filed", note: String(note || "It did not file.").slice(0, 400) }; };
-
-  // 1 · knowledge: ONE writeKnowledge call, all or nothing
-  const kIdx = a.items.map((_, i) => i).filter((i) => forms[i] === "knowledge" && verdicts[i] === "files" && !status[i]);
-  // the meter before a knowledge write (the one-pass fix 8): when the write starts an area, the receipt says so ("GTM now
-  // counts: +3 items"). One checklist read before and one after (CHECKLIST_SQL, the meter's own statement), only when knowledge files
-  const meterBefore = kIdx.length && !kIdx.every((i) => landed.has(kRef)) ? await checklistFor(penv, who, { project }).catch((e) => { if (isD1Quota(e)) throw e; return null; }) : null;
-  if (kIdx.length) {
-    if (landed.has(kRef)) for (const i of kIdx) status[i] = { status: "filed", id: landed.get(kRef).id, ledger: true };
-    else {
-      try {
-        const w = await writeKnowledge(who, { project, ops: kIdx.map((i) => a.items[i]), clientRef: kRef, ...(ev ? { eval: true } : {}) }, penv, { via });
-        if (w.error === "invalid_ops") {
-          const byIdx = new Map((w.errors || []).map((e) => [e.index, e.note]));
-          kIdx.forEach((i, j) => fail(i, byIdx.get(j) || "Another knowledge item of this file was refused, and knowledge files all together: nothing of it was written."));
-        } else if (w.error) kIdx.forEach((i) => fail(i, w.note || w.error));
-        else for (const i of kIdx) status[i] = { status: "filed", ...(w.ledger ? { id: w.ledger, ledger: true } : {}) };
-      } catch (e) { if (isD1Quota(e)) throw e; kIdx.forEach((i) => fail(i, "The knowledge write did not complete; file again with the same previewId.")); }
+      if (other) status.set(i, { status: "not_filed", note: CLASH_NOTE, clash: other.id });
     }
   }
-  // 2 · contributions: ONE batch-door call
-  const cIdx = a.items.map((_, i) => i).filter((i) => forms[i] === "contribution" && ready(i) && !status[i]);
-  const cTodo = [];
-  for (const i of cIdx) { const l = landed.get(refFor(i)); if (l) status[i] = { status: "filed", id: l.id, route: l.route }; else cTodo.push(i); }
-  if (cTodo.length) {
-    try {
-      // the refs were read just above (`landed`) and none of these landed: the batch door does not read them again
-      const res = await fileTransmissionsBatch(who, cTodo.map((i) => ({ ...a.items[i].contribution, project, clientRef: refFor(i), via, ...(ev ? { eval: true } : {}) })), penv, false, { refsChecked: new Set(cTodo.map(refFor)) });
-      cTodo.forEach((i, k) => { const r = res[k] || {}; if (r.id && !r.error) status[i] = { status: "filed", id: r.id, route: r.route }; else fail(i, r.note || r.error); });
-    } catch (e) { if (isD1Quota(e)) throw e; cTodo.forEach((i) => fail(i, "The contributions did not file; file again with the same previewId.")); }
+  const via = o.via || "mcp";
+  const fail = (i, note) => { status.set(i, { status: "not_filed", note: String(note || "It did not file.").slice(0, 400) }); };
+  let meterBefore = null;
+  if (isK) {
+    // the knowledge: ONE writeKnowledge call, all or nothing
+    const kIdx = idx.filter((i) => verdicts[i] === "files" && !status.get(i));
+    // the meter before a knowledge write (the one-pass fix 8): when the write starts an area, the receipt says so ("GTM now
+    // counts: +3 items"). One checklist read before and one after (CHECKLIST_SQL, the meter's own statement), only when knowledge files
+    meterBefore = kIdx.length && !landed.has(kRef) ? await checklistFor(penv, who, { project }).catch((e) => { if (isD1Quota(e)) throw e; return null; }) : null;
+    if (kIdx.length) {
+      if (landed.has(kRef)) for (const i of kIdx) status.set(i, { status: "filed", id: landed.get(kRef).id, ledger: true });
+      else {
+        try {
+          const w = await writeKnowledge(who, { project, ops: kIdx.map((i) => sentAt.get(i)), clientRef: kRef, ...(ev ? { eval: true } : {}) }, penv, { via });
+          if (w.error === "invalid_ops") {
+            const byIdx = new Map((w.errors || []).map((e) => [e.index, e.note]));
+            kIdx.forEach((i, j) => fail(i, byIdx.get(j) || `Another ${words[0]} of this call was refused, and they file all together: nothing of it was written.`));
+          } else if (w.error) kIdx.forEach((i) => fail(i, w.note || w.error));
+          else for (const i of kIdx) status.set(i, { status: "filed", ...(w.ledger ? { id: w.ledger, ledger: true } : {}) });
+        } catch (e) { if (isD1Quota(e)) throw e; kIdx.forEach((i) => fail(i, `The knowledge write did not complete; call ${tool} again with the same previewId.`)); }
+      }
+    }
+  } else {
+    // the contributions: ONE batch-door call
+    const cTodo = [];
+    for (const i of idx.filter((x) => ready(x) && !status.get(x))) { const l = landed.get(refFor(i)); if (l) status.set(i, { status: "filed", id: l.id, route: l.route }); else cTodo.push(i); }
+    if (cTodo.length) {
+      try {
+        // the refs were read just above (`landed`) and none of these landed: the batch door does not read them again
+        const res = await fileTransmissionsBatch(who, cTodo.map((i) => ({ ...sentAt.get(i).contribution, project, clientRef: refFor(i), via, ...(ev ? { eval: true } : {}) })), penv, false, { refsChecked: new Set(cTodo.map(refFor)) });
+        cTodo.forEach((i, k) => { const r = res[k] || {}; if (r.id && !r.error) status.set(i, { status: "filed", id: r.id, route: r.route }); else fail(i, r.note || r.error); });
+      } catch (e) { if (isD1Quota(e)) throw e; cTodo.forEach((i) => fail(i, `The contributions did not file; call ${tool} again with the same previewId.`)); }
+    }
   }
-  // 3 · grades: gradeCheck's rules, all of them in one call (gradeChecks: one read of the checks, one batch of filings, one
-  // batch of result rows)
-  const gIdx = a.items.map((_, i) => i).filter((i) => forms[i] === "grade" && ready(i) && !status[i]);
-  const gTodo = [];
-  for (const i of gIdx) { const l = landed.get(refFor(i)); if (l) status[i] = { status: "filed", id: l.id, route: l.route }; else gTodo.push(i); }
-  if (gTodo.length) {
-    try {
-      const res = await gradeChecks(who, penv, gTodo.map((i) => ({ checkId: a.items[i].grade.checkId, verdict: a.items[i].grade.verdict, proof: a.items[i].grade.proof, clientRef: refFor(i) })), { project, via, ...(ev ? { eval: true } : {}) });
-      if (!Array.isArray(res)) gTodo.forEach((i) => fail(i, res.note || res.error));
-      else gTodo.forEach((i, k) => { const r = res[k] || {}; if (r.error) fail(i, r.note || r.error); else status[i] = { status: "filed", id: r.transmission, route: r.route, counted: r.counted }; });
-    } catch (e) { if (isD1Quota(e)) throw e; gTodo.forEach((i) => fail(i, "The grades did not file; file again with the same previewId.")); }
-  }
-  // 4 · answers: ONE respondOptions call
-  const aIdx = a.items.map((_, i) => i).filter((i) => forms[i] === "answer" && ready(i) && !status[i]);
-  const aTodo = [];
-  for (const i of aIdx) { const l = landed.get(refFor(i)); if (l) status[i] = { status: "filed", id: l.id, route: l.route }; else aTodo.push(i); }
-  if (aTodo.length) {
-    const entries = aTodo.map((i) => { const x = a.items[i].answer; const [e] = entriesFrom({ qid: x.qid, option: x.option, provisional: x.provisional, project, ...(ev ? { eval: true } : {}) }); return { ...e, clientRef: refFor(i) }; });
-    try {
-      const r = await respondOptions(who, entries, penv, { via });
-      if (r.error) aTodo.forEach((i) => fail(i, r.note || r.error));
-      else aTodo.forEach((i, k) => { const t = (r.transmissions || [])[k] || {}; if (t.tx) status[i] = { status: "filed", id: t.tx, route: t.route, ...(t.ruled ? { ruled: true } : {}) }; else fail(i, t.error || "It did not file."); });
-    } catch (e) { if (isD1Quota(e)) throw e; aTodo.forEach((i) => fail(i, "The answers did not file; file again with the same previewId.")); }
-  }
-
-  const complete = status.every((s) => s && s.status !== "not_filed");
+  const complete = idx.every((i) => status.get(i) && status.get(i).status !== "not_filed");
   const at = now();
-  const meterAfter = meterBefore && !meterBefore.live && kIdx.some((i) => status[i] && status[i].status === "filed") ? await checklistFor(penv, who, { project }).catch((e) => { if (isD1Quota(e)) throw e; return null; }) : null;
+  const meterAfter = meterBefore && !meterBefore.live && idx.some((i) => status.get(i) && status.get(i).status === "filed") ? await checklistFor(penv, who, { project }).catch((e) => { if (isD1Quota(e)) throw e; return null; }) : null;
   const meterNote = meterAfter && !meterAfter.live ? meterChangeWords(meterBefore, meterAfter) : "";
-  const filed = { at, complete, items: status.map((s, i) => ({ i, ...s })), ...(meterNote ? { meterNote } : {}) };
-  await db(penv).prepare("UPDATE previews SET filed = ?, filed_at = ? WHERE id = ? AND person = ?").bind(JSON.stringify(filed), complete ? at : null, previewId, person.id).run();
-  return receiptOf(summary, filed, { previewId, project, origin: o.origin, sent: a.items });
+  const rec = { at, complete, items: idx.map((i) => ({ i, ...status.get(i) })), ...(meterNote ? { meterNote } : {}) };
+  // ONE update: this part's receipt under its tool; the row counts as filed (filed_at) once every part of it is complete (each
+  // other part's flag read from the row as it stands, in the same statement). The tool names are the registry's, never a caller's.
+  const others = parts.filter((p) => p.tool !== tool).map((p) => ` AND json_extract(filed, '$.parts.${p.tool}.complete') = 1`).join("");
+  await db(penv).prepare(`UPDATE previews SET filed = json_set(COALESCE(filed, '{}'), '$.parts.${tool}', json(?1)), filed_at = CASE WHEN ?2 = 1${others} THEN ?3 ELSE filed_at END WHERE id = ?4 AND person = ?5`)
+    .bind(JSON.stringify(rec), complete ? 1 : 0, at, previewId, person.id).run();
+  return receiptOf(summary, rec, { previewId, project, origin: o.origin, tool, idx, sent: sentAt, rest: restOf(parts, done, tool) });
 }
 
-// receiptOf(summary, filed, { previewId, project, origin }) -> the receipt: the preview's items (or its groups) with what each
-// became, each place now resolved for a contribution's id
+// receiptOf(summary, filed, { previewId, project, origin, tool?, idx?, sent?, rest? }) -> the receipt: the preview's items (one
+// part's, with idx; else every one, the page's view) with what each became, each place now resolved for a contribution's id
 export function receiptOf(summary, filed, o) {
   const by = new Map(((filed && filed.items) || []).map((x) => [x.i, x]));
-  // D1b item 14: a preview stored GROUPED (over 64 KB: 424 grades) keeps only the items that were not ready, so the receipt's
-  // items were empty for every one that filed (their ids were in results alone). With the items as sent (file has them), every
-  // index gets its row: the stored one, else one made from the item itself (its kind and key, its verdict and what it became)
-  const stored = summary.items || [];
+  const inPart = Array.isArray(o && o.idx) ? new Set(o.idx) : null;
+  // D1b item 14: a preview stored GROUPED (over 64 KB) keeps only the items that were not ready, so the receipt's items were
+  // empty for every one that filed (their ids were in results alone). With the items as sent (a write tool has them), every
+  // index of its part gets its row: the stored one, else one made from the item itself (its kind and key, its verdict and what
+  // it became)
+  const stored = (summary.items || []).filter((it) => !inPart || inPart.has(it.i));
   const have = new Set(stored.map((it) => it.i));
   const verdicts = Array.isArray(summary.verdicts) ? summary.verdicts : [];
-  const made = Array.isArray(o && o.sent) && summary.grouped ? o.sent.map((it, i) => (have.has(i) ? null : sentRow(it, i, verdicts[i]))).filter(Boolean) : [];
+  const made = o && o.sent instanceof Map && summary.grouped ? [...o.sent].filter(([i]) => !have.has(i)).map(([i, it]) => sentRow(it, i, verdicts[i])) : [];
   const items = stored.concat(made).sort((x, y) => x.i - y.i).map((it) => {
     const f = by.get(it.i) || null;
     const places = it.type === "contribution" && f && f.id ? shapeShowsOf({ lane: it.lane || "leader", id: f.id, goalRef: undefined }).concat((it.places || []).filter((p) => !/\{id\}/.test(p.path))) : it.places;
@@ -744,35 +724,33 @@ export function receiptOf(summary, filed, o) {
   });
   const st = (s) => ((filed && filed.items) || []).filter((x) => x.status === s).length;
   const url = (o.origin || "") + orgPath(`/preview/${o.previewId}`);
-  const ans = { previewId: o.previewId, project: o.project, complete: !!(filed && filed.complete), filedAt: filed && filed.complete ? filed.at : null, items, ...(summary.groups ? { groups: summary.groups } : {}),
-    leftOut: summary.leftOut || [],
+  // a part's receipt names its own items; the whole preview's groups (a summary stored grouped) belong to the page's view
+  const groups = !inPart && summary.groups ? summary.groups : null;
+  const ans = { previewId: o.previewId, project: o.project, ...(o.tool ? { tool: o.tool } : {}), complete: !!(filed && filed.complete), filedAt: filed && filed.complete ? filed.at : null, items, ...(groups ? { groups } : {}),
+    leftOut: inPart ? [] : summary.leftOut || [],
     counts: { filed: st("filed"), unchanged: st("unchanged"), left: st("left"), notFiled: st("not_filed") }, filedCount: st("filed"), leftCount: st("left"), notFiledCount: st("not_filed"), url,
     ...(filed && filed.meterNote ? { meterNote: filed.meterNote } : {}),
+    ...(o.rest ? { rest: o.rest } : {}),
     // every item's own result, by its index (whole even when the summary was stored grouped)
     results: ((filed && filed.items) || []).map((x) => ({ i: x.i, n: x.i + 1, status: x.status, ...(x.id ? { id: x.id } : {}) })) };
-  // the text block stays the grouped one (the groups say the many; a row per item is for the client to read, not to print)
+  // the page's text block stays the grouped one (the groups say the many; a row per item is for the client to read, not to print)
   const madeSet = new Set(made.map((x) => x.i));
-  const forText = made.length ? { ...ans, items: items.filter((it) => !madeSet.has(it.i)) } : ans;
-  return { ...ans, text: previewText(forText, { mode: "receipt", org: summary.org, url, previewId: o.previewId }) };
+  const forText = made.length && groups ? { ...ans, items: items.filter((it) => !madeSet.has(it.i)) } : ans;
+  return { ...ans, text: previewText(forText, { mode: "receipt", org: summary.org, url, previewId: o.previewId, tool: o.tool, rest: o.rest }) };
 }
 // sentRow(item, i, verdict) -> a receipt row for an item a grouped summary did not keep: its form, kind and key from the item
 function sentRow(it, i, verdict) {
-  return { n: i + 1, ...sentRow0(it, i, verdict) };
-}
-function sentRow0(it, i, verdict) {
   const form = formOf(it);
   const clip60 = (v) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
-  if (form === "grade") return { i, type: "grade", kind: "grade", kindWord: "grade", key: clip60(it.grade.checkId), line: `Grade: ${clip60(it.grade.checkId)}, ${clip60(it.grade.verdict)}`, verdict: verdict || null, places: [] };
-  if (form === "answer") return { i, type: "answer", kind: "answer", kindWord: "answer", key: clip60(it.answer.qid), line: `Answer: ${clip60(it.answer.qid)}`, verdict: verdict || null, places: [] };
-  if (form === "contribution") return { i, type: "contribution", kind: clip60(it.contribution.kind) || "contribution", kindWord: "contribution", lane: clip60(it.contribution.lane), line: `Contribution: ${clip60(it.contribution.what)}`, verdict: verdict || null, places: [] };
-  if (form === "knowledge") { const d = isObj(it.data) ? it.data : {}; const key = clip60(d.id ?? d.qid ?? d.path ?? d.screen ?? ""); return { i, type: "knowledge", kind: clip60(it.kind), kindWord: clip60(it.kind), ...(key ? { key } : {}), line: `${clip60(it.kind)}${key ? `: ${key}` : ""}`, verdict: verdict || null, places: [] }; }
-  return { i, type: null, kind: "item", kindWord: "item", line: "An item of no known form", verdict: verdict || null, places: [] };
+  if (form === "contribution") return { i, n: i + 1, type: "contribution", kind: clip60(it.contribution.kind) || "contribution", kindWord: "contribution", lane: clip60(it.contribution.lane), line: `Contribution: ${clip60(it.contribution.what)}`, verdict: verdict || null, places: [] };
+  const d = isObj(it.data) ? it.data : {}; const key = clip60(d.id ?? d.qid ?? d.path ?? d.screen ?? "");
+  return { i, n: i + 1, type: "knowledge", kind: clip60(it.kind), kindWord: clip60(it.kind), ...(key ? { key } : {}), line: `${clip60(it.kind)}${key ? `: ${key}` : ""}`, verdict: verdict || null, places: [] };
 }
 const dedupe = (places) => { const seen = new Set(); return places.filter((p) => { const k = `${p.tab}|${p.path}`; if (seen.has(k)) return false; seen.add(k); return true; }); };
 
 // ---- pruning (sprint 3, D3): a preview lives an hour; a row nothing was filed from is deleted a day after it expired ----
-// What a FILED row is read for, and so kept whole: `file` again with its id answers preview_filed with the receipt (filed),
-// a partial one is retried against its digest and verdicts (summary), and the receipt's link, the page GET /preview/:id
+// What a FILED row is read for, and so kept whole: a write tool again with its id answers preview_filed with its part's receipt
+// (filed), a partial part is retried against its digest and verdicts (summary), and the receipt's link, the page GET /preview/:id
 // and the card's brain://card/<id>, draws the items and what each became (summary, filed). The ledger never reads a preview
 // row (a filing names its preview only inside its clientRef). An UNFILED row is read only by those same doors, which answer
 // "expired" after its hour; a day later the row goes and its id answers as an unknown one (preview_not_found, the usual
@@ -820,13 +798,16 @@ export async function readPreviewView(env, person, id) {
   const sc = await resolveProject(person, row.project, await seatsOnce(env, person.id), env);
   if (sc.error) { if (!author) return null; } else scoped = sc.env;
   const summary = parse(row.summary) || {};
-  const filed = parse(row.filed);
+  const raw = parse(row.filed);
+  const filed = filedView(raw, summary);
   const t = Date.now();
   const state = row.filed_at ? "filed" : Date.parse(row.expires_at) < t && !filed ? "expired" : filed ? "partial" : "open";
   let items = summary.items || [], hidden = 0;
   if (!author) { const keep = items.filter((it) => !it.roles || !it.roles.length || rolesAdmit(person, it.roles)); hidden = items.length - keep.length; items = keep; }
   const view = receiptOf({ ...summary, items }, filed || { items: [] }, { previewId: pid, project: row.project, origin: "" });
+  // sprint 19: each part with its tool, its items and whether it is filed (the page's calls, the card's File press)
+  const parts = partsOf(summary).map((p) => ({ tool: p.tool, items: p.idx.map((i) => i + 1), filed: !!(isObj(raw) && isObj(raw.parts) && isObj(raw.parts[p.tool]) && raw.parts[p.tool].complete) }));
   return { id: pid, project: row.project, projectName, author, by: summary.by || {}, org: summary.org || "", createdAt: row.created_at, expiresAt: row.expires_at, filedAt: row.filed_at, filedSoFar: !!filed,
     state, items: view.items, groups: summary.groups || null, counts: summary.counts || countsOf(items), reach: summary.reach || null, reachLine: summary.reachLine || "", leftOut: summary.leftOut || [],
-    note: summary.note || "", hidden, scopedEnv: scoped, fileCounts: view.counts };
+    note: summary.note || "", hidden, scopedEnv: scoped, fileCounts: view.counts, parts };
 }

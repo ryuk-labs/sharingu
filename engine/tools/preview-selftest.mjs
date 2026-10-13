@@ -33,7 +33,7 @@ const small = { project: "pricing", items: [
   { ...it(2, "render", "Render: Pricing, state annual, html, 2 KB", "files", "map"), effect: "replaces 1", places: [{ tab: "map", path: "/map/screens", region: "screen-renders", what: "w" }] },
   it(3, "contribution", "Contribution (Code): A toggle — with a very long title that goes on and on beyond any column", "needs", "build", { effect: "needs proof +2" }),
 ], leftOut: [{ what: "10 messages with no fact or decision", why: "small talk" }], reachLine: "1 screen, 1 flow, 2 doors, 1 goal; 5 graded checks in question", counts: { byVerdict: { files: 2, waits_for_owner: 1, needs: 1 } } };
-const t1 = previewText(small, { mode: "preview", org: "Northwind", url: "http://127.0.0.1:8870/preview/P-0123456789abcdef", previewId: "P-0123456789abcdef" });
+const t1 = previewText(small, { mode: "preview", org: "Northwind", url: "http://127.0.0.1:8870/preview/P-0123456789abcdef", previewId: "P-0123456789abcdef", parts: [{ tool: "file_contribution", items: [1, 4] }, { tool: "save_knowledge", items: [2, 3] }] });
 const L1 = t1.split("\n");
 console.log(t1.split("\n").map((l) => "    | " + l).join("\n"));
 ok(L1.every((l) => l.length <= WIDTH), `every line at most ${WIDTH} columns (longest ${Math.max(...L1.map((l) => l.length))})`);
@@ -44,7 +44,7 @@ ok(/^ {2}1 {2}contribution {2}New pricing tiers \(.\.\. {2}Build {5}files at onc
 ok(/Screens\s+replaces 1/.test(t1) && /Decisions waits for the owner/.test(t1), "a render names the Screens view and says it replaces one; a question waits for the owner");
 ok(L1.some((l) => /A toggle, with a ve\.\.\.|A toggle - with a ve\.\.\.|A toggle.*\.\.\./.test(l)), "a long line is cut with an ellipsis (three dots)");
 ok(/^ {2}- {2}left out {6}10 messages with no fact or decision: small talk$/.test(L1.find((l) => /left out/.test(l)) || ""), "what was left out has its own row");
-ok(/^ reaches  1 screen, 1 flow, 2 doors, 1 goal; 5 graded checks in question$/m.test(t1) && /^ open     http:\/\/127\.0\.0\.1:8870\/preview\/P-0123456789abcdef$/m.test(t1) && /^ file     file \{previewId: "P-0123456789abcdef"\} with the same items$/m.test(t1), "the reach, the page and the exact file call");
+ok(/^ reaches  1 screen, 1 flow, 2 doors, 1 goal; 5 graded checks in question$/m.test(t1) && /^ open     http:\/\/127\.0\.0\.1:8870\/preview\/P-0123456789abcdef$/m.test(t1) && /^ file     file_contribution \{previewId: "P-0123456789abcdef"\} with items\n {10}1 and 4, as previewed$/m.test(t1) && /^ file     save_knowledge \{previewId: "P-0123456789abcdef"\} with items 2\n {10}and 3, as previewed$/m.test(t1), "the reach, the page and each part's exact call (sprint 19: its write tool and its items)");
 ok(cut("abcdefghij", 6) === "abc..." && cut("abc", 6) === "abc" && cut("one, two", 7) === "one..." && ascii("a — b … “c”") === 'a - b ... "c"', "cut and ascii: the ellipsis, no trailing comma before it, typographic marks mapped");
 ok(lineBody("Goal: Paid orders, under Grow revenue") === "Paid orders, under Grow revenue" && lineBody("Card (Claims): A claim") === "A claim", "lineBody drops the kind word the kind column already says");
 

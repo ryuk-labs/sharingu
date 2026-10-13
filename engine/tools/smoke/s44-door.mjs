@@ -57,7 +57,7 @@ smoke("door · publish and equip ask their confirm (7.5b): a declared client is 
   const draft = async (i) => {
     const items = [{ contribution: { lane: "leader", kind: "item", what: `S44 kit ${i}`, why: "a kit the door smoke publishes", touches: ["skill"], gapRefs: [`item/${slug}`], proof: `https://example.invalid/${slug}/${i}` } }];
     const pv = await tool(ownerKey, "preview", { project: P, items });
-    const f = pv && pv.previewId ? await tool(ownerKey, "file", { previewId: pv.previewId, items }) : pv;
+    const f = pv && pv.previewId ? await tool(ownerKey, "file_contribution", { previewId: pv.previewId, items }) : pv;
     const id = f && f.results && f.results[0] && f.results[0].id;
     expect(id, () => `the draft: ${JSON.stringify(f).slice(0, 200)}`);
     return id;

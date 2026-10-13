@@ -2,10 +2,10 @@
 kind: skill
 slug: file-the-screens
 order: 16
-version: 1
+version: 2
 title: File the screens
 purpose: Read an app's code and file its screens, the doors they call, the tables behind them and the checks each implies.
-calls: missing, map, formats, preview, file
+calls: missing, map, formats, preview, save_knowledge
 ---
 
 # File the screens
@@ -57,7 +57,7 @@ observe later. sharingu runs no model: you read the code and ask the person; the
 9. **Preview.** `preview {project: "<key>", items: [...], leftOut: [{what, why}]}`. Show the person the answer's `text`
    as it is. Read each item's verdict: files at once, or waits for the owner; needs one more thing names the field to
    fix (fix it and preview again); refused is left out.
-10. **File, once the person says so.** `file {previewId: "<id>", items: [...the same items...]}`.
+10. **File, once the person says so.** `save_knowledge {previewId: "<id>", items: [...the same items...]}`.
 11. **Read `missing` again.** The app area's meter moves on the very next read. Repeat from step 4 for the next flow
     until the app area has nothing open.
 

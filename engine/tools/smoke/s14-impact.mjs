@@ -61,7 +61,7 @@ smoke("impact: a code contribution naming the screen: its Impact view reaches th
   const imp = await http("GET", `/contribution/${q.tx}/impact`, { key: q.a.key });
   const i = imp.json || {};
   expect(imp.status === 200 && i.touched.names.some((n) => n.id === "screen:s14-pricing" && n.how) && i.reached.names.some((n) => n.id === "door:s14-prices")
-    && i.proof.toRedo.length === 1 && i.proof.toRedo[0].id === "AC.s14.screen" && i.proof.toRedo[0].stale === true && /^preview /.test(i.proof.calls[0].call) && /1 check to redo/.test(i.line),
+    && i.proof.toRedo.length === 1 && i.proof.toRedo[0].id === "AC.s14.screen" && i.proof.toRedo[0].stale === true && /^submit_grade \{"project":"[^"]+","checkId":"AC\.s14\.screen",/.test(i.proof.calls[0].call) && /1 check to redo/.test(i.line),
     () => `impact ${imp.status}: ${brief({ touched: i.touched, reached: i.reached, proof: i.proof, line: i.line })}`);
   const page = await html(`/contribution/${q.tx}/impact`, q.a.key);
   expect(page.status === 200 && page.text.includes('data-region="proof"') && page.text.includes('data-check="AC.s14.screen" data-state="stale"') && page.text.includes('data-reached="door:s14-prices"'), () => `page ${page.status}`);
@@ -74,7 +74,7 @@ smoke("impact: a code contribution naming the screen: its Impact view reaches th
   const node = ((map.json && map.json.nodes) || []).find((n) => n.r === "screen:s14-pricing");
   expect(map.status === 200 && node && node.z === 1 && map.json.counts.stale === 1, () => `map ${map.status}: ${brief(node)}`);
   const gr = await holesGrades();
-  expect(gr && /stale/.test(gr.what) && gr.first && gr.first.id === "AC.s14.screen" && gr.what.includes(`since ${q.tx}`) && gr.fillPath.args.items[0].grade.checkId === "AC.s14.screen", () => `holes: ${brief(gr)}`);
+  expect(gr && /stale/.test(gr.what) && gr.first && gr.first.id === "AC.s14.screen" && gr.what.includes(`since ${q.tx}`) && gr.fillPath.tool === "submit_grade" && gr.fillPath.args.checkId === "AC.s14.screen", () => `holes: ${brief(gr)}`);
   const ref = (await mcp(q.a.key, "impact", { project: P, refs: ["screen:s14-pricing"] })).out;
   expect(!ref.error && ref.reached.names.some((n) => n.id === "door:s14-prices") && ref.proof.toRedo.some((c) => c.id === "AC.s14.screen") && ref.decisions && ref.goals, () => brief(ref));
   const home = await http("GET", `/home/summary?project=${P}`, { key: q.b.key });

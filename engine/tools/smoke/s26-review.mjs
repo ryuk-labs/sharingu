@@ -6,7 +6,7 @@
 //     seat, a member seated nowhere, a plain key, a signed-in cookie, a key in the address and an OAuth grant each read only
 //     what that rule gives them; the owner keeps the org rollup.
 import { createHash, randomBytes } from "node:crypto";
-import { smoke, expect, brief, http, mcp, ownerKey, control, BASE, contribute, sessionPath, unbased } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, ownerKey, control, BASE, contribute, sessionPath, unbased, fileParts } from "./lib.mjs";
 
 // S26_TAG: a second run against a kept worker takes its own projects and people (the smoke itself runs it once, untagged)
 const TAG = String(process.env.S26_TAG || "").replace(/[^a-z0-9]/g, "");
@@ -251,7 +251,7 @@ smoke("review · the eval mark hides nothing real: a member's marked write on a 
   // the owner gives the project a check and an open question to aim at (unmarked, real)
   const fx = await mcp(ownerKey, "preview", { project: A, items: [{ kind: "check", op: "upsert", data: { id: "AC.r26.1", title: "R26 check", refs: [] } },
     { kind: "question", op: "upsert", data: { qid: "Q-r26-1", question: "R26 which way?", status: "open", options: [{ what: "left" }, { what: "right" }] } }] });
-  await mcp(ownerKey, "file", { previewId: fx.out.previewId, items: [{ kind: "check", op: "upsert", data: { id: "AC.r26.1", title: "R26 check", refs: [] } }, { kind: "question", op: "upsert", data: { qid: "Q-r26-1", question: "R26 which way?", status: "open", options: [{ what: "left" }, { what: "right" }] } }] });
+  await mcp(ownerKey, "save_knowledge", { previewId: fx.out.previewId, items: [{ kind: "check", op: "upsert", data: { id: "AC.r26.1", title: "R26 check", refs: [] } }, { kind: "question", op: "upsert", data: { qid: "Q-r26-1", question: "R26 which way?", status: "open", options: [{ what: "left" }, { what: "right" }] } }] });
   const ledger = async () => ((await mcp(ownerKey, "read", { project: A, kind: "contribution", eval: true, limit: 100 })).out.items || []).length;
   const before = await ledger();
   const k = r.p.mA.key, refused = {};
@@ -283,14 +283,16 @@ smoke("review · the eval mark hides nothing real: a member's marked write on a 
 
 smoke("review · a clientRef names its content on every door: the same content again is a replay, other content under it is refused saying so, never 'filed' and never 'unchanged'", async () => {
   const k = r.p.mA.key, t = TAG || "x";
-  const pf = async (args) => { const pv = (await mcp(k, "preview", args)).out || {}; const f = pv.previewId ? (await mcp(k, "file", { previewId: pv.previewId, items: args.items, ...(pv.notReady ? { only: "ready" } : {}) })).out : null;
+  // pf: preview, then each part with its write tool (sprint 19), only: "ready" when something is not
+  const pf = async (args) => { const pv = (await mcp(k, "preview", args)).out || {}; const f = pv.previewId ? (await fileParts((n, a) => mcp(k, n, a), pv, args.items, pv.notReady ? { only: "ready" } : {})).out : null;
     return { v: (pv.items || []).map((i) => i.verdict + (i.refusal ? ":" + i.refusal.error : "")).join(","), f: f && (f.items || []).map((i) => i.filed && i.filed.status).join(",") }; };
   const C = (what) => ({ contribution: { lane: "leader", kind: "note", what, why: "s26 cref", touches: ["decisions"], clientRef: `r26c-${t}` } });
   const Gr = (verdict) => ({ grade: { checkId: "AC.r26.1", verdict, proof: verdict === "proven" ? "npm test -> exit 0, 3 passing" : "npm test -> exit 1, 0 passing", clientRef: `r26g-${t}` } });
   const K = (title) => ({ kind: "goal", op: "upsert", data: { id: `r26-cref-${t}`, title } });
   const out = {
     c1: await pf({ project: A, items: [C("R26 one")] }), c2: await pf({ project: A, items: [C("R26 one")] }), c3: await pf({ project: A, items: [C("R26 CHANGED")] }),
-    g1: await pf({ project: A, items: [Gr("proven")] }), g2: await pf({ project: A, items: [Gr("proven")] }), g3: await pf({ project: A, items: [Gr("refused")] }),
+    // sprint 19: a grade is never a preview's — refused naming submit_grade, nothing filed (its clientRef rule: s1-s3 below)
+    g1: await pf({ project: A, items: [Gr("proven")] }),
     k1: await pf({ project: A, items: [K("R26 goal one")], clientRef: `r26k-${t}` }), k3: await pf({ project: A, items: [K("R26 goal CHANGED")], clientRef: `r26k-${t}` }),
   };
   const sg = async (verdict) => (await mcp(k, "submit_grade", { project: A, checkId: "AC.r26.1", verdict, proof: "exit 0", clientRef: `r26s-${t}` })).out;
@@ -299,18 +301,18 @@ smoke("review · a clientRef names its content on every door: the same content a
   // W1 (sprint 5): a wrap_up answer names a question of the project — QR261 must exist, or the answer is said back unknown
   const qItems = [{ kind: "question", op: "upsert", data: { qid: "QR261", question: "R26: left or right?", status: "open", whoOwes: "owner", options: [{ what: "left" }, { what: "right" }] } }];
   const qPv = (await mcp(ownerKey, "preview", { project: A, items: qItems })).out || {};
-  await mcp(ownerKey, "file", { previewId: qPv.previewId, items: qItems });
+  await mcp(ownerKey, "save_knowledge", { previewId: qPv.previewId, items: qItems });
   const W = (answer) => ({ project: A, summary: "s26 wrap", clientRef: `r26w-${t}`, answers: [{ card: "QR261", answer }] });
   const w1 = await mcp(k, "wrap_up", W("left, because")), w3 = await mcp(k, "wrap_up", W("right, CHANGED"));
   const goal = (await mcp(ownerKey, "read", { project: A, ref: `goal/r26-cref-${t}` })).out;
-  const want = { c1: "files|filed", c2: "unchanged|unchanged", c3: "refused:client_ref_taken|left", g1: "files|filed", g2: "unchanged|unchanged", g3: "refused:client_ref_taken|left",
+  const want = { c1: "files|filed", c2: "unchanged|unchanged", c3: "refused:client_ref_taken|left", g1: "refused:wrong_tool|",
     k1: "files|filed", k3: "refused:client_ref_taken|left" };
   const bad = Object.entries(want).filter(([n, v]) => `${out[n].v}|${out[n].f}` !== v).map(([n, v]) => `${n} ${out[n].v}|${out[n].f} (want ${v})`);
   const wrapErr = JSON.stringify(w3.out || {});
   expect(!bad.length && s1.transmission && s2.transmission === s1.transmission && s3.error === "client_ref_taken" && rest.json && rest.json.error === "client_ref_taken"
     && goal.item && goal.item.title === "R26 goal one" && w1.out && w1.out.receipt && w1.out.receipt.filedAnswers === 1 && w3.out && w3.out.receipt && w3.out.receipt.filedAnswers === 0 && /QR261 \(client_ref_taken\)/.test(wrapErr),
     () => `${bad.join(" | ")} · submit_grade ${s1.transmission} / ${s2.transmission} / ${brief(s3)} · POST /grade ${rest.status} ${brief(rest.json)} · goal ${brief(goal.item && goal.item.title)} · wrap_up ${wrapErr.slice(0, 300)}`);
-  return `contribution, grade (preview/file, submit_grade, POST /grade), knowledge under a batch clientRef, and a wrap-up's card answer: the same content replays, other content is refused client_ref_taken; the goal stays "R26 goal one"`;
+  return `contribution (preview/file_contribution), grade (submit_grade, POST /grade; a preview refuses it, wrong_tool), knowledge under a batch clientRef, and a wrap-up's card answer: the same content replays, other content is refused client_ref_taken; the goal stays "R26 goal one"`;
 });
 
 smoke("review · the OAuth consent names where the code goes (the redirect's host, the whole address on hover) and what is asked; a client's name is what it calls itself; a registration with a redirect that is not https (or this computer) is refused", async () => {

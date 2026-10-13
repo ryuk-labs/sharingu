@@ -1,13 +1,13 @@
 // starthere.js — the newcomer's FIRST read (W4, B7b, Q60CCC574: day-1 is ONE MCP URL and a sign-in, about five minutes).
 // `initialize` names `start-here.md` as the guide; this makes that doc real on EVERY project: `read` {ref:
-// "doc/start-here.md"} serves the project's own start-here.md (a doc filed through preview then file) when it has one, else
+// "doc/start-here.md"} serves the project's own start-here.md (a doc filed through preview then save_knowledge) when it has one, else
 // this built-in text, and the Library lists it first either way. PURE — the org's name, the engine's name and the owner's name are passed
 // in from the seam (src/tenant.js), never typed here (check-brand.py). It names only tools the door carries; a
 // human verb (land · deploy · publish · consent · reopen) has no tool, and this text never pretends otherwise.
 import { TEMPO_WORDS } from "./tempo.js";
 import { orgNoteDefault, PROJECT_RULE } from "./core.js";
 
-export const START_HERE_TOOLS = ["whoami", "updates", "missing", "formats", "preview", "file", "ask", "wrap_up", "open_items", "read", "goals"];
+export const START_HERE_TOOLS = ["whoami", "updates", "missing", "formats", "preview", "file_contribution", "save_knowledge", "remove_knowledge", "ask", "wrap_up", "open_items", "read", "goals"];
 
 // what each tempo word means, keyed by the word (TEMPO_WORDS is the one list; a word without a line here fails the selftest)
 const TEMPO_MEANS = {
@@ -40,12 +40,14 @@ no clone, no install, no repo. Five calls make you a working member.
 3. \`missing\` with \`project\` — what your project still needs, and for each item the exact call that fills it (most are
    \`preview\` items: the aim, goals, questions, checks, the map, docs). \`formats\` shows how every item is shaped.
 4. Contribute one thing. Preview it first: \`preview\` shows what will be filed, where it will show, how it is graded and
-   what it reaches, and files nothing (with \`fileOnConfirm: true\`, a client that supports confirmation asks the person
-   and files on yes); show the person its \`text\` as it is. Then \`file\` with the same items files it.
+   what it reaches, and which write tool files each item (\`filesWith\`); it files nothing. Show the person its \`text\` as
+   it is. Then the write tool files it, with the previewId and its items as previewed: \`file_contribution\` a contribution,
+   \`save_knowledge\` a knowledge upsert (the aim, a goal, a question, a check, the map, a doc), \`remove_knowledge\` a
+   knowledge remove (with \`fileOnConfirm: true\`, a client that supports confirmation asks the person and files on yes).
    The simplest is a plain note — what and why only: no touches, proof, screens or ids needed, and anyone may file it in
    lane "leader", whatever your own lane is:
    \`preview\` with \`{"project": "<one of your projects>", "items": [{"contribution": {"lane": "leader", "kind": "note", "what": "…", "why": "…"}}]}\`,
-   then \`file\` with \`{"previewId": "<the id preview answered>", "items": [the same items]}\`.
+   then \`file_contribution\` with \`{"previewId": "<the id preview answered>", "items": [the same items]}\`.
    (\`touches\` — the note ids or areas it affects — is optional for a plain note; every other filing needs it.)
    The receipt names each item with its status and its id; the preview's \`effect\` said where it lands (files at once, or
    waits for the owner), and \`updates\` shows where it stands after, in the words below.

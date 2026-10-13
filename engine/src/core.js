@@ -87,8 +87,8 @@ export function normalizeRef(raw) {
   return { ref: s };
 }
 
-// The router's ONE insert path (ADR-062/063). Called by BOTH POST /file and the MCP
-// file tool, so the seam has a single implementation — the seam rule (ADR-063):
+// The router's ONE insert path (ADR-062/063). Called by BOTH POST /preview/file-contribution and the MCP
+// file_contribution tool (through the batch door), so the seam has a single implementation — the seam rule (ADR-063):
 // one shape, one place. Returns the response object (an {error} field means a 4xx to the caller).
 // "ba" added by owner ruling 2026-08-30: BA (requirements/flows) files through its OWN
 // envelope row — supersedes the S-018 "no BA lane" correction, which predated any BA seat.
@@ -171,15 +171,15 @@ export const parentMatches = (person, parentRow, project) => !!parentRow && (
 
 // UI-B11a D4 — the reserved kinds (Q60CCC574: a human verb has NO tool). kind "publish" and kind "equip" are written only
 // by src/broadcast.js, the seam behind a person's own press on Broadcast in a signed-in browser. Every other writer
-// (POST /file, file, the composer) is refused 422 reserved_kind and files
+// (POST /preview/file-contribution, file_contribution, the composer) is refused 422 reserved_kind and files
 // nothing. The kind compares trimmed and lowercased, exactly those two; any other kind (and no kind) files as before. The
 // seam's pass is `internal`, the FOURTH FUNCTION ARGUMENT, never a body field and never `via` (a caller sets both).
 export const isReservedKind = (kind) => RESERVED_KINDS.includes(String(kind ?? "").trim().toLowerCase());
 export function reservedKind(kind, extra) {
   const k = String(kind ?? "").trim().toLowerCase();
-  // kind knowledge is filed only by the knowledge write door (src/knowledge/write.js), one row per preview then file call
+  // kind knowledge is filed only by the knowledge write door (src/knowledge/write.js), one row per save_knowledge or remove_knowledge call
   if (k === KNOWLEDGE_KIND) return { error: "reserved_kind", kind: k, ...(extra || {}),
-    hint: "preview then file files it", note: "Knowledge is filed through preview then file (items {kind, op, data}), which files its own ledger row; nothing was filed." };
+    hint: "preview then save_knowledge files it", note: "Knowledge is filed through preview, then save_knowledge (items {kind, op: \"upsert\", data}) or remove_knowledge (items {kind, op: \"remove\", data}), each of which files its own ledger row; nothing was filed." };
   return { error: "reserved_kind", kind: k, ...(extra || {}),
     hint: "a person presses Publish or Equip on Broadcast", note: "Publishing and equipping are a person's own press on Broadcast in a signed-in browser; nothing was filed." };
 }
@@ -439,7 +439,7 @@ export async function fileTransmission(person, body, env, internal = null) {
 // batch fails, NONE of it commits.
 //
 // The race this must still cover: a concurrent OTHER writer (fileTransmission(),
-// used by every other route — POST /file, /verb, file) can
+// used by every other route — POST /preview/file-contribution, /verb, file_contribution) can
 // file into the same day between our SELECT and our batch, and grab one of the ids
 // we reserved. The batch then throws a UNIQUE error and — because batch() is
 // atomic — NOTHING in it commits, including items that never collided. That is
@@ -612,7 +612,7 @@ function chunkRows(rows) {
 }
 
 export async function fileTransmissionsBatch(person, items, env, raced = false, o = {}) {
-  // o.refsChecked: the clientRefs the caller has just read and found unfiled (src/preview.js fileItems), so the plan's replay
+  // o.refsChecked: the clientRefs the caller has just read and found unfiled (src/preview.js filePart), so the plan's replay
   // lookup skips them; a ref that lands in between is refused by migrate-069's unique index, and the retry below reads it
   const plan = await planTransmissionsBatch(person, items, env, raced ? {} : { refsChecked: o.refsChecked });
   if (plan.all) return plan.all;
@@ -629,7 +629,7 @@ export async function fileTransmissionsBatch(person, items, env, raced = false, 
   const ownerLabel = async () => ownerLabelCache || (ownerLabelCache = ownerName(await resolveOwner(env)));
   const client = requestClient();   // sprint 13, 13.1: the request's one client word, the same for every row of the call
 
-  // sprint 8, 8.3b (PLATFORM §3: `file` of 50 contributions was 160 statements, over a free account's 50 queries a call): the
+  // sprint 8, 8.3b (PLATFORM §3: a file of 50 contributions was 160 statements, over a free account's 50 queries a call): the
   // block's rows go in ONE statement per table — the filings, their events mirrors and their refs, each an INSERT … SELECT over a
   // json_each list (the idiom of src/knowledge/write.js optionStatements), cut into chunks under TX_CHUNK_BYTES — never one
   // statement per row. The rows are the same rows in the same order (each table's rowids as before): every column a filing
@@ -1510,7 +1510,7 @@ export function carriesTranscript(obj, depth = 0, allowAuthored = false) {
 }
 
 
-// knowledgeAtOf(env) -> when the request's project's knowledge last changed (its newest preview then file call's ledger row,
+// knowledgeAtOf(env) -> when the request's project's knowledge last changed (its newest preview then save_knowledge call's ledger row,
 // hotsql.js KNOWLEDGE_AT_SQL), or null (nothing filed yet, or a read at the org level): the "as of" of `updates` and the
 // heartbeat (Home reads the same inside its S1). One statement, memoized per request under "knowledge:".
 export async function knowledgeAtOf(env) {
@@ -1586,7 +1586,7 @@ export async function heartbeatFor(person, env, opts = {}) {
               "`elsewhere` counts what moved in other lanes (not shown here).",
         you: { person: person.name, role: person.role, lane: person.lane || "all" },
         sinceYouWereLast: since === "1970-01-01T00:00:00.000Z" ? null : since,
-        // when the project's knowledge last changed (its newest preview then file), null when nothing is filed
+        // when the project's knowledge last changed (its newest preview then save_knowledge), null when nothing is filed
         knowledgeAt,
         inYourLane: mine.slice(0, 12).map(summarise),
         elsewhere: all ? 0 : landed.length - mine.length,
@@ -1833,7 +1833,7 @@ export async function stateSummaryFor(person, env) {
     activeProject: await activeProjectOf(person, seats, env),   // D4: a live stamp only
     yourProjects: seats.slice(0, 8).map((seat) => ({ key: seat.key, name: seat.name || seat.key })),
     more: !project ? "This read is at the org level: name one of your projects with `project`."
-      : !aim || !aim.text ? 'This project has no aim yet: file one through preview then file, an item {kind: "aim", op: "upsert", data: {aim}}. `missing` lists everything it still needs.'
+      : !aim || !aim.text ? 'This project has no aim yet: file one through preview then save_knowledge, an item {kind: "aim", op: "upsert", data: {aim}}. `missing` lists everything it still needs.'
       : "`missing` lists what this project still needs.",
   };
 }

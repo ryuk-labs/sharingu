@@ -26,7 +26,7 @@
 
           { "id": "registry", "group": "worker", "kind": "worker", "title": "The registry", "sub": "every kind and shape: format, example, place", "about": "One declaration of what each kind of knowledge and each contribution shape carries, where it shows and how it is checked. The door's checks, the formats read and the contract all read it.", "service": "cloudflare-workers" },
           { "id": "preview", "group": "worker", "kind": "worker", "title": "Preview", "sub": "plans every item, writes nothing", "about": "Runs every item through the same checks the real write runs and answers where it will show and how it will be graded. Its one write is its own row.", "service": "cloudflare-workers" },
-          { "id": "file", "group": "worker", "kind": "worker", "title": "File", "sub": "files exactly what was previewed", "about": "Takes the preview's id and the same items, and files them through the existing write doors in one batch.", "service": "cloudflare-workers" },
+          { "id": "file", "group": "worker", "kind": "worker", "title": "The write tools", "sub": "file each previewed part", "about": "file_contribution, save_knowledge and remove_knowledge each take the preview's id and the same items of their part, and file them through the existing write doors (sprint 19: each write its own tool).", "service": "cloudflare-workers" },
           { "id": "grade", "group": "worker", "kind": "worker", "title": "The grade at the door", "sub": "filed, with the owner, or one more thing", "about": "Every contribution is graded as it arrives and routed: filed at once, waiting in the owner's queue, or sent back naming what is missing. A check's grade counts only with its proof.", "service": "cloudflare-workers" },
           { "id": "sanitiser", "group": "worker", "kind": "worker", "title": "The sanitiser", "sub": "strips what in a screen could run", "about": "A screen's html and css are re-emitted from their own tokens with anything that could run or reach the network taken out, then shown only in a sandbox.", "service": "cloudflare-workers" },
           { "id": "reads", "group": "worker", "kind": "worker", "title": "Live reads", "sub": "one statement per screen region", "about": "Every page and every MCP read asks D1 at request time, through one bounded statement per region of a screen.", "service": "cloudflare-workers" },
@@ -48,7 +48,7 @@
           { "from": "browser", "to": "app", "label": "pages, with a session cookie", "main": true },
           { "from": "browser", "to": "rest", "label": "a person's buttons: answer, rule, equip" },
           { "from": "mcp", "to": "preview", "label": "preview: the items, nothing written", "main": true },
-          { "from": "mcp", "to": "file", "label": "file: the preview's id, the same items", "main": true },
+          { "from": "mcp", "to": "file", "label": "a write tool: the preview's id, the same items of its part", "main": true },
           { "from": "mcp", "to": "registry", "label": "every write, checked against its kind", "main": true },
           { "from": "mcp", "to": "grade", "label": "a check's grade and its proof" },
           { "from": "rest", "to": "registry", "label": "the same checks as the MCP" },
@@ -75,7 +75,7 @@
           { "name": "A contribution is filed", "steps": [
             { "from": "claude-code", "to": "mcp", "says": "Claude calls the MCP door with what it found" },
             { "from": "mcp", "to": "preview", "says": "Preview plans every item and writes nothing to the project" },
-            { "from": "preview", "to": "file", "says": "The person agrees: file takes the preview's id" },
+            { "from": "preview", "to": "file", "says": "The person agrees: each part's write tool takes the preview's id" },
             { "from": "file", "to": "grade", "says": "The door checks the format and grades it" },
             { "from": "grade", "to": "ledger", "says": "One write to D1: the filing and its route" },
             { "from": "ledger", "to": "reads", "says": "Every screen reads it live" },

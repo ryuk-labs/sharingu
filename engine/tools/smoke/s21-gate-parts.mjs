@@ -18,7 +18,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { smoke, expect, brief, http, mcp, html, ownerKey, control, BASE, kread } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, html, ownerKey, control, BASE, kread, fileParts } from "./lib.mjs";
 
 const TAG = String(process.env.S21_TAG || "").replace(/[^a-z0-9]/g, "");
 const P = "s21" + TAG, EP = "s21-eval" + TAG;
@@ -33,7 +33,7 @@ const invite = async (name, email, role, projects, extra = []) => {
 const fileVia = async (key, items, project = P, extra = {}) => {
   const pv = await mcp(key, "preview", { project, items, ...extra });
   expect(!pv.isError && pv.out.previewId, () => `preview: ${brief(pv.out)}`);
-  const f = await mcp(key, "file", { previewId: pv.out.previewId, items, only: "ready" });
+  const f = await fileParts((n, a) => mcp(key, n, a), pv.out, items, { only: "ready" });   // sprint 19: each part with its write tool
   expect(!f.isError && f.out.complete === true, () => `file: ${brief(f.out)}`);
   return f.out;
 };

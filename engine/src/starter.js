@@ -7,8 +7,8 @@
 //
 // What Equip writes (src/broadcast.js equipItem, the one door, a person's press in a signed-in browser):
 //   1. the project's COPY: the item's body as the doc starter/<slug>.md, through the knowledge write door (one
-//      preview then file-shaped batch: the k_docs row and its ONE ledger row, kind knowledge). `read` lists it and `read`
-//      reads it, so every AI client connected to the project finds it; anyone seated edits it with preview then file (kind
+//      save_knowledge-shaped batch: the k_docs row and its ONE ledger row, kind knowledge). `read` lists it and `read`
+//      reads it, so every AI client connected to the project finds it; anyone seated edits it with preview then save_knowledge (kind
 //      "doc", that path), attributed and kept by the project's versions like any doc.
 //   2. ONE filing, kind equip (the reserved kind), lane leader, project the target, parent none (a starter item has no
 //      publish row), gapRefs ["preset/<slug>"], touches the item's kind, proof "preset:<slug>@v<version>": the press,

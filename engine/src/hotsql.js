@@ -124,7 +124,7 @@ export const HOME_NOT_APPROVE = "('answer','round','counter','critique','grant')
 export const SHIPPED_NOT_KIND = "('counter','critique','rank','restore','item','publish','equip','knowledge','answer','round','grant','grade')";
 // the same list as one string, matched with instr(): a NOT IN list is read as a table, one row per filing it tests
 const SHIPPED_NOT_KIND_CSV = "," + SHIPPED_NOT_KIND.replace(/[()' ]/g, "") + ",";
-// the project's newest knowledge write (preview then file files one kind knowledge row per call): "as of" on Home, `updates` and
+// the project's newest knowledge write (preview then save_knowledge files one kind knowledge row per call): "as of" on Home, `updates` and
 // the heartbeat (core.js knowledgeAtOf). EXACT and ONE row read on migrate-041's partial index idx_transmission_knowledge
 // (project, created_at) WHERE kind = 'knowledge' — the literal 'knowledge' is load-bearing (a bound kind cannot use a partial
 // index), so a busy ledger never hides the last write. Newest first with LIMIT 1 rather than MAX: before the index exists
@@ -272,7 +272,7 @@ export const HOME_GOALS_MOVED_SQL = (scoped, includeEval) =>
   "SELECT t.project, t.goal_ref, t.submitter, t.lane, COUNT(*) AS n FROM transmission t " +
   "WHERE " + projWhere("t.project", scoped) + " AND t.created_at >= ? AND COALESCE(t.happened_at, t.created_at) >= ? AND (t.route = 'auto' OR t.decision = 'approve') AND t.goal_ref IS NOT NULL" + txEval("t.eval", includeEval) + " " +
   "GROUP BY t.goal_ref, t.submitter, t.lane) x JOIN people p ON p.id = x.submitter LEFT JOIN k_goals g ON g.project = x.project AND g.id = x.goal_ref";
-// the ledger rows that RECORD a write rather than carry work (sprint 3, B3): a preview then file call's row (kind knowledge) and a
+// the ledger rows that RECORD a write rather than carry work (sprint 3, B3): a preview then save_knowledge call's row (kind knowledge) and a
 // grade filed with proof (kind grade), both routed auto. They leave Home's open and in-motion counts (migrate-050 keeps them
 // out of transmission_open) and Build's default list and counts (Build keeps a filter for each kind).
 export const RECORD_KINDS = ["knowledge", "grade"];
@@ -470,7 +470,7 @@ export const WEEK_SQL = (scoped, includeEval) => {
 export const NOT_EVAL_PROBE = "(what IS NULL OR (what NOT LIKE '%eval probe%' AND what NOT LIKE '%[eval%'))";
 // the kinds that never move a goal: a counter or a critique disputes, a rank orders, a restore restores (Q48115AD1); an
 // item is a draft for the Broadcast shelf and a publish or an equip a person's press on it (UI-B11a); a knowledge row
-// records a preview then file call (it changes the tree, it does not feed it)
+// records a preview then save_knowledge call (it changes the tree, it does not feed it)
 export const GOALS_NOT_KIND = "('counter','critique','rank','restore','item','publish','equip','knowledge')";
 // G1 — the landed predicate computeGoals always used (route auto, or decided approve; R's own mind/* out; suite rows and
 // the "[eval probe]" text out unless ?eval=1), plus the kinds above, over the project's rows since the period's start.
@@ -595,7 +595,7 @@ export const BROADCAST_SQL = (includeEval) =>
 // filing names one): ONE statement on idx_transmission_project (project, created_at), walked newest first from now back to
 // the cutoff and stopped at the LIMIT. A filing with no goal_ref is the "unaligned" bucket on glass (the door's own word).
 // Left out: the kinds that are a press or a dispute, never work toward a goal (LIVE_NOT_KIND: counter, critique, rank,
-// restore, item, publish, equip; knowledge stays: a preview then file call IS a person's contribution), R's own namespace
+// restore, item, publish, equip; knowledge stays: a save_knowledge or remove_knowledge call IS a person's contribution), R's own namespace
 // (notMind) and the suites' rows unless ?eval=1. The eval term is written +t.eval so the planner never trades the project
 // range for idx_transmission_eval_created (every non-suite filing of the org, newest first). `profile` is the people
 // column list (", p.avatar"; "" on a database before migrate-044: core.js withProfile). Sprint 3 (happenedAt, migrate-051): the

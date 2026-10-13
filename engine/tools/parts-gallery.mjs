@@ -388,7 +388,7 @@ ${stack(
 
 function contribution() {
   const changed = lines([
-    ["door", "POST /mcp file", "written"], ["table", "transmission", "written"], ["screen", "Build", "a screen it names"], ["check", "C-door-findings-pass", "named in what it touches", true], ["component", "the filter row", "a component it names"],
+    ["door", "POST /mcp file_contribution", "written"], ["table", "transmission", "written"], ["screen", "Build", "a screen it names"], ["check", "C-door-findings-pass", "named in what it touches", true], ["component", "the filter row", "a component it names"],
   ].map(([k, n, how, isNew]) => line({ lead: chip(k), title: n, sub: how, meta: isNew ? chip("New", { tone: "quiet" }) : "" })), { lead: 84 });
   const reach = lines([["screen", "Home"], ["screen", "Decisions"], ["door", "GET /build"], ["table", "k_goals"]].map(([k, n]) => line({ lead: chip(k), title: n })), { lead: 84 });
   const redo = lines([

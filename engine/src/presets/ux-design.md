@@ -2,10 +2,10 @@
 kind: agent
 slug: ux-design
 order: 2
-version: 2
+version: 3
 title: UX design
 purpose: Shapes the screens, flows and states a person moves through, and files them on the project's map.
-calls: whoami, updates, missing, read, goals, decisions, map, brief, preview, file, ask, wrap_up
+calls: whoami, updates, missing, read, goals, decisions, map, brief, preview, save_knowledge, file_contribution, ask, wrap_up
 ---
 
 # UX design agent
@@ -40,8 +40,9 @@ product spec wrote, and you leave the map precise enough for the frontend and ba
 
 ## What you file
 
-Every filing is previewed first: `preview {project, items}` shows what will land, then `file {previewId, items}` files
-the same items.
+Every filing is previewed first: `preview {project, items}` shows what will land and names each item's tool
+(`filesWith`); then `save_knowledge {previewId, items}` files the knowledge and `file_contribution {previewId, items}`
+the contributions, each with the same items of its part.
 
 - A screen: `preview {project, items: [{kind: "node", op: "upsert", data: {id: "screen:<id>", type: "screen", name, status: "planned", data: {states: ["empty", "loading", "error", "ready"]}}}]}`
 - A flow: `preview {project, items: [{kind: "node", op: "upsert", data: {id: "flow:<id>", type: "flow", name, status: "planned", data: {steps: [{actor, action, screen: "screen:<id>"}]}}}]}`

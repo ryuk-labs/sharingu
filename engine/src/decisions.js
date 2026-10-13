@@ -4,7 +4,7 @@
 // `respond`) call the SAME functions here, so a guarantee cannot hold on one door only.
 //
 // What it reads (and nothing else):
-//   · the project's questions in D1 (k_questions + k_options, filed with preview then file): src/knowledge/decisions.js
+//   · the project's questions in D1 (k_questions + k_options, filed with preview then save_knowledge): src/knowledge/decisions.js
 //     projectDecisionRows -> src/knowledge/decisions.js decisionRows, one statement — severity, area, why, options, blocks,
 //     whoOwes, implStatus, supersededBy and the ruling (status, choice, label, rationale, decidedAt);
 //   · ONE D1 statement, the live overlay (src/hotsql.js DECISIONS_LIVE_SQL / QUESTION_LIVE_SQL), the project's own: the
@@ -190,7 +190,7 @@ const matches = (r, f) => (!f.status
   && (!f.area || String(r.area || "").toLowerCase() === f.area);
 
 // readDecisions(env, reader, q, opts) -> the Decisions read, the request's project's questions (src/knowledge/decisions.js
-// projectDecisionRows). No question filed yet is EMPTY (empty: "no_questions", its sentence names preview then file); a failed
+// projectDecisionRows). No question filed yet is EMPTY (empty: "no_questions", its sentence names preview then save_knowledge); a failed
 // rows read is ERROR (error: "unreadable"); a failed live read keeps the rows and says so (live: "unreachable" ->
 // UNREACHABLE, writes refused before the press); a D1 quota error propagates to the honest outage page.
 // opts.open: the open questions only (the owner's badge reads the same memoized statement), for a face that shows only

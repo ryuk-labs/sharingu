@@ -2,10 +2,10 @@
 kind: skill
 slug: fill-the-product-side
 order: 17
-version: 1
+version: 2
 title: Fill the product side
 purpose: Read the code, docs, tickets and designs and file the product picture: goals, the Map's layers, decisions and docs.
-calls: missing, map, goals, decisions, read, formats, preview, file, changes, impact
+calls: missing, map, goals, decisions, read, formats, preview, save_knowledge, remove_knowledge, changes, impact
 ---
 
 # Fill the product side
@@ -86,8 +86,8 @@ architecture go deeper on one layer each; this one fills every layer once, then 
 9. **Preview each batch.** `preview {project: "<key>", items: [...], leftOut: [{what, why}]}`. Show the person the
    answer's `text` as it is. Read each item's verdict: files at once, or waits for the owner; needs one more thing names
    the field to fix (fix it and preview again); refused is left out.
-10. **File, once the person says so.** `file {previewId: "<id>", items: [...the same items...]}`. Then the next batch,
-    from step 6.
+10. **File, once the person says so.** `save_knowledge {previewId: "<id>", items: [...the same items...]}`. Then the
+    next batch, from step 6.
 11. **Read `missing` again.** The meter moves on the very next read. Repeat until every area the project has is filled.
 
 ## Keep it current
@@ -100,7 +100,8 @@ architecture go deeper on one layer each; this one fills every layer once, then 
 3. **Ask what a change reaches before you file it.** `impact {refs: ["screen:<id>", "door:<METHOD>:<path>"]}` names what
    it touches, what that reaches and the graded checks it puts in question.
 4. **Shape only what changed.** An upsert replaces an item's data whole: carry over every field you do not change. A
-   screen or a door the code no longer has takes `status: "retired"`; remove an item only when it was filed by mistake.
+   screen or a door the code no longer has takes `status: "retired"`; remove an item (`{kind, op: "remove", data}`,
+   filed by `remove_knowledge {previewId, items}`) only when it was filed by mistake.
 5. **Preview, then file**, as in steps 9 and 10.
 
 ## Know
