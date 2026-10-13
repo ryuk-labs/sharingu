@@ -1,6 +1,6 @@
 {
   "name": "sharingu",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Your tools. One company brain. A universal harness connecting contributions, decisions and goals through MCP, with humans in charge.",
   "author": {
     "name": "Ryuk Labs",
@@ -100,7 +100,8 @@
               "expected_behavior": "Refused with owner_only; no project is made (the admin's Control page lists only the two projects)."
             }
           ]
-        }
+        },
+        "demo_recording_url": "https://www.sharingu.xyz/docs.html#walkthrough"
       },
       "publication": {
         "release_notes": "First public release of sharingu for ChatGPT. One MCP server (https://agent.sharingu.xyz/mcp, OAuth with dynamic client registration) and 19 skills. Read a project's goals, decisions, open questions, docs and map; preview every write before it lands and file it only on confirmation; questions go to the person who owns the decision. Each contribution records which AI tool filed it, as the tool names itself. Hosted beta: an account comes with a one-time sign-up code from the operator."

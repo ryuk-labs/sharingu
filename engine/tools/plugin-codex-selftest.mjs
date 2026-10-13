@@ -112,7 +112,10 @@ const sizes = [...assets].map(([p, b]) => `${p} ${T.pngSize(b).w}x${T.pngSize(b)
 ok([...assets.values()].every((b) => T.pngSize(b) && T.pngSize(b).w === T.pngSize(b).h && b.length < T.MAX_ASSET_BYTES), `the images square PNGs under 256 KiB: ${sizes.join(" · ")}`);
 const text = real.text;
 ok(!/test_credentials|reviewer_instructions|clientSecret|"headers"|"hooks"|"apps"/.test(text), "no forbidden key in the manifest");
-ok(!("demo_recording_url" in review), "no demo_recording_url (the owner's to add, as codex-listing.json's demoRecordingURL)");
+// the walkthrough is the docs page's own section (the owner's ruling, 2026-10-13): one fixed URL, its videos added there
+const demoWant = JSON.parse(readFileSync(T.CODEX_SOURCES.listing, "utf8")).demoRecordingURL;
+ok(review.demo_recording_url === demoWant && /^https:\/\/www\.sharingu\.xyz\/docs\.html#walkthrough$/.test(review.demo_recording_url || ""),
+  `demo_recording_url ${review.demo_recording_url}: codex-listing.json's demoRecordingURL, the docs page's #walkthrough`);
 ok(m.skills === "./skills/" && m.mcpServers === "./.mcp.json" && i.logo === "./assets/logo.png" && i.composerIcon === "./assets/composer-icon.png", "the paths start ./ and name files the plugin holds");
 
 console.log("X3 · each limit, one past it, is red");
