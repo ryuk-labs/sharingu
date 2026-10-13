@@ -13,7 +13,7 @@
 //   ----------------------------------------------------------------------
 //    reaches  1 screen, 1 flow, 2 doors, 1 goal; 5 graded checks in question
 //    open     <url>
-//    file     file {previewId: "<id>"} with the same items
+//    file     file_contribution {previewId: "<id>"} with items 1 and 2, as previewed
 export const WIDTH = 72;
 export const GROUP_AT = 12;          // more items than this: the plain ones are grouped by (kind, verdict, effect)
 export const MUST_LIST_MAX = 40;     // must-show items listed one by one, each with its reason; past it, "and N more on the page"
@@ -193,8 +193,11 @@ export function previewText(a, o = {}) {
     out.push(...wrap("proof", PROOF_FORMS.replace(/^proof /, ""), 6));
   if (groupedItems) out.push(...wrap("shown", `${groupedItems} item${groupedItems === 1 ? "" : "s"} in groups above; every line is on the page${o.url ? ` (open, below)` : ""}`, 2));
   if (o.url) out.push(...wrap("open", o.url, 2));
-  if (!receipt && o.previewId) out.push(...wrap("file", `file {previewId: "${o.previewId}"} with the same items`, 2));
-  if (receipt && a && a.complete === false && o.previewId) out.push(...wrap("retry", `file {previewId: "${o.previewId}"} again: it files only what did not land`, 2));
+  // sprint 19: each part's write tool, with the items it files (the same items, as previewed)
+  const itemWords = (ns) => `item${ns.length === 1 ? "" : "s"} ${ns.length > 1 ? `${ns.slice(0, -1).join(", ")} and ${ns[ns.length - 1]}` : ns[0]}`;
+  if (!receipt && o.previewId) for (const p of Array.isArray(o.parts) ? o.parts : []) out.push(...wrap("file", `${p.tool} {previewId: "${o.previewId}"} with ${itemWords(p.items)}, as previewed`, 2));
+  if (receipt && a && a.complete === false && o.previewId && o.tool) out.push(...wrap("retry", `${o.tool} {previewId: "${o.previewId}"} again: it files only what did not land`, 2));
+  if (receipt && o.previewId) for (const p of Array.isArray(o.rest) ? o.rest : []) out.push(...wrap("next", `${p.tool} {previewId: "${o.previewId}"} with ${itemWords(p.items)}, as previewed`, 2));
   if (!receipt && a && a.readOnly) out.push(...wrap("note", "a read-only key previews; it never files. Use your full key.", 2));
   if (a && a.meterNote) out.push(...wrap("meter", a.meterNote, 2));
   // last: when the work happened (a contribution's happenedAt): the items are filed now, the record keeps both

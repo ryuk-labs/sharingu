@@ -13,7 +13,7 @@ smoke("W1: a wrap_up answers an open question by its qid — filed, shown on the
   const items = [{ kind: "question", op: "upsert", data: { qid: QID, question: "Which world is the take recorded in?",
     status: "open", whoOwes: "owner", options: [{ what: "Paper" }, { what: "Ink" }] } }];
   const pv = await mcp(ownerKey, "preview", { project: P, items });
-  const f = await mcp(ownerKey, "file", { previewId: pv.out.previewId, items });
+  const f = await mcp(ownerKey, "save_knowledge", { previewId: pv.out.previewId, items });
   expect(!f.isError && f.out.complete === true, () => `the question files: ${brief(f.out)}`);
   const w = await mcp(s.member.key, "wrap_up", { project: P, summary: "s31 session wrap",
     answers: [{ card: QID, answer: "Paper — the brand's reference world", basis: "LOOK.md" },

@@ -19,7 +19,7 @@ smoke("happenedAt: filed today through preview -> file, it reads back with both 
   const pv = (await mcp(s.member.key, "preview", { project: P, items: [item] })).out;
   const it = (pv.items || [])[0] || {};
   expect(pv.previewId && it.verdict === "files" && it.happenedAt === d3 && it.line.endsWith(`happened ${d3}`) && (pv.text || "").includes(`happened ${d3}; filed when you file`), () => `preview: ${brief(it)}\n${pv.text}`);
-  const f = (await mcp(s.member.key, "file", { previewId: pv.previewId, items: [item] })).out;
+  const f = (await mcp(s.member.key, "file_contribution", { previewId: pv.previewId, items: [item] })).out;
   const id = f.items && f.items[0] && f.items[0].filed && f.items[0].filed.id;
   expect(id && f.complete === true, () => `file: ${brief(f)}`);
   const r = (await readTx(s.member.key, id, P)).out;
@@ -46,12 +46,12 @@ smoke("happenedAt: a future date is refused at the door, naming the field; a pre
   const tomorrow = new Date(Date.now() + DAY).toISOString().slice(0, 10);
   const body = { project: P, lane: "leader", kind: "note", what: "S13 future work", why: "never filed", happenedAt: tomorrow };
   const sub = await contribute(s.member.key, body);
-  // D5: the door is preview then file: the preview needs happenedAt (tool and POST /preview), and file files nothing
+  // D5: the door is preview then file: the preview needs happenedAt (tool and POST /preview), and file_contribution files nothing
   const rest = await http("POST", "/preview", { key: s.member.key, body: { project: P, items: [{ contribution: { ...body, project: undefined, happenedAt: `${tomorrow}T09:00:00Z` } }] } });
   const it = (((sub.preview || {}).items || [])[0]) || {};
   const rn = (((rest.json || {}).items || [])[0] || {}).needs || {};
   expect(sub.isError && sub.out.error === "not_ready" && it.verdict === "needs" && it.needs && it.needs.field === "happenedAt" && /future/.test(it.needs.hint) && it.needs.example
     && rest.status === 200 && rn.field === "happenedAt", () => brief([sub.out, rest.json, it]));
   expect(!(await contributions(s.member.key, P, { eval: true })).some((x) => x.what === "S13 future work"), "a future happenedAt was filed");
-  return `the preview needs happenedAt (${it.needs.hint.slice(0, 60)}...), on the tool and POST /preview; file answers not_ready; nothing filed`;
+  return `the preview needs happenedAt (${it.needs.hint.slice(0, 60)}...), on the tool and POST /preview; file_contribution answers not_ready; nothing filed`;
 });

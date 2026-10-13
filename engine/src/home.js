@@ -13,7 +13,7 @@
 // tool and GET /home (this page, rendered in-process from the SAME call) all answer from it, so the page and the JSON
 // cannot disagree. The read is AT MOST SIX D1 statements beyond the memoized auth, in ONE parallel wave (their SQL
 // lives in src/hotsql.js, EXPLAINed by tools/d1-hot-selftest.mjs section G, and the aim's in src/knowledge/goals.js
-// AIM_SQL: the aim and its measure are D1 knowledge, filed with preview then file kind "aim"), plus the open questions
+// AIM_SQL: the aim and its measure are D1 knowledge, filed with preview then save_knowledge kind "aim"), plus the open questions
 // (readDecisions, memoized per request). S1 also carries "shipped this week" and "as of" (the project's newest knowledge
 // write). The org's name is its org row (src/tenant.js, one primary-key read). The decide rows are the open questions the ONE
 // owedBy says are yours, so the Needs-you decide count equals the Decisions "Open: yours" count by construction.

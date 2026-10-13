@@ -13,7 +13,7 @@
 #   · the residue audit over the target's ledger (tools/residue-audit.sh): a polluted ledger never reads green.
 # Page text, brand words and per-screen regions are tools/smoke.sh's (the look cases) — nothing here pins them.
 # THE ORG (the local default) starts the way the smoke starts (tools/lib.sh suite_local_up): a fresh local org, its
-# fixtures (tools/suites/fixtures/) filed through preview then file. --live: tools/cf-budget.sh first, then the hosted
+# fixtures (tools/suites/fixtures/) filed through preview then each part's write tool. --live: tools/cf-budget.sh first, then the hosted
 # ryuklabs worker (no fixture is filed there).
 #   sh tools/verify-live.sh            # a local org
 #   sh tools/verify-live.sh --live     # the hosted worker (budget-guarded)
@@ -184,7 +184,8 @@ except Exception: print('')" 2>/dev/null)
 try: i=json.load(sys.stdin).get('items') or []; print(i[0]['id'] if i else '')
 except Exception: print('')" 2>/dev/null)
   # the seats live in the suites' own org (sprint 6, 6.6): a fresh one holds no contribution, so the legs file their own,
-  # eval-marked, through the door (preview -> file) rather than borrowing any org's real row
+  # eval-marked, through the door (preview -> each part's write tool: a note is file_contribution's) rather than borrowing any
+  # org's real row (the preview carries the mark; its write tool files it so)
   if [ -n "$LP" ] && [ -z "$LID" ]; then
     LID=$(RL="$RL" LP="$LP" UA="$UA" KEY="$RLOWNERKEY" python3 -c "
 import json,os,urllib.request
@@ -195,9 +196,12 @@ def mcp(name,args):
 items=[{'contribution':{'lane':'leader','kind':'note','what':'verify-live: the live legs aim at this note','why':'the suites org holds no contribution of its own yet'}}]
 try:
     pv=mcp('preview',{'project':os.environ['LP'],'items':items,'eval':True})
-    f=mcp('file',{'project':os.environ['LP'],'previewId':pv['previewId'],'items':items,'eval':True})
-    it=(f.get('items') or [{}])[0].get('filed') or {}
-    print(it.get('id') or ((f.get('results') or [{}])[0].get('id')) or '')
+    ids=[]
+    for p in pv.get('parts') or []:
+        f=mcp(p['tool'],{'previewId':pv['previewId'],'items':[items[n-1] for n in p['items']]})
+        it=(f.get('items') or [{}])[0].get('filed') or {}
+        ids.append(it.get('id') or ((f.get('results') or [{}])[0].get('id')) or '')
+    print(next((i for i in ids if i), ''))
 except Exception: print('')" 2>/dev/null)
   fi
   if [ -n "$LP" ] && [ -n "$LID" ]; then

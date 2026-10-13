@@ -373,7 +373,7 @@ export const KINDS = {
   },
   check: {
     table: "k_checks", noun: ["check", "checks"], search: ["id", "title"],
-    line: "what done looks like (given, when, then), naming the nodes, goals or questions it grades; a grade item ({grade: {checkId, verdict, proof}}, through preview then file) grades it",
+    line: "what done looks like (given, when, then), naming the nodes, goals or questions it grades; a grade (submit_grade {checkId, verdict, proof}, filed at once) grades it",
     shows: [at("map", "/map?node={refs}", "inspector", "under every node it names, with its latest grade; the node lights from it"),
       at("goals", "/goals", "goal-tree", "the passed, failed and ungraded counts of every goal it names")],
     example: { op: { kind: "check", op: "upsert", data: { id: "AC.pricing.01", title: "The pricing page shows the annual plan", given: "a visitor on the pricing page", when: "they pick annual", then: "the annual price shows", refs: ["screen:pricing"] } } },
@@ -381,7 +381,7 @@ export const KINDS = {
     checklist: [
       item("checks-screens", "proof", "Does every screen have a check that says what done looks like?", "a check naming the screen in its refs", "/map?node={refs}", "every screen node"),
       item("checks-doors", "proof", "Does every door have a check?", "a check naming the door in its refs", "/map?node={refs}", "every door node"),
-      item("grades", "proof", "Is every check graded, with proof?", "a grade with proof (a command and what it printed, a link, or an artifact) on each check, filed through preview then file", "/goals", "every check"),
+      item("grades", "proof", "Is every check graded, with proof?", "a grade with proof (a command and what it printed, a link, or an artifact) on each check, filed through submit_grade", "/goals", "every check"),
     ],
     cols: [
       col("id", "text", { key: true, re: ID, hint: 'an id without spaces, e.g. "AC.landing.01"' }),

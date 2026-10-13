@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // engine/tools/import-brain.mjs — the one-time importer (ARCHITECTURE §8/§9, sprint 1 slice 5): reads a git brain and
 // files its knowledge into a project through the MCP door as any client does: each batch of <= 200 items is previewed
-// (`preview`) and then filed (`file`) with the same items.
+// (`preview`) and then each part the preview answers is filed with its write tool (save_knowledge the upserts, remove_knowledge
+// the removes; import/door.mjs fileOps) with the same items.
 //
 //   node tools/import-brain.mjs <brain-dir | -> --project <key> [--layout kit|bank|pack|board|code] [--board <dir>] [--renders <file|dir>]
 //        [--url <worker-url>] [--dry-run] [--out <ops.json>] [--only <kind,kind>] [--max-ops <n>] [--max-bytes <n>] [--max-batches <n>]
@@ -52,7 +53,7 @@ import { readSource, LAYOUTS, NO_SOURCE } from "./import/read.mjs";
 import { buildImport } from "./import/build.mjs";
 import { toBatches, KIND_ORDER } from "./import/batch.mjs";
 import { validateAll, MAX_OPS } from "./import/validate.mjs";
-import { mcpClient, countStored, brief, pageOf, readPage, fileOps } from "./import/door.mjs";
+import { mcpClient, countStored, brief, pageOf, readPage, fileOps, writeToolsOf } from "./import/door.mjs";
 import { readOverlay, applyOverlays } from "./import/overlay.mjs";
 import { tidyOps } from "./import/tidy.mjs";
 import { scanOps } from "./audit/text-rules.mjs";
@@ -255,7 +256,8 @@ const client = mcpClient(url, key);
 const list = await client.rpc("tools/list", {});
 if (list.error) { console.error(`  the door refused tools/list: ${list.error}`); process.exit(1); }
 const names = new Set(((list.result && list.result.tools) || []).map((t) => t.name));
-for (const t of ["preview", "file", "read"]) if (!names.has(t)) { console.error(`  the door offers no ${t} to this key (${names.size} tools listed)`); process.exit(1); }
+// the write tools this run's items need (import/door.mjs writeToolsOf: an upsert save_knowledge's, a remove remove_knowledge's)
+for (const t of ["preview", "read", ...writeToolsOf(batches.flatMap((b) => b.ops))]) if (!names.has(t)) { console.error(`  the door offers no ${t} to this key (${names.size} tools listed)`); process.exit(1); }
 // a project with no source may be new to the org: the door answers the owner's read of a project it does not hold (or holds
 // archived) with project_forbidden, and then the project is created with --name, as the admin's agent creates one
 if (noSource) {

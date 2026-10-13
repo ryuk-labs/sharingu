@@ -350,7 +350,7 @@ const noHumanVerbTool = (text) => ![...String(text).matchAll(/`([a-z_]+)`/g)].so
 
   const t = startHereText({ org: "O", engine: "E", owner: "Olive" });
   ok(noHumanVerbTool(t), "the start-here text names no human-verb tool");
-  for (const tool of ["whoami", "updates", "missing", "preview", "file", "ask", "wrap_up"]) ok(t.includes("`" + tool + "`"), `start-here names \`${tool}\``);
+  for (const tool of ["whoami", "updates", "missing", "preview", "file_contribution", "save_knowledge", "remove_knowledge", "ask", "wrap_up"]) ok(t.includes("`" + tool + "`"), `start-here names \`${tool}\``);
   ok(START_HERE_TOOLS.every((x) => t.includes("`" + x + "`")), "every START_HERE_TOOLS entry appears");
   ok(TEMPO_WORDS.every((w) => t.includes(w === "with" ? "with Olive" : `**${w}**`)) && !/ — \n/.test(t), "every tempo word is explained (with the owner's name)");
   ok(!/Agent R|SIRU|siru|Ryuklabs|ryuklabs/.test(startHereText({})) && startHereText({}).includes("this org"), "no org or engine name of its own (the seam supplies them)");

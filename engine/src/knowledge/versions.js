@@ -218,7 +218,7 @@ export function versionOne(env, project, n) {
 
 // ---- the writes ----
 // versionProjectOf(person, a, env) -> { project } | a refusal: the owner's project for a version call — named (any active
-// project), else the one the door's own rule stamps (core.js doorProject, as preview then file resolves it)
+// project), else the one the door's own rule stamps (core.js doorProject, as preview then save_knowledge resolves it)
 async function versionProjectOf(person, a, env) {
   const seats = await seatsOnce(env, person.id);
   const d = await doorProject(person, { project: a.project }, seats, env);

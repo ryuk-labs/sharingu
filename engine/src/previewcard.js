@@ -17,9 +17,10 @@
 //     not model context); else the bridge asks the host to read brain://card/<previewId> (the same fragment, read from the
 //     preview's row as the page reads it); else it shows the result's own text block. Theme: the host's (light → Paper,
 //     dark → Ink), else the system's.
-//   · File: a press is an ordinary tools/call of `file` with the preview's id and the SAME items the host handed the view
-//     (ui/notifications/tool-input), through the host, which shows its own consent; publish and equip previews call their
-//     own tool with confirm: true (their `next`). The door's checks are unchanged: the card adds no authority.
+//   · File: a press is ordinary tools/calls, one per part of the preview (sprint 19: file_contribution, save_knowledge,
+//     remove_knowledge, each with the preview's id and ITS items, picked by their numbers from the SAME items the host handed the
+//     view: ui/notifications/tool-input), in turn, through the host, which shows its own consent; publish and equip previews call
+//     their own tool with confirm: true (their `next`). The door's checks are unchanged: the card adds no authority.
 import { esc, statusChip } from "./ui.js";
 import { card, tile, tileRow, chip, group, line, lines, lineDetail, empty, stack } from "./parts.js";
 import { PARTS_CSS } from "./parts.js";
@@ -35,7 +36,7 @@ export const CARD_MIME = "text/html;profile=mcp-app";
 export const CARD_META_KEY = "sharingu/card";
 export const CARD_FRAGMENT_PREFIX = "brain://card/";
 // the tools whose result the card draws (tools/list carries _meta.ui.resourceUri on each)
-export const CARD_TOOLS = ["preview", "file", "publish", "equip"];
+export const CARD_TOOLS = ["preview", "file_contribution", "save_knowledge", "remove_knowledge", "publish", "equip"];
 // the template's own CSP, repeated in the document (the host's default is the same or stricter); font-src data: alone lets the
 // card's inlined faces load (sprint 12, 12.6) and nothing from the network
 // copy: off-screen (a meta tag's content, never on the screen)
@@ -199,15 +200,15 @@ a.pv-place:hover{color:var(--text);text-decoration:underline;text-decoration-col
 
 // ---- the card ----
 const isObj = (x) => x !== null && typeof x === "object" && !Array.isArray(x);
-// cardViewOf(answer) -> the view summaryParts draws, from the tool's own answer: a preview (preview), a receipt (file), or
-// null for anything else (a refusal, an answer of another tool)
+// cardViewOf(answer) -> the view summaryParts draws, from the tool's own answer: a preview (preview), a receipt (a write tool's),
+// or null for anything else (a refusal, an answer of another tool)
 export function cardViewOf(a) {
   if (!isObj(a) || a.error || !Array.isArray(a.items)) return null;
   const receipt = "complete" in a && !!a.results;
   const countsOf = (items) => { const byVerdict = {}; for (const it of items) byVerdict[it.verdict] = (byVerdict[it.verdict] || 0) + 1; return { byVerdict }; };
   return { id: a.previewId || "", project: a.project || "", author: true, state: receipt ? (a.complete ? "filed" : "partial") : "open", items: a.items, groups: a.groups || null,
     counts: receipt ? countsOf(a.items) : a.counts || countsOf(a.items), reach: a.reach || null, leftOut: a.leftOut || [], note: a.note || "", hidden: 0,
-    fileCounts: receipt ? a.counts || {} : {}, ready: Number(a.ready) || 0, notReady: Number(a.notReady) || 0, url: a.url || "" };
+    fileCounts: receipt ? a.counts || {} : {}, ready: Number(a.ready) || 0, notReady: Number(a.notReady) || 0, url: a.url || "", parts: receipt ? [] : Array.isArray(a.parts) ? a.parts : [] };
 }
 const STATE_WORD = { open: "Not filed yet", partial: "Filed in part", filed: "Filed", expired: "Expired", empty: "Not filed yet" };
 
@@ -224,9 +225,11 @@ export function cardFragment(a, o = {}) {
   const parts = summaryParts(v, { origin, card: true });
   const page = v.id ? withProject(orgPath(`/preview/${encodeURIComponent(v.id)}`), "") : "";
   const open = page ? `<a class="u-btn small ghost" href="${esc(hrefOf({ origin }, page))}" data-open data-button="open-preview">Open in the app</a>` : "";
-  // the File press is the author's (file reads a preview for its author only): a reader of the project sees no button
-  const canFile = parts.state === "open" && !!v.id && v.author !== false && !(v.notReady > 0) && v.ready > 0;
-  const fileBtn = canFile && o.tool !== "page" ? `<button class="u-btn small primary" type="button" data-file data-tool="file" data-preview-id="${esc(v.id)}" hidden>File</button>` : "";
+  // the File press is the author's (a write tool reads a preview for its author only): a reader of the project sees no button.
+  // It files each part not filed yet with its own tool (data-parts: each tool and its items' numbers)
+  const press = (Array.isArray(v.parts) ? v.parts : []).filter((p) => p && !p.filed && Array.isArray(p.items) && p.items.length).map((p) => ({ tool: p.tool, items: p.items }));
+  const canFile = parts.state === "open" && !!v.id && v.author !== false && !(v.notReady > 0) && v.ready > 0 && press.length > 0;
+  const fileBtn = canFile && o.tool !== "page" ? `<button class="u-btn small primary" type="button" data-file data-tool="parts" data-parts="${esc(JSON.stringify(press))}" data-preview-id="${esc(v.id)}" hidden>File</button>` : "";
   const notReady = parts.state === "open" && v.notReady > 0 ? chip("Not ready", { tone: "warn", count: v.notReady }) : "";
   const head = `<header class="sg-head"><span class="sg-mark">sharingu</span><span class="sg-title" data-region="state">${esc(STATE_WORD[parts.state] || "Preview")}</span><span class="sg-proj">${txt(v.projectName || projectSlug(v.project || ""))}</span><span class="sg-act">${notReady}${open}${fileBtn}</span></header>`;
   const body = `<div class="sg-body" data-screen="card" data-state="${esc(parts.state)}" data-preview="${esc(v.id || "")}">${head}${stack(parts.glance, parts.items, parts.left, v.reach ? parts.reach : "")}<p class="sg-done" data-region="file-result" hidden></p></div>`;
@@ -280,11 +283,15 @@ function drawText(t){var p=document.createElement('pre');p.className='sg-text';p
 function show(r){result=r;var h=cardOf(r);if(h)return draw(h);var d=dataOf(r);var id=d&&(d.previewId||(d.receipt&&d.receipt.previewId));
  if(id&&caps.serverResources){req('resources/read',{uri:'${CARD_FRAGMENT_PREFIX}'+id}).then(function(x){var c=x&&x.contents&&x.contents[0];if(c&&typeof c.text==='string'&&c.text)draw(c.text);else drawText(textOf(r))},function(){drawText(textOf(r))});return}
  drawText(textOf(r))}
-function wire(){var b=root.querySelector('[data-file]');if(b){var tool=b.getAttribute('data-tool');var a=null;
- if(tool==='file'){if(args&&Array.isArray(args.items))a={previewId:b.getAttribute('data-preview-id'),items:args.items}}else{try{a=JSON.parse(b.getAttribute('data-args'))}catch(e){a=null}}
- if(a&&caps.serverTools){b.hidden=false;b.addEventListener('click',function(){if(busy)return;busy=true;b.disabled=true;
-  req('tools/call',{name:tool,arguments:a}).then(function(r){busy=false;var h=cardOf(r);if(h)return draw(h);var o=root.querySelector('[data-region="file-result"]');if(o){o.hidden=false;o.textContent=(r&&r.isError?'Not filed: ':'')+(textOf(r).split('\\n')[0]||'')}size()},
-  function(){busy=false;b.disabled=false;var o=root.querySelector('[data-region="file-result"]');if(o){o.hidden=false;o.textContent='Not filed'}size()})})}}}
+function wire(){var b=root.querySelector('[data-file]');if(b){var tool=b.getAttribute('data-tool');var calls=null;
+ if(tool==='parts'){var ps=null;try{ps=JSON.parse(b.getAttribute('data-parts'))}catch(e){ps=null}var pid=b.getAttribute('data-preview-id');
+  if(ps&&args&&Array.isArray(args.items))calls=ps.map(function(p){return{name:p.tool,arguments:{previewId:pid,items:p.items.map(function(n){return args.items[n-1]})}}})}
+ else{var a=null;try{a=JSON.parse(b.getAttribute('data-args'))}catch(e){a=null}if(a)calls=[{name:tool,arguments:a}]}
+ if(calls&&caps.serverTools){b.hidden=false;b.addEventListener('click',function(){if(busy)return;busy=true;b.disabled=true;
+  function done(r){busy=false;var h=cardOf(r);if(h)return draw(h);var o=root.querySelector('[data-region="file-result"]');if(o){o.hidden=false;o.textContent=(r&&r.isError?'Not filed: ':'')+(textOf(r).split('\\n')[0]||'')}size()}
+  function failed(){busy=false;b.disabled=false;var o=root.querySelector('[data-region="file-result"]');if(o){o.hidden=false;o.textContent='Not filed'}size()}
+  function step(k,last){if(k>=calls.length)return done(last);req('tools/call',calls[k]).then(function(r){if(r&&r.isError)return done(r);step(k+1,r)},failed)}
+  step(0,null)})}}}
 document.addEventListener('click',function(e){var a=e.target&&e.target.closest&&e.target.closest('a[href]');if(!a)return;e.preventDefault();var u=a.getAttribute('href');if(/^https?:/.test(u))req('ui/open-link',{url:u}).catch(function(){})});
 window.addEventListener('message',function(e){if(host&&e.source!==host)return;var m=e.data;if(!m||m.jsonrpc!=='2.0')return;
  if(m.id!=null&&wait[m.id]&&!m.method){var w=wait[m.id];delete wait[m.id];if(m.error)w.no(m.error);else w.ok(m.result);return}

@@ -182,9 +182,9 @@ const flashOf = (html) => { const m = /class="ct-flash[^"]*"[\s\S]*?<\/(section|
   await W.call("POST", "/control", { form: { action: "archive-project", projectKey: "beta" } });
   const c3 = (await W.mcp("create_project", { key: "beta", name: "Beta lab" }, "two-owner-key")).out || {};
   ok(c3.reactivated === true && /^Project Beta lab \(beta\) was archived and is active again\.$/.test(c3.note || ""), "E3 · create_project on an archived project: 'was archived and is active again'", c3.note);
-  const { confirmSchema } = await import(pathToFileURL(join(ENGINE, "src", "confirm.js")).href);
-  const d = (n, p) => confirmSchema(n, p).properties.file.description;
-  ok(d(3, "o2--sample") === "File 3 items into sample" && d(1, "alpha") === "File 1 item into alpha" && d(2, null) === "File 2 items into the org", "E4 · the confirm form's line names the slug ('File 3 items into sample'; org 1's bare key is its slug; no project: the org)", `${d(3, "o2--sample")} | ${d(1, "alpha")} | ${d(2, null)}`);
+  const { partAsk } = await import(pathToFileURL(join(ENGINE, "src", "confirm.js")).href);
+  const d = (n, p, tool = "file_contribution") => partAsk({ previewId: "P-0", tool, ready: n, project: p, text: "" }, { key: "k", until: "u" }).schema.properties.file.description;
+  ok(d(3, "o2--sample") === "File 3 contributions into sample" && d(1, "alpha", "save_knowledge") === "Save 1 knowledge item in alpha" && d(2, null, "remove_knowledge") === "Remove 2 knowledge items from the org", "E4 · the confirm form's line names the slug ('File 3 contributions into sample'; org 1's bare key is its slug; no project: the org)", `${d(3, "o2--sample")} | ${d(1, "alpha")} | ${d(2, null)}`);
 }
 
 console.log(`\nproject-words-selftest: ${passes} passed, ${fails} failed`);

@@ -10,7 +10,7 @@
 //      fresh (the flow's stale count on the Map goes to 0 for that check); a Partner is refused; a check naming /logout is
 //      never fetched; the cap holds at 8 with more: true, and a second call regrades the rest.
 // Exit 1 on any failure. Run: node tools/regrade-selftest.mjs
-import { observationOf, fillPath, judge, proofText, previewCall, scopeOf, observeUrl, REGRADE_CAP, WHY } from "../src/regrade.js";
+import { observationOf, fillPath, judge, proofText, gradeCall, scopeOf, observeUrl, REGRADE_CAP, WHY } from "../src/regrade.js";
 import { flowRefsOf } from "../src/knowledge/mapmodel.js";
 import { proofKind } from "../src/transmission.js";
 import { sqliteWorker } from "./fixtures/sqlite-worker.mjs";
@@ -57,8 +57,8 @@ ok(judge(rail, page('<nav><a href="/broadcast?project=a" data-tab="broadcast"><s
 const proof = proofText("/audit?project=alpha", "session", j1.said);
 ok(proof === 'GET /audit?project=alpha (Accept: text/html, as the caller\'s session) -> 200, data-screen="s24-home" present, regions 1 of 1', proof);
 ok(proofKind(proof) !== null && proofKind(proofText("/x", "key", j2.said)) !== null, `the door's proof rule takes it: ${proofKind(proof)}`);
-const call = previewCall("alpha", [{ id: "c.1" }, { id: "c.2" }]);
-ok(/^preview \{"project":"alpha","items":\[\{"grade":\{"checkId":"c\.1"/.test(call) && JSON.parse(call.slice(8)).items.length === 2, call.slice(0, 120));
+const call = gradeCall("alpha", [{ id: "c.1" }, { id: "c.2" }]);
+ok(call.split("\n").length === 2 && call.split("\n").every((l, i) => /^submit_grade \{"project":"alpha","checkId":"c\.\d"/.test(l) && JSON.parse(l.slice(13)).checkId === `c.${i + 1}`), call.slice(0, 120));
 
 // ---- 3. the placeholders and the scope ----
 ok(fillPath("/goals/<ref>", { goal: "beta" }) === "/goals/beta" && fillPath("/goals/<ref>", {}) === null, "a goal fills /goals/<ref>");
@@ -78,7 +78,14 @@ ok(scopeOf({ checks: "a, b,a" }).value.join() === "a,b" && scopeOf({ node: "goal
 // ---- 4. the real worker, offline ----
 const w = await sqliteWorker({ projects: ["alpha"], people: [["p-o", "Owen", "owner", "owner-key", ["alpha"]], ["p-x", "Pia", "partner", "partner-key", ["alpha"]]] });
 const call2 = async (name, args, key = "owner-key") => w.mcp(name, { project: "alpha", ...args }, key);
-const file = async (items, key = "owner-key") => { const pv = await call2("preview", { items }, key); const f = await w.mcp("file", { previewId: pv.out.previewId, items }, key); return f; };
+// sprint 19: a grade files at once through submit_grade; the rest through preview, then the write tool of each part
+const file = async (items, key = "owner-key") => {
+  if (items.every((it) => it.grade)) { const rs = []; for (const it of items) rs.push(await call2("submit_grade", it.grade, key)); const bad = rs.find((r) => r.isError); return bad || { out: { complete: true } }; }
+  const pv = await call2("preview", { items }, key);
+  let f = null;
+  for (const p of pv.out.parts || []) { f = await w.mcp(p.tool, { previewId: pv.out.previewId, items: p.items.map((n) => items[n - 1]) }, key); if (f.isError) return f; }
+  return f || pv;
+};
 const S = ["r-a", "r-b", "r-c"];
 const seed = [{ kind: "node", op: "upsert", data: { id: "surface:r", type: "surface", name: "R" } },
   ...S.map((x) => ({ kind: "node", op: "upsert", data: { id: `screen:${x}`, type: "screen", name: `R ${x}`, data: { surface: "r" } } })),

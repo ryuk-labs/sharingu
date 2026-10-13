@@ -32,6 +32,7 @@ import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { openRecorder, CHROME } from "./record.mjs";
 import { call, isLocal } from "./mcp-call.mjs";
+import { writeToolsOf } from "../import/door.mjs";
 import { PROJECT, GOAL, QID, CHANGE, SCRIPT, BEATS, memberItems } from "./scenes.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -164,7 +165,8 @@ const exec = (who, args) => new Promise((res) => {
 });
 
 // ---- the take ----
-const t = { ownerEmail, ownerKey, memberName: MEMBER, exec, lights: {} };
+// the write tools each filing's parts take (sprint 19: the terminal files each part with its own tool, in the preview's order)
+const t = { ownerEmail, ownerKey, memberName: MEMBER, exec, lights: {}, tools: { take: writeToolsOf(takeItems), change: writeToolsOf([changeItem]) } };
 const r = await openRecorder({ base: URL0, out: join(WORK, "frames"), log: (s) => console.log(s) });
 await r.send("Browser.grantPermissions", { permissions: ["clipboardReadWrite", "clipboardSanitizedWrite"], origin: URL0 }, null).catch(() => {});
 const beatTimes = [];

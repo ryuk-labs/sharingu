@@ -4,14 +4,17 @@
 // the recorder imports its `call` for the steps it does not show.
 //
 //   SHARINGU_URL=http://127.0.0.1:8850 SHARINGU_KEY=<a seat's key, env only> node tools/walkthrough/mcp-call.mjs <tool> [<json> | @<file.json>]
-//   ... mcp-call.mjs file <previewId> @<file.json>     file what that preview showed: {previewId, items: the file's items}
+//   ... mcp-call.mjs <write tool> <previewId> @<file.json>     file one part of what that preview showed: {previewId, items:
+//       the file's items of that tool's form, in their order} (sprint 19: file_contribution the contributions, save_knowledge
+//       the knowledge upserts, remove_knowledge the removes; tools/import/door.mjs writeToolOf)
 //
-// preview and file print the door's own terminal text (src/previewtext.js: the preview, the receipt). Any other tool prints
+// preview and the write tools print the door's own terminal text (src/previewtext.js: the preview, the part's receipt). Any other tool prints
 // its answer as indented JSON, cut to --lines N (default 24). --json prints the whole answer as one JSON line instead (for
 // a script). The key is read from SHARINGU_KEY and never printed; the url must be a loopback address. Exit 0 on an answer,
 // 1 when the door answers an error (isError or a JSON-RPC error), 2 on a usage error.
 import { readFileSync, realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { WRITE_TOOLS, writeToolOf } from "../import/door.mjs";
 
 export const isLocal = (u) => /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(String(u || "").replace(/\/+$/, ""));
 
@@ -31,7 +34,7 @@ export async function call(base, key, name, a = {}) {
 export function show(name, res, n = 24) {
   if (res.error) return `error ${res.status}: ${typeof res.error === "string" ? res.error : JSON.stringify(res.error)}`;
   const o = res.out;
-  if (o && typeof o === "object" && typeof o.text === "string" && (name === "preview" || name === "file")) return o.text;
+  if (o && typeof o === "object" && typeof o.text === "string" && (name === "preview" || WRITE_TOOLS.includes(name))) return o.text;
   const lines = (typeof o === "string" ? o : JSON.stringify(o, null, 2)).split("\n");
   return lines.slice(0, n).join("\n") + (lines.length > n ? `\n... (${lines.length - n} more lines)` : "");
 }
@@ -44,8 +47,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
   const BASE = String(process.env.SHARINGU_URL || "").replace(/\/+$/, "");
   const KEY = process.env.SHARINGU_KEY || "";
   const [tool, raw0, raw1] = pos;
-  // file <previewId> @<file>: the same items the preview was given, under that preview's id
-  const raw = tool === "file" && /^P-[0-9a-f]+$/.test(raw0 || "") && raw1 ? JSON.stringify({ previewId: raw0, items: JSON.parse(readFileSync(raw1.replace(/^@/, ""), "utf8")).items }) : raw0;
+  // <write tool> <previewId> @<file>: that tool's part of the items the preview was given (as previewed, in their order), under its id
+  const raw = WRITE_TOOLS.includes(tool) && /^P-[0-9a-f]+$/.test(raw0 || "") && raw1
+    ? JSON.stringify({ previewId: raw0, items: JSON.parse(readFileSync(raw1.replace(/^@/, ""), "utf8")).items.filter((it) => writeToolOf(it) === tool) }) : raw0;
   if (!tool || !BASE || !KEY) { console.error("usage: SHARINGU_URL=<local org> SHARINGU_KEY=<key> node tools/walkthrough/mcp-call.mjs <tool> [<json> | @<file>] [--json] [--lines N]"); process.exit(2); }
   if (!isLocal(BASE)) { console.error("mcp-call: the url must be a local org (http://127.0.0.1:<port>)"); process.exit(2); }
   let args = {};

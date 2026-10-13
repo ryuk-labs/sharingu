@@ -13,7 +13,7 @@ const GTM = { identity: { name: "smoke gtm" }, activityKinds: ["post", "demo"], 
 
 smoke("a GTM template filed with preview then file shows its lanes on GET /gtm", async () => {
   const none = await http("GET", `/gtm?project=${P}`, { key: ownerKey });
-  expect(none.status === 200 && none.json.template === null && (none.json.messages || []).some((m) => /preview then file, an item of kind "gtm"/.test(m)), () => `before: ${none.status} ${brief(none.json && none.json.messages)}`);
+  expect(none.status === 200 && none.json.template === null && (none.json.messages || []).some((m) => /preview then save_knowledge, an item of kind "gtm"/.test(m)), () => `before: ${none.status} ${brief(none.json && none.json.messages)}`);
   const w = await kwrite(ownerKey, { project: P, ops: [{ kind: "gtm", op: "upsert", data: { template: GTM } }] });
   expect(!w.isError && w.out.written === 1, () => brief(w.out));
   const j = await http("GET", `/gtm?project=${P}`, { key: ownerKey });
@@ -22,7 +22,7 @@ smoke("a GTM template filed with preview then file shows its lanes on GET /gtm",
     && !(j.json.messages || []).some((m) => /gtm/.test(m) && /template/i.test(m)), () => `after: ${j.status} template ${brief(j.json && j.json.template)} lanes ${lanes}`);
   const page = await html(`/gtm?project=${P}`);
   expect(page.status === 200 && /data-lane="post"/.test(page.text) && /data-lane="demo"/.test(page.text) && /the post&#39;s link|the post's link/.test(page.text), () => `page: ${page.status} ${region(page.text, "lanes").slice(0, 300)}`);
-  return `before: template null, the message names preview then file kind "gtm"; after: lanes ${lanes.join(", ")}, each with what it holds`;
+  return `before: template null, the message names preview then save_knowledge kind "gtm"; after: lanes ${lanes.join(", ")}, each with what it holds`;
 });
 
 smoke("a project with no version shows the empty sentence naming publish_version", async () => {

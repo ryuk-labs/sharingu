@@ -41,7 +41,7 @@
    "2024-11-05"
   ],
   "negotiation": "the client's requested protocolVersion is echoed when listed in `protocols`, else the first (newest) is answered",
-  "instructions": "the first-run guide: one line, then five numbered steps (1 `whoami` · 2 `missing` with project · 3 `formats` · 4 `preview` · 5 `file`), then one line naming a new team's four steps and the two fill skills (`fill-the-product-side`, `fill-the-gtm-side`: the plugin's skills, on the starter shelf through `broadcast` and `equip` for any other client; `weekly-review`) (src/mcp.js FOUR_STEPS_LINE), then one line for every session (`updates` first, `read` doc/start-here.md, `ask`, `wrap_up`); only the registry's tool names and the starter skills' slugs (src/mcp.js instructionsFor)",
+  "instructions": "the first-run guide: one line, then five numbered steps (1 `whoami` · 2 `missing` with project · 3 `formats` · 4 `preview` · 5 the write tool each item names: `file_contribution`, `save_knowledge`, `remove_knowledge`; a grade `submit_grade`, an answer `respond`), then one line naming a new team's four steps and the two fill skills (`fill-the-product-side`, `fill-the-gtm-side`: the plugin's skills, on the starter shelf through `broadcast` and `equip` for any other client; `weekly-review`) (src/mcp.js FOUR_STEPS_LINE), then one line for every session (`updates` first, `read` doc/start-here.md, `ask`, `wrap_up`); only the registry's tool names and the starter skills' slugs (src/mcp.js instructionsFor)",
   "notifications": "any notifications/* message is answered 202 with no body",
   "batch": "a JSON-RPC array is answered as an array of the replies (notifications carry none)",
   "modern": {
@@ -113,7 +113,7 @@
     "decisions"
    ],
    "shape": "{ version, decision:{…the full published row: qid, question, status, choice, label, updated, severity, area, why, options, blocks, whoOwes, waitingOn, implStatus, supersededBy}, live:{answers:[{by, at, option, provisional, tx}], inRound, counters:[{id, by, what, at, tempo}], ruled:{option, by, at, tx}|null}, counterCall }",
-   "counterCall": "preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"q/<qid>\"], what, why}}]}, then file",
+   "counterCall": "preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"q/<qid>\"], what, why}}]}, then file_contribution",
    "inRound": "true when the CALLER has an undecided kind round filing on this question",
    "refusals": "404 not_found for a qid the pack lacks (or a malformed one) · 404 no_pack when nothing is published (EMPTY on glass) · 502 unreadable"
   },
@@ -167,7 +167,7 @@
   "empty": "every region draws its own EMPTY sentence: aim 'No measure published for this aim yet.' (no aim.measure) or 'No aim is published for this project yet.'; needs-you (a seat with no filing yet: the first-five steps are its next action; never the owner's); goals-moved 'No goal moved this month.'; who-is-here 'Nobody is seated on this project yet.'; the Shipped card until the brain exports it",
   "live": "a failed D1 statement (not the daily quota, which answers the outage page) -> live:'unreachable': the regions it fed read null/EMPTY and the page shows UNREACHABLE (writes refused before the press)",
   "buttons": "decide row: choose-option -> POST /respond {qid, option:0, next:/home}; see-options -> GET /question/:qid · approve row: approve -> POST /contribution/:id/decide {verdict:approve, next:/home}; see-diff -> GET /contribution/:id · grant row: grant-once -> the same door {verdict:approve, note:'granted once'}; not-yet -> {verdict:needs-work, note:'not yet'}, terminal (no snooze: the agent re-files with parent) · counters: client-side, the count from this read and the exact MCP call (by gapRefs q/<qid> on a decide row, by parent on an approve or grant row) · all-open -> /decisions",
-  "grant": "a grant is a filing: a contribution item {lane:'leader', kind:'grant', what, why, touches} through preview, then file; the router sends kind grant to the owner with reason asks-a-grant (src/transmission.js, at the route step, so a code, design or gtm grant still meets its screen and proof gates first)",
+  "grant": "a grant is a filing: a contribution item {lane:'leader', kind:'grant', what, why, touches} through preview, then file_contribution; the router sends kind grant to the owner with reason asks-a-grant (src/transmission.js, at the route step, so a code, design or gtm grant still meets its screen and proof gates first)",
   "goalsMoved": "this project, this calendar month (UTC): the goals that filings moved (route auto or decided approve, goalRef set), each with how far (n: its contributions this month, and by area: src/lanes.js AREA_OF_LANE) and its contributors by name, in name order: no rank, no per-person count; the suites' seats only with eval; the most-moved goal first",
   "meter": "the project's checklist meter (src/checklist.js), overall and per area it has; null when the read has no project or failed"
  },
@@ -188,7 +188,7 @@
   "tempo": "the three rows that moved last (decided, else filed) in the last seven days: {id, title, tempo, ago}; EMPTY 'Nothing moved this week.'",
   "finishLine": "{done, total, gating, deferred} from the goal tree's leaves (UI-B6b: done = a leaf's rollup reaches 100, deferred = its status deferred), else null when no goal is filed",
   "page": "three regions in the artboard's order, each with data-region: filings (the filter chips All N and the kinds present as ?kind= links, the sort chips Ranked / Newest / By goal as ?sort= links, the rows: chip, title, 'filed by <name>', the goal tag, counters, rank, open) · tempo · finish-line; buttons filter and sort (client-side: they re-ask the same read), rank (POST /rank), counters (the standing count, 'Read them on the filing' -> /contribution/:id#counters, the exact call), open-row (GET /contribution/:id); no text input, no em dash, Brand v2 tokens only",
-  "counterCall": "preview {items: [{contribution: {lane, kind: \"counter\", parent: <this id>, what, why}}]}, then file",
+  "counterCall": "preview {items: [{contribution: {lane, kind: \"counter\", parent: <this id>, what, why}}]}, then file_contribution",
   "empty": "no filing: 'Nothing filed on <project> yet. Work is filed from your own Claude through the MCP door.'",
   "unreachable": "a failed D1 wave (not a quota): rows [], counts null, live:'unreachable'; the page shows the UNREACHABLE banner and the rank press is refused before it is made"
  },
@@ -196,7 +196,7 @@
   "_doc": "additive (UI-B4b, QEFC716D5): rank is a FILING, never a table or a column. Any reader seated on the ranked filing's project presses it (the owner on any); it is a person verb, not an owner one (QA20249FB).",
   "doors": [
    "POST /rank",
-   "file"
+   "file_contribution"
   ],
   "seam": "src/build.js fileRank(env, reader, {id, eval, via}) -> core.js fileTransmission",
   "body": "{id} as JSON or a form (a form may carry next, same-origin, and eval); the tool takes {id, eval?}",
@@ -209,8 +209,8 @@
  "counter": {
   "_doc": "additive (UI-B4a): kind \"counter\" in the router. A counter is a filing (QC8B94276): no table, no POST /counter. It names a FILING by parent a QUESTION by gapRefs q/<qid> (QB953462F) and a GOAL node by gapRefs goal/<id> (UI-B6a, Q48115AD1), is graded before the lane gates (src/transmission.js gradeAndRoute: what, why and a target; touches optional; no screen, proof or component gate), always routes to the owner and stands until it is ruled. ONE standing-counter definition, src/hotsql.js STANDING_COUNTER, is read by Decisions, the QuestionCard, Home's approve and grant rows and the filing page, so they show the same number.",
   "doors": [
-   "POST /file",
-   "file"
+   "POST /preview/file-contribution",
+   "file_contribution"
   ],
   "targets": [
    "parent",
@@ -231,9 +231,9 @@
   "incomplete": "no target: route incomplete, grade.missing ['parent'], binding false; the reply's example carries parent and the drawn call, its note names all three target forms (parent, gapRefs q/<qid>, gapRefs goal/<id>)",
   "parentCheck": "a filing naming parent (any kind) needs that filing to exist in the filer's project (a null project matches a null project; the owner may name any), else 422 unknown_parent and nothing is filed; a batch with one unknown parent refuses the whole batch (every result carries unknown_parent, item = the first offending index)",
   "standing": "kind IN ('counter','critique') AND decision IS NULL",
-  "call": "preview {items: [{contribution: {lane, kind: \"counter\", parent: \"<id>\", what, why}}]}, then file",
-  "callQuestion": "preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"q/<qid>\"], what, why}}]}, then file",
-  "callGoal": "preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"goal/<id>\"], what, why}}]}, then file",
+  "call": "preview {items: [{contribution: {lane, kind: \"counter\", parent: \"<id>\", what, why}}]}, then file_contribution",
+  "callQuestion": "preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"q/<qid>\"], what, why}}]}, then file_contribution",
+  "callGoal": "preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"goal/<id>\"], what, why}}]}, then file_contribution",
   "page": "GET /contribution/:id (a browser): the counters region lists every counter on the filing by parent, headed \"N standing · M ruled\", each linking to its own page, then the exact call with the id filled in; EMPTY: \"No counters on this filing.\" Two D1 statements in total: the row (core.js transmissionOneFor) and src/hotsql.js FILING_COUNTERS_SQL"
  },
  "goals": {
@@ -255,7 +255,7 @@
   "reads": "one parallel wave beyond the memoized auth (src/hotsql.js): GET /goals at most TWO D1 statements, G1 GOALS_AGG_SQL (the project's landed filings since the period's start, grouped by goal_ref and lane, on idx_transmission_project) and G2 GOALS_COUNTERS_SQL (the goal/ counters per goal, ONE transmission_refs range 'goal/'..'goal0' under CROSS JOIN, on idx_transmission_refs_ref); GET /goals/:ref at most THREE, G1, G3 GOAL_COUNTERS_SQL (this goal's counters, r.ref = 'goal/<id>') and G4 GOAL_ROWS_SQL (the filings naming it, newest 26, on idx_transmission_goalref). Beside the wave: the goal tree (D1, src/knowledge/goals.js) and the project's questions (knowledge/decisions.js projectDecisionRows, memoized per request). No migration. An org with no declared tree runs no D1 statement",
   "landed": "a filing feeds a goal when it names it (goal_ref) and has landed: route auto, or decided approve; eval 0 and no '[eval probe]' text (unless ?eval=1); sharingu's own mind/* out; kinds counter, critique, rank and restore never feed a goal",
   "scope": "the project is Home's (the request's workspace, else the org's one declared project; none: the rows no project stamps), bound in every statement (M-ADR-028). A node's filings list also folds in the seat scope: a non-owner with no seat on the project lists none",
-  "counters": "a counter names a goal by gapRefs goal/<id> (Q48115AD1, the counter block); standing = the one STANDING_COUNTER definition; ruled = a counter or critique with a decision; not period-bounded (a counter stands until it is ruled). call: preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"goal/<id>\"], what, why}}]}, then file",
+  "counters": "a counter names a goal by gapRefs goal/<id> (Q48115AD1, the counter block); standing = the one STANDING_COUNTER definition; ruled = a counter or critique with a decision; not period-bounded (a counter stands until it is ruled). call: preview {items: [{contribution: {lane, kind: \"counter\", gapRefs: [\"goal/<id>\"], what, why}}]}, then file_contribution",
   "fed": "fed.total = the landed filings naming the node or any goal under it, in the period; fed.byArea = the same per area (src/lanes.js AREA_OF_LANE: build, gtm, goals); noFeed = the nodes whose fed.total is 0",
   "whatFed": "the top goal (the tree's root): one row per lane that fed it, n filings, area, and delta = the points the root loses with that lane left out (rollupCells over the aggregate without it); credit: null (Q4FF173D7: person credit waits on the brain linking filings to rulings; the page says so)",
   "blocked": "the pack's OPEN decisions with area 'goals' (DECIDE, linking /question/:qid), then the no-feed goals (gap)",
@@ -332,7 +332,7 @@
   "query": "GET /map: ?layer=screens,doors,data,flows,deps (the layers on) · ?node=<ref> or ?gap=<n> (pins the inspector) · ?flow=<id> (plays a flow) · ?find=<words>. GET /map/lights: ?since=<ISO time>",
   "shape": "GET /map (JSON): the compact layout {p, v, cols:[{k, label, layer, x, w, n, g:[group index]}], groups:[{id, c, label, fold, m:[node index], lc:[green, amber, red, grey], pre?}], nodes:[{r (map ref), t, n, l (light), g, k, id?, s?}], links:[a, b, kind index, ...], kinds, rest, flows:[{id, r, n, s, a, d, l, st:[[node index|-1, door index|-1, actor, text, does]]}], counts:{green, amber, red, grey}, layerN}. GET /map/lights: {at, lights:[{id (node id), light, counts:{total, graded, passed, failed}}], more}",
   "reads": "GET /map: the nodes (one row per node of the drawn types), k_node_links (one row per node with an edge out), the lit rows of the drawn nodes (0 when nothing is graded) and the version head, beside the shell's own; ?node= adds GET /map/node's read. GET /map/lights: one statement on idx_k_node_lights_at, only the rows changed after since",
-  "page": "the toolbar (data-region layers: the layer pills with their counts, the views Canvas · Arch · MCP, the light filter with its counts, find, Play flow, zoom, Fit, the version chip) · the canvas (data-region canvas: the SVG in a viewBox the browser fits, pan, zoom, a minimap, hover, pin, keys, folds, find, flows, live lights) · the inspector (data-region inspector) · the node list (data-region node-list; a phone's main surface, the canvas a sideways strip above it, the pinned node a bottom sheet). Arch: lanes, crossing-rules, seam, org-worker. MCP: mcp-tools (the table part), workspace-shelf. EMPTY names preview then file; UNREACHABLE when the model read fails; BEHIND from the shell's own head poll",
+  "page": "the toolbar (data-region layers: the layer pills with their counts, the views Canvas · Arch · MCP, the light filter with its counts, find, Play flow, zoom, Fit, the version chip) · the canvas (data-region canvas: the SVG in a viewBox the browser fits, pan, zoom, a minimap, hover, pin, keys, folds, find, flows, live lights) · the inspector (data-region inspector) · the node list (data-region node-list; a phone's main surface, the canvas a sideways strip above it, the pinned node a bottom sheet). Arch: lanes, crossing-rules, seam, org-worker. MCP: mcp-tools (the table part), workspace-shelf. EMPTY names preview then save_knowledge; UNREACHABLE when the model read fails; BEHIND from the shell's own head poll",
   "errors": [
    "401 auth_required: no credential (a browser is sent to /login)",
    "503 unreadable: the model read failed (JSON); a page draws UNREACHABLE"
@@ -423,7 +423,7 @@
    "GET /map/screens",
    "map",
    "GET /render/:hash",
-   "file",
+   "save_knowledge",
    "read",
    "POST /render/restore"
   ],
@@ -443,7 +443,7 @@
   "remove": "removes the index row; the body stays in R2. Removing a screen node removes its renders' index rows (as it removes its edges); the frame's takes stay (M6: it can be restored)",
   "readShape": "{project, surfaces: [{key, name, screens}], surface, lanes: [{key, name}], screens: [{id, name, lane, step, status, states, light, checks: {total, graded, passed, failed}, renders: [{state, variant, format, hash, bytes, width, height, style}], wireframe}], edges: [{from, to, label}], styles: {<id>: <hash>}}; ?surface= (default the first with screens); a surface's key is its node id after surface:, or a key its screens name with no node; the screens naming none are the surface \"\"",
   "bodyAnswer": "GET /render/<hash>?project=<key>&style=<the style's hash> (a render's body, or a previous take's: M6, a body this project's takes hold): html a complete document (the fragment, its style's css inline, a meta CSP); wireframe the grammar as JSON; image the picture. Headers: Content-Security-Policy: sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data: · X-Content-Type-Options: nosniff · Referrer-Policy: no-referrer · Cross-Origin-Resource-Policy: same-origin · ETag; Cache-Control: private, max-age=31536000, immutable when the URL names everything the answer holds, else private, no-cache (304 on If-None-Match). A caller who may not read the project, or a hash it does not hold: 404 not_found; no credential: 401 auth_required; indexed with no body: 410 blob_missing",
-  "who": "a render is readable by whoever may read its project (no per-render list); written by any seated member through preview then file, the owner any active project; an image render may name only an artifact the writer may read on GET /artifact/:id (their own, a public one, any for the owner)",
+  "who": "a render is readable by whoever may read its project (no per-render list); written by any seated member through preview then save_knowledge, the owner any active project; an image render may name only an artifact the writer may read on GET /artifact/:id (their own, a public one, any for the owner)",
   "errors": [
    "unknown_surface",
    "not_found",
@@ -458,7 +458,7 @@
    "project_forbidden"
   ],
   "formats": "a screen (kind node, type screen), a render and a style: their fields, examples and places are GENERATED into `formats.kinds.node`, `formats.kinds.render` and `formats.kinds.style` from src/knowledge/schema.js KINDS",
-  "takes": "M6 (migrate-065): every body a frame (screen, state, variant) has held is one of its takes (k_screen_takes, one row per take, numbered 1, 2, 3 per frame and format, with who filed it and when), appended by the database as a render is written (a re-filed identical body, or a field-only change, appends none); the newest take is the frame's render. A removed render or screen keeps its takes. A render upsert {screen, state, variant, hash} with no body RESTORES a take this project holds: no body is put, the frame takes the take's format, size and style (a style sent in the same op wins) and the trigger files it as the newest take, with ONE ledger row as any render write; the frame's current body writes nothing. Through preview then file (an agent: map {ref: \"screen:<id>\"} lists the takes and their hashes) or the Restore press (POST /render/restore, a signed-in browser's press its own confirm). A hash this project's takes do not hold is unknown_render (another project's alike); a Partner is partner_refused"
+  "takes": "M6 (migrate-065): every body a frame (screen, state, variant) has held is one of its takes (k_screen_takes, one row per take, numbered 1, 2, 3 per frame and format, with who filed it and when), appended by the database as a render is written (a re-filed identical body, or a field-only change, appends none); the newest take is the frame's render. A removed render or screen keeps its takes. A render upsert {screen, state, variant, hash} with no body RESTORES a take this project holds: no body is put, the frame takes the take's format, size and style (a style sent in the same op wins) and the trigger files it as the newest take, with ONE ledger row as any render write; the frame's current body writes nothing. Through preview then save_knowledge (an agent: map {ref: \"screen:<id>\"} lists the takes and their hashes) or the Restore press (POST /render/restore, a signed-in browser's press its own confirm). A hash this project's takes do not hold is unknown_render (another project's alike); a Partner is partner_refused"
  },
  "contract": {
   "_doc": "additive (UI-B8a, QFAEA20A3): the door's contract served by the door itself. tools/make-door-contract.py writes contracts/door.json and, in the same run, src/doorcontract.js (export const DOOR_TEXT = <door.json's exact text>; export default the parsed object); gate.sh regenerates and diffs both, so GET /contract equals this file at the deployed sha.",
@@ -482,7 +482,7 @@
    "broadcast",
    "publish",
    "equip",
-   "file"
+   "file_contribution"
   ],
   "seams": {
    "read": "src/broadcastread.js readBroadcast(env, reader, q), q = {eval?} (a URLSearchParams or the MCP arguments); equippedHere(env, reader, project?) is its equipped-here region alone, the SAME function GET /map/mcp's workspace-shelf reads",
@@ -496,7 +496,7 @@
    "equip": "RESERVED: ONE row per press, lane leader, parent the publish row (= the version), project the equipping project, gapRefs [\"item/<slug>\"]; append-only, so update-version files a NEW row and the old one stands; 'equipped here' = the newest equip row of a slug in the project; routes auto Sprint 2: a STARTER item's equip has NO parent (the item is the engine's, not a filing): gapRefs [\"preset/<slug>\"], touches its kind, proof \"preset:<slug>@v<version>\" (the version it copied); 'equipped here' = the newest such row of the slug in the project",
    "reserved": "kind publish and kind equip as a contribution item of preview and file: refused reserved_kind, nothing filed"
   },
-  "call": "transmission.js FILING_ITEM_CALL: preview {items: [{contribution: {lane: \"leader\", kind: \"item\", what, why, touches: [\"skill\" | \"agent\" | \"workflow\"], gapRefs: [\"item/<slug>\"], proof: \"<http(s) link | /artifact/:id>\"}}]}, then file; then publish {id} (the preview), publish {id, confirm: true}",
+  "call": "transmission.js FILING_ITEM_CALL: preview {items: [{contribution: {lane: \"leader\", kind: \"item\", what, why, touches: [\"skill\" | \"agent\" | \"workflow\"], gapRefs: [\"item/<slug>\"], proof: \"<http(s) link | /artifact/:id>\"}}]}, then file_contribution; then publish {id} (the preview), publish {id, confirm: true}",
   "query": "?eval=1 (the suites' rows); the tool takes eval as an argument",
   "shape": "{ project:{key, name}, org, stamp:{counts:{published, equippedHere, updates, starter}}, filter:{kinds:[{kind, count}] (skill, agent, workflow)}, regions:{shelf:[{slug, kind, v, what, why, source|null, publisher:{id, name}, publishedAt, equippedIn, here:{v|null, state:'none'|'current'|'update', by, at}, can:{equip, update, reason}, warning, href}], 'equipped-here':[{slug, kind, v, latest, state, by, at, href:'/contribution/<equip id>', source:'org'|'starter', title?, doc?:'starter/<slug>.md'}], 'org-wall-note':{org, text}, 'starter-shelf':[{slug, kind, title, purpose, calls:[tool], v, source:'starter', href:'/broadcast/starter/<slug>', equipSlug:'preset:<slug>', here:{v|null, state:'none'|'current'|'update', by, at, doc, href}, can:{equip, update, reason}}]}, mine:[{id, slug, kind, what, published:v|null, publishable, reason}], call, empty:{shelf?, 'equipped-here'?, mine?}, more?, eval?, live?:'unreachable' }",
   "scope": "the shelf is org-wide (this worker's D1 alone: nothing crosses the org wall); equippedIn counts only the projects the reader holds a seat on (the owner: every active project) and an equip row in any other project is never read; mine is the reader's own drafts; the project is GET /goals' own (goalsread.js contextOf); suite rows out unless ?eval=1",
@@ -510,7 +510,7 @@
   "verbs": {
    "auth": "sprint 3, D2 (B7; MCP.md §5 supersedes Q60CCC574): the MCP tools publish and equip, and their REST twins (auth bearer, below the gate: a key or a session; a read-only credential 403 read_only_credential, a cross-origin session 403 cross_origin_session_write, a ?k= key or no credential 401). Who: publish anyone whose role CLASS is not Partner, on their own draft, seated somewhere (the admin needs no seat); equip anyone whose role class is not Partner into a project they are seated on (the admin: any active project); a Partner (role partner, or a typed outside label) is 403 partner_refused before anything is read. Preview first: without confirm: true the answer is the preview {preview:true, verb, line, shows, reaches, text, next} and nothing is written; a signed-in browser's press on the Broadcast page is its own confirm",
    "publish": "publish {id, confirm?, publishOnConfirm?} · POST /broadcast/publish {id, confirm?}: anyone seated in the org but a Partner, only on their own draft. 422 id_required · 404 unknown_item · 403 not_yours · 403 not_seated · 403 partner_refused · 422 incomplete_item · 409 already_published · 409 slug_taken",
-   "equip": "equip {slug, v, project?, confirm?, equipOnConfirm?} · POST /broadcast/equip {slug, v, project?, confirm?}: serves equip and update-version; anyone seated on the target project (the owner on any active one); project defaults to the request's own. 403 not_seated · 404 unknown_item · 404 unknown_version · 409 already_current · 422 project_required. Sprint 2: a Partner is 403 partner_refused. {slug: 'preset:<slug>', v, project?} equips a STARTER item at the engine's version (any other v: 404 unknown_version with latest; an unknown slug 404 unknown_item): it writes the project's COPY first, the item's body as the doc starter/<slug>.md through the knowledge write door (its k_docs row and ONE ledger row, kind knowledge; refused as that door refuses: project_forbidden, invalid_ops), then ONE equip filing (parent none, gapRefs [\"preset/<slug>\"], proof preset:<slug>@v<n>); 409 already_current when the project's newest equip of it is that version; a later edit of the copy is the project's own (preview then file kind doc on that path), and Update re-copies it",
+   "equip": "equip {slug, v, project?, confirm?, equipOnConfirm?} · POST /broadcast/equip {slug, v, project?, confirm?}: serves equip and update-version; anyone seated on the target project (the owner on any active one); project defaults to the request's own. 403 not_seated · 404 unknown_item · 404 unknown_version · 409 already_current · 422 project_required. Sprint 2: a Partner is 403 partner_refused. {slug: 'preset:<slug>', v, project?} equips a STARTER item at the engine's version (any other v: 404 unknown_version with latest; an unknown slug 404 unknown_item): it writes the project's COPY first, the item's body as the doc starter/<slug>.md through the knowledge write door (its k_docs row and ONE ledger row, kind knowledge; refused as that door refuses: project_forbidden, invalid_ops), then ONE equip filing (parent none, gapRefs [\"preset/<slug>\"], proof preset:<slug>@v<n>); 409 already_current when the project's newest equip of it is that version; a later edit of the copy is the project's own (preview then save_knowledge kind doc on that path), and Update re-copies it",
    "reply": "JSON: publish {id, slug, v, item}, equip {id, slug, v, project, from}; a form is sent (303) to /broadcast?published=<id> or /broadcast?equipped=<id>; a starter equip also {doc:'starter/<slug>.md', knowledge:<the copy's ledger id>} and its form is sent to /broadcast?equipped=<id>&doc=<path>"
   },
   "unreachable": "a failed ledger statement answers 200 with live:'unreachable', empty regions and null counts; a D1 quota error propagates",
@@ -590,30 +590,32 @@
  "knowledge": {
   "_doc": "additive (sprint 1, slice 0: the knowledge core, docs/plan/ARCHITECTURE.md §2-§4): a project's own knowledge lives in D1 (migrate-039.sql: k_aim · k_goals · k_questions + k_options · k_checks · k_cards · k_card_kinds · k_nodes · k_edges · k_gtm · k_docs, and k_versions · k_snapshots · org for the later slices), written through ONE validated door and read through ONE store.",
   "doors": [
-   "file",
+   "save_knowledge",
+   "remove_knowledge",
    "read",
-   "POST /file",
+   "POST /preview/save-knowledge",
+   "POST /preview/remove-knowledge",
    "GET /read",
    "formats",
    "GET /formats"
   ],
   "seams": "src/knowledge/schema.js (the registry and planKnowledge, pure) · src/knowledge/write.js writeKnowledge · src/knowledge/store.js readKnowledge · listKnowledge · getKnowledge · knowledgeCounts",
   "write": {
-   "body": "D5: knowledge items reach the write door through preview then file: preview {project?, items: [{ kind, op: \"upsert\" | \"remove\", data }] (1 to 200 items), clientRef?, eval?}, then file {previewId, items} with the same items (the MCP arguments and the POST /preview, POST /file JSON bodies alike); src/knowledge/write.js writeKnowledge is the write file runs, once per file call, with every knowledge item of it",
+   "body": "D5 (split in sprint 19): knowledge items reach the write door through a preview, then the write tool of their op: preview {project?, items: [{ kind, op: \"upsert\" | \"remove\", data }] (1 to 200 items), clientRef?, eval?}, then save_knowledge {previewId, items} with the preview's upserts and remove_knowledge {previewId, items} with its removes, each as previewed (the MCP arguments and the POST /preview, POST /preview/save-knowledge, POST /preview/remove-knowledge JSON bodies alike); src/knowledge/write.js writeKnowledge is the write each runs, once per call, with every item of its part",
    "merge": "an upsert merges: a field present in data overwrites, an absent one keeps its stored value, and the merged row is what is checked; a new row needs its required fields; a remove needs only the key fields, and removing what is not there changes nothing",
    "rules": "per op, the kind's field rules (src/knowledge/schema.js KINDS: the brain kit's goal tree, measure, question, gap, flow and GTM template rules); across the batch's end state: exactly one root goal, every parent a goal, no cycle, a removed goal leaves no child; an open question has 2 or more options and no choice, a ruled one with options names its choice or carries a label; an edge's two nodes exist; a card's refs (at most 12, card/<kind>/<id>) are cards of the same project the writer may read, never the card itself (missing_card names the near matches); a node's ownedBy (its data.ownedBy, a diagram part's ownedBy) names an active project of the org the writer may read, never the one written (unknown_project lists the keys they may name; a key the stored node already named is not checked again). A question's options ride inline (data.options: [{what, tradeoff?}], at most 26) and replace the stored ones when sent; removing a question removes its options, removing a node its edges.",
-   "allOrNothing": "every item is checked in the preview (an item that breaks a rule is `needs` or `refused`, with the door's own code and note, and file then refuses the call not_ready unless only: \"ready\"); the knowledge items file all together, in ONE D1 batch with their one ledger row, or none",
+   "allOrNothing": "every item is checked in the preview (an item that breaks a rule is `needs` or `refused`, with the door's own code and note, and save_knowledge or remove_knowledge then refuses the call not_ready unless only: \"ready\"); each part's items file all together, in ONE D1 batch with their one ledger row, or none",
    "who": "a seated member writes their project, the owner any active project; a person with no seat on the resolved project is refused project_forbidden (even in a single-project org, where doorProject alone would stamp them into it); only the owner writes a question's ruling fields (a status other than open, choice, label, rationale, decidedBy, decidedAt, supersededBy) or edits or removes a ruled question (owner_only, inside invalid_ops); a read-only credential or a read-only OAuth grant never reaches it",
    "ledger": "ONE contribution row per call that changed something: lane leader, kind knowledge (reserved: 422 reserved_kind on every other filing door), routed auto, what = the summary (\"1 aim, 3 goals written\"), touches = <kind>:<id> of up to 30 items, via = mcp | http (the door, never the caller's word), client_ref = clientRef, eval honoured",
-   "reply": "file's receipt names each knowledge item's status (filed, with the one ledger row's id; unchanged; not_filed with the note) under results[] and items[]; a retry of the same preview, or a batch clientRef filed again, files nothing twice",
-   "idempotent": "the batch clientRef is per person; preview marks an item already stored the same `unchanged`, and file files only what changed"
+   "reply": "the write tool's receipt names each knowledge item's status (filed, with the one ledger row's id; unchanged; not_filed with the note) under results[] and items[]; a retry of the same preview, or a batch clientRef filed again, files nothing twice",
+   "idempotent": "the batch clientRef is per person; preview marks an item already stored the same `unchanged`, and the write tool files only what changed"
   },
   "read": {
    "query": "kind (required), id?, q?, cursor?, limit? (default 50, at most 200), cardKind?; the REST twin takes kind and id in the path and the rest as ?query",
    "project": "the project the door scoped (src/core.js projectOf, after resolveProject): a named project is one of the caller's seats, or any active one for the owner",
    "list": "{ project, kind, items, next, note? }: items in key order; next = the last item's key while there is more (a composite key's parts joined by |: a card kind|id, an edge from|to|kind); q matches a substring of the kind's id and title fields in any case; note names the knowledge item when the kind is empty",
    "item": "{ project, kind, item }; not there: 404 not_found",
-   "shape": "an item is its fields as preview then file takes them (a question with its options [{what, tradeoff}]), plus createdBy, createdAt, updatedBy, updatedAt"
+   "shape": "an item is its fields as preview then save_knowledge takes them (a question with its options [{what, tradeoff}]), plus createdBy, createdAt, updatedBy, updatedAt"
   },
   "errors": [
    "ops_required",
@@ -933,7 +935,7 @@
    "nextAction": "Retry with real content."
   },
   "forbidden": {
-   "meaning": "The caller authenticated, but may not read/write this specific resource (a role's brief it can't read, a private artifact it doesn't own). Or, inside a preview then file invalid_ops, a non-owner's op on a doc, a card or a card kind their role may not read, or on a card of such a kind.",
+   "meaning": "The caller authenticated, but may not read/write this specific resource (a role's brief it can't read, a private artifact it doesn't own). Or, inside a preview then save_knowledge invalid_ops, a non-owner's op on a doc, a card or a card kind their role may not read, or on a card of such a kind.",
    "nextAction": "Do not retry unchanged — use a credential that holds the resource, or ask its owner.",
    "class": "not-allowed"
   },
@@ -981,7 +983,7 @@
    "nextAction": "Fix every op named, then send the whole batch again (the same clientRef is fine: nothing was filed under it)."
   },
   "items_required": {
-   "meaning": "POST /file's body carried no items array (or an empty one).",
+   "meaning": "A preview's or a write tool's body carried no items array (or an empty one, or over 200 for a write tool).",
    "nextAction": "Retry with at least one item."
   },
   "kind_and_id_required": {
@@ -1052,7 +1054,7 @@
    "nextAction": "Retry with qid and option, the index of one of the question's published options (0 for A, 1 for B, 2 for C); `decisions` lists them."
   },
   "owner_only": {
-   "meaning": "This door/tool is owner-role only, and the caller isn't the org's owner. Or, inside a preview then file invalid_ops, a member's op on a question's ruling: a status other than open, a choice, label, rationale, decidedBy, decidedAt or supersededBy, or an edit or remove of a ruled question; a non-owner writing a role's brief doc capsules/<role>.md or start-here.md; or a non-owner setting or changing roleVisibility.",
+   "meaning": "This door/tool is owner-role only, and the caller isn't the org's owner. Or, inside a preview then save_knowledge invalid_ops, a member's op on a question's ruling: a status other than open, a choice, label, rationale, decidedBy, decidedAt or supersededBy, or an edit or remove of a ruled question; a non-owner writing a role's brief doc capsules/<role>.md or start-here.md; or a non-owner setting or changing roleVisibility.",
    "nextAction": "Do not retry unchanged — use the owner's own credential, or ask the owner to do this.",
    "class": "not-allowed"
   },
@@ -1062,7 +1064,7 @@
    "class": "not-allowed"
   },
   "project_required": {
-   "meaning": "This caller holds more than one seat, so the write needs an explicit `project` to stamp — the server refuses to guess; or POST /broadcast/equip named no project and the request has none of its own; or (U-MCP-tail-b D6) submit_grade has no project to count against (a caller seated nowhere in a multi-project org) or its filing would be stamped into another project than the pack it reads — nothing is filed. Or preview then file / POST /file / read resolved no project (a caller holding more than one seat with none active, or the owner seated nowhere in a multi-project org): nothing is written or read.",
+   "meaning": "This caller holds more than one seat, so the write needs an explicit `project` to stamp — the server refuses to guess; or POST /broadcast/equip named no project and the request has none of its own; or (U-MCP-tail-b D6) submit_grade has no project to count against (a caller seated nowhere in a multi-project org) or its filing would be stamped into another project than the pack it reads — nothing is filed. Or preview / read resolved no project (a caller holding more than one seat with none active, or the owner seated nowhere in a multi-project org): nothing is written or read.",
    "nextAction": "Retry with `project` set to one of the seats listed — the refusal's `note` names them and its `example` carries one ready to send (for an equip: the project to equip into)."
   },
   "q_required": {
@@ -1087,8 +1089,8 @@
    "nextAction": "Retry with a shorter ref."
   },
   "reserved_kind": {
-   "meaning": "A filing with kind publish, equip or knowledge reached file (a contribution item). Publish and equip are written only by a person's press on Broadcast, knowledge only by the knowledge write door (one row per preview then file call). Nothing was filed (a batch files none of its items).",
-   "nextAction": "Do not retry with that kind: file a draft as kind item (FILING_ITEM_CALL) and let its author press Publish, or the people seated on a project press Equip, on Broadcast; write knowledge with preview then file (POST /file).",
+   "meaning": "A filing with kind publish, equip or knowledge reached file_contribution (a contribution item). Publish and equip are written only by a person's press on Broadcast, knowledge only by the knowledge write door (one row per save_knowledge or remove_knowledge call). Nothing was filed (a batch files none of its items).",
+   "nextAction": "Do not retry with that kind: file a draft as kind item (FILING_ITEM_CALL) and let its author press Publish, or the people seated on a project press Equip, on Broadcast; write knowledge with preview then save_knowledge (POST /preview/save-knowledge).",
    "class": "not-allowed"
   },
   "slug_required": {
@@ -1122,7 +1124,7 @@
    "nextAction": "Send data.options with 2 or more [{what, tradeoff}] (a ruling may carry none)."
   },
   "too_large": {
-   "meaning": "The content sent is over this door's byte limit (see `maxBytes`); on preview then file (inside invalid_ops), a render's or a style's body over its limit (html 200 KB, css 200 KB, a wireframe 50 KB, an image 1 MB), a call whose carried bodies (html, css, wireframes) together pass 256 KB, or whose image renders' pictures together pass 1 MB — the error's index names the op.",
+   "meaning": "The content sent is over this door's byte limit (see `maxBytes`); on preview then save_knowledge (inside invalid_ops), a render's or a style's body over its limit (html 200 KB, css 200 KB, a wireframe 50 KB, an image 1 MB), a call whose carried bodies (html, css, wireframes) together pass 256 KB, or whose image renders' pictures together pass 1 MB — the error's index names the op.",
    "nextAction": "Retry with smaller content, or split it (a call's bodies: send the named op and the ones after it in another call)."
   },
   "too_many_attempts": {
@@ -1183,7 +1185,7 @@
   },
   "unknown_check": {
    "meaning": "submit_grade (POST /grade) or regrade (POST /regrade, checks) named a checkId the project's check register (k_checks) does not carry. Nothing was filed or regraded.",
-   "nextAction": "List the project's checks with read {kind: \"check\"} (brief {for: <a ref>} for one item's), then retry with one of their ids; file a new check as an item {kind: \"check\", op: \"upsert\", data} through preview, then file.",
+   "nextAction": "List the project's checks with read {kind: \"check\"} (brief {for: <a ref>} for one item's), then retry with one of their ids; file a new check as an item {kind: \"check\", op: \"upsert\", data} through preview, then save_knowledge.",
    "class": "not-found"
   },
   "unknown_option": {
@@ -1225,7 +1227,7 @@
    "nextAction": "Read the kinds back before retrying; a retry with the same clientRef is safe (a write that did land answers replay)."
   },
   "partner_refused": {
-   "meaning": "publish, equip or regrade (the MCP tools, or their REST twins POST /broadcast/publish, POST /broadcast/equip and POST /regrade), or a restore of a screen's take (a render upsert naming a take's hash on preview then file, inside invalid_ops; POST /render/restore), was called by a Partner: the role CLASS (src/hats.js roleClassOf: people.role partner, or a typed outside label such as external-* or vendor). An outside collaborator works on the projects they are seated on and never publishes to the org's shelf, equips into a project, regrades its checks or restores a screen's previous take. Nothing was read or filed.",
+   "meaning": "publish, equip or regrade (the MCP tools, or their REST twins POST /broadcast/publish, POST /broadcast/equip and POST /regrade), or a restore of a screen's take (a render upsert naming a take's hash on preview then save_knowledge, inside invalid_ops; POST /render/restore), was called by a Partner: the role CLASS (src/hats.js roleClassOf: people.role partner, or a typed outside label such as external-* or vendor). An outside collaborator works on the projects they are seated on and never publishes to the org's shelf, equips into a project, regrades its checks or restores a screen's previous take. Nothing was read or filed.",
    "nextAction": "Ask a member of the org to publish the draft, equip the item or regrade the checks or restore the take, or ask the admin to make you a member on Control.",
    "class": "not-allowed"
   },
@@ -1253,32 +1255,40 @@
   },
   "preview_id_required": {
    "meaning": "file was sent no previewId of the form preview answers (P- and 16 hex). Nothing was filed.",
-   "nextAction": "Send previewId: the id preview answered, and the same items."
+   "nextAction": "Send previewId: the id preview answered, and the items of the tool's operation, as previewed."
   },
   "preview_not_found": {
    "class": "not-found",
-   "meaning": "file named a preview that is not the caller's own: none with that id, or another person's (the same answer either way, so an id grants nothing). GET /preview/:id answers its usual 404 for the same reasons. Nothing was filed.",
+   "meaning": "A write tool (file_contribution, save_knowledge, remove_knowledge) named a preview that is not the caller's own: none with that id, or another person's (the same answer either way, so an id grants nothing). GET /preview/:id answers its usual 404 for the same reasons. Nothing was filed.",
    "nextAction": "Preview the items again (preview) and file with the id it answers."
   },
   "preview_filed": {
-   "meaning": "file named a preview that was already filed; nothing was filed again. The answer carries its receipt (what each item became).",
-   "nextAction": "Nothing: read the receipt. Preview again to file something new."
+   "meaning": "A write tool named a preview whose part of that operation was already filed; nothing was filed again. The answer carries that part's first receipt (what each item became).",
+   "nextAction": "Nothing: read the receipt. File the preview's other parts with their own tools, or preview again to file something new."
   },
   "preview_expired": {
-   "meaning": "file named a preview older than an hour, and nothing of it had been filed. Nothing was filed.",
+   "meaning": "A write tool named a preview older than an hour, and nothing of its part had been filed. Nothing was filed.",
    "nextAction": "Preview the items again, then file with the new previewId."
   },
   "preview_changed": {
-   "meaning": "file was sent items whose digest (sha256 of the items as canonical JSON) differs from the preview's: what would be filed is not what the person saw. Nothing was filed.",
-   "nextAction": "Preview the items again, then file with the new previewId and exactly those items."
+   "meaning": "A write tool was sent items whose digest (sha256 of the items as canonical JSON) differs from the preview's items of its operation, in their order: what would be filed is not what the person saw (or the preview was made before the split, sprint 19). Nothing was filed; items names the preview's items of that operation.",
+   "nextAction": "Send the preview's items of that operation as previewed, or preview again, then file with the new previewId."
   },
   "not_ready": {
-   "meaning": "file named a preview with items that are not ready (verdict needs or refused), and the call did not ask for only \"ready\". Nothing was filed; notReady lists each such item's index and verdict.",
-   "nextAction": "Fix those items and preview again, or file again with only: \"ready\" to file the ready ones and leave the rest."
+   "meaning": "A write tool named a preview whose items of its operation are not all ready (verdict needs or refused), and the call did not ask for only \"ready\". Nothing was filed; notReady lists each such item's index and verdict.",
+   "nextAction": "Fix those items and preview again, or call the tool again with only: \"ready\" to file the ready ones and leave the rest."
+  },
+  "wrong_tool": {
+   "meaning": "sprint 19 (the split door): a write tool was sent an item of another operation (items names each, what it is and the tool that files it: file_contribution a contribution, save_knowledge a knowledge upsert, remove_knowledge a knowledge remove; submit_grade a grade, respond an answer), or preview was sent a grade or an answer (that item is refused, naming submit_grade or respond). Nothing was filed.",
+   "nextAction": "Send each write tool only the preview's items of its own operation, as previewed; file a grade with submit_grade and an answer with respond."
+  },
+  "nothing_to_file": {
+   "meaning": "sprint 19: a write tool named a preview that holds no item of its operation (parts names each tool the preview's items are filed with). Nothing was filed.",
+   "nextAction": "Call the tool the parts name, with its items."
   },
   "batch_failed": {
-   "meaning": "One grade of a file call did not come back from the batch door, so it is not filed; the receipt names it, the others stand.",
-   "nextAction": "File again with the same previewId: what landed is found by its clientRef and never filed twice."
+   "meaning": "One grade or answer of a call did not come back from the batch door, so it is not filed; the answer names it, the others stand.",
+   "nextAction": "Send the same call again with the same clientRefs: what landed is found by its clientRef and never filed twice."
   },
   "unreachable": {
    "meaning": "GET /preview/:id (JSON) could not read the preview right now (a D1 error other than the daily limit). Nothing was read or written.",
@@ -1341,16 +1351,16 @@
   "bad_answer": {
    "class": "not-found",
    "meaning": "A JSON-RPC response POSTed to /mcp (a client's answer to a confirm, sprint 3 D3) was neither an elicitation result (action accept, decline or cancel) nor a JSON-RPC error. HTTP 400; nothing was recorded or filed.",
-   "nextAction": "Answer the elicitation/create request with {action, content} as the MCP elicitation spec shapes it, or call file with the previewId and the same items."
+   "nextAction": "Answer the elicitation/create request with {action, content} as the MCP elicitation spec shapes it, or send the write tool's call again without fileOnConfirm once the person said yes."
   },
   "confirm_failed": {
-   "meaning": "The confirm's stream (preview with fileOnConfirm; publish or equip with its OnConfirm flag, 7.5b) could not finish: a database call failed while it waited or filed. Nothing more was filed by the stream; what landed before is in the preview's receipt.",
-   "nextAction": "Call file with the previewId and the same items: a retry files only what did not land."
+   "meaning": "The confirm's stream (a write tool with fileOnConfirm, sprint 19; publish or equip with its OnConfirm flag, 7.5b) could not finish: a database call failed while it waited or filed. Nothing more was filed by the stream; what landed before is in the preview's receipt.",
+   "nextAction": "Send the same call again without fileOnConfirm: a retry files only what did not land."
   },
   "confirm_not_open": {
    "class": "not-found",
-   "meaning": "A client's answer to a confirm named no open confirm of the caller's: another person's elicitation, another session's, a wrong id, an answer after the window (50 s), a second answer, a preview already filed, or (7.5b) a retry naming another tool's confirm or a changed call (the same answer for each, so an id grants nothing). HTTP 400; nothing was recorded or filed.",
-   "nextAction": "Nothing to retry: preview again with fileOnConfirm, or call file with the previewId and the same items."
+   "meaning": "A client's answer to a confirm named no open confirm of the caller's: another person's elicitation, another session's, a wrong id, an answer after the window (50 s), a second answer, a preview already filed, or (7.5b) a retry naming another tool's confirm (sprint 19: another write tool's too) or a changed call (the same answer for each, so an id grants nothing). HTTP 400; nothing was recorded or filed.",
+   "nextAction": "Nothing to retry: call the write tool again with fileOnConfirm for a new confirm, or without it once the person said yes."
   },
   "session_required": {
    "class": "not-allowed",
@@ -1364,7 +1374,7 @@
   },
   "unknown_brief": {
    "meaning": "brief with no `for` (or GET /brief?role=) named a role whose brief (the doc capsules/<role>.md) the project does not hold, or one your role may not read: the two read the same (see `briefs`).",
-   "nextAction": "Name one of `briefs` as role, or file the brief: preview then file, a doc at capsules/<role>.md."
+   "nextAction": "Name one of `briefs` as role, or file the brief: preview then save_knowledge, a doc at capsules/<role>.md."
   },
   "invalid_token": {
    "meaning": "An OAuth access token the provider still holds, whose person the door refuses: their key or passphrase changed after the grant (G2 M1), or they were removed; or a grant made before connections carried their credentials' stamp (before G2: sprint 7, 7.5b — it could never be checked, so it ends; its error_description says so). Nothing was read or written.",
@@ -1382,7 +1392,7 @@
    "class": "not-allowed"
   },
   "unknown_render": {
-   "meaning": "A render upsert that restores a take (data.hash, no body) names a hash this project's takes do not hold: never filed here, or another project's (the two read the same). On preview then file it rides in invalid_ops (nothing was written); POST /render/restore answers it 404.",
+   "meaning": "A render upsert that restores a take (data.hash, no body) names a hash this project's takes do not hold: never filed here, or another project's (the two read the same). On preview then save_knowledge it rides in invalid_ops (nothing was written); POST /render/restore answers it 404.",
    "nextAction": "Send the hash of one of this project's takes (map {ref: \"screen:<id>\"} lists a screen's last six, each with its hash), or send the frame's body instead.",
    "class": "not-found"
   },
@@ -1472,8 +1482,8 @@
  "shapes": {
   "_doc": "additive (sprint 3, B1; docs/plan/MCP.md §9 demand 2): the contribution shapes. ONE declaration, src/shapes.js SHAPES (a shape per lane of src/lanes.js), read by the filing doors, read, the contribution's page, the `formats` read and this contract (its fields, examples and places are GENERATED into `formats.shapes`). The fields new in B1 are each optional and checked at the door before anything is read or written: source, depends, open, next on every shape; audience, claim, channel, experiment on the gtm shape. src/transmission.js gateGrade never reads them: a missing one is never a refusal and the grade's reasons are unchanged.",
   "doors": [
-   "file",
-   "POST /file",
+   "file_contribution",
+   "POST /preview/file-contribution",
    "read",
    "GET /contribution/:id",
    "formats",
@@ -1486,15 +1496,19 @@
   "happenedAt": "sprint 3, the owner's MCQ 2026-10-01 (keep the filing time true, add the real date beside it): optional on every shape, when the work really happened: a date YYYY-MM-DD or a UTC date-time (ISO 8601, Z), never in the future (bad_field happenedAt), never before 2000-01-01. The row is still filed now (created_at, never backdated); migrate-051's contribution.happened_at keeps the date as sent and a date-time as toISOString(), returned by read and GET /contribution/:id as happened_at. Shown on the contribution's page (the trail: 'Happened <day> · filed <day>' when the days differ), on Build's rows (the time shown, 'filed <day>' in the title) and in a preview's line and text ('happened <day>'). The timelines a person reads use COALESCE(happened_at, created_at): Build's Newest (and the order inside Ranked and By goal), Home's goals moved this month, Broadcast's live picture's last 7 days and each dot's place; every count about the record (ids, rate limits, idempotency, the tallies, the queue, Home's metrics, Build's Moved this week) stays on created_at"
  },
  "preview": {
-  "_doc": "additive (sprint 3, B2; docs/plan/MCP.md §4 Two directions; the owner's ruling: every filing is previewed first): preview, then file. src/preview.js previewItems and fileItems; src/reach.js (what a set of items reaches); src/previewtext.js (the terminal block); src/previewpage.js (GET /preview/:id); migrate-048.sql (previews, WITHOUT ROWID).",
+  "_doc": "additive (sprint 3, B2; docs/plan/MCP.md §4 Two directions; the owner's ruling: every filing is previewed first; split in sprint 19 by the owner's ruling of 2026-10-13, by what the write does): preview shows and never files; three write tools file, each ONE operation of a preview (src/formats.js WRITE_TOOLS): file_contribution its contributions (it only adds), save_knowledge its knowledge upserts, remove_knowledge its knowledge removes. src/preview.js previewItems and filePart; src/reach.js (what a set of items reaches); src/previewtext.js (the terminal block); src/previewpage.js (GET /preview/:id); migrate-048.sql (previews, WITHOUT ROWID).",
   "doors": [
    "preview",
-   "file",
+   "file_contribution",
+   "save_knowledge",
+   "remove_knowledge",
    "POST /preview",
-   "POST /file",
+   "POST /preview/file-contribution",
+   "POST /preview/save-knowledge",
+   "POST /preview/remove-knowledge",
    "GET /preview/:id"
   ],
-  "items": "1 to 200, each ONE of: a knowledge op {kind, op, data} (preview then file's), {contribution: {...}} (file's body, every shape field), {grade: {checkId, verdict, proof}} (submit_grade's), {answer: {qid, option, provisional?}} (respond's)",
+  "items": "1 to 200, each ONE of: {contribution: {...}} (file_contribution's, every shape field), a knowledge upsert {kind, op: 'upsert', data} (save_knowledge's), a knowledge remove {kind, op: 'remove', data} (remove_knowledge's); each answered with filesWith, the tool that files it, and the answer's parts [{tool, items, ready}]; a {grade} or an {answer} is refused wrong_tool (submit_grade and respond file those at once). Each write tool takes {previewId, items: the preview's items of its operation, as previewed and in their order, only?: 'ready', fileOnConfirm?} and refuses an item of another operation wrong_tool (each named with the tool that files it); a preview holding none of its operation is nothing_to_file; the schema of each tool's items is exactly its form (src/formats.js ITEM_SCHEMA_OF), preview's the anyOf of the three",
   "verdicts": {
    "files": "files at once",
    "waits_for_owner": "files, and waits in the owner's queue (the reasons say why, in words)",
@@ -1502,11 +1516,11 @@
    "unchanged": "stored already, the same (or already filed under its clientRef)",
    "refused": "the door's own refusal (no seat, owner only, a reserved kind, a question no longer open, a read-only key)"
   },
-  "writes": "a preview writes ONE previews row (summary without any body, at most 64 KB, a larger one stored grouped by kind), nothing else; a read-only key's preview writes nothing. file writes through the existing doors, in order: knowledge (one preview then file batch, all or nothing), contributions (one batch-door batch), grades (knowledge/grades.js gradeChecks: one batch of filings, one of result rows), answers (one respondOptions call), then ONE update of the previews row (its receipt)",
-  "retry": "each part is filed under its own clientRef (pv:<previewId>:k for the knowledge, pv:<previewId>:<c|g|a><index> for each contribution, grade and answer, or the item's own clientRef): a retry of file with the same previewId reads which already landed in one statement and files only the rest; a batch clientRef sent to preview (1 to 48 letters, digits, . _ : -) names the parts instead (<it>:k, <it>:<c|g|a><index>), so the same batch previewed again and filed again files nothing twice",
-  "authority": "the project is the door's own stamp (doorProject) held to the read scope (projectCallScope): a seat, or the owner; a read-only key previews (every item refused for filing) and never files; file reads a preview only for its author and re-checks the author's right to the project; GET /preview/:id opens for its author and anyone who may read its project (a Partner only with a seat), else 404; ?k= is never a credential here; a contribution's screens, components and depends are checked against the stamped project's own Map (src/maprefs.js), and the near matches of a ref that is not there come only from that project, after the read-scope check",
-  "confirm": "sprint 3, D3 (src/confirm.js): preview {fileOnConfirm: true} from a client that declared elicitation at initialize (it then holds an Mcp-Session-Id sg1e.<32 hex>; sprint 13, 13.1: a client whose initialize clientInfo names a known AI family holds sg1<flags>.<family>.<32 hex>, claude, claude-code, chatgpt or codex, and holds one even with no flag, so the door can stamp which AI filed a row: src/client.js) answers a text/event-stream: first the server's elicitation/create (the preview's text, at most 4,000 characters; the form ONE boolean, file, required, false by default), keep-alive comments, then the tools/call result. The client answers on another POST (the JSON-RPC response, with the session id): recorded by ONE conditional UPDATE bound to the preview's author, a write-capable credential, the session and the nonce, inside 50 s, the first answer, before any file (202; anything else 400 and nothing changes). On accept with file: true the stream files exactly that preview through the ordinary file tool (the same checks and digest) and answers its receipt with confirm {asked, answer, filed, polls}; decline, cancel, accept with file false, a JSON-RPC error or no answer in 50 s file nothing and say so. Asked only when every item is ready; a client that did not declare elicitation, a request that does not accept a stream, or a batch gets the plain preview with confirm {asked: false, note}. The two calls, preview then file, are unchanged. D3b, the stateless revision (2026-07-28, MRTR): a request that declares form elicitation in its _meta clientCapabilities is answered {resultType: input_required, inputRequests: {file: elicitation/create, mode form, the same message and form}, requestState: sg2.<previewId>.<nonce>}; no stream. The client retries the same call with requestState and inputResponses.file: recorded by the same conditional UPDATE, keyed to the person (sha256(nonce:person:mrtr)), inside 10 minutes, once; accept with file: true files through the same file tool and answers the receipt with confirm {asked, answer, filed}; decline, cancel or accept with file false files nothing and says so; a state that names no open confirm of the caller's is 400 -32602 and nothing changes. A request that did not declare elicitation gets the plain preview with confirm {asked: false, note}. Sprint 7, 7.5b: publish {publishOnConfirm: true} and equip {equipOnConfirm: true} ask the SAME confirm (both revisions, the same conditions): the verb answers its preview (nothing published or equipped) and writes ONE confirm row in previews holding what the preview showed (the draft's id; the slug, version and RESOLVED project) — never a preview of items (file and the preview page answer it as unknown); the form is titled Publish or Equip and says the preview's line. On accept the row is claimed once (its author's, of that verb, answered accept: one read, one conditional DELETE) and the verb runs with confirm: true on exactly those args through the same tool (every check again, as the person); decline, cancel, a timeout or a closed stream run nothing, the answer is the preview again with confirm {asked, answer, filed: false, note} — the note names the two calls, which a client that declines every confirm on its own (Claude Code desktop, BETA line 3) uses. The stateless retry is bound to the verb's row and the call as sent (its digest): a requestState never crosses tools. A read-only credential, a verb with no project, a client with no elicitation, a request that does not accept a stream or a batch gets the plain preview with confirm {asked: false, note}. The two calls (the verb, then the verb with confirm: true) are unchanged.",
-  "card": "sprint 3, D3 (src/previewcard.js, MCP Apps 2026-01-26): preview, file, publish and equip carry _meta {ui: {resourceUri: ui://sharingu/card}, ui/resourceUri} in tools/list (a host without the extension ignores it). resources/read ui://sharingu/card answers ONE static HTML document (mimeType text/html;profile=mcp-app; the brand tokens and the parts' stylesheet inlined; no external request; one script, the Apps bridge; CSP default-src 'none'), not listed by resources/list. A client that declared the extension at initialize (session sg1u.) gets the card's fragment in the result's _meta[\"sharingu/card\"].html, drawn by the same summary renderer as GET /preview/:id; resources/read brain://card/<previewId> answers the same fragment from the preview's row under the page's own read rule. The card's File press is an ordinary tools/call file {previewId, items} through the host.",
+  "writes": "a preview writes ONE previews row (summary without any body, at most 64 KB, a larger one stored grouped by kind; summary.parts the item indices of each write tool; the digest column each part's digest, by its tool), nothing else; a read-only key's preview writes nothing. Each write tool writes through an existing door: save_knowledge and remove_knowledge one writeKnowledge batch each (all or nothing), file_contribution one batch-door batch; then ONE update of the previews row (its part's receipt under filed.parts.<tool>; filed_at once every part is filed whole)",
+  "retry": "each part is filed under its own clientRef (pv:<previewId>:k for the upserts, pv:<previewId>:kr for the removes, pv:<previewId>:c<index> for each contribution, or the item's own clientRef): a retry of the write tool with the same previewId reads which already landed in one statement and files only the rest, and a part filed whole answers preview_filed with its first receipt; a batch clientRef sent to preview (1 to 48 letters, digits, . _ : -) names the parts instead (<it>:k, <it>:kr, <it>:c<index>), so the same batch previewed again and filed again files nothing twice",
+  "authority": "the project is the door's own stamp (doorProject) held to the read scope (projectCallScope): a seat, or the owner; a read-only key previews (every item refused for filing) and never files; a write tool reads a preview only for its author and re-checks the author's right to the project; GET /preview/:id opens for its author and anyone who may read its project (a Partner only with a seat), else 404; ?k= is never a credential here; a contribution's screens, components and depends are checked against the stamped project's own Map (src/maprefs.js), and the near matches of a ref that is not there come only from that project, after the read-scope check",
+  "confirm": "sprint 3, D3 (src/confirm.js; moved to the write tools in sprint 19): file_contribution, save_knowledge or remove_knowledge {previewId, items, fileOnConfirm: true} runs every check of its filing and files nothing; a refusal is answered as it is, and a part that would file asks the person, on a client that declared elicitation at initialize (it then holds an Mcp-Session-Id sg1e.<32 hex>; sprint 13, 13.1: a client whose initialize clientInfo names a known AI family holds sg1<flags>.<family>.<32 hex>, claude, claude-code, chatgpt or codex, and holds one even with no flag, so the door can stamp which AI filed a row: src/client.js). The confirm's binding is written into the preview's row (ONE conditional UPDATE: its author, not filed whole; {key, until, tool}, replacing an earlier part's), then the answer is a text/event-stream: first the server's elicitation/create (the part's text, at most 4,000 characters; the form ONE boolean, file, required, false by default, titled File, Save or Remove and saying how many items into which project), keep-alive comments, then the tools/call result. The client answers on another POST (the JSON-RPC response, with the session id): recorded by ONE conditional UPDATE bound to the preview's author, a write-capable credential, the session and the nonce, inside 50 s, the first answer, before the preview is filed whole (202; anything else 400 and nothing changes); the stream reads an answer only under its own binding. On accept with file: true the stream files the part through the same tool without fileOnConfirm (the same checks and digest) and answers its receipt with confirm {asked, answer, filed, polls}; decline, cancel, accept with file false, a JSON-RPC error or no answer in 50 s file nothing and say so. A client that did not declare elicitation, a request that does not accept a stream, a batch, or an account connection acting outside its own org gets the check with filed: false and confirm {asked: false, note}: the person was not asked and nothing was filed. A part with nothing to file (every item unchanged) is answered without asking. D3b, the stateless revision (2026-07-28, MRTR): a request that declares form elicitation in its _meta clientCapabilities is answered {resultType: input_required, inputRequests: {file: elicitation/create, mode form, the same message and form}, requestState: sg2.<previewId>.<nonce>}; no stream. The client retries the same call with requestState and inputResponses.file: recorded by the same conditional UPDATE, keyed to the person (sha256(nonce:person:mrtr)) and bound to the tool retried, inside 10 minutes, once; accept with file: true files through the same tool and answers the receipt with confirm {asked, answer, filed}; decline, cancel or accept with file false files nothing and says so; a state that names no open confirm of the caller's for that tool is 400 -32602 and nothing changes. A request that did not declare elicitation gets the check with confirm {asked: false, note}. The plain call (without fileOnConfirm) is unchanged. Sprint 7, 7.5b: publish {publishOnConfirm: true} and equip {equipOnConfirm: true} ask the SAME confirm (both revisions, the same conditions): the verb answers its preview (nothing published or equipped) and writes ONE confirm row in previews holding what the preview showed (the draft's id; the slug, version and RESOLVED project) — never a preview of items (the write tools and the preview page answer it as unknown); the form is titled Publish or Equip and says the preview's line. On accept the row is claimed once (its author's, of that verb, answered accept: one read, one conditional DELETE) and the verb runs with confirm: true on exactly those args through the same tool (every check again, as the person); decline, cancel, a timeout or a closed stream run nothing, the answer is the preview again with confirm {asked, answer, filed: false, note} — the note names the two calls, which a client that declines every confirm on its own (Claude Code desktop, BETA line 3) uses. The stateless retry is bound to the verb's row and the call as sent (its digest): a requestState never crosses tools. A read-only credential, a verb with no project, a client with no elicitation, a request that does not accept a stream or a batch gets the plain preview with confirm {asked: false, note}. The two calls (the verb, then the verb with confirm: true) are unchanged.",
+  "card": "sprint 3, D3 (src/previewcard.js, MCP Apps 2026-01-26): preview, file_contribution, save_knowledge, remove_knowledge, publish and equip carry _meta {ui: {resourceUri: ui://sharingu/card}, ui/resourceUri} in tools/list (a host without the extension ignores it). resources/read ui://sharingu/card answers ONE static HTML document (mimeType text/html;profile=mcp-app; the brand tokens and the parts' stylesheet inlined; no external request; one script, the Apps bridge; CSP default-src 'none'), not listed by resources/list. A client that declared the extension at initialize (session sg1u.) gets the card's fragment in the result's _meta[\"sharingu/card\"].html, drawn by the same summary renderer as GET /preview/:id; resources/read brain://card/<previewId> answers the same fragment from the preview's row under the page's own read rule. The card's File press is ordinary tools/calls through the host, one per part not filed yet: its write tool with {previewId, items: that part's items, picked by their numbers from the preview's own}, in turn.",
   "prune": "sprint 3, D3 (src/preview.js prunePreviews, on the cron): a preview nothing was filed from is deleted a day after it expired (at most 500 rows a run); a filed or partly filed row stays (its receipt, its page)."
  },
  "createProject": {
@@ -1638,7 +1652,7 @@
   ],
   "seam": "src/missing.js computeHoles(env, reader, tenant, { includeEval }) over src/checklist.js checklistFor(env, reader, { firsts: true }): at most four D1 statements (CHECKLIST_SQL on migrate-050's k_fill, the open questions and the owner's owed set, both memoized, and CHECKLIST_FIRSTS_SQL for the open items only)",
   "project": "`project` names one of the caller's seats (the owner: any active project) — else project_forbidden with `seats` (projectScope, one helper); absent -> the caller's active project, else the first project in the org's order they may read (U-MCP Fork 2 (1)), with projectNote naming the others; seated nowhere: the org-wide reading",
-  "fillPath": "through the door: every open item's fillPath is preview {project, items: [ONE op or ONE grade]} (the registry's example with the project's ids put in and the free text as <placeholders>) with then 'then file {previewId, items} with the same items', or rule_question (the owner's); agents-equipped names /broadcast (an Equip press). fill is the same call as one line, on EVERY open item (the one-pass fix 8; past 48 KB an item past the fifth drops only its shows). Never a serve/ path or a publish step",
+  "fillPath": "through the door: every open item's fillPath is preview {project, items: [ONE knowledge upsert]} (the registry's example with the project's ids put in and the free text as <placeholders>) with then 'then save_knowledge {previewId, items} with the same items', submit_grade {project, checkId, verdict, proof} for a check's grade, or rule_question (the owner's); agents-equipped names /broadcast (an Equip press). fill is the same call as one line, on EVERY open item (the one-pass fix 8; past 48 KB an item past the fifth drops only its shows). Never a serve/ path or a publish step",
   "eval": "the checklist reads knowledge, which carries no suite mark: eval changes nothing here",
   "resources": "brain://missing reads the same seam; ?project=<key> picks the project exactly as the tool's `project` does (projectScope)",
   "shape": "{ generatedAt, org, project, intake, meter:{done, total, pct, open, words:'7 of 12 complete · 68% by depth', counts:'it counts Core, App and Proof; GTM and Agents count once started'}, areas:[{area: core|app|proof|gtm|agents, label, applies, done, total, pct, open}], next, items:[{piece (the sprint-1 piece name where one maps 1:1: aim, goals, questions, grades, gaps, start-here, gtm; else the item id), id, area, status:'open', state:'partial'|'empty', have, want, count, countText, what, first?:{id, name}, fill (the call as one line), fillPath:{tool:'preview'|'rule_question', args, then?}|null, href?, shows?, ownerOnly?}], filled:[item id], notApplicable:[{area, label, piece, what, fill, fillPath, href?, counts}], checklist:[{id, area, state:'done'|'partial'|'empty'|'not_applicable', have, want}], summary:{open, filled, done, total, pct}, live?, note? }",

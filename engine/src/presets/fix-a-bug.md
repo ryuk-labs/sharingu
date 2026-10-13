@@ -2,18 +2,19 @@
 kind: workflow
 slug: fix-a-bug
 order: 9
-version: 2
+version: 3
 title: Fix a bug
 purpose: From a report to a proven fix in six steps: reproduce, pin it with a check, fix, prove, ship, close.
-calls: preview, file, read, brief, submit_grade, ask, open_items, wrap_up
+calls: preview, file_contribution, save_knowledge, read, brief, submit_grade, ask, open_items, wrap_up
 ---
 
 # Fix a bug
 
 The standard path from "this is broken" to a fix that stays fixed. The rule that makes it stay fixed: no fix without a
 check that failed before it and passes after it. Each step names the role that takes it and ends in a filed
-contribution, so the bug's whole life is on Build. Every filing is a `preview {project, items}` the person sees, then
-`file {previewId, items}` with the same items.
+contribution, so the bug's whole life is on Build. Every filing is a `preview {project, items}` the person sees,
+then each part with the tool its items name (`filesWith`): `save_knowledge {previewId, items}` the knowledge,
+`file_contribution {previewId, items}` the contributions, each with the same items of its part.
 
 ## The steps
 

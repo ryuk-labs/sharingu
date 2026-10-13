@@ -1,7 +1,7 @@
 // tools/smoke/s4b-holes.mjs — slice 4b: loop 1 (holes -> file what is missing -> it shows, and the hole closes), and the
 // docs, cards and served-state reads on D1. A fresh project s4b (added here); the member from s0 is seated on it. Every
 // fill below is the fillPath `holes` handed out, with its placeholders replaced by real values, and nothing else.
-import { smoke, expect, brief, s, http, html, mcp, control, ownerKey, kwrite, kread } from "./lib.mjs";
+import { smoke, expect, brief, s, http, html, mcp, control, ownerKey, kwrite, kread, fileParts } from "./lib.mjs";
 
 const P = "s4b";
 const holesOf = async (key = ownerKey) => {
@@ -12,16 +12,16 @@ const holesOf = async (key = ownerKey) => {
 const openNames = (h) => (h.items || []).map((x) => x.piece);
 const holeNamed = (h, name) => (h.items || []).find((x) => x.piece === name) || null;
 // send(fillPath, fix) -> the answer, the fillPath's args changed by fix(args) (the real values an agent puts in). The one-pass
-// fix 8: a fillPath is a `preview` (then file the same items with its previewId, as fillPath.then says) or rule_question; a
-// preview's answer here is the file's receipt item (its status, id and route)
+// fix 8: a fillPath is a `preview` (then each part's write tool with the same items and its previewId, as fillPath.then says),
+// rule_question or (sprint 19) submit_grade; a preview's answer here is the receipt's item (its status, id and route)
 async function send(fillPath, fix, key = ownerKey) {
   const args = JSON.parse(JSON.stringify(fillPath.args));
   fix(args);
   const r = await mcp(key, fillPath.tool, args);
   if (r.isError) throw new Error(`${fillPath.tool}: ${brief(r.out)}`);
   if (fillPath.tool !== "preview") return r.out;
-  const f = await mcp(key, "file", { previewId: r.out.previewId, items: args.items });
-  if (f.isError) throw new Error(`file: ${brief(f.out)}`);
+  const f = await fileParts((n, a) => mcp(key, n, a), r.out, args.items);   // sprint 19: each part with its write tool
+  if (f.isError) throw new Error(`${f.step}: ${brief(f.out)}`);
   return { preview: r.out, receipt: f.out, item: f.out.items[0] };
 }
 const region = (page, r) => (new RegExp(`data-region="${r}"[\\s\\S]*?</section>`).exec(page) || [""])[0];
@@ -33,7 +33,7 @@ smoke("loop 1: holes names the missing aim with its fillPath; sending exactly th
   const aim = holeNamed(before, "aim");
   expect(before.project === P && before.next && before.next.piece === "aim" && openNames(before)[0] === "aim" && aim && aim.status === "open"
     && aim.fillPath.tool === "preview" && aim.fillPath.args.project === P && aim.fillPath.args.items.length === 1 && aim.fillPath.args.items[0].kind === "aim"
-    && /<[^>]+>/.test(aim.fillPath.args.items[0].data.aim) && /^then file \{previewId, items\}/.test(aim.fillPath.then) && aim.fill.startsWith("preview {")
+    && /<[^>]+>/.test(aim.fillPath.args.items[0].data.aim) && /^then save_knowledge \{previewId, items\}/.test(aim.fillPath.then) && aim.fill.startsWith("preview {")
     && !JSON.stringify(before).includes("serve/") && !/publish/i.test(JSON.stringify(before.items)),
   () => `holes before: ${brief(before)}`);
   const w = await send(aim.fillPath, (a) => { a.items[0].data.aim = "Close loop one on glass, with no publish step"; });
@@ -50,7 +50,7 @@ smoke("loop 1: holes names the missing aim with its fillPath; sending exactly th
   return `before: ${openNames(before).join(", ")}; sent the aim's own op; after: aim filed (next ${after.next ? after.next.piece : "none"}), Home and /missing show it in the same session`;
 });
 
-smoke("an ungraded check is a hole whose fillPath previews the grade; grading it with proof closes it", async () => {
+smoke("an ungraded check is a hole whose fillPath is its submit_grade; grading it with proof closes it", async () => {
   const w = await kwrite(ownerKey, { project: P, ops: [
     { kind: "goal", op: "upsert", data: { id: "s4b-goal", title: "Close loop one", parent: null, dimensions: ["leader"] } },
     // sprint 3 (B3): the goal tree is complete with a goal under its root, each leaf with a lane
@@ -61,19 +61,20 @@ smoke("an ungraded check is a hole whose fillPath previews the grade; grading it
   expect(!w.isError && w.out.written === 4, () => brief(w.out));
   const h = await holesOf();
   const g = holeNamed(h, "grades");
-  expect(g && g.fillPath.tool === "preview" && g.fillPath.args.items[0].grade.checkId === "AC.s4b.01" && g.fillPath.args.project === P && g.count === 2 && !openNames(h).includes("checks") && !openNames(h).includes("goals"),
+  // sprint 19: a grade files at once, so its fill is the submit_grade call itself (preview refuses a grade)
+  expect(g && g.fillPath.tool === "submit_grade" && g.fillPath.args.checkId === "AC.s4b.01" && g.fillPath.args.project === P && g.count === 2 && !openNames(h).includes("checks") && !openNames(h).includes("goals"),
     () => `holes: ${brief(h.items)}`);
   // D1b item 9: the fill line's verdict is a placeholder the client fills from what it observes (never a suggested "proven")
-  expect(/^<proven \| refused \| incomplete/.test(g.fillPath.args.items[0].grade.verdict), () => `the fill line suggests a verdict: ${brief(g.fillPath)}`);
-  const one = await send(g.fillPath, (a) => { a.items[0].grade.proof = "curl -s /home/summary?project=s4b -> aim.text set (smoke s4b)"; a.items[0].grade.verdict = "proven"; });
-  expect(one.item.filed && one.item.filed.status === "filed" && one.item.filed.counted === true && one.item.key === "AC.s4b.01", () => brief(one));
+  expect(/^<proven \| refused \| incomplete/.test(g.fillPath.args.verdict), () => `the fill line suggests a verdict: ${brief(g.fillPath)}`);
+  const one = await send(g.fillPath, (a) => { a.proof = "curl -s /home/summary?project=s4b -> aim.text set (smoke s4b)"; a.verdict = "proven"; });
+  expect(/^T-/.test(one.transmission || "") && one.counted === true && one.checkId === "AC.s4b.01", () => brief(one));
   const mid = holeNamed(await holesOf(), "grades");
-  expect(mid && mid.count === 1 && mid.fillPath.args.items[0].grade.checkId === "AC.s4b.02", () => `after one grade: ${brief(mid)}`);
-  const two = await send(mid.fillPath, (a) => { a.items[0].grade.proof = "holes after the aim write: aim filed (smoke s4b)"; a.items[0].grade.verdict = "refused"; });
-  expect(two.item.filed && two.item.filed.counted === true, () => brief(two));
+  expect(mid && mid.count === 1 && mid.fillPath.tool === "submit_grade" && mid.fillPath.args.checkId === "AC.s4b.02", () => `after one grade: ${brief(mid)}`);
+  const two = await send(mid.fillPath, (a) => { a.proof = "holes after the aim write: aim filed (smoke s4b)"; a.verdict = "refused"; });
+  expect(/^T-/.test(two.transmission || "") && two.counted === true, () => brief(two));
   const after = await holesOf();
   expect(!openNames(after).includes("grades") && after.filled.includes("grades"), () => `holes after: ${brief(after.items)}`);
-  return `grades open with 2 (fillPath previews AC.s4b.01's grade, then file), then 1 (AC.s4b.02), then filled`;
+  return `grades open with 2 (fillPath: submit_grade AC.s4b.01), then 1 (AC.s4b.02), then filled`;
 });
 
 smoke("GET /goals/:ref lists the goal's checks with their grades, and GET /goals counts them", async () => {

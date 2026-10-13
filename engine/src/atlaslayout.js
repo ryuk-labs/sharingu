@@ -335,7 +335,7 @@ export function atlasKit() {
     return '<section class="mx-sec ax-sb" data-region="screen-renders" data-screen-id="' + esc(f.id) + '">' +
       '<h4 class="mx-k">States <span>' + f.st.length + "</span></h4>" + (chips ? '<div class="ax-chips">' + chips + "</div>" : '<p class="mx-note">No state is named.</p>') +
       '<h4 class="mx-k">Renders <span>' + f.rs.length + "</span></h4>" + (rows ? '<ul class="ax-rl">' + rows + (f.rs.length > 12 ? "<li><span>and " + (f.rs.length - 12) + " more</span></li>" : "") + "</ul>"
-        : '<p class="mx-note">No render is filed for it' + (f.w ? ", only its wireframe" : "") + ': file one through preview then file, an item {kind: "render"} (screen ' + esc(f.r) + ", a state, html, a picture as base64, or a wireframe).</p>") +
+        : '<p class="mx-note">No render is filed for it' + (f.w ? ", only its wireframe" : "") + ': file one through preview then save_knowledge, an item {kind: "render"} (screen ' + esc(f.r) + ", a state, html, a picture as base64, or a wireframe).</p>") +
       '<div class="mx-acts"><button type="button" class="mx-b mx-b-go" data-button="open-full" data-client="opens the screen full size" data-i="' + i + '">Open full size</button></div></section>';
   }
   return { esc: esc, show: show, lod: lod, plan: plan, path: path, mid: mid, box: box, edges: edges, flow: flow, wireR: wireR, has: has, block: block };

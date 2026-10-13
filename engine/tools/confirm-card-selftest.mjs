@@ -10,8 +10,11 @@
 //      keys never answer each other's rows
 //   4. the prune (src/preview.js prunePreviews): only unfiled rows a day past their hour; a filed or partly filed row stays;
 //      (sprint 6, 6.4) run per org by the cron, an org's prune deletes its own projects' previews alone
+//   3c. sprint 19: the confirm moved to the write tools: storePartConfirm writes the binding into the preview's row (its author,
+//      not filed whole; a later part's replaces it), the stateless retry is bound to the tool that asked
 //   5. the card (src/previewcard.js): the template is one self-contained document (no external URL, no inline handler, one
-//      script, the CSP); the fragment's rows equal the preview's items; the File action names `file` and the preview id;
+//      script, the CSP); the fragment's rows equal the preview's items; the File action names each part's write tool, its items
+//      and the preview id;
 //      no File action for a reader who is not the author, for a preview not ready, or once filed; publish and equip previews
 //      name their own tool with confirm: true; the page and the card draw the same summary block
 //   5b. (sprint 12, 12.6) the brand faces inlined as data: fonts (font-src data: alone) inside the template's budget; a
@@ -46,7 +49,7 @@ ok(s1 && s1.elicit && s1.ui, "a session id reads back its flags");
 ok(C.sessionOf(hdr("sg1e.XYZ")) === null && C.sessionOf(hdr("random")) === null && C.sessionOf(hdr(null)) === null && C.sessionOf(hdr("sg1ue." + "a".repeat(32))) === null, "a malformed or foreign id is no session (never an error)");
 
 // ---- 2 · the elicitation ----
-const sch = C.confirmSchema(3, "alpha");
+const sch = C.partAsk({ previewId: "P-1", tool: "file_contribution", ready: 3, project: "alpha", text: "t" }, { key: "k", until: "u" }).schema;
 ok(sch.type === "object" && Object.keys(sch.properties).length === 1 && sch.properties.file.type === "boolean" && sch.properties.file.default === false && JSON.stringify(sch.required) === '["file"]', "the form: ONE boolean, required, false by default (flat, primitive: inside the spec's limits)");
 const long = Array.from({ length: 400 }, (_, i) => `line ${i} ${"x".repeat(40)}`).join("\n");
 ok(C.confirmMessage(long).length <= C.MESSAGE_MAX && /the rest is on the preview page/.test(C.confirmMessage(long)) && C.confirmMessage("short") === "short", "the message is the text, cut at MESSAGE_MAX on a line, saying so");
@@ -55,7 +58,9 @@ ok(C.answerWord({ id: 1, result: { action: "accept", content: { file: false } } 
 ok(C.answerWord({ id: 1, result: { action: "decline" } }) === "decline" && C.answerWord({ id: 1, result: { action: "cancel" } }) === "cancel" && C.answerWord({ id: 1, error: { code: -1, message: "x" } }) === "error" && C.answerWord({ id: 1, result: { action: "maybe" } }) === null, "decline, cancel, an error; anything else is no answer");
 ok(C.isResponse({ jsonrpc: "2.0", id: "x", result: {} }) && !C.isResponse({ jsonrpc: "2.0", id: 1, method: "ping" }) && !C.isResponse({ jsonrpc: "2.0", method: "n" }), "a JSON-RPC response is told from a request and a notification");
 ok(C.CONFIRM_POLLS.length === 18 && C.CONFIRM_POLLS[C.CONFIRM_POLLS.length - 1] < C.CONFIRM_WINDOW_MS && C.CONFIRM_WINDOW_MS < 60000 && C.CONFIRM_POLLS.every((t, i) => !i || t > C.CONFIRM_POLLS[i - 1]), `the poll schedule: ${C.CONFIRM_POLLS.length} reads (+1 after the window) over ${C.CONFIRM_WINDOW_MS / 1000} s (under the SDK's 60 s request timeout)`);
-ok(C.confirmPlan({ previewId: "P-1", ready: 2, notReady: 0 }) === null && C.confirmPlan({ previewId: null }) && C.confirmPlan({ previewId: "P-1", ready: 1, notReady: 1 }) && C.confirmPlan({ previewId: "P-1", ready: 0, notReady: 0 }) && C.confirmPlan({ error: "x" }), "asked only for a stored preview whose every item is ready");
+ok(C.confirmPlan({ previewId: "P-1", ready: 2 }) === null && C.confirmPlan({ previewId: "P-1", ready: 0 }) && C.confirmPlan({}), "asked only for a part that files at least one item (a refused check is answered as it is, before)");
+ok(sch.properties.file.title === "File" && sch.properties.file.description === "File 3 contributions into alpha" && C.partAsk({ previewId: "P-1", tool: "remove_knowledge", ready: 1, project: "o2--x", text: "" }, { key: "k", until: "u" }).schema.properties.file.description === "Remove 1 knowledge item from x",
+  "the form is titled by the write tool and says its part: how many items, into which project (by its slug)");
 
 // ---- 3 · recordAnswer on SQLite ----
 const db = new DatabaseSync(":memory:");
@@ -102,6 +107,20 @@ const rec2 = await C.recordInput(env, O, RS, "decline", { canWrite: true });
 ok(rec2.recorded && rec2.answer === "decline" && ans("P-0000000000000009") === "decline", "the author's retry, in time: recorded");
 ok((await C.recordInput(env, O, RS, "accept", { canWrite: true })).error === "confirm_not_open" && ans("P-0000000000000009") === "decline", "a second retry: refused, the first answer stands");
 
+// ---- 3c · sprint 19: the write tools' confirm on a preview's row ----
+db.prepare("INSERT INTO previews (id,project,person,created_at,expires_at,digest,summary) VALUES (?,?,?,?,?,?,?)").run("P-000000000000000c", "p", "o", T0, "2999-01-01T00:00:00.000Z", "{}", JSON.stringify({ v: 2, items: [], parts: {} }));
+const st1 = { ...(await C.mrtrState(nonce, "o")), tool: "file_contribution" };
+ok(!(await C.storePartConfirm(env, "P-000000000000000c", "m", st1)) && (await C.storePartConfirm(env, "P-000000000000000c", "o", st1)), "storePartConfirm: another person's write changes nothing; the author's is written");
+const RS3 = C.requestStateOf("P-000000000000000c", nonce);
+ok((await C.recordInput(env, O, RS3, "accept", { canWrite: true, verb: null, tool: "save_knowledge" })).error === "confirm_not_open" && !ans("P-000000000000000c"), "a retry naming another write tool than the one that asked: refused, nothing recorded");
+const st2 = { ...(await C.mrtrState("f".repeat(32), "o")), tool: "save_knowledge" };
+await C.storePartConfirm(env, "P-000000000000000c", "o", st2);
+ok((await C.recordInput(env, O, RS3, "accept", { canWrite: true, verb: null, tool: "file_contribution" })).error === "confirm_not_open", "a later part's confirm replaces the earlier: the first state answers nothing");
+const r3 = await C.recordInput(env, O, C.requestStateOf("P-000000000000000c", "f".repeat(32)), "accept", { canWrite: true, verb: null, tool: "save_knowledge" });
+ok(r3.recorded && ans("P-000000000000000c") === "accept", "the confirm that stands, retried on its own tool: recorded");
+db.prepare("UPDATE previews SET filed_at = ? WHERE id = 'P-000000000000000c'").run(T0);
+ok(!(await C.storePartConfirm(env, "P-000000000000000c", "o", st1)), "a preview filed whole takes no new confirm");
+
 // ---- 4 · the prune ----
 const now = Date.parse("2026-10-03T12:00:00.000Z");
 const day = 24 * 3600 * 1000, iso = (t) => new Date(t).toISOString();
@@ -132,14 +151,17 @@ ok(tpl.includes(`content="${K.CARD_CSP}"`) && /default-src 'none'/.test(K.CARD_C
 ok(/--page:/.test(tpl) && /\.p-card\{/.test(tpl) && /prefers-color-scheme:light/.test(tpl), "the brand tokens (both worlds) and the parts' stylesheet are inlined");
 ok(/ui\/initialize/.test(tpl) && /ui\/notifications\/initialized/.test(tpl) && /ui\/notifications\/tool-result/.test(tpl) && /ui\/open-link/.test(tpl) && /size-changed/.test(tpl) && /'tools\/call'/.test(tpl), "the bridge speaks ui/initialize, initialized, tool-result, tools/call, ui/open-link, size-changed");
 const it = (i, verdict, extra = {}) => ({ i, n: i + 1, type: "knowledge", kind: "goal", kindWord: "goal", line: `Goal: G${i}`, verdict, effect: "files at once", tab: "goals", places: [{ tab: "goals", path: "/goals/g" + i, region: "tree", what: "w" }], reasons: [], ...extra });
-const ans1 = { previewId: "P-00000000000000aa", project: "alpha", items: [it(0, "files"), it(1, "waits_for_owner")], counts: { byVerdict: { files: 1, waits_for_owner: 1 } }, reach: null, leftOut: [{ what: "a side thread", why: "no fact" }], ready: 2, notReady: 0, url: "http://x/preview/P-00000000000000aa", text: "t" };
+const ans1 = { previewId: "P-00000000000000aa", project: "alpha", items: [it(0, "files"), it(1, "waits_for_owner")], counts: { byVerdict: { files: 1, waits_for_owner: 1 } }, reach: null, leftOut: [{ what: "a side thread", why: "no fact" }], ready: 2, notReady: 0, url: "http://x/preview/P-00000000000000aa", text: "t",
+  parts: [{ tool: "save_knowledge", items: [1, 2], ready: 2 }] };
 const fr = K.cardFragment(ans1, { origin: "https://org.example" });
 const rows = [...fr.matchAll(/data-i="(\d+)" data-verdict="([a-z_]+)"/g)].map((m) => `${m[1]}:${m[2]}`);
 ok(JSON.stringify(rows) === '["0:files","1:waits_for_owner"]', "the fragment's rows are the preview's items with their verdicts");
-ok(/data-file data-tool="file" data-preview-id="P-00000000000000aa"/.test(fr), "the File action names `file` and the preview's id");
+ok(/data-file data-tool="parts" data-parts="\[\{&quot;tool&quot;:&quot;save_knowledge&quot;,&quot;items&quot;:\[1,2\]\}\]" data-preview-id="P-00000000000000aa"/.test(fr), "the File action names each part's write tool and its items, and the preview's id");
+ok(/req\('tools\/call',calls\[k\]\)/.test(tpl) && /name:p\.tool,arguments:\{previewId:pid,items:p\.items\.map/.test(tpl) && !/tool==='file'/.test(tpl), "the bridge calls each part's tool in turn, with its items picked from the preview's own");
 ok(!/href="\/(?!\/)/.test(fr) && /href="https:\/\/org\.example\/goals\/g0\?project=alpha" data-open/.test(fr) && /href="https:\/\/org\.example\/preview\/P-00000000000000aa" data-open/.test(fr), "its links are absolute and opened through the host (data-open)");
 ok(!/\sdata-file\s/.test(K.cardFragment({ ...ans1, items: [it(0, "files"), it(1, "needs")], ready: 1, notReady: 1, counts: { byVerdict: { files: 1, needs: 1 } } }, { origin: "https://o" })), "a preview with an item not ready: no File action");
-const view = { id: "P-00000000000000aa", project: "alpha", projectName: "Alpha", author: false, by: { name: "Rae" }, createdAt: T0, expiresAt: T0, filedAt: null, state: "open", items: [it(0, "files")], counts: { byVerdict: { files: 1 } }, reach: null, leftOut: [], note: "", hidden: 0, fileCounts: {} };
+const view = { id: "P-00000000000000aa", project: "alpha", projectName: "Alpha", author: false, by: { name: "Rae" }, createdAt: T0, expiresAt: T0, filedAt: null, state: "open", items: [it(0, "files")], counts: { byVerdict: { files: 1 } }, reach: null, leftOut: [], note: "", hidden: 0, fileCounts: {},
+  parts: [{ tool: "save_knowledge", items: [1], filed: false }] };
 ok(!/\sdata-file\s/.test(K.cardFragment(view, { origin: "https://o" })) && /\sdata-file\s/.test(K.cardFragment({ ...view, author: true }, { origin: "https://o" })), "brain://card for a reader who is not the author: no File action (the author's: one)");
 const rec = { previewId: "P-00000000000000aa", project: "alpha", complete: true, filedAt: T0, items: [{ ...it(0, "files"), filed: { status: "filed", id: "T-20261001-001" } }], leftOut: [], counts: { filed: 1, unchanged: 0, left: 0, notFiled: 0 }, results: [{ i: 0, status: "filed" }], url: "" };
 const rf = K.cardFragment(rec, { origin: "https://o" });

@@ -62,7 +62,7 @@ async function fileGoal(tok, project, id, orgSlugArg, parent = null) {
   const items = [goal(id, parent)], o = orgSlugArg ? { orgSlug: orgSlugArg } : {};
   const pv = await tool(tok, "preview", { project, items, ...o });
   if (pv.isError || !pv.out || !pv.out.previewId) return pv;
-  return tool(tok, "file", { previewId: pv.out.previewId, items, ...o });
+  return tool(tok, "save_knowledge", { previewId: pv.out.previewId, items, ...o });
 }
 const orgsOf = (o) => ((o && o.orgs) || []).map((x) => `${x.slug}:${x.role}${x.current ? "*" : ""}`).join(" ");
 const goalAt = (id) => (rows(`SELECT project FROM k_goals WHERE id = ${q(id)}`)[0] || {}).project || null;

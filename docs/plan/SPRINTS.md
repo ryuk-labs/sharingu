@@ -167,7 +167,7 @@ Migrations `047`–`063` are local only; the ship applies them in order, each by
   the ship with M1–M7. Smoke 234/234, gate exit 0.
 - [x] **The last fixes before the video, and G1** (`bbf09a7ad`): one fact for what a contribution touches; a ruling's
   decider by name; a preview that says files files (refs indexed in one statement; a batch of 100 or more clientRefs
-  no longer files again on a replay); `map {ref}` answers `parent`, `POST /file` declares its codes; fixed terminal
+  no longer files again on a replay); `map {ref}` answers `parent`, the then file route (split in sprint 19) declares its codes; fixed terminal
   columns; Copy says Copied; a ruling dated ahead of now counts; `day0-verify` stamps an eval project. The candidate on
   the final code: 170,008 rows written, stored == built on all five, no high finding, sharingu 98 contributions, 197
   of 201 checks graded; **the local gate rehearsal: 22 ✓, 7 live only, 2 by hand.** Smoke 233/233.
@@ -615,6 +615,38 @@ same commit: the backup rule had not placed `people.pending`; `/orgs/seat` had n
 and the AC eval both teach it); d1-hot's fixture lacked the org row the new sign-in joins; the smoke's transient
 socket failures under the shared Mini's spikes (patientFetch; s40's paced form creation). To S8's ledger: the
 account lockout, the per-seat grants epoch, and the squat's residual (`PLATFORM.md` §3).
+
+## Sprint 19 · The write door split (branch `sprint-19`, opened 2026-10-13; the owner's MCQs of the day)
+
+The spec: OpenAI's rescan after sprint 17 kept "operations that are not individually exposed" on `preview` and `file` and
+added "`preview` marked destructiveHint: false, but … material loss" (its confirm path filed, removes included). The
+owner ruled: fix to the standard, split now, by what the write does; every write is still previewed first.
+
+- [x] **19.1 · The door.** `preview` never files (its `fileOnConfirm` removed); its items are an anyOf of a
+  contribution, a knowledge upsert and a knowledge remove, and it answers per item `filesWith` and the parts; a grade or
+  an answer is refused (`wrong_tool`, naming `submit_grade` or `respond`). Three write tools each file their own part of
+  a preview, by its id and the SAME items in order, `fileOnConfirm` moved to them: `file_contribution` (only adds),
+  `save_knowledge` (adds or changes the project's knowledge: destructive), `remove_knowledge` (destructive). A repeat of
+  a filed part answers `preview_filed` with its first receipt. `file` is removed (its address stays a reserved name); the
+  REST twins are `POST /preview/file-contribution`, `/preview/save-knowledge`, `/preview/remove-knowledge` (under
+  /preview: a new first segment would reserve an org name and need a migration). Schemas generated from the registries
+  (`WRITE_TOOLS` in `src/formats.js`). 37 tools; tools/list 46.4 KB → 49.9 KB compact. annotations 483/0, dual-era,
+  confirm-card, mcp-orgs, day1-door, wire, knowledge, preview selftests green.
+- [x] **19.2 · The skills and the listing.** 18 presets say preview, then the write tool each item names (grades
+  through `submit_grade`, answers through `respond`); each preset's version moved; plugin 0.1.15 (the generator's rule);
+  P3–P5 name the new tools, P4's confirm rides `save_knowledge`; N1 says truthfully that `remove_knowledge` removes a
+  project's knowledge, never the project (the walker's N1 check stricter: a remove tool passes only if its schema can name
+  no project, org, seat or account). plugin-codex 129/129, presets 57/0, `claude plugin validate --strict` passes.
+- [x] **19.3 · The tools.** One shared helper per language (`fileParts` in `tools/import/door.mjs`, `file_parts` in
+  `tools/suites/door.py`) files a preview's parts in order; the importer, after-import, live-walk, verify-live,
+  gate-rehearsal, day0-verify, the reviewer org, page-budget, card-shots, attack-xorg, the walkthrough recorder and the
+  suites' fixtures use it. import selftest 215/0, the reviewer org's 35/35. The sharingu import's rows unchanged (one kind
+  a batch); a batch mixing upserts and removes makes two write calls.
+- [x] **19.4 · The smoke.** `tools/smoke/lib.mjs`'s `fileParts`/`fileWith`; every rule `file` held now runs on each write
+  tool (the same items, not ready, expired, another's preview, the repeat, the read-only 403, the confirm on both
+  revisions). Smoke 329/329.
+- [ ] **The sprint end.** The gate green and evals 42/42; one PR; the ship; the dist repo at 0.1.15; the ZIP; the
+  owner's Rescan.
 
 ## Sprint 18 · The walkthrough (branch `sprint-18`, opened 2026-10-13; the owner's MCQ of the day) — DONE 2026-10-13
 

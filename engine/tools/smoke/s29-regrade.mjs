@@ -64,7 +64,7 @@ smoke("regrade · 2 regrade {flow} through the door: the plan files nothing; the
   const plan = await mcp(ownerKey, "regrade", { project: P, flow: "r29-walk" });
   const o = plan.out || {};
   expect(!plan.isError && o.preview && (o.observe || []).map((c) => c.id).join() === "R29.r29-a.loads" && (o.needsProof || []).map((c) => c.id).join() === "R29.walk"
-    && o.cap === 8 && o.more === false && /^preview /.test(o.call || "") && o.next && o.next.args.confirm === true, () => brief(o));
+    && o.cap === 8 && o.more === false && /^submit_grade \{"project":"[^"]+","checkId":"R29\.walk",/.test(o.call || "") && o.next && o.next.args.confirm === true, () => brief(o));   // sprint 19: a person's grade is its submit_grade
   expect((await staleOf("screen:r29-a")).count === 2, "the plan filed something");
   const done = await mcp(ownerKey, "regrade", { project: P, flow: "r29-walk", confirm: true });
   const ob = ((done.out || {}).observed || [])[0] || {};

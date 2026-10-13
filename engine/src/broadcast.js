@@ -21,7 +21,7 @@
 //     refused read_only_credential at the confirm (the REST twin's gate refuses it on the POST before this module).
 //
 // PREVIEW FIRST (the owner's rule: every filing is previewed first). Publish and equip are their own write doors, not items of
-// `preview` / `file`: they file a RESERVED kind (publish, equip) that the contribution door refuses by design, their checks
+// `preview` and its write tools: they file a RESERVED kind (publish, equip) that the contribution door refuses by design, their checks
 // (whose draft, which version, which seat, already current) are the shelf's own, and a starter equip writes a doc AND a
 // filing in one press. So each verb previews itself: called without confirm it runs every check and answers the preview
 // (what will be filed, where it shows, what it reaches, the terminal text) and writes NOTHING; called again with confirm:
@@ -209,7 +209,7 @@ async function equipStarter(env, reader, plan, a) {
   const res = await fileTransmission(reader, {
     lane: "leader", kind: EQUIP_KIND, parent: null, gapRefs: [presetRef(p.slug)], touches: p.kind, proof: presetSource(p.slug, vn),
     what: from ? `Updated the starter ${p.slug} from v${from} to v${vn} in ${projectSlug(project)}` : `Equipped the starter ${p.slug} v${vn} into ${projectSlug(project)}`,
-    why: `A person's press on Broadcast: the starter ${p.kind} is copied into this project as the doc ${doc}, which its AI reads and anyone seated edits through preview then file (QEBB5D318: pinned to v${vn}).`,
+    why: `A person's press on Broadcast: the starter ${p.kind} is copied into this project as the doc ${doc}, which its AI reads and anyone seated edits through preview then save_knowledge (QEBB5D318: pinned to v${vn}).`,
     eval: isEval, via: a.via || "broadcast",
   }, env, { reserved: true, project });
   if (res && res.error) return { http: 422, ...res };

@@ -1,7 +1,7 @@
 // src/goals.js — the Goals Engine (M-ADR-020, owner /mcq 2026-09-03): R generalizes from
 // a fixed 4-axis product tracker into an org-goal operating system. Two orthogonal layers:
 //   the GOAL TREE (vertical rollup) — global goal -> segments -> optional individual goals,
-//     one per project, filed through the MCP (preview then file kind "goal") into D1 k_goals and
+//     one per project, filed through the MCP (preview then save_knowledge kind "goal") into D1 k_goals and
 //     read by src/knowledge/goals.js goalTree. A project with no goal filed has no tree.
 //   DIMENSIONS (horizontal measurement) — a contribution's LANE *is* its dimension (PRD
 //     00_DESIGN/goals-engine-prd.md §5): the gate already grades by lane, so this module
@@ -311,7 +311,7 @@ export const GOAL_CHECKS_REGION = "checks";
 export const goalChecksEmpty = () => "No checks";
 // the goals read's note when no goal is filed (its JSON, the `goals` tool's answer: it names the call; the page says a phrase)
 // copy: off-screen
-export const GOALS_EMPTY = 'No goal tree yet. File one through preview then file, items of kind "goal".';
+export const GOALS_EMPTY = 'No goal tree yet. File one through preview then save_knowledge, items of kind "goal".';
 export const TREE_DOWN = "The goal tree did not answer, so it is not drawn until it does.";
 export const BLOCKED_EMPTY = "Nothing blocked";
 export const LEAF_CHILDREN = "No child goals";

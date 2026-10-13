@@ -38,7 +38,7 @@
         { "actor": "Claude", "does": "reads what the project still needs, each item with the call that fills it", "door": "GET /missing", "mcp": true },
         { "actor": "Claude", "does": "previews the filing: what lands, where it shows, how it is graded, what it reaches", "door": "POST /preview", "mcp": true },
         { "actor": "Person", "does": "reads the preview and confirms it", "screen": "/preview/:id" },
-        { "actor": "Claude", "does": "files the preview's items", "door": "POST /file", "mcp": true },
+        { "actor": "Claude", "does": "files the preview's items", "door": "POST /preview/save-knowledge", "mcp": true },
         { "actor": "Person", "does": "sees the item closed and the meter moved on What is missing", "screen": "/missing" }
       ] },
       { "id": "proof-decisions", "name": "Proof 2: a decision, answered, decided", "audience": "member", "desc": "Decisions lists what is open and who owes it; an answer with an option rules the question at once (the owner) or waits with the owner (a member).", "steps": [
@@ -59,11 +59,11 @@
         { "actor": "Claude", "does": "reads what the project still needs", "door": "GET /missing", "mcp": true },
         { "actor": "Claude", "does": "previews what it extracted from the member's input", "door": "POST /preview", "mcp": true },
         { "actor": "Member", "does": "reads the preview", "screen": "/preview/:id" },
-        { "actor": "Claude", "does": "files it", "door": "POST /file", "mcp": true },
+        { "actor": "Claude", "does": "files it", "door": "POST /preview/save-knowledge", "mcp": true },
         { "actor": "Member", "does": "sees the tabs fill and the meter move", "screen": "/home" },
         { "actor": "Member", "does": "answers one question on its page", "door": "POST /respond" },
         { "actor": "Claude", "does": "grades one check with proof", "door": "POST /grade", "mcp": true },
-        { "actor": "Claude", "does": "files one change, naming what it touches", "door": "POST /file", "mcp": true },
+        { "actor": "Claude", "does": "files one change, naming what it touches", "door": "POST /preview/file-contribution", "mcp": true },
         { "actor": "Member", "does": "sees what the change reaches and the proof to redo", "screen": "/contribution/:id/impact" },
         { "actor": "Member", "does": "sees the stale light on the Map", "screen": "/map" },
         { "actor": "Claude", "does": "regrades the stale check", "door": "POST /grade", "mcp": true }

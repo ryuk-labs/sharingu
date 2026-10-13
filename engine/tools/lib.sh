@@ -137,7 +137,7 @@ PYORGB
       return 1
     fi
     echo "  (local org: org B, the suites' own org (2, settings.suites), its owner and its eval project(s): $(sed -n 's/^INSERT INTO projects .* VALUES (.o2. || char(45, 45) || .\([a-z0-9-]*\).,.*/o2--\1/p' "$_ldir/suites-org.sql" | paste -sd, - | sed 's/,/, /g'))"
-    # 4 — the fixtures, through preview then file: org A's as its owner, the suites' as theirs (the loader is part of this repo;
+    # 4 — the fixtures, through preview then each part's write tool: org A's as its owner, the suites' as theirs (the loader is part of this repo;
     # a tree without it — a selftest's throwaway copy of this file — starts the orgs with their seeds alone, and says so)
     if [ -f "$_eng/tools/suites/load-fixtures.mjs" ]; then
       if ! node "$_eng/tools/suites/load-fixtures.mjs" --url "http://127.0.0.1:$(cat "$_ldir/port")" --creds "$_ldir/credentials.env" --dir "$SUITE_ORGA_FIXTURES" \

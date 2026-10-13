@@ -20,7 +20,7 @@
 // The paging (pageOf): a project whose scan filled up is `capped`, known only down to its oldest scanned moment (its rows of
 // that very millisecond perhaps not all read): the page holds the rows newer than the NEWEST such bound, never splits one
 // millisecond's rows across two pages unless that millisecond alone outgrows the page, and `next` (a cursor: a moment, and
-// whether that moment's rows are still owed) goes on from there; a capped scan that is ONE millisecond's rows (a `file` of up
+// whether that moment's rows are still owed) goes on from there; a capped scan that is ONE millisecond's rows (a write tool's call of up
 // to 200 items lands in one) AT the page's bound reads that millisecond whole (ACTIVITY_MOMENT_SQL, at most
 // ACTIVITY_MOMENT_MAX rows) — a project capped at an older moment shows nothing this page, so it reads nothing more (25
 // projects each with a 200-item batch read 6,225 rows before the review's fix) — so paging always moves on. A millisecond

@@ -3,7 +3,7 @@
 // falsifier is "gtm grows its own tree or rollup") · Q61A1D91E (a campaign is a goal-tree node) · QB74B1B7E (one state
 // chip) · QD0A65555 + QC8B94276 (a counter is a filing, shown with its exact call) · owner MCQ 2026-09-29: Fork 1 (a) the
 // lanes are the template's activity kinds, Fork 3 (a) with no template filed the lanes are the kinds actually filed and the
-// answer says so. The template is the project's k_gtm row, filed with preview then file kind "gtm".
+// answer says so. The template is the project's k_gtm row, filed with preview then save_knowledge kind "gtm".
 //
 // ONE seam, two faces (the readGoals pattern): readGtmPipeline(env, reader, q) is the whole read; GET /gtm answers
 // it as JSON (UI-B10b renders it to a browser from the SAME call), the MCP `gtm` tool and brain://gtm
@@ -41,9 +41,9 @@ export const GTM_DIM = "gtm";
 export const GTM_ROWS_LIMIT = 200;   // rows listed; X1 reads one more to know there is more
 // the read's own notes (its JSON `message(s)`, the `gtm` tool's answer; GTM_NO_GOAL is also the disabled button's title)
 // copy: off-screen
-export const GTM_NO_GOAL = 'No go-to-market goal yet. Your Claude files one through preview then file: an item of kind "goal", dimensions ["gtm"].';
+export const GTM_NO_GOAL = 'No go-to-market goal yet. Your Claude files one through preview then save_knowledge: an item of kind "goal", dimensions ["gtm"].';
 // copy: off-screen
-export const GTM_NO_TEMPLATE = 'No GTM template is filed for this project yet: file one through preview then file, an item of kind "gtm".';
+export const GTM_NO_TEMPLATE = 'No GTM template is filed for this project yet: file one through preview then save_knowledge, an item of kind "gtm".';
 // copy: off-screen
 export const GTM_EMPTY = "No go-to-market contribution in this project this period.";
 

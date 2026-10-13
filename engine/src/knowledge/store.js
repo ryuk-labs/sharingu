@@ -148,5 +148,5 @@ export async function readKnowledge(env, a = {}, reader = null) {
   const next = page.next;
   const empty = !items.length && !text(a.q) && !text(a.cursor);
   const noun = KINDS[kind].noun[KINDS[kind].key.length ? 1 : 0];
-  return { project, kind, items, next, ...(empty ? { note: `No ${noun} here yet: file one through preview then file, an item {kind: "${kind}", op: "upsert", data: {…}} (\`formats\` with kind shows its fields).` } : {}) };
+  return { project, kind, items, next, ...(empty ? { note: `No ${noun} here yet: file one through preview then save_knowledge, an item {kind: "${kind}", op: "upsert", data: {…}} (\`formats\` with kind shows its fields).` } : {}) };
 }

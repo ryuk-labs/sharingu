@@ -219,7 +219,7 @@ export async function searchAnswer(env, person, a = {}) {
   }
   const total = groups.reduce((n, g) => n + g.count, 0);
   return { project, q: String(a.q ?? "").slice(0, 200), words, total, groups, ...(evalOn(a) ? { eval: true } : {}),
-    ...(total ? {} : { note: `Nothing in ${projectSlug(project)} matches ${words.map((w) => `"${w}"`).join(" and ")}. Try fewer or shorter words; what is not filed is not found: file it with preview, then file.` }) };
+    ...(total ? {} : { note: `Nothing in ${projectSlug(project)} matches ${words.map((w) => `"${w}"`).join(" and ")}. Try fewer or shorter words; what is not filed is not found: file it with preview, then the write tool each item names.` }) };
 }
 function hitOf(kind, r, words, meta) {
   const item = { kind, id: r.id, qid: r.qid, path: r.path, refs: r.refs };
@@ -315,7 +315,7 @@ export async function readAnswer(env, person, a = {}) {
     const items = rows.slice(0, limit).map((r) => ({ id: r.id, ref: r.id, lane: r.lane, kind: r.kind, what: r.what, route: r.route, status: r.status, goalRef: r.goal_ref || null, at: r.created_at, happenedAt: r.happened_at || null, href: hrefOf("contribution", r) }));
     const last = items[items.length - 1];
     return { project, kind, items, next: rows.length > limit && last ? `${last.at}|${last.id}` : null, href: orgPath("/build"),
-      ...(items.length || a.after ? {} : { note: "No contribution here yet: file one with preview, then file ({contribution: {lane, what, why}})." }) };
+      ...(items.length || a.after ? {} : { note: "No contribution here yet: file one with preview, then file_contribution ({contribution: {lane, what, why}})." }) };
   }
   if (kind === "check") return readChecks(env, person, project, a, limit);
   // authority: the store's list applies the role rule (visibleTo) to docs, cards and card kinds
@@ -718,7 +718,7 @@ export async function changesAnswer(env, person, a = {}, o = {}) {
     total: shaped.length, ...(rows.length > CHANGES_FETCH ? { totalNote: `${shaped.length}+` } : {}), more, changes,
     ...(o.work ? { graded: { n: Math.min(GRADED_MAX, Number((gradedRow || {}).n) || 0), more: (Number((gradedRow || {}).n) || 0) > GRADED_MAX } } : {}),
     ...(since.noVersion ? { noVersion: `No version of ${projectSlug(project)} yet, so this is the last ${SINCE_DAYS} days. The owner makes v1 with publish_version.` } : {}),
-    ...(changes.length ? {} : { note: `Nothing changed in ${projectSlug(project)} since ${since.label}${want ? ` among ${want.join(", ")}` : ""}. A change is filed with preview, then file.` }) };
+    ...(changes.length ? {} : { note: `Nothing changed in ${projectSlug(project)} since ${since.label}${want ? ` among ${want.join(", ")}` : ""}. A change is filed with preview, then the write tool each item names.` }) };
 }
 // knowledgeVisFor(env, person, project, rows) -> vis(ref) | null — THE visibility of what knowledge ledger rows name, for a
 // reader who is not the owner (null: the owner, who reads everything). A knowledge row's `what` ("3 cards, 1 doc written") and
@@ -881,8 +881,8 @@ async function hatBrief(env, person, project, hat, includeEval = false) {
     aim: aim.text ? { text: aim.text, measure: aim.measure } : null, goals, ...(money ? { budget: treeBudget } : {}), questions, blockers,
     followUps: follow.rows || [], changed: changes.error ? { error: changes.error } : { since: changes.since, total: changes.total, more: changes.more, changes: changes.changes, href: orgPath(`/changes${changes.tab ? `?tab=${changes.tab}` : ""}`) },
     version: head ? { n: head.n, title: head.title, at: head.at } : null, startHere: start,
-    ...(aim.text ? {} : { aimNote: "No aim is filed yet: file one with preview, then file ({kind: \"aim\", op: \"upsert\", data: {aim}})." }),
-    ...(goals.length ? {} : { goalsNote: money ? "No goal carries a budget yet: a goal's budget is {allocated, spent, currency, source} (preview, then file, kind \"goal\"; formats {kind: \"goal\"} has an example)." : lanes ? `No goal is measured in ${lanes.join(" or ")} yet: a goal names its lanes in dimensions (preview, then file, kind "goal").` : "No goal tree yet: file one with preview, then file (kind \"goal\")." }) };
+    ...(aim.text ? {} : { aimNote: "No aim is filed yet: file one with preview, then save_knowledge ({kind: \"aim\", op: \"upsert\", data: {aim}})." }),
+    ...(goals.length ? {} : { goalsNote: money ? "No goal carries a budget yet: a goal's budget is {allocated, spent, currency, source} (preview, then save_knowledge, kind \"goal\"; formats {kind: \"goal\"} has an example)." : lanes ? `No goal is measured in ${lanes.join(" or ")} yet: a goal names its lanes in dimensions (preview, then save_knowledge, kind "goal").` : "No goal tree yet: file one with preview, then save_knowledge (kind \"goal\")." }) };
 }
 async function refBrief(env, person, project, ref, includeEval = false) {
   const one = await readOne(env, person, project, ref);

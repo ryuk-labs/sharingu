@@ -2,17 +2,19 @@
 kind: workflow
 slug: build-web-app
 order: 7
-version: 2
+version: 3
 title: Build a web app
 purpose: From an idea to a released web app in eight steps, each ending in a contribution the whole team can see.
-calls: whoami, updates, missing, preview, file, decisions, respond, ask, open_items, submit_grade, brief, publish_version, wrap_up
+calls: whoami, updates, missing, preview, save_knowledge, file_contribution, decisions, respond, ask, open_items, submit_grade, brief, publish_version, wrap_up
 ---
 
 # Build a web app
 
 The standard path from an idea to a released web app. Each step names the role that takes it (the starter agents of the
 same names) and ends in a filed contribution, so Build, Goals and the Map show where the work stands at every moment.
-Every filing is a `preview {project, items}` the person sees, then `file {previewId, items}` with the same items.
+Every filing is a `preview {project, items}` the person sees, then each part with the tool its items name
+(`filesWith`): `save_knowledge {previewId, items}` the knowledge, `file_contribution {previewId, items}` the
+contributions, each with the same items of its part.
 Every role starts its session with `whoami`, `updates` and `missing`, and ends it with `wrap_up`.
 
 ## The steps

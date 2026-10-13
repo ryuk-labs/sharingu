@@ -19,8 +19,10 @@ if (!first.length) { console.error("✗ src/controlpage.js FIRST_CALLS not found
 const L = [];
 L.push("# sharingu: the door speaks one vocabulary", "");
 L.push(`The MCP door's tools are renamed and folded **at once**: ${oldCount} tools become ${newCount}. There is no alias and no redirect: an old tool name answers \`unknown tool\`, an old REST address answers 404, an old resource is not found. A client re-reads \`tools/list\` and calls the new names.`, "");
-L.push(`The first time, in order: ${first.map(code).join(" → ")}. Every session: ${code("updates")} first; ${code("ask")} asks the owner; ${code("wrap_up")} hands over at the end.`, "");
-L.push(`Writing is one door: ${code("preview")} (shows what would be filed, where it shows, how it is graded, what it reaches, and files nothing, except with ${code("fileOnConfirm: true")}, where a client that supports confirmation asks the person and files on yes) then ${code("file")} (the same items, by the preview's id). Knowledge, contributions, grades and answers all go through it.`, "");
+// the first four are calls in order; the rest are the write tools, one per operation of a preview (sprint 19)
+const writers = first.slice(first.indexOf("preview") + 1);
+L.push(`The first time, in order: ${first.slice(0, first.indexOf("preview") + 1).map(code).join(" → ")} → the write tool each item names (${writers.map(code).join(", ")}). Every session: ${code("updates")} first; ${code("ask")} asks the owner; ${code("wrap_up")} hands over at the end.`, "");
+L.push(`Every write is previewed first: ${code("preview")} shows what would be filed, where it shows, how it is graded and what it reaches, names the write tool that files each item (${code("filesWith")}), and never files. Then each part is filed by the tool of its operation, with the preview's id and its items as previewed: ${code("file_contribution")} the contributions (it only adds), ${code("save_knowledge")} the knowledge upserts, ${code("remove_knowledge")} the knowledge removes; with ${code("fileOnConfirm: true")}, a client that supports confirmation asks the person and files on yes. A grade is ${code("submit_grade")}'s and an answer ${code("respond")}'s: each files at once.`, "");
 
 L.push("## The tools", "", "| tool | title | read-only | what it does |", "|---|---|---|---|");
 for (const t of [...door.tools].sort((a, b) => a.name.localeCompare(b.name))) L.push(`| ${code(t.name)} | ${t.title} | ${t.annotations.readOnlyHint ? "yes" : "no"} | ${String(t.description).split(/(?<=\.)\s/)[0]} |`);
@@ -64,7 +66,7 @@ L.push(`Internal, not renamed: ${N.keep.internal}`, "");
 
 L.push("## What a client changes", "");
 L.push("1. Re-read `tools/list` (or `GET /capabilities`); drop any cached tool list.");
-L.push("2. Replace every old name in prompts, skills and scripts with the table above; a write is `preview` then `file`.");
+L.push("2. Replace every old name in prompts, skills and scripts with the table above; a write is `preview`, then the write tool each item names (`file_contribution`, `save_knowledge` or `remove_knowledge`).");
 L.push("3. Read the renamed fields (`items`/`piece` on `missing`, `openItems`, `openItemIds`); a role's brief is `brief`, refused `unknown_brief`.");
 L.push("4. Links to old REST addresses (`/transmission/...`, `/pack/card/...`, `/holes`) now 404: use the new addresses.", "");
 

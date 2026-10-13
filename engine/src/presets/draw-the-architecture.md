@@ -2,10 +2,10 @@
 kind: skill
 slug: draw-the-architecture
 order: 15
-version: 1
+version: 2
 title: Draw the architecture
 purpose: Read the project's repo and draw its architecture: the parts, the services they run on, real journeys and the walls.
-calls: map, read, formats, preview, file
+calls: map, read, formats, preview, save_knowledge
 ---
 
 # Draw the architecture
@@ -52,7 +52,7 @@ the repo and ask the person; the door checks every item.
 9. **Preview.** `preview {project: "<key>", items: [...], leftOut: [{what, why}]}`: the drawing, the services and the
    questions in one call. Show the person the answer's `text` as it is. Read each item's verdict: files at once, or
    waits for the owner; needs one more thing names the field to fix (fix it and preview again); refused is left out.
-10. **File, once the person says so.** `file {previewId: "<id>", items: [...the same items...]}`.
+10. **File, once the person says so.** `save_knowledge {previewId: "<id>", items: [...the same items...]}`.
 11. **Read it back.** `map {plane: "arch"}` returns the bands and the parts as filed. The person opens the Arch view and
     plays each journey.
 

@@ -13,11 +13,12 @@
 //     ids agree, the meter says depth, and the receipt that starts GTM says GTM now counts;
 //   · fix 6 + 9: a ruling with the ruled option alone and its source shows on its page; gtm/ docs list on GTM's Strategy; Home
 //     offers every option of an open question, none picked; whoami tells the owner where their writes land.
-import { smoke, expect, brief, http, mcp, html, ownerKey, control, contribute, readTx } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, html, ownerKey, control, contribute, readTx, fileParts } from "./lib.mjs";
 
 const P = "s15";
 const preview = async (items, extra = {}) => { const r = await mcp(ownerKey, "preview", { project: P, items, ...extra }); if (r.isError) throw new Error(`preview: ${brief(r.out)}`); return r.out; };
-const fileAll = async (pv, items, only) => { const r = await mcp(ownerKey, "file", { previewId: pv.previewId, items, ...(only ? { only } : {}) }); if (r.isError) throw new Error(`file: ${brief(r.out)}`); return r.out; };
+// fileAll(pv, items, only?) -> the receipt: each part of the preview with its write tool (sprint 19), the receipts as one
+const fileAll = async (pv, items, only) => { const r = await fileParts((n, a) => mcp(ownerKey, n, a), pv, items, { only }); if (r.isError) throw new Error(`${r.step}: ${brief(r.out)}`); return r.out; };
 const C = (o) => ({ contribution: { lane: "code", kind: "pr", why: "s15 smoke", ...o } });
 const MODEL = [
   { kind: "node", op: "upsert", data: { id: "screen:s15-home", type: "screen", name: "S15 Home" } },
@@ -62,7 +63,7 @@ smoke("honest door · screens are checked against the project's own Map: by id o
   const typo = pv.items[3];
   expect(typo.needs.field === "screens" && /Screen screen:s15-hme is not in the project's Map: near screen:s15-home \(S15 Home\)/.test(typo.reasons[0])
     && typo.needs.unknown[0].near.some((x) => x.id === "screen:s15-home") && /Screen 001 is not in the project's Map/.test(pv.items[2].reasons[0]), () => brief(pv.items.slice(2)));
-  // D5: the one door is preview then file: file with only "ready" files the two that
+  // D5: the one door is preview then the write tool: file_contribution with only "ready" files the two that
   // resolve and leaves the two that need a fix, nothing routed to the owner
   const rc = await fileAll(pv, items, "ready");
   const st = (rc.results || []).map((x) => x.status).join(",");
@@ -108,10 +109,10 @@ smoke("honest door · goals count what was filed: status back and shown, done re
   return `s15-done done 100%; s15-build in progress ${b.pct}% (code 1 landed, 1 waiting for the owner, a plan under plans); the page shows the chips and the rule`;
 });
 
-smoke("honest door · holes: every fill is a preview (or the owner's rule_question) with its line, ids agree, the meter says depth; the receipt that starts GTM says it now counts", async () => {
+smoke("honest door · holes: every fill is a preview (or the owner's rule_question, or a grade's submit_grade) with its line, ids agree, the meter says depth; the receipt that starts GTM says it now counts", async () => {
   const h = (await mcp(ownerKey, "missing", { project: P })).out;
   const ids = new Set((h.checklist || []).map((x) => x.id));
-  expect(h.items.length > 0 && h.items.every((x) => x.fill && (x.fillPath === null ? /Equip/.test(x.fill) : ["preview", "rule_question"].includes(x.fillPath.tool)))
+  expect(h.items.length > 0 && h.items.every((x) => x.fill && (x.fillPath === null ? /Equip/.test(x.fill) : ["preview", "rule_question", "submit_grade"].includes(x.fillPath.tool)))
     && h.items.every((x) => ids.has(x.id)) && h.filled.every((x) => ids.has(x)) && / by depth$/.test(h.meter.words) && /^it counts /.test(h.meter.counts), () => brief({ holes: h.items.map((x) => [x.id, x.fillPath && x.fillPath.tool, !!x.fill]), filled: h.filled, meter: h.meter }));
   const gtm = !(h.areas.find((a) => a.area === "gtm") || {}).applies;
   const items = [{ kind: "doc", op: "upsert", data: { path: "gtm/positioning.md", title: "S15 positioning", body: "# Who we serve first", asOf: "2026-09-30", confidence: "direction" } }];

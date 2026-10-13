@@ -195,7 +195,7 @@ const CLIENT = strip(`
     var vars=vs.map(function(v,j){return chip('view-variant','data-v="'+j+'"',v===cur,v.label);}).join('');
     var z=size(),aw=Math.max(200,(viewer.clientWidth||z.w)-48),ah=Math.max(200,(viewer.clientHeight||z.h)-150);
     var rw=cur&&cur.r&&cur.r[4]||A.dev.w,rh=cur&&cur.r&&cur.r[5]||A.dev.h,sc=Math.min(1,aw/rw,ah/A.dev.h),body='',tag=cur&&cur.tag?cur.tag:'';
-    if(!cur)body='<div class="ax-vnone">No render or wireframe is filed for '+esc(A.st[S.vs]||'this state')+': file one through preview then file, an item {kind: "render", …}.</div>';
+    if(!cur)body='<div class="ax-vnone">No render or wireframe is filed for '+esc(A.st[S.vs]||'this state')+': file one through preview then save_knowledge, an item {kind: "render", …}.</div>';
     else if(cur.spec)body=draw(cur.spec,{width:A.dev.w,height:A.dev.h,inset:true});
     // a wireframe render: its grammar (fetched once, kept) drawn by the same drawer once it answers
     else if(cur.r[2]==='wireframe'){var wh=cur.r[3];grammar(wh).then(function(spec){var d=viewer.querySelector('.ax-vd');if(!spec||S.view!==k||!d||d.getAttribute('data-wh')!==wh||d.querySelector('svg.wf'))return;d.insertAdjacentHTML('afterbegin',draw(spec,{width:A.dev.w,height:A.dev.h,inset:true}));});}

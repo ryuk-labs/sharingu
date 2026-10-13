@@ -137,16 +137,16 @@ smoke("the same qid in another project is untouched, and the overlay does not le
   return "local's Q-smoke-1 still open, no answers, no ruling, on Decisions and its page";
 });
 
-smoke("a project with no question shows the empty sentence naming preview then file", async () => {
+smoke("a project with no question shows the empty sentence naming preview then save_knowledge", async () => {
   await control({ action: "add-project", key: "quiet", name: "Quiet" });
   const j = await http("GET", "/decisions?project=quiet", { key: ownerKey });
-  expect(j.status === 200 && j.json.empty === "no_questions" && /preview then file/.test(j.json.note || "") && j.json.rows.length === 0, () => `${j.status} ${brief(j.json)}`);
+  expect(j.status === 200 && j.json.empty === "no_questions" && /preview then save_knowledge/.test(j.json.note || "") && j.json.rows.length === 0, () => `${j.status} ${brief(j.json)}`);
   const page = await html("/decisions?project=quiet");
   // sprint 3 L2 (pristine copy): the page says a phrase and offers What is missing; the call is the JSON's and the tool's
-  expect(page.status === 200 && /data-state="empty"/.test(page.text) && /No questions yet/.test(page.text) && !/preview then file/.test(page.text) && /href="\/missing"/.test(page.text) && !/data-state="error"/.test(page.text), () => `HTML ${page.status}`);
+  expect(page.status === 200 && /data-state="empty"/.test(page.text) && /No questions yet/.test(page.text) && !/preview then (file|save_knowledge)/.test(page.text) && /href="\/missing"/.test(page.text) && !/data-state="error"/.test(page.text), () => `HTML ${page.status}`);
   const p = await mcp(ownerKey, "decisions", { project: "quiet" });
-  expect(!p.isError && p.out.empty === "no_questions" && (p.out.rows || []).length === 0 && /preview then file/.test(p.out.note || ""), () => `decisions: ${brief(p.out)}`);
-  return "empty no_questions, its note names preview then file (D1b item 11), the page's EMPTY a phrase with What is missing; the decisions tool says the same";
+  expect(!p.isError && p.out.empty === "no_questions" && (p.out.rows || []).length === 0 && /preview then save_knowledge/.test(p.out.note || ""), () => `decisions: ${brief(p.out)}`);
+  return "empty no_questions, its note names preview then save_knowledge (D1b item 11), the page's EMPTY a phrase with What is missing; the decisions tool says the same";
 });
 
 smoke("a long Decisions page leads with what needs an answer and pages the settled ones, 50 newest first", async () => {

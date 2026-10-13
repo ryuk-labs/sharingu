@@ -11,7 +11,7 @@
 //   L4 · publish and equip through the MCP: the member files a draft, publish previews (nothing filed) then publishes; equip
 //        previews then equips; the shelf and the project's equipped list show it at once; the Partner is refused by the tool
 //        and the REST twin; the Partner's shelf shows what their seat's project holds
-import { smoke, expect, brief, http, mcp, html, ownerKey, control, personId, contributions } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, html, ownerKey, control, personId, contributions, fileParts } from "./lib.mjs";
 
 const TAG = String(process.env.S18_TAG || "").replace(/[^a-z0-9]/g, "");
 const P = "s18" + TAG;
@@ -26,7 +26,7 @@ const invite = async (name, email, role, projects) => {
 const fileVia = async (key, items) => {
   const pv = await mcp(key, "preview", { project: P, items });
   expect(!pv.isError && pv.out.previewId, () => `preview: ${brief(pv.out)}`);
-  const f = await mcp(key, "file", { previewId: pv.out.previewId, items, only: "ready" });
+  const f = await fileParts((n, a) => mcp(key, n, a), pv.out, items, { only: "ready" });   // sprint 19: each part with its write tool
   expect(!f.isError && f.out.complete === true, () => `file: ${brief(f.out)}`);
   return f.out;
 };
@@ -95,7 +95,7 @@ smoke("lists: a card's own page on the new path; a hidden card is the usual 404"
 // sprint 4, F1 (P3's fault 6: a copy card could not name the claim that backs it): a card's refs are cards of its OWN project
 smoke("refs: a card names the cards it relies on; another project's card is refused with the near match; read and the page show the links; the list reads nothing new", async () => {
   // another project's card with a near name: project smoke holds a s18claim kind and a card flowzo-smoke
-  await mcp(ownerKey, "file", { previewId: (await mcp(ownerKey, "preview", { project: "smoke", items: [{ kind: "card_kind", op: "upsert", data: { key: "s18claim", label: "Smoke claims" } },
+  await mcp(ownerKey, "save_knowledge", { previewId: (await mcp(ownerKey, "preview", { project: "smoke", items: [{ kind: "card_kind", op: "upsert", data: { key: "s18claim", label: "Smoke claims" } },
     { kind: "card", op: "upsert", data: { kind: "s18claim", id: "flowzo-smoke", name: "Smoke's own FlowZo" } }] })).out.previewId,
     items: [{ kind: "card_kind", op: "upsert", data: { key: "s18claim", label: "Smoke claims" } }, { kind: "card", op: "upsert", data: { kind: "s18claim", id: "flowzo-smoke", name: "Smoke's own FlowZo" } }] });
   const across = await mcp(ownerKey, "preview", { project: P, items: [{ kind: "card", op: "upsert", data: { kind: "s18copy", id: "dm", name: "S18 the DM", refs: ["card/s18claim/flowzo-smoke"] } }] });

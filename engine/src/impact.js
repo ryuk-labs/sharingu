@@ -116,7 +116,7 @@ export function proofOf(rows, sinceIso, staleSet = new Set()) {
   }
   return { total: list.length, toRedo, regraded, ungraded: ungraded.length, capped: (rows || []).length > PROOF_MAX };
 }
-// regradeCall(project, checkId) -> the exact call that regrades a check, as its preview (every filing is previewed first)
+// regradeCall(project, checkId) -> the exact call that regrades a check: submit_grade, which files a grade at once (sprint 19)
 // (D1b item 9: the verdict is a placeholder, never "proven": a regrade says what the check does NOW)
 export const regradeCall = (project, checkId) => callText({ tool: "submit_grade", args: { project: project || "<your project>", checkId, verdict: "<proven | refused | incomplete: what you observe when you run the check now>", proof: "<the command you ran and what it printed, a link, or an artifact id>" } });
 

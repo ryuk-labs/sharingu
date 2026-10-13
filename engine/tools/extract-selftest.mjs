@@ -241,7 +241,7 @@ const SECRETS_NO_DOC = /Pricing hidden claim|c-secret|Pricing deal terms|Deal tw
     && q.groups.every((x) => ["doc", "goal"].includes(x.kind)) && q.groups.every((x) => x.hits.length <= 1),
     `C2 · a hit carries its ref, href, snippet, as-of and due-for-review mark; kinds and limit narrow it`, show({ hit, q: q.groups }));
   const none = (await D.mcp("search", { project: "alpha", q: "x" }, "mem-key")).out, empty = (await D.mcp("search", { project: "alpha", q: "zzzz" }, "mem-key")).out, badK = (await D.mcp("search", { project: "alpha", q: "pricing", kinds: ["secret"] }, "mem-key")).out;
-  ok(none.error === "q_required" && empty.total === 0 && /preview, then file/.test(empty.note) && badK.error === "unknown_kind", "C3 · one letter is q_required; no match names the call that fills it; an unknown kind is refused");
+  ok(none.error === "q_required" && empty.total === 0 && /preview, then the write tool each item names/.test(empty.note) && badK.error === "unknown_kind", "C3 · one letter is q_required; no match names the call that fills it; an unknown kind is refused");
 }
 
 // ---- read ----
@@ -313,7 +313,7 @@ const SECRETS_NO_DOC = /Pricing hidden claim|c-secret|Pricing deal terms|Deal tw
   ok(eng.hat.key === "engineering" && eng.goals.some((g) => g.ref === "goal/g-pricing") && eng.questions.some((q) => q.ref === "q/Q-price-1") && eng.startHere.path === "capsules/engineering.md" && eng.changed.total >= 1,
     "C12 · brief for the engineering hat: the goals measured in code, the question it owes, its capsule, what changed", show({ g: eng.goals, q: eng.questions, s: eng.startHere, c: eng.changed && eng.changed.total }));
   ok(mem.startHere.path === "start-here.md" && !SECRETS.test(JSON.stringify(mem)), "B14 · a member without the hat is pointed at start-here, never at the engineering capsule they may not read", show(mem.startHere));
-  ok(mgmt.goals.some((g) => g.ref === "goal/g-pricing") && mgmt.aim === null && /preview, then file/.test(mgmt.aimNote), "C13 · management reads the top of the tree; no aim names the call that files one", show(mgmt.goals));
+  ok(mgmt.goals.some((g) => g.ref === "goal/g-pricing") && mgmt.aim === null && /preview, then save_knowledge/.test(mgmt.aimNote), "C13 · management reads the top of the tree; no aim names the call that files one", show(mgmt.goals));
   const ref = await b("mem-key", "screen:pricing");
   ok(ref.kind === "node" && ref.dependsOn.some((l) => l.ref === "door:GET:/prices") && ref.checks.some((c) => c.id === "AC.price") && ref.questions.some((q) => q.ref === "q/Q-price-1") && ref.contributions.some((t) => t.id === code.out.id),
     "C14 · brief for a ref: what it depends on, its checks, its open questions, the contribution naming it", show({ d: ref.dependsOn, c: ref.checks, q: ref.questions, t: ref.contributions }));

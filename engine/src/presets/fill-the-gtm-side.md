@@ -2,10 +2,10 @@
 kind: skill
 slug: fill-the-gtm-side
 order: 18
-version: 1
+version: 2
 title: Fill the GTM side
 purpose: Turn the person's mail, chats, meetings, CRM, revenue and search signals into GTM cards and contributions: summaries and links only.
-calls: whoami, gtm, goals, read, formats, preview, file, changes, ask
+calls: whoami, gtm, goals, read, formats, preview, save_knowledge, file_contribution, changes, ask
 ---
 
 # Fill the GTM side
@@ -66,8 +66,10 @@ you file, and runs no model. The rule of this skill: **summaries and links back 
 9. **Preview.** `preview {project: "<key>", items: [...], leftOut: [{what: "12 threads with no outcome", why: "no decision or next step"}]}`.
    Show the person the answer's `text` as it is, item by item. Read each verdict: files at once, or waits for the owner;
    needs one more thing names the field to fix (fix it and preview again); refused is left out.
-10. **File, once the person says so.** `file {previewId: "<id>", items: [...the same items...]}`. Show the receipt's
-    `text`. Then the next source, from step 4.
+10. **File, once the person says so.** Each part with the tool its items name (`filesWith`): the cards by
+    `save_knowledge {previewId: "<id>", items: [...the same cards...]}`, the work by
+    `file_contribution {previewId: "<id>", items: [...the same contributions...]}`. Show each receipt's `text`. Then
+    the next source, from step 4.
 
 ## Keep it current
 

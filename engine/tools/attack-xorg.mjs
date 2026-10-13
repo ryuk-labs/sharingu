@@ -160,6 +160,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFile } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
+import { fileParts } from "./import/door.mjs";
 
 const ENGINE = dirname(dirname(fileURLToPath(import.meta.url)));
 const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -284,6 +285,10 @@ function door(target) {
   };
   return { http, rpc, mcp };
 }
+// fileWith(D, key, previewAnswer, items, onCall?) -> fileParts' answer { ok, out, step, parts }: each part the preview answers
+// with its write tool (file_contribution, save_knowledge, remove_knowledge) and its items as previewed, over D.mcp; onCall(tool,
+// the raw answer) sees every call (the sweep's look, a call count)
+const fileWith = (D, key, pv, items, onCall) => fileParts(async (n, a) => { const r = await D.mcp(key, n, a); if (onCall) onCall(n, r); return { ok: !r.isError, out: r.out }; }, pv, items);
 const PNG = Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEklEQVR4nGP4z8DwHwyBNAMDAGX8C/V8+/0LAAAAAElFTkSuQmCC"), (c) => c.charCodeAt(0));
 
 // seedOrg(target, o) -> the facts its seeding answered: o = { word, owner, member (keys), project (its key as the org names it),
@@ -298,9 +303,14 @@ export async function seedOrg(target, o) {
     if (pv.isError || !pv.out || !pv.out.previewId) fail("preview", pv);
     const stuck = (pv.out.items || []).filter((it) => it.verdict === "needs" || it.verdict === "refused");
     if (stuck.length) fail("preview items", { out: stuck });
-    const f = await D.mcp(key, "file", { previewId: pv.out.previewId, items });
-    if (f.isError || !f.out || f.out.error) fail("file", f);
-    return { preview: pv.out.previewId, results: f.out.results || [], items: f.out.items || [] };
+    // sprint 19: each part through its write tool (file_contribution, save_knowledge, remove_knowledge), its items as previewed
+    const results = [], filed = [];
+    for (const part of pv.out.parts || []) {
+      const f = await D.mcp(key, part.tool, { previewId: pv.out.previewId, items: part.items.map((n) => items[n - 1]) });
+      if (f.isError || !f.out || f.out.error) fail(part.tool, f);
+      results.push(...(f.out.results || [])); filed.push(...(f.out.items || []));
+    }
+    return { preview: pv.out.previewId, results, items: filed };
   };
   const node = `screen:${w}-home`, check = `AC.${w}.1`, qid = `Q-${w}-1`, kind = `${w}claim`;
   // a project holds one root goal: under the one it already holds, if any
@@ -536,9 +546,8 @@ async function plantPeople(D, who, V, look) {
     const pv = await D.mcp(who.key, "preview", { project: who.project, items, ...(who.eval ? { eval: true } : {}) });
     look(`preview (the people plant) ${JSON.stringify(items).slice(0, 100)}`, pv.text, sentOf(items), pv.status);
     if (pv.isError || !pv.out || !pv.out.previewId) return [];
-    const f = await D.mcp(who.key, "file", { previewId: pv.out.previewId, items });
-    look(`file (the people plant) ${JSON.stringify(items).slice(0, 100)}`, f.text, sentOf(items), f.status);
-    return ((f.out && f.out.results) || []).map((r) => (r && r.id) || null);
+    const f = await fileWith(D, who.key, pv.out, items, (n, r) => look(`${n} (the people plant) ${JSON.stringify(items).slice(0, 100)}`, r.text, sentOf(items), r.status));
+    return ((f.ok && f.out.results) || []).map((r) => (r && r.id) || null);
   };
   const tx = await file(pids.map((pid, i) => ({ contribution: { lane: "leader", kind: "note", what: `xorg plant ${tag} ${i}`, why: "its next action names a person by id",
     next: { what: `follow up ${tag} ${i}`, who: pid, by: today }, ...(i ? { depends: [V.tx[0]] } : {}) } })));
@@ -670,7 +679,7 @@ async function walk(target, who, V, o = {}) {
         look(`${t.name} ${JSON.stringify(args).slice(0, 120)}`, r.text, sent, r.status, !(t.annotations && t.annotations.readOnlyHint));
         // sprint 7, 7.5a: a key names one seat — a call naming the victim's org is refused before it runs (src/mcp.js orgArgRefused)
         if (V.slug && args.orgSlug === V.slug && !(r.out && r.out.error === "org_unreachable")) res.findings.push(`${who.label} · ${t.name} {orgSlug: <the victim's org>} was not refused org_unreachable (${brief(r.out)})`);
-        if (t.name === "preview" && r.out && r.out.previewId && !r.isError) { const f = await D.mcp(who.key, "file", { previewId: r.out.previewId, items: args.items || [] }); look(`file (its preview) ${JSON.stringify(args).slice(0, 100)}`, f.text, sent, f.status); }
+        if (t.name === "preview" && r.out && r.out.previewId && !r.isError) await fileWith(D, who.key, r.out, args.items || [], (n, f) => look(`${n} (its preview) ${JSON.stringify(args).slice(0, 100)}`, f.text, sent, f.status));
       }
     }
     // the ruled exception, through the MCP: read_file by the public file's exact id (its body served, never counted)
@@ -1519,8 +1528,8 @@ async function partnerMoves(target, who, vic, V, routes, failFast) {
   const file = async (key, project, items) => {
     const pv = await D.mcp(key, "preview", { project, items }); out.calls++;
     if (!pv.out || !pv.out.previewId) return { error: pv };
-    const f = await D.mcp(key, "file", { previewId: pv.out.previewId, items }); out.calls++;
-    return f.out && !f.out.error ? { preview: pv.out.previewId, results: f.out.results || [] } : { error: f };
+    const f = await fileWith(D, key, pv.out, items, () => { out.calls++; });
+    return f.ok ? { preview: pv.out.previewId, results: f.out.results || [] } : { error: f };
   };
   const vs = await file(who.key, vault, [
     { kind: "goal", op: "upsert", data: { id: `${w2}-root`, title: `Grow ${W2}`, parent: null, dimensions: ["leader"] } },

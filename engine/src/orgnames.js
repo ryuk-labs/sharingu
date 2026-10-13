@@ -23,6 +23,9 @@ export const PLATFORM_WORDS = [
   "api", "admin", "app", "assets", "static", "public", "www", "help", "about", "privacy", "terms", "legal", "security",
   "status", "support", "settings", "account", "accounts", "org", "orgs", "new", "dashboard", "billing", "pricing", "blog",
   "auth", "register", "token", "authorize", "callback", "robots.txt", "sitemap.xml", "operator", "platform", "sharingu",
+  // a retired door's first segment stays reserved, so an org never takes the address an older client still calls (sprint 19:
+  // POST /file became the write tools' twins under /preview/)
+  "file",
 ];
 // ORG_SLUG_MIN · ORG_SLUG_MAX: an org's path name, 2 to 40 characters (migrate-072's CHECK)
 export const ORG_SLUG_MIN = 2;

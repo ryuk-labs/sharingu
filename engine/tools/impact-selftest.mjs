@@ -295,7 +295,7 @@ console.log("E · impact: a contribution, refs, a knowledge row, a note, nothing
   const im = await I.impactFor(got.env, got.project, I.refsOfRow(got.row), { row: got.row });
   ok(im.touched.names.some((x) => x.id === "screen:pricing" && x.how === "named in what it touches") && im.reached.names.some((x) => x.id === "door:prices") && im.reached.names.some((x) => x.id === "flow:buy")
     && !im.reached.names.some((x) => x.id === "table:prices"), `one hop out: the door it depends on and the flow that steps through it, never the door's table (${im.reached.names.map((x) => x.id).join(", ")})`);
-  ok(im.proof.toRedo.length === 1 && im.proof.toRedo[0].id === "AC.screen" && im.proof.toRedo[0].stale === true && im.proof.ungraded === 1 && /^preview /.test(im.proof.calls[0].call) && im.proof.calls[0].call.includes("AC.screen"),
+  ok(im.proof.toRedo.length === 1 && im.proof.toRedo[0].id === "AC.screen" && im.proof.toRedo[0].stale === true && im.proof.ungraded === 1 && /^submit_grade /.test(im.proof.calls[0].call) && im.proof.calls[0].call.includes("AC.screen"),
     `proof to redo: AC.screen only (graded before it, stale), AC.new not graded, AC.door names the reached door, not the touched screen; its regrade call: ${im.proof.calls[0] && im.proof.calls[0].call.slice(0, 80)}`);
   ok(im.decisions.asks.some((q) => q.qid === "Q-1") && im.next && im.next.who === "bo@x.test" && /Pricing screen changed · reaches 1 door, 1 flow · 1 check to redo|pricing screen changed/.test(im.line), `the open question naming it, the next action, the line: ${im.line}`);
   const ref = await I.impactAnswer(envOf(db, "alpha"), ADA, { refs: ["screen:pricing", "goal/nope"] }, "alpha");

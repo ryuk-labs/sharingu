@@ -65,4 +65,4 @@ export async function gtmStrategy(env, project, reader) {
 
 // the empty state every doc read names
 export const docFillNote = (project, path) =>
-  `File it through preview then file: preview {project: "${(project && projectSlug(project)) || "<your project>"}", items: [{kind: "doc", op: "upsert", data: {path: "${path || "<a path, e.g. guides/setup.md>"}", title: "<its title>", body: "<the doc, in markdown>"}}]}.`;
+  `File it through preview then save_knowledge: preview {project: "${(project && projectSlug(project)) || "<your project>"}", items: [{kind: "doc", op: "upsert", data: {path: "${path || "<a path, e.g. guides/setup.md>"}", title: "<its title>", body: "<the doc, in markdown>"}}]}.`;

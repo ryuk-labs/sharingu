@@ -145,7 +145,7 @@ smoke("F8 · missing costs the same D1 rows whether the checks are graded or not
   }
   const h1 = await counted("missing", { project: P });
   const g1 = (h1.out.items || []).find((h) => h.piece === "grades") || {};
-  expect(g0.countText === "50+" && g1.count === 3 && g1.fillPath.args.items[0].grade.checkId === "AC.s5.57" && h0.rows && h1.rows && h1.rows.read <= h0.rows.read,
+  expect(g0.countText === "50+" && g1.count === 3 && g1.fillPath.tool === "submit_grade" && g1.fillPath.args.checkId === "AC.s5.57" && h0.rows && h1.rows && h1.rows.read <= h0.rows.read,
     () => `holes: before ${brief(g0)} rows ${brief(h0.rows)}; after ${brief(g1)} rows ${brief(h1.rows)}`);
-  return `60 checks: holes read ${h0.rows.read} rows with none graded (grades ${g0.countText}) and ${h1.rows.read} with 57 graded (grades ${g1.count}, first ${g1.fillPath.args.items[0].grade.checkId})`;
+  return `60 checks: holes read ${h0.rows.read} rows with none graded (grades ${g0.countText}) and ${h1.rows.read} with 57 graded (grades ${g1.count}, first ${g1.fillPath.args.checkId})`;
 });

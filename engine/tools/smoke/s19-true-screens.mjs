@@ -18,7 +18,7 @@
 //         GTM with goals and no contribution one phrase (no zero tiles, no campaign chips repeating the goal names)
 //   T9  · lists: the checklist's gtm-lists counts what the reader may read; gtm's lists are the page's, cut to a row;
 //         a list mounts on Home, Goals, Broadcast and the Map's overview
-import { smoke, expect, brief, http, mcp, html, ownerKey, control, contribute } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, html, ownerKey, control, contribute, fileWith } from "./lib.mjs";
 import { PROOF_RULE } from "../../src/transmission.js";
 
 const TAG = String(process.env.S19_TAG || "").replace(/[^a-z0-9]/g, "");   // a rerun on a kept worker takes its own projects
@@ -32,11 +32,10 @@ const invite = async (name, email, role, projects) => {
   return key;
 };
 const fileVia = async (key, items, extra = {}, project = P) => {
-  const pv = await mcp(key, "preview", { project, items, ...extra });
-  expect(!pv.isError && pv.out.previewId, () => `preview: ${brief(pv.out)}`);
-  const f = await mcp(key, "file", { previewId: pv.out.previewId, items, only: "ready" });
-  expect(!f.isError, () => `file: ${brief(f.out)}`);
-  return { pv: pv.out, rc: f.out };
+  // sprint 19: preview, then each part with its write tool; a grade among the items goes to submit_grade (lib.mjs fileWith)
+  const f = await fileWith((n, a) => mcp(key, n, a), { project: project, items, only: "ready", ...extra });
+  expect(f.step === "file" && !f.isError, () => `${f.step}: ${brief(f.out)}`);
+  return { pv: f.preview, rc: f.out };
 };
 const C = (o) => ({ contribution: { lane: "code", kind: "pr", why: "s19", touches: ["engine/s19.js"], ...o } });
 const metricOf = (text, k) => (new RegExp(`data-metric="${k}" data-value="([^"]*)"`).exec(text) || [])[1];
@@ -120,7 +119,7 @@ smoke("true screens · T5 a picture's reach: a render of a graded screen puts no
   const R = [{ kind: "render", op: "upsert", data: { screen: "screen:s19-a", format: "html", body: "<main><h1>S19 A</h1></main>" } }];
   const pv = (await mcp(ownerKey, "preview", { project: P, items: R })).out;
   expect(pv.reach && pv.reach.checks && !Number(pv.reach.checks.graded) && !/in question/.test(pv.reachLine || ""), () => brief([pv.reach && pv.reach.checks, pv.reachLine]));
-  const f = (await mcp(ownerKey, "file", { previewId: pv.previewId, items: R })).out;
+  const f = (await mcp(ownerKey, "save_knowledge", { previewId: pv.previewId, items: R })).out;
   const id = (f.items[0].filed || {}).id;
   const imp = (await mcp(ownerKey, "impact", { contribution: id })).out;
   expect(id && imp.proof && imp.proof.toRedo.length === 0 && !/to redo/.test(imp.line || ""), () => brief([id, imp.proof, imp.line]));

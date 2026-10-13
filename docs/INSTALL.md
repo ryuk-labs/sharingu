@@ -74,9 +74,11 @@ The skill walks the door's first calls, which are also the way to file anything 
 1. `whoami` — your name, your projects, your hats, where your writes land, and your orgs;
 2. `missing` with `project` — what that project still needs, each item with the `preview` call that fills it;
 3. `formats` — how each kind of item is shaped;
-4. `preview` — every write: the aim, goals, questions, checks, cards, the model, docs, a contribution with its proof, a
-   grade, an answer. It files nothing and shows what will land, where it shows, how it is graded and what it reaches;
-5. `file` with the `previewId` and the same items — it files them, and the app shows them at once.
+4. `preview` — every write: the aim, goals, questions, checks, cards, the model, docs, a contribution with its proof.
+   It files nothing and shows what will land, where it shows, how it is graded, what it reaches and which tool files it
+   (a grade goes through `submit_grade`, an answer through `respond`);
+5. the write tool each item names — `file_contribution`, `save_knowledge` or `remove_knowledge` — with the `previewId`
+   and the same items: it files them, and the app shows them at once.
 
 ## 4. Fill the GTM side
 

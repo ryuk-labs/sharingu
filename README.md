@@ -41,7 +41,8 @@ plugin's README):
 3. **Fill the product side** — your AI runs the skill `fill-the-product-side` over the code, docs and tickets.
 4. **Fill the GTM side** — your AI runs `fill-the-gtm-side` over the apps you connected to it: summaries and links only.
 
-Every write is `preview` → `file`; the door teaches the rest (`whoami`, then `missing` with a project).
+Every write is `preview`, then the write tool each item names (`file_contribution`, `save_knowledge`,
+`remove_knowledge`); the door teaches the rest (`whoami`, then `missing` with a project).
 
 ## Clients
 
@@ -55,8 +56,9 @@ Every write is `preview` → `file`; the door teaches the rest (`whoami`, then `
 
 A connection that reaches several orgs acts in its current one; a call names another with `orgSlug`, and `whoami`
 lists them. Every write is **preview, then file** — the preview says what will land, where it shows and what it
-reaches, and nothing is written until the file. Clients that render the door's confirm card get a one-press file
-(`fileOnConfirm`; `publish` and `equip` ask the same way); the two-call `preview` → `file` always works everywhere.
+reaches, and nothing is written until its write tool runs (`file_contribution`, `save_knowledge`, `remove_knowledge`).
+Clients that render the door's confirm get a one-press file (a write tool's `fileOnConfirm`; `publish` and `equip` ask
+the same way); preview, then the write tool, always works everywhere.
 (Known client finding: Claude Code's desktop app currently auto-declines the confirm without rendering it, so its users
 take the two-call path.)
 
@@ -67,7 +69,7 @@ thing to file **with the exact call that files it**, `formats` shows every item'
 guide is served to every reader through the door. The repo-side references:
 
 - [`llms.txt`](llms.txt) — the one-request index of this repo for a model.
-- [`contracts/door.json`](contracts/door.json) — the generated contract: all 35 tools, their REST twins, shapes and
+- [`contracts/door.json`](contracts/door.json) — the generated contract: all 37 tools, their REST twins, shapes and
   refusals (never hand-edited; built by `engine/tools/make-door-contract.py`).
 - [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) — what changes for a connected client.
 

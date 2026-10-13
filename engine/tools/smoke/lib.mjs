@@ -149,15 +149,96 @@ export const G = (id, parent, extra = {}) => ({ kind: "goal", op: "upsert", data
 export const goalIds = async (key = ownerKey) => ((await mcp(key, "read", { project: "smoke", kind: "goal", limit: 100 })).out.items || []).map((g) => g.id).sort().join(",");
 
 // ---- D5: the writes and reads, as any client makes them now ----
-// fileVia(key, { project?, items, clientRef?, eval?, only? }) -> { out, isError, preview } — preview, then file with the SAME
-// items (the receipt, or the refusal at either step, with `step`)
-export async function fileVia(key, { project, items, clientRef, eval: ev, only } = {}) {
-  const pv = await mcp(key, "preview", { ...(project !== undefined ? { project } : {}), items, ...(clientRef ? { clientRef } : {}), ...(ev ? { eval: true } : {}) });
-  if (pv.isError || !pv.out || !pv.out.previewId) return { ...pv, step: "preview", preview: pv.out };
-  const f = await mcp(key, "file", { previewId: pv.out.previewId, items, ...(only ? { only } : {}) });
-  return { ...f, step: "file", preview: pv.out };
+// fileParts(call, pv, items, { only? }) -> { out, isError, step, preview } — a preview's parts filed in order, each with the
+// write tool its items name (sprint 19: file_contribution, save_knowledge, remove_knowledge; preview's `parts`, its item
+// numbers 1-based), each sent the SAME items of its part as previewed and in their order. `call(name, args)` is the case's own
+// door call, answering { out, isError }. The answer is the parts' receipts as one (their items and results together, by the
+// preview's index; complete when every part is; counts summed), the first filed item's id and route lifted to the top; a
+// refusal at any part is answered as it came, with `step` (that tool) — the parts before it stay filed, as the door left them.
+export async function fileParts(call, pv, items, { only } = {}) {
+  // without only: "ready", a part holding an item that is not ready goes first: the door answers it not_ready, and nothing of the
+  // preview is filed (as one client would find out before filing the rest)
+  const stuck = (p) => p.items.some((n) => { const v = ((pv.items || [])[n - 1] || {}).verdict; return v === "needs" || v === "refused"; });
+  const parts = [...((pv && pv.parts) || [])].sort((a, b) => (only ? 0 : Number(stuck(b)) - Number(stuck(a))));
+  let last = null;
+  const all = { items: [], results: [] }, receipts = [];
+  for (const p of parts) {
+    const f = await call(p.tool, { previewId: pv.previewId, items: p.items.map((n) => items[n - 1]), ...(only ? { only } : {}) });
+    if (!f || !f.out || f.isError || f.out.error) return { ...(f || {}), step: p.tool, preview: pv, receipts };
+    last = f; receipts.push(f.out);
+    all.items.push(...(f.out.items || []));
+    all.results.push(...(f.out.results || []));
+  }
+  if (!last) return { out: { error: "nothing_to_file", previewId: pv && pv.previewId, parts, note: "the preview names no part to file" }, isError: true, step: "file", preview: pv, receipts };
+  const its = all.items.sort((x, y) => x.i - y.i), results = all.results.sort((x, y) => x.i - y.i);
+  const st = (k) => results.filter((x) => x.status === k).length;
+  const r0 = results.find((x) => x.id) || results[0] || {};
+  const it0 = (its.find((x) => x.filed && x.filed.id) || its[0] || {}).filed || {};
+  const meter = receipts.map((x) => x.meterNote).filter(Boolean);
+  return { ...last, step: "file", preview: pv, receipts,
+    out: { ...last.out, items: its, results, complete: receipts.every((x) => x.complete), filedAt: receipts.every((x) => x.complete) ? receipts.map((x) => x.filedAt).sort().pop() : null,
+      counts: { filed: st("filed"), unchanged: st("unchanged"), left: st("left"), notFiled: st("not_filed") }, filedCount: st("filed"), leftCount: st("left"), notFiledCount: st("not_filed"),
+      text: receipts.map((x) => x.text || "").join("\n"), ...(meter.length ? { meterNote: meter.join("; ") } : {}),
+      id: r0.id || it0.id || null, route: it0.route || null, status: r0.status || null } };
 }
-// kwrite(key, { project?, ops, clientRef?, eval? }) -> { out, isError }: knowledge items through preview then file, answered in
+// the write tools' REST twins (sprint 19): each part's POST, beside the preview's own address
+export const REST_WRITE = { file_contribution: "/preview/file-contribution", save_knowledge: "/preview/save-knowledge", remove_knowledge: "/preview/remove-knowledge" };
+// restFileParts(key, pv, items, { only? }) -> the last part's HTTP answer ({ status, json, … }, with `parts`, every part's), each
+// part POSTed to its tool's twin with the SAME items of its part; it stops at the first answer that is not 200
+export async function restFileParts(key, pv, items, { only } = {}) {
+  const got = [];
+  for (const p of (pv && pv.parts) || []) {
+    const r = await http("POST", REST_WRITE[p.tool], { key, body: { previewId: pv.previewId, items: p.items.map((n) => items[n - 1]), ...(only ? { only } : {}) } });
+    got.push(r);
+    if (r.status !== 200) break;
+  }
+  return got.length ? { ...got[got.length - 1], parts: got } : null;
+}
+// a grade and an answer file at once through their own tools (sprint 19: preview refuses them, naming submit_grade / respond)
+const DIRECT = { grade: "submit_grade", answer: "respond" };
+const directForm = (it) => (it && typeof it === "object" ? Object.keys(DIRECT).find((k) => it[k] && typeof it[k] === "object" && !("kind" in it)) : null);
+// fileVia(key, { project?, items, clientRef?, eval?, only? }) -> { out, isError, preview, step } — preview, then each part with its
+// write tool and the SAME items (fileParts); a grade or an answer among the items is sent to submit_grade / respond, in its own
+// place in the receipt (its i the index it had among the items). A refusal at any step is answered with `step`.
+// The rest of the options (leftOut, note, …) go to preview as they are. fileWith(call, opts) is the same through a case's own door
+// call (`call(name, args)` -> { out, isError }: another transport, an org's grant).
+export const fileVia = (key, opts = {}) => fileWith((name, args) => mcp(key, name, args), opts);
+export async function fileWith(call, { project, items, clientRef, eval: ev, only, ...extra } = {}) {
+  const list = items || [];
+  const pidx = [], direct = [];
+  list.forEach((it, i) => (directForm(it) ? direct.push(i) : pidx.push(i)));
+  let r = null;
+  if (pidx.length) {
+    const sent = pidx.map((i) => list[i]);
+    const pv = await call("preview", { ...(project !== undefined ? { project } : {}), items: sent, ...(clientRef ? { clientRef } : {}), ...(ev ? { eval: true } : {}), ...extra });
+    if (pv.isError || !pv.out || !pv.out.previewId) return { ...pv, step: "preview", preview: pv.out };
+    r = await fileParts(call, pv.out, sent, { only });
+    if (r.step !== "file" || !direct.length) return r;
+    // the preview's own indices back to the items' (a grade or an answer took a place among them)
+    const at = (x) => (x && typeof x.i === "number" ? { ...x, i: pidx[x.i], ...(x.n != null ? { n: pidx[x.i] + 1 } : {}) } : x);
+    r = { ...r, preview: { ...r.preview, items: (r.preview.items || []).map(at) }, out: { ...r.out, items: r.out.items.map(at), results: r.out.results.map(at) } };
+  }
+  const gItems = [], gResults = [];
+  for (const i of direct) {
+    const form = directForm(list[i]), tool = DIRECT[form], body = list[i][form];
+    const g = await call(tool, { ...(project !== undefined ? { project } : {}), ...body, ...(ev ? { eval: true } : {}) });
+    if (g.isError || !g.out || g.out.error) return { ...g, step: tool, preview: r && r.preview };
+    const id = g.out.transmission || g.out.id || null;
+    const verdict = g.out.route === "owner" ? "waits_for_owner" : "files";
+    gItems.push({ i, type: form, kind: form, kindWord: form, key: String(form === "grade" ? body.checkId : body.qid), verdict, filed: { status: "filed", ...(id ? { id } : {}), ...(g.out.route ? { route: g.out.route } : {}) }, answer: g.out });
+    gResults.push({ i, n: i + 1, status: "filed", ...(id ? { id } : {}) });
+  }
+  const base = r ? r.out : { complete: true, filedAt: null, items: [], results: [], counts: { filed: 0, unchanged: 0, left: 0, notFiled: 0 }, filedCount: 0, leftCount: 0, notFiledCount: 0 };
+  const its = base.items.concat(gItems).sort((x, y) => x.i - y.i), results = base.results.concat(gResults).sort((x, y) => x.i - y.i);
+  const c = base.counts || {};
+  const first = results.find((x) => x.id) || results[0] || {};
+  const pv = r ? { ...r.preview, items: (r.preview.items || []).concat(gItems).sort((x, y) => x.i - y.i), ready: (r.preview.ready || 0) + gItems.length } : { previewId: null, items: gItems, ready: gItems.length, notReady: 0, parts: [] };
+  return { ...(r || {}), isError: false, step: "file", preview: pv,
+    out: { ...base, items: its, results, counts: { ...c, filed: (c.filed || 0) + gResults.length }, filedCount: (base.filedCount || 0) + gResults.length,
+      id: first.id || null, route: ((its.find((x) => x.filed && x.filed.id) || {}).filed || {}).route || null, status: first.status || null } };
+}
+// kwrite(key, { project?, ops, clientRef?, eval? }) -> { out, isError }: knowledge items through preview then their write tools
+// (fileVia), answered in
 // a compact shape (written: the items filed, ledger: its one row, replay: every item unchanged,
 // or invalid_ops with errors[{ index, error, note }] from the preview's own needs and refusals, nothing filed)
 export async function kwrite(key, { project, ops, clientRef, eval: ev } = {}) {

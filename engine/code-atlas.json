@@ -2425,7 +2425,7 @@
           "role": ""
         },
         {
-          "line": 263,
+          "line": 264,
           "name": "FILL_THEN",
           "role": "copy: off-screen (the fill's JSON `then`)"
         },
@@ -2445,7 +2445,7 @@
           "role": "an item's short name on glass"
         },
         {
-          "line": 265,
+          "line": 266,
           "name": "LANES",
           "role": ""
         },
@@ -2475,7 +2475,7 @@
           "sql": "<dynamic: checklistSql(cols)>"
         },
         {
-          "line": 401,
+          "line": 400,
           "sql": "<dynamic: CHECKLIST_FIRSTS_SQL>"
         }
       ],
@@ -2635,119 +2635,133 @@
     "confirm.js": {
       "constants": [
         {
-          "line": 76,
+          "line": 213,
+          "name": "AGAIN",
+          "role": "(sprint 19: a write tool's; \"the call\" is that tool, sent again without fileOnConfirm)"
+        },
+        {
+          "line": 79,
           "name": "ANSWERS",
           "role": ""
         },
         {
-          "line": 194,
+          "line": 214,
           "name": "ANSWER_NOTE",
-          "role": "what the call says when the person's answer files nothing (both revisions)"
+          "role": ""
         },
         {
-          "line": 69,
+          "line": 72,
           "name": "CONFIRM_ID_RE",
           "role": ""
         },
         {
-          "line": 73,
+          "line": 76,
           "name": "CONFIRM_POLLS",
           "role": "after the window"
         },
         {
-          "line": 70,
+          "line": 73,
           "name": "CONFIRM_WINDOW_MS",
           "role": ""
         },
         {
-          "line": 74,
+          "line": 77,
           "name": "KEEPALIVE_MS",
           "role": ""
         },
         {
-          "line": 75,
+          "line": 78,
           "name": "MESSAGE_MAX",
           "role": ""
         },
         {
-          "line": 287,
+          "line": 304,
           "name": "MRTR_INPUT",
           "role": ""
         },
         {
-          "line": 286,
+          "line": 303,
           "name": "MRTR_WINDOW_MS",
           "role": "request timeout; it stays inside the preview row's own hour (PREVIEW_TTL_MS, src/preview.js)."
         },
         {
-          "line": 200,
+          "line": 220,
           "name": "NOT_ASKED",
           "role": ""
         },
         {
-          "line": 158,
+          "line": 170,
           "name": "NOT_OPEN",
           "role": "by its primary key, its author, not filed, the confirm's key, no answer yet, inside `until`"
         },
         {
-          "line": 161,
-          "name": "RECORD_WORD_SQL",
-          "role": "\"publish\" / \"equip\": that verb's) and, for a verb, of the call as sent (digest), so a requestState never crosses tools"
+          "line": 124,
+          "name": "PART_CONFIRM",
+          "role": "sprint 19: each write tool's confirm \u2014 its form's title and the line of its part (n items into a project)"
         },
         {
-          "line": 288,
+          "line": 174,
+          "name": "RECORD_WORD_SQL",
+          "role": "(digest), so a requestState never crosses tools"
+        },
+        {
+          "line": 305,
           "name": "REQUEST_STATE_RE",
           "role": ""
         },
         {
-          "line": 66,
+          "line": 69,
           "name": "SESSION_HEADER",
           "role": ""
         },
         {
-          "line": 68,
+          "line": 71,
           "name": "SESSION_RE",
           "role": "sprint 13, 13.1: the id may carry the client's family word (src/client.js NAMED_FAMILIES) between the flags and the hex:"
         },
         {
-          "line": 380,
+          "line": 397,
           "name": "TWO_CALLS",
-          "role": "the words of a verb's answers (a file's are ANSWER_NOTE and NOT_ASKED, unchanged)"
+          "role": "the words of a verb's answers (a write tool's are ANSWER_NOTE and NOT_ASKED)"
         },
         {
-          "line": 90,
+          "line": 93,
           "name": "UI_EXTENSION",
           "role": "capabilities.extensions[\"io.modelcontextprotocol/ui\"].mimeTypes, REQUIRED, includes \"text/html;profile=mcp-app\")"
         },
         {
-          "line": 326,
+          "line": 343,
           "name": "VERB_CONFIRM",
           "role": "VERB_CONFIRM \u2014 each verb's argument that asks, the words its answers use, and how the two calls finish it"
         }
       ],
       "d1Queries": [
         {
-          "line": 166,
+          "line": 179,
           "sql": "<dynamic: RECORD_WORD_SQL + \" AND json_extract(summary, '$.verb') IS ?6 AND (?7 IS NUL>"
         },
         {
-          "line": 168,
+          "line": 181,
           "sql": "<dynamic: RECORD_WORD_SQL>"
         },
         {
-          "line": 178,
-          "sql": "SELECT json_extract(summary, '$.confirm.answer') AS a FROM previews WHERE id = ?"
+          "line": 192,
+          "sql": "SELECT json_extract(summary, '$.confirm.answer') AS a, json_extract(summary, '$."
         },
         {
-          "line": 364,
+          "line": 206,
+          "sql": "UPDATE previews SET summary = json_set(summary, '$.confirm', json(?1)) WHERE id "
+        },
+        {
+          "line": 381,
           "sql": "INSERT INTO previews (id, project, person, created_at, expires_at, digest, summa"
         },
         {
-          "line": 372,
+          "line": 389,
           "sql": "SELECT summary FROM previews WHERE id = ? AND person = ?"
         },
         {
-          "line": 375,
+          "line": 392,
           "sql": "DELETE FROM previews WHERE id = ? AND person = ? AND filed_at IS NULL AND json_e"
         }
       ],
@@ -2763,6 +2777,7 @@
         "MRTR_WINDOW_MS",
         "NOT_ASKED",
         "NOT_OPEN",
+        "PART_CONFIRM",
         "RECORD_WORD_SQL",
         "REQUEST_STATE_RE",
         "SESSION_HEADER",
@@ -2788,12 +2803,14 @@
         "newNonce",
         "notAskedNote",
         "parseRequestState",
+        "partAsk",
         "recordAnswer",
         "recordInput",
         "rendersCard",
         "requestStateOf",
         "sessionFor",
         "sessionOf",
+        "storePartConfirm",
         "storeVerbConfirm",
         "verbArgs",
         "verbAsk",
@@ -2835,17 +2852,17 @@
           "role": "copy: off-screen (a title)"
         },
         {
-          "line": 207,
+          "line": 208,
           "name": "CHATGPT_ADD",
           "role": ""
         },
         {
-          "line": 209,
+          "line": 210,
           "name": "CHATGPT_STEPS",
           "role": "copy: label (the ChatGPT row's three steps, in the order its plugins page asks them)"
         },
         {
-          "line": 206,
+          "line": 207,
           "name": "CLAUDE_ADD",
           "role": "copy: off-screen (an href)"
         },
@@ -2870,9 +2887,9 @@
           "role": ""
         },
         {
-          "line": 198,
+          "line": 199,
           "name": "FIRST_CALLS",
-          "role": "FIRST_CALLS \u2014 the first-run guide's calls, in order (the initialize instructions name the same five)"
+          "role": "tools, each filing its own operation of a preview, sprint 19)"
         },
         {
           "line": 36,
@@ -2880,7 +2897,7 @@
           "role": "copy: label (each limit's tile)"
         },
         {
-          "line": 199,
+          "line": 200,
           "name": "PLUGIN_MARKET",
           "role": ""
         }
@@ -5110,14 +5127,14 @@
     "formats.js": {
       "constants": [
         {
-          "line": 81,
+          "line": 107,
           "name": "FORMATS_NEXT",
           "role": ""
         },
         {
           "line": 17,
           "name": "ITEM_FORMS",
-          "role": "unknown_kind. They are filed through preview \u2192 file as {grade: {\u2026}} and {answer: {\u2026}} (src/preview.js)."
+          "role": "unknown_kind. Each files through its own tool at once (sprint 19: submit_grade, respond), never through a preview."
         },
         {
           "line": 43,
@@ -5125,14 +5142,49 @@
           "role": ""
         },
         {
-          "line": 61,
-          "name": "ITEM_SCHEMA",
+          "line": 91,
+          "name": "ITEM_SCHEMA_OF",
+          "role": ""
+        },
+        {
+          "line": 83,
+          "name": "JSON_TYPE",
+          "role": "form passes its schemas and a shape outside them is refused."
+        },
+        {
+          "line": 87,
+          "name": "KEY_DOC",
           "role": ""
         },
         {
           "line": 54,
-          "name": "JSON_TYPE",
-          "role": "tools/annotations-selftest.mjs proves a valid item of each form passes both and a shape outside the four is refused."
+          "name": "OP_OF_TOOL",
+          "role": ""
+        },
+        {
+          "line": 56,
+          "name": "OP_WORDS",
+          "role": "the words an operation is named by in a refusal and a receipt (\"Item 2 is a knowledge remove\")"
+        },
+        {
+          "line": 58,
+          "name": "OTHER_DOORS",
+          "role": "the tools the other two forms file through, at once (a preview refuses them, pointing here)"
+        },
+        {
+          "line": 99,
+          "name": "PREVIEW_ITEM_SCHEMA",
+          "role": ""
+        },
+        {
+          "line": 52,
+          "name": "WRITE_TOOLS",
+          "role": "bad_op, a `needs` the preview shows and save_knowledge never files."
+        },
+        {
+          "line": 53,
+          "name": "WRITE_TOOL_NAMES",
+          "role": ""
         }
       ],
       "d1Queries": [],
@@ -5140,12 +5192,20 @@
         "FORMATS_NEXT",
         "ITEM_FORMS",
         "ITEM_FORM_KEYS",
-        "ITEM_SCHEMA",
+        "ITEM_SCHEMA_OF",
+        "OP_OF_TOOL",
+        "OP_WORDS",
+        "OTHER_DOORS",
+        "PREVIEW_ITEM_SCHEMA",
+        "WRITE_TOOLS",
+        "WRITE_TOOL_NAMES",
         "formatsAll",
         "formatsAnswer",
         "formatsList",
         "formatsOfKind",
-        "formatsOfShape"
+        "formatsOfShape",
+        "itemForm",
+        "opOf"
       ],
       "imports": [
         {
@@ -5160,7 +5220,6 @@
             "KINDS",
             "KNOWLEDGE_FIELDS_DOC",
             "KNOWLEDGE_KINDS",
-            "KNOWLEDGE_OPS",
             "MAX_OPS",
             "fieldDocs",
             "nounOf"
@@ -6474,7 +6533,7 @@
         {
           "line": 474,
           "name": "GOALS_NOT_KIND",
-          "role": "records a preview then file call (it changes the tree, it does not feed it)"
+          "role": "records a preview then save_knowledge call (it changes the tree, it does not feed it)"
         },
         {
           "line": 499,
@@ -7046,22 +7105,22 @@
     "index.js": {
       "constants": [
         {
-          "line": 634,
+          "line": 651,
           "name": "ABOVE_ROUTES",
           "role": ""
         },
         {
-          "line": 503,
+          "line": 505,
           "name": "ARTIFACT_CSP",
           "role": "G2 M2: a saved file is served as an inert document (GET /artifact/:id): no script, nothing loaded from anywhere"
         },
         {
-          "line": 1963,
+          "line": 1980,
           "name": "BELOW_ROUTES_1",
           "role": ""
         },
         {
-          "line": 2215,
+          "line": 2232,
           "name": "BELOW_ROUTES_2",
           "role": ""
         },
@@ -7076,52 +7135,52 @@
           "role": "NULL/absent = 'off'. Enforcement is STRIP + honest note, never a block \u2014 R never blocks."
         },
         {
-          "line": 501,
+          "line": 503,
           "name": "EXTRACT_STATUS",
           "role": "the HTTP status of an extract refusal (src/extract.js): a missing item reads 404 exactly as a hidden one"
         },
         {
-          "line": 340,
+          "line": 342,
           "name": "FLASH_CODES",
           "role": "code, a filing error, or that it filed. Only the codes the screens know are read; anything else reads as nothing."
         },
         {
-          "line": 630,
+          "line": 647,
           "name": "HEALTH_SQL",
           "role": "/health's one row (sprint 6, 6.3: the platform's, read off the schema; it names nothing of any org)"
         },
         {
-          "line": 513,
+          "line": 515,
           "name": "MCP_TOOLS",
           "role": "what it needs and what it answers, in at most three sentences. No tenant fact rides a description (check-brand.py guards"
         },
         {
-          "line": 218,
+          "line": 220,
           "name": "NOT_HERE",
           "role": ""
         },
         {
-          "line": 2439,
+          "line": 2456,
           "name": "OBSERVABLE_GETS",
           "role": "(it ends the session). Tested on the URL-normalised PATHNAME (installSelfPage), so a dot-segment path resolves first."
         },
         {
-          "line": 623,
+          "line": 637,
           "name": "ORG_ARG",
           "role": "plane and the attack suite's argument sets all see it."
         },
         {
-          "line": 367,
+          "line": 369,
           "name": "PLAN_WARNING_HEADER",
           "role": ""
         },
         {
-          "line": 354,
+          "line": 356,
           "name": "REQ_FROM",
           "role": ""
         },
         {
-          "line": 198,
+          "line": 200,
           "name": "RESERVED_ORG_NAMES",
           "role": "it exists. tools/check-org-names.mjs (a gate step) proves every route the tables below answer is in it."
         },
@@ -7133,59 +7192,59 @@
       ],
       "d1Queries": [
         {
-          "line": 313,
+          "line": 315,
           "sql": "${sql} WHERE project = ?1 AND ${ids.length > 1 ?"
         },
         {
-          "line": 645,
+          "line": 662,
           "sql": "<dynamic: HEALTH_SQL>"
         },
         {
-          "line": 676,
+          "line": 693,
           "sql": "UPDATE tokens SET revoked = 1 WHERE token_hash = ?"
         },
         {
-          "line": 709,
+          "line": 726,
           "sql": "SELECT key FROM projects WHERE key = ? AND active = 1 AND org = {org}"
         },
         {
-          "line": 723,
+          "line": 740,
           "sql": "UPDATE tokens SET project = ? WHERE token_hash = ? AND revoked = 0"
         },
         {
-          "line": 779,
+          "line": 796,
           "sql": "UPDATE people SET hats = ?, avatar = ? WHERE id = ?"
         },
         {
-          "line": 782,
+          "line": 799,
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         },
         {
-          "line": 805,
+          "line": 822,
           "sql": "UPDATE people SET trace_consent = ? WHERE id = ?"
         },
         {
-          "line": 810,
+          "line": 827,
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         },
         {
-          "line": 1355,
+          "line": 1372,
           "sql": "<dynamic: auditEventsSql(clauses)>"
         },
         {
-          "line": 1368,
+          "line": 1385,
           "sql": "SELECT project, id, name FROM k_nodes WHERE project = ? AND id IN (${ch.map(() ="
         },
         {
-          "line": 1859,
+          "line": 1876,
           "sql": "SELECT a.*, p.name AS by_name FROM artifacts a JOIN people p ON p.id = a.person_"
         },
         {
-          "line": 1974,
+          "line": 1991,
           "sql": "UPDATE tokens SET revoked = 1 WHERE token_hash = ? AND revoked = 0"
         },
         {
-          "line": 2589,
+          "line": 2606,
           "sql": "SELECT settings FROM org WHERE id = {org}"
         }
       ],
@@ -7848,10 +7907,6 @@
         {
           "kind": "exact",
           "pattern": "/favicon.svg"
-        },
-        {
-          "kind": "exact",
-          "pattern": "/file"
         },
         {
           "kind": "prefix",
@@ -11121,117 +11176,112 @@
     "mcp.js": {
       "constants": [
         {
-          "line": 107,
+          "line": 108,
           "name": "B64_RE",
           "role": ""
         },
         {
-          "line": 95,
+          "line": 96,
           "name": "CACHE_PRIVATE",
           "role": "fresh past the moment it is sent (ttlMs 0); only discover holds nothing of the caller's (public)"
         },
         {
-          "line": 96,
+          "line": 97,
           "name": "CACHE_PUBLIC",
           "role": ""
         },
         {
-          "line": 146,
+          "line": 147,
           "name": "FOUR_STEPS_LINE",
           "role": "`equip` preset:<slug> copies one into the project as doc starter/<slug>.md)"
         },
         {
-          "line": 77,
+          "line": 78,
           "name": "MCP_PROTOCOLS",
           "role": "dropped again \u2014 still accepted here, harmlessly; the MCP-Protocol-Version header is tolerated, never required)."
         },
         {
-          "line": 87,
+          "line": 88,
           "name": "META_CAPS",
           "role": ""
         },
         {
-          "line": 90,
+          "line": 91,
           "name": "META_CLIENT",
           "role": "sprint 13, 13.1: the request's own clientInfo (optional in the revision): its name, read for the family word alone (src/"
         },
         {
-          "line": 86,
+          "line": 87,
           "name": "META_PROTOCOL",
           "role": ""
         },
         {
-          "line": 88,
+          "line": 89,
           "name": "META_SERVER",
           "role": ""
         },
         {
-          "line": 105,
+          "line": 106,
           "name": "MIRRORS_REQUIRED",
           "role": ""
         },
         {
-          "line": 104,
+          "line": 105,
           "name": "MIRROR_HEADERS",
           "role": "engine/.runs/d3b/SPEC-NOTES.md, a stated deviation)."
         },
         {
-          "line": 92,
+          "line": 93,
           "name": "MODERN_METHODS",
           "role": "the methods the modern door answers (ping and the handshake are not in the revision); any other is 404 + -32601"
         },
         {
-          "line": 85,
+          "line": 86,
           "name": "MODERN_PROTOCOLS",
           "role": "served as the handshake revisions always were. The two never mix: a modern request reads nothing a session id says."
         },
         {
-          "line": 106,
+          "line": 107,
           "name": "NAMED_BY",
           "role": ""
         },
         {
-          "line": 843,
+          "line": 838,
           "name": "NOT_YOURS_TO_CLAIM",
           "role": ""
         },
         {
-          "line": 167,
-          "name": "PREVIEW_TIP",
-          "role": "respond and submit_grade file at once; each answer carries ONE line pointing at preview, which shows a filing first"
-        },
-        {
-          "line": 647,
+          "line": 642,
           "name": "RESOURCE_METHODS",
           "role": "wraps it in its own envelope"
         },
         {
-          "line": 520,
+          "line": 518,
           "name": "RES_PROJECT_HINT",
           "role": "RES_PROJECT_HINT \u2014 U-MCP D5 (Q0D506BBC): every brain:// resource reads one project, and takes ?project=<key> to pick it"
         },
         {
-          "line": 505,
+          "line": 503,
           "name": "RES_TEMPLATES",
           "role": "RES_PROJECT_HINT (U-MCP D5, additive)"
         },
         {
-          "line": 181,
+          "line": 179,
           "name": "WRITE_SCOPE",
           "role": "callers are unaffected, exactly as before."
         }
       ],
       "d1Queries": [
         {
-          "line": 448,
+          "line": 446,
           "sql": "INSERT INTO artifacts (id,person_id,kind,title,r2_key,sha256,bytes,group_tag,cre"
         },
         {
-          "line": 452,
+          "line": 450,
           "sql": "INSERT INTO events (id,session_id,person_id,kind,payload_json,created_at,org) VA"
         },
         {
-          "line": 464,
+          "line": 462,
           "sql": "SELECT a.*, p.name AS by_name FROM artifacts a JOIN people p ON p.id=a.person_id"
         }
       ],
@@ -11249,7 +11299,6 @@
         "MODERN_METHODS",
         "MODERN_PROTOCOLS",
         "NAMED_BY",
-        "PREVIEW_TIP",
         "annotationsOf",
         "callTool",
         "handleMcp",
@@ -11444,7 +11493,7 @@
           "from": "./preview.js",
           "names": [
             "PREVIEW_ID_RE",
-            "fileItems",
+            "filePart",
             "previewItems",
             "readPreviewView"
           ]
@@ -11805,12 +11854,12 @@
     "orgnames.js": {
       "constants": [
         {
-          "line": 29,
+          "line": 32,
           "name": "ORG_SLUG_MAX",
           "role": ""
         },
         {
-          "line": 28,
+          "line": 31,
           "name": "ORG_SLUG_MIN",
           "role": "ORG_SLUG_MIN \u00b7 ORG_SLUG_MAX: an org's path name, 2 to 40 characters (migrate-072's CHECK)"
         },
@@ -11820,7 +11869,7 @@
           "role": "the platform's fixed words: the doors outside the registry and the names a platform keeps (each lower-case)"
         },
         {
-          "line": 31,
+          "line": 34,
           "name": "SLUG_RE",
           "role": "a-z, 0-9 and single dashes, never opening or closing on a dash"
         }
@@ -12687,18 +12736,23 @@
           "role": "files nothing twice (each door's own clientRef replay)"
         },
         {
-          "line": 118,
+          "line": 103,
           "name": "CLASH_NOTE",
-          "role": "and again at file. A part filed before this rule (<ref>:c0, no digest) is taken as the same content, as it was."
+          "role": "file_contribution. A part filed before this rule (<ref>:c0, no digest) is taken as the same content, as it was."
         },
         {
-          "line": 191,
+          "line": 176,
           "name": "ERROR_FIELD",
           "role": "the field a knowledge refusal is about when its note names no data.<field>: the cross-row rules (src/knowledge/schema.js"
         },
         {
-          "line": 72,
-          "name": "FILE_NEXT",
+          "line": 406,
+          "name": "FORMS_WORDS",
+          "role": "read-only key), nothing else; it never files."
+        },
+        {
+          "line": 92,
+          "name": "KNOWLEDGE_PART",
           "role": ""
         },
         {
@@ -12707,14 +12761,14 @@
           "role": ""
         },
         {
-          "line": 184,
+          "line": 169,
           "name": "NODE_KIND",
           "role": "---- per-item builders ----"
         },
         {
-          "line": 92,
-          "name": "PART_LETTER",
-          "role": ""
+          "line": 408,
+          "name": "OTHER_DOOR_REASON",
+          "role": "a grade or an answer in a preview: refused, pointing at the tool that files it at once"
         },
         {
           "line": 64,
@@ -12727,7 +12781,7 @@
           "role": ""
         },
         {
-          "line": 579,
+          "line": 514,
           "name": "PREVIEW_ROW_SQL",
           "role": ""
         },
@@ -12737,32 +12791,32 @@
           "role": ""
         },
         {
-          "line": 784,
+          "line": 762,
           "name": "PRUNE_GRACE_MS",
           "role": "previews, the filed ones kept for ever \u2014 once an org a run (the real-data org held 42 rows, 38 filed, on 2026-10-02)."
         },
         {
-          "line": 785,
+          "line": 763,
           "name": "PRUNE_MAX",
           "role": ""
         },
         {
-          "line": 786,
+          "line": 764,
           "name": "PRUNE_SQL",
           "role": ""
         },
         {
-          "line": 73,
+          "line": 72,
           "name": "READ_ONLY_REASON",
           "role": ""
         },
         {
-          "line": 138,
+          "line": 123,
           "name": "REASON_WORDS",
           "role": "---- the reasons, in plain words: src/transmission.js gateGrade's reason codes translated (never a code alone) ----"
         },
         {
-          "line": 203,
+          "line": 188,
           "name": "REFUSALS",
           "role": ""
         },
@@ -12772,7 +12826,7 @@
           "role": "a contribution's route at the gate (src/transmission.js gateGrade) -> its verdict"
         },
         {
-          "line": 179,
+          "line": 164,
           "name": "STRIP_WORD",
           "role": "what the sanitiser takes out of a body (src/render.js sanitizeHtml's tally), in words"
         },
@@ -12789,42 +12843,33 @@
       ],
       "d1Queries": [
         {
-          "line": 100,
-          "sql": "SELECT id, client_ref, route, json_extract(grade, '$.refDigest') AS rd FROM tran"
-        },
-        {
-          "line": 126,
+          "line": 111,
           "sql": "SELECT id, client_ref, route FROM transmission WHERE submitter = ?1 AND client_r"
         },
         {
-          "line": 397,
-          "sql": "SELECT id, title, refs FROM k_checks WHERE project = ?1 AND id IN (SELECT value "
-        },
-        {
-          "line": 601,
+          "line": 573,
           "sql": "<dynamic: PREVIEW_ROW_SQL>"
         },
         {
-          "line": 790,
+          "line": 768,
           "sql": "<dynamic: PRUNE_SQL>"
         },
         {
-          "line": 803,
+          "line": 781,
           "sql": "<dynamic: PREVIEW_ROW_SQL>"
         },
         {
-          "line": 809,
+          "line": 787,
           "sql": "SELECT 1 AS x FROM people WHERE id = ? AND org = {org}"
         },
         {
-          "line": 815,
+          "line": 793,
           "sql": "SELECT name FROM projects WHERE key = ? AND org = {org}"
         }
       ],
       "exports": [
         "BATCH_REF_RE",
         "CLASH_NOTE",
-        "FILE_NEXT",
         "LEFT_OUT_MAX",
         "PREVIEW_ID_RE",
         "PREVIEW_MAX",
@@ -12840,13 +12885,14 @@
         "canon",
         "countsOf",
         "digestOf",
-        "fileItems",
+        "filePart",
+        "filedView",
         "fitSummary",
         "formOf",
         "needsOf",
-        "ownDigestOf",
-        "ownRefLanded",
+        "nextOf",
         "partDigest",
+        "partsOf",
         "previewItems",
         "prunePreviews",
         "readPreviewView",
@@ -12882,36 +12928,9 @@
           ]
         },
         {
-          "from": "./decisions.js",
-          "names": [
-            "checkOptionAnswers",
-            "entriesFrom"
-          ]
-        },
-        {
-          "from": "./knowledge/checks.js",
-          "names": [
-            "GRADE_VERDICTS"
-          ]
-        },
-        {
-          "from": "./knowledge/decisions.js",
-          "names": [
-            "decisionRows"
-          ]
-        },
-        {
           "from": "./knowledge/goals.js",
           "names": [
             "goalTree"
-          ]
-        },
-        {
-          "from": "./knowledge/grades.js",
-          "names": [
-            "gradeChecks",
-            "gradeFilingBody",
-            "gradeNorm"
           ]
         },
         {
@@ -12949,12 +12968,6 @@
           ]
         },
         {
-          "from": "./qnaire.js",
-          "names": [
-            "respondOptions"
-          ]
-        },
-        {
           "from": "./reach.js",
           "names": [
             "collectRefs",
@@ -12987,8 +13000,7 @@
           "from": "./transmission.js",
           "names": [
             "GTM_PROOF_FORMS",
-            "PROOF_FORMS",
-            "gateGrade"
+            "PROOF_FORMS"
           ]
         },
         {
@@ -13007,92 +13019,92 @@
     "previewcard.js": {
       "constants": [
         {
-          "line": 268,
+          "line": 271,
           "name": "BRIDGE",
           "role": "talks to the network (the CSP forbids it), never reads a cookie or storage, and holds only what the host hands it."
         },
         {
-          "line": 42,
+          "line": 43,
           "name": "CARD_CSP",
           "role": "copy: off-screen (a meta tag's content, never on the screen)"
         },
         {
-          "line": 252,
+          "line": 255,
           "name": "CARD_CSS",
           "role": ""
         },
         {
-          "line": 48,
+          "line": 49,
           "name": "CARD_FONT_CSS",
           "role": "no network, so /fonts/ is out of reach. A host whose own CSP refuses data: fonts gets each stack's system face."
         },
         {
-          "line": 50,
+          "line": 51,
           "name": "CARD_FRAGMENT_MAX",
           "role": ""
         },
         {
-          "line": 36,
+          "line": 37,
           "name": "CARD_FRAGMENT_PREFIX",
           "role": ""
         },
         {
-          "line": 35,
+          "line": 36,
           "name": "CARD_META_KEY",
           "role": ""
         },
         {
-          "line": 34,
+          "line": 35,
           "name": "CARD_MIME",
           "role": ""
         },
         {
-          "line": 333,
+          "line": 340,
           "name": "CARD_RESOURCE_META",
           "role": "the resource's _meta: no CSP domain is declared (the host's default: no network at all); prefersBorder for a card look"
         },
         {
-          "line": 45,
+          "line": 46,
           "name": "CARD_TEMPLATE_MAX",
           "role": "150,000 characters); the card stays well inside, its inlined faces included (tools/confirm-card-selftest.mjs pins it)"
         },
         {
-          "line": 38,
+          "line": 39,
           "name": "CARD_TOOLS",
           "role": "the tools whose result the card draws (tools/list carries _meta.ui.resourceUri on each)"
         },
         {
-          "line": 335,
+          "line": 342,
           "name": "CARD_TOOL_META",
           "role": "the tool's _meta in tools/list: the current key and the deprecated flat one the SDK still writes"
         },
         {
-          "line": 33,
+          "line": 34,
           "name": "CARD_URI",
           "role": ""
         },
         {
-          "line": 64,
+          "line": 65,
           "name": "FILED_CHIP",
           "role": ""
         },
         {
-          "line": 212,
+          "line": 213,
           "name": "STATE_WORD",
           "role": ""
         },
         {
-          "line": 184,
+          "line": 185,
           "name": "SUMMARY_CSS",
           "role": ""
         },
         {
-          "line": 62,
+          "line": 63,
           "name": "VERDICT_CHIP",
           "role": ""
         },
         {
-          "line": 63,
+          "line": 64,
           "name": "VERDICT_WORD",
           "role": ""
         }
@@ -13188,17 +13200,17 @@
     "previewpage.js": {
       "constants": [
         {
-          "line": 64,
+          "line": 65,
           "name": "CSS",
           "role": ""
         },
         {
-          "line": 24,
+          "line": 25,
           "name": "MON",
           "role": ""
         },
         {
-          "line": 23,
+          "line": 24,
           "name": "STATE_TITLE",
           "role": ""
         }
@@ -13304,7 +13316,7 @@
         {
           "line": 17,
           "name": "WIDTH",
-          "role": "file     file {previewId: \"<id>\"} with the same items"
+          "role": "file     file_contribution {previewId: \"<id>\"} with items 1 and 2, as previewed"
         }
       ],
       "d1Queries": [],
@@ -13527,7 +13539,7 @@
     "reach.js": {
       "constants": [
         {
-          "line": 176,
+          "line": 169,
           "name": "CALLER_MAX",
           "role": "CALLER_MAX (a slot left empty binds a string no data holds)"
         },
@@ -13547,7 +13559,7 @@
           "role": ""
         },
         {
-          "line": 255,
+          "line": 248,
           "name": "EMPTY_REACH",
           "role": ""
         },
@@ -13557,7 +13569,7 @@
           "role": ""
         },
         {
-          "line": 116,
+          "line": 109,
           "name": "IN",
           "role": ""
         },
@@ -13567,7 +13579,7 @@
           "role": ""
         },
         {
-          "line": 115,
+          "line": 108,
           "name": "J",
           "role": ""
         },
@@ -13582,7 +13594,7 @@
           "role": ""
         },
         {
-          "line": 122,
+          "line": 115,
           "name": "REACH_SQL",
           "role": "IN_MAX + 1 links kept)"
         },
@@ -13592,18 +13604,18 @@
           "role": ""
         },
         {
-          "line": 200,
+          "line": 193,
           "name": "TYPE_WORD",
           "role": ""
         }
       ],
       "d1Queries": [
         {
-          "line": 262,
+          "line": 255,
           "sql": "<dynamic: sql>"
         },
         {
-          "line": 267,
+          "line": 260,
           "sql": "<dynamic: REACH_SQL.callers>"
         }
       ],
@@ -13803,27 +13815,27 @@
       ],
       "d1Queries": [
         {
-          "line": 206,
+          "line": 207,
           "sql": "<dynamic: FLOW_SQL>"
         },
         {
-          "line": 210,
+          "line": 211,
           "sql": "<dynamic: CHECKS_BY_REFS_SQL>"
         },
         {
-          "line": 212,
+          "line": 213,
           "sql": "<dynamic: NODE_SQL>"
         },
         {
-          "line": 215,
+          "line": 216,
           "sql": "<dynamic: CHECKS_BY_REFS_SQL>"
         },
         {
-          "line": 217,
+          "line": 218,
           "sql": "<dynamic: CHECKS_BY_IDS_SQL>"
         },
         {
-          "line": 231,
+          "line": 232,
           "sql": "<dynamic: FILL_SQL[k]>"
         }
       ],
@@ -13839,12 +13851,12 @@
         "SELF_PAGE",
         "WHY",
         "fillPath",
+        "gradeCall",
         "installSelfPage",
         "judge",
         "mayRegrade",
         "observationOf",
         "observeUrl",
-        "previewCall",
         "proofText",
         "regradeAnswer",
         "regradePlan",
@@ -15562,7 +15574,7 @@
         {
           "line": 452,
           "name": "KNOWLEDGE_KIND",
-          "role": "kind \"knowledge\": the ONE ledger row a preview then file call files (src/knowledge/write.js), lane leader, routed auto"
+          "role": "kind \"knowledge\": the ONE ledger row a preview then save_knowledge call files (src/knowledge/write.js), lane leader, rou"
         },
         {
           "line": 25,

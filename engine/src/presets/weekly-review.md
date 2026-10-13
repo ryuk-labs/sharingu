@@ -2,10 +2,10 @@
 kind: skill
 slug: weekly-review
 order: 19
-version: 2
+version: 3
 title: The weekly review
 purpose: Read what changed across the org's projects this week, who filed what and with which AI, what waits on whom and what moved each goal.
-calls: whoami, changes, build, updates, home, goals, decisions, brief, preview, file
+calls: whoami, changes, build, updates, home, goals, decisions, brief, preview, file_contribution
 ---
 
 # The weekly review
@@ -48,7 +48,7 @@ projects, a Partner only the projects they hold a seat on.
 7. **File it, only if the person asks.** One note for the record, in the project they choose:
    `preview {project: "<key>", items: [{contribution: {lane: "leader", kind: "note", what: "Weekly review, <since> to <today>", why: "<the review, with the ids it names>", clientRef: "weekly-review-<today>"}}]}`.
    Show the person the answer's `text` as it is, then
-   `file {previewId: "<id>", items: [...the same items...]}`.
+   `file_contribution {previewId: "<id>", items: [...the same items...]}`.
 
 ## Know
 

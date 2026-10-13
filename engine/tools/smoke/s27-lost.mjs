@@ -19,7 +19,7 @@
 //   · H  the ruling a decision mirrors carries the eval mark of the row it rules (E257a3)
 //   · I  /profile never prints the reader's key (E246b)
 import { execFileSync } from "node:child_process";
-import { smoke, expect, brief, http, mcp, ownerKey, control, BASE, contribute, readOnlyOf, sessionPath, unbased } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, ownerKey, control, BASE, contribute, readOnlyOf, sessionPath, unbased, fileParts } from "./lib.mjs";
 
 const TAG = String(process.env.S27_TAG || "").replace(/[^a-z0-9]/g, "");
 const P = "l27" + TAG;
@@ -52,7 +52,7 @@ const ledger = async () => ((await mcp(ownerKey, "read", { project: P, kind: "co
 const fileVia = async (key, items, extra = {}) => {
   const pv = await mcp(key, "preview", { project: P, items, ...extra });
   expect(pv.out && pv.out.previewId, () => `preview: ${brief(pv.out)}`);
-  const f = await mcp(key, "file", { previewId: pv.out.previewId, items, only: "ready" });
+  const f = await fileParts((n, a) => mcp(key, n, a), pv.out, items, { only: "ready" });   // sprint 19: each part with its write tool
   return f.out;
 };
 // sql(q) -> the rows of a read on the smoke's local D1 (tools/smoke.sh sets SMOKE_D1_*; the case that needs it says so)

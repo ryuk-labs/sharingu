@@ -1,6 +1,6 @@
 // src/knowledge/screens.js — a project's screens, the standard way (docs/plan/ARCHITECTURE.md §11): the Screens view's ONE
 // read (GET /map/screens, the map {plane: "screens"} tool) and a render's body (GET /render/:hash). Everything here is generic: a
-// project differs only by its data, filed through preview then file (screen nodes, nav edges, renders, styles).
+// project differs only by its data, filed through preview then save_knowledge (screen nodes, nav edges, renders, styles).
 //
 // readScreens(env, project, surface) — ONE surface (app) of the project at a time, in three round trips:
 //   A. SCREENS_SURFACES_SQL · SCREENS_COUNTS_SQL · SCREENS_LANES_SQL · SCREENS_STYLES_SQL (one batch): the surface nodes,
@@ -112,7 +112,7 @@ export async function readScreens(env, project, want = null) {
   }
   const empty = { project, surfaces, surface: pick ? pick.key : null, lanes: [], screens: [], edges: [], styles };
   if (!pick || !pick.screens) {
-    return { status: 200, body: { ...empty, ...(surfaces.length ? {} : { note: 'No screen is filed for this project yet: file one through preview then file, an item {kind: "node", op: "upsert", data: {id: "screen:home", type: "screen", name: "Home", data: {surface: "mobile", lane: "start", step: 1, states: ["default"]}}}, then its renders (kind "render").' }) } };
+    return { status: 200, body: { ...empty, ...(surfaces.length ? {} : { note: 'No screen is filed for this project yet: file one through preview then save_knowledge, an item {kind: "node", op: "upsert", data: {id: "screen:home", type: "screen", name: "Home", data: {surface: "mobile", lane: "start", step: 1, states: ["default"]}}}, then its renders (kind "render").' }) } };
   }
   // B · the surface's screens
   const rows = (await db(env).prepare(SCREENS_OF_SQL).bind(project, pick.key === "" ? null : pick.key).all()).results || [];
@@ -176,7 +176,7 @@ export async function screenTakes(env, project, screen) {
 // restoreAnswer(env, person, a, { press, via }) — M6 · the Restore press (POST /render/restore, src/index.js): ONE render upsert
 // naming a take's hash and no body, {kind: "render", op: "upsert", data: {screen, state, variant, hash}}, through the knowledge
 // write door as the person (src/knowledge/write.js writeKnowledge: the project rule, prepareTakes, the plan, ONE ledger row).
-// It is exactly the item an agent files through preview then file; this is its twin for a press. a: {project?, screen, state?,
+// It is exactly the item an agent files through preview then save_knowledge; this is its twin for a press. a: {project?, screen, state?,
 // variant?, hash, confirm?, eval?}.
 //   · authority: a Partner (the role CLASS, src/hats.js roleClassOf) is refused 403 partner_refused before anything is read, as
 //     Publish, Equip and Regrade refuse one; the project is the write's own rule (a seat, the owner any active project);
@@ -199,7 +199,7 @@ export async function restoreAnswer(env, person, a = {}, { press = false, via = 
     if (pl.plan.errors.length) return one(pl.plan.errors[0], pl.project);
     const step = pl.plan.steps[0];
     return { http: 200, preview: true, project: pl.project, item, line: previewLine("render", item.data, { bytes: step && step.row ? step.row.bytes : null }),
-      ...(step && step.unchanged ? { unchanged: true } : {}), next: "Send the same body with confirm: true to file it (or file the item through preview then file)." };
+      ...(step && step.unchanged ? { unchanged: true } : {}), next: "Send the same body with confirm: true to file it (or file the item through preview then save_knowledge)." };
   }
   const w = await writeKnowledge(person, args, env, { via });
   if (w.error === "invalid_ops" && Array.isArray(w.errors) && w.errors[0]) return one(w.errors[0], w.project);
@@ -250,7 +250,7 @@ export async function serveRender(request, env, url, path) {
   };
   if (!exact && (request.headers.get("if-none-match") || "") === etag) return new Response(null, { status: 304, headers });
   const obj = await store(env).get(renderKey(project, hash));
-  if (!obj) return json({ error: "blob_missing", note: "The render is indexed but its body is not stored: file it again (an item of kind render with its body, through preview then file)." }, 410, { "cache-control": "private, no-store" });
+  if (!obj) return json({ error: "blob_missing", note: "The render is indexed but its body is not stored: file it again (an item of kind render with its body, through preview then save_knowledge)." }, 410, { "cache-control": "private, no-store" });
   if (row.format === "image") {
     // review fix 5 (sprint 2): only a raster picture is served (src/render.js IMAGE_TYPES); a body stored before as an SVG
     // (or under any other type) is refused, never served from this origin

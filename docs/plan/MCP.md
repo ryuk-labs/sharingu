@@ -41,10 +41,10 @@ contract `/capabilities`, `/contract`, `/formats`.
 
 The owner utilities: `/log`, `/storage`.
 
-## 2. The door today: 35 tools, 87 REST rows (57 GET, 30 POST), 138 error codes
+## 2. The door today: 37 tools, 90 REST rows (58 GET, 32 POST), 147 error codes
 
-The tools are §5's. For an owner, the `tools/list` answer is 36,715 bytes of compact JSON and the descriptions 8,405
-characters (measured 2026-10-08 on a local worker; every tool's schema carries `orgSlug` since sprint 7).
+The tools are §5's. For an owner, the `tools/list` answer is 49,949 bytes of compact JSON (measured 2026-10-13 on a local worker, sprint
+19's split; every tool's schema carries `orgSlug` since sprint 7).
 `GET /capabilities` serves the inventory generated from the contract: every tool and route, read or write, who may call
 it, and whether you may. `POST /rank` and `POST /round` are REST only, for Build's Rank button and Decisions' Add to round.
 
@@ -63,7 +63,8 @@ it, and whether you may. `POST /rank` and `POST /round` are REST only, for Build
 | Agents and workflows | `publish`, `equip` | Broadcast |
 | People and seats | — (the app only) | Control |
 
-Every write in this table goes through `preview` → `file`.
+Every write in this table goes through `preview`, then the write tool each item names (`file_contribution`,
+`save_knowledge`, `remove_knowledge`); grades through `submit_grade`, answers through `respond`.
 
 ## 4. The architecture, whole
 
@@ -75,19 +76,20 @@ generated from it, so a kind cannot be fileable and not shown, or shown and not 
 **Two directions, one vocabulary.**
 
 - *Add:* the client extracts → `preview` (nothing filed: each item with its kind, where it shows, its grade and route,
-  what it reaches, and what was left out) → the person confirms → `file` (the same items, checked against the preview's
-  digest; the knowledge items land all or nothing, then contributions, grades and answers, each part under its own
-  clientRef so a retry files only what did not land) → a receipt with links.
+  what it reaches, what was left out, and the tool that files it) → the person confirms → each part through its own
+  tool, `file_contribution`, `save_knowledge` or `remove_knowledge` (the same items of that part, checked against the
+  preview's digest for it; the knowledge items land all or nothing; a part filed again answers its first receipt) → a
+  receipt with links.
 - *Extract:* `search` (one search across everything a seat may read), `read` (one item by its ref, or a kind's list),
   the eight tab reads, `changes` (since a time or a version, with what each change reaches), `impact` (for a ref, before
   changing it), `brief` (the work packet for a role or a ref).
 
 **How the person sees it.** One preview, three renders of the same data, all built: the inline text in the tool's
-answer, the page `/preview/:id`, and the card in the chat (MCP Apps: the resource `ui://sharingu/card`). The confirm is
-`preview {fileOnConfirm: true}`: a client that declared elicitation is asked (on the call's own stream, or as an "input
-required" answer it retries) and the preview is filed on a yes. `publish {publishOnConfirm: true}` and
+answer, the page `/preview/:id`, and the card in the chat (MCP Apps: the resource `ui://sharingu/card`). The confirm rides
+the write tool (`save_knowledge {…, fileOnConfirm: true}`, the same on the other two): a client that declared elicitation
+is asked (on the call's own stream, or as an "input required" answer it retries) and the part is filed on a yes. `publish {publishOnConfirm: true}` and
 `equip {equipOnConfirm: true}` ask the same way: one confirm row holds what was shown, and nothing is published or
-equipped before a yes (a decline or a timeout writes nothing). The two calls, `preview` then `file`, always work. The
+equipped before a yes (a decline or a timeout writes nothing). The calls, `preview` then each part's write tool, always work. The
 door speaks MCP 2025-06-18 and 2026-07-28 on one endpoint, `/mcp` at the platform's root, for every org.
 
 **Orgs on the door (sprint 7).** An OAuth grant is an ACCOUNT's (signed in with the account's passphrase: the account's
@@ -120,7 +122,7 @@ project's current version, from the same read as `changes`.
 |---|---|
 | Start | `whoami`, `updates` (what changed for you and what waits on you) |
 | What is missing | `missing` (the checklist), `formats` |
-| Add | `preview`, `file` |
+| Add | `preview`, `file_contribution`, `save_knowledge`, `remove_knowledge` |
 | Decide and prove | `respond`, `rule_question`, `submit_grade`, `regrade`, `decide_contribution` |
 | Carry forward | `pick_up`, `open_items`, `wrap_up` |
 | Find | `search`, `read`, `changes`, `impact`, `brief` |

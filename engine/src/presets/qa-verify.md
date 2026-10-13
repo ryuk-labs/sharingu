@@ -2,10 +2,10 @@
 kind: agent
 slug: qa-verify
 order: 5
-version: 2
+version: 3
 title: QA verify
 purpose: Writes the checks that prove the work, runs them, and grades each one with its proof.
-calls: whoami, updates, missing, read, brief, map, preview, file, submit_grade, save_file, ask, wrap_up
+calls: whoami, updates, missing, read, brief, map, preview, save_knowledge, file_contribution, submit_grade, save_file, ask, wrap_up
 ---
 
 # QA verify agent
@@ -41,8 +41,9 @@ cannot prove.
 
 ## What you file
 
-Every filing is previewed first: `preview {project, items}` shows what will land, then `file {previewId, items}` files
-the same items.
+Every filing is previewed first: `preview {project, items}` shows what will land and names each item's tool
+(`filesWith`); then `save_knowledge {previewId, items}` files the knowledge and `file_contribution {previewId, items}`
+the contributions, each with the same items of its part.
 
 - A missing check: `preview {project, items: [{kind: "check", op: "upsert", data: {id: "<id>", title, given, when, then, refs: ["<node, goal or question id>"], severity: "normal", method: "manual"}}]}`
 - A grade: `submit_grade {checkId: "<id>", verdict: "proven", proof: "<command> -> <result>", clientRef}` (verdict `proven`, `refused` or `incomplete`)

@@ -60,13 +60,13 @@ const truth = (db, project = "alpha") => db.prepare("SELECT c.id FROM k_checks c
   const ids = Array.from({ length: 60 }, (_, i) => `AC.${String(i).padStart(3, "0")}`);
   const w = await writeKnowledge(OWNER, { project: "alpha", ops: ids.map(check) }, envOf(db));
   await writeKnowledge(OWNER, { project: "beta", ops: [check("AC.000")] }, envOf(db, "beta"));
-  ok(!w.error && ungraded(db) === ids.join(",") && ungraded(db, "beta") === "AC.000", `F8 · 60 checks filed through preview then file: all 60 are in k_check_ungraded (beta's own apart)`, show(w));
+  ok(!w.error && ungraded(db) === ids.join(",") && ungraded(db, "beta") === "AC.000", `F8 · 60 checks filed through preview then save_knowledge: all 60 are in k_check_ungraded (beta's own apart)`, show(w));
   for (const id of ids.slice(0, 55)) grade(db, "alpha", id);
   grade(db, "alpha", "AC.001");   // a second grade of a graded check changes nothing
   ok(ungraded(db) === truth(db) && ungraded(db) === ids.slice(55).join(",") && ungraded(db, "beta") === "AC.000", `F8 · 55 graded (one twice): k_check_ungraded holds the other 5 (${ungraded(db)}), beta's untouched`);
   const h = await computeHoles(envOf(db), OWNER, { brand: { org: "Northwind" } });
   const gh = (h.items || []).find((x) => x.piece === "grades") || {};
-  ok(gh.count === 5 && gh.fillPath.args.items[0].grade.checkId === "AC.055" && gh.first && gh.first.id === "AC.055" && /5 of 60 checks have no grade yet, first: check AC\.055\./.test(gh.what), `F8 · holes: grades open, count 5, first AC.055 (${gh.what})`, show(h.items));
+  ok(gh.count === 5 && gh.fillPath.tool === "submit_grade" && gh.fillPath.args.checkId === "AC.055" && gh.first && gh.first.id === "AC.055" && /5 of 60 checks have no grade yet, first: check AC\.055\./.test(gh.what), `F8 · holes: grades open, count 5, first AC.055 (${gh.what})`, show(h.items));
   await writeKnowledge(OWNER, { project: "alpha", ops: [{ kind: "check", op: "remove", data: { id: "AC.055" } }, check("AC.999"), { kind: "check", op: "upsert", data: { id: "AC.056", title: "renamed" } }] }, envOf(db));
   grade(db, "alpha", "AC.998");   // a grade for a check that is not filed
   ok(ungraded(db) === truth(db) && ungraded(db) === "AC.056,AC.057,AC.058,AC.059,AC.999", `F8 · a check removed leaves, a new one joins, a renamed one stays, a grade of an unknown check changes nothing: ${ungraded(db)}`);

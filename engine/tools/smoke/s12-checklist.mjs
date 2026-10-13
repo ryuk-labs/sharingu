@@ -9,7 +9,7 @@
 //     Build;
 //   · a knowledge write is never an open contribution: Home's open filings and Build's list leave them out, Build's filter
 //     shows them; Home's answer carries goalsMoved and the meter, never a leaderboard.
-import { smoke, expect, brief, http, mcp, html, ownerKey, readOnlyOf, control, contribute } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, html, ownerKey, readOnlyOf, control, contribute, fileWith } from "./lib.mjs";
 
 const TAG = String(process.env.S12_TAG || "").replace(/[^a-z0-9]/g, "");
 const P = "s12" + TAG;
@@ -17,12 +17,11 @@ const keyOf = (text) => (text.match(/API key\): ([0-9a-f]{40})/) || [])[1] || nu
 const holes = async (key = ownerKey) => { const h = await mcp(key, "missing", { project: P }); if (h.isError) throw new Error(`holes: ${brief(h.out)}`); return h.out; };
 const item = (h, id) => (h.checklist || []).find((x) => x.id === id) || {};
 const st = (h, id) => { const x = item(h, id); return x.state ? `${x.state}${x.want ? ` ${x.have}/${x.want}` : ""}` : "absent"; };
-// fileThrough(items) -> the file receipt: preview first (nothing written), then file the same items
+// fileThrough(items) -> the receipt: preview first (nothing written), then each part with its write tool and the same items
+// (sprint 19; a grade files at once through submit_grade: lib.mjs fileWith)
 async function fileThrough(items, key = ownerKey) {
-  const pv = await mcp(key, "preview", { project: P, items });
-  if (pv.isError || !pv.out.previewId) throw new Error(`preview: ${brief(pv.out)}`);
-  const f = await mcp(key, "file", { previewId: pv.out.previewId, items });
-  if (f.isError) throw new Error(`file: ${brief(f.out)}`);
+  const f = await fileWith((n, a) => mcp(key, n, a), { project: P, items });
+  if (f.isError || f.step !== "file") throw new Error(`${f.step}: ${brief(f.out)}`);
   return f.out;
 }
 const q = {};
@@ -94,7 +93,7 @@ smoke("filing through preview then file moves each item exactly, an area appears
   expect(st(h, "screens-pictured") === "partial 1/3", () => `pictured ${st(h, "screens-pictured")}`);
   await fileThrough([{ kind: "check", op: "upsert", data: { id: "AC.s12.01", title: "S12 A shows", given: "a visitor", when: "they open A", then: "A shows", refs: ["screen:s12-a"] } }]);
   h = await holes();
-  expect(h.areas.find((a) => a.area === "proof").applies && st(h, "checks-screens") === "partial 1/3" && st(h, "grades") === "empty 0/1" && h.items.find((x) => x.piece === "grades").fillPath.args.items[0].grade.checkId === "AC.s12.01",
+  expect(h.areas.find((a) => a.area === "proof").applies && st(h, "checks-screens") === "partial 1/3" && st(h, "grades") === "empty 0/1" && h.items.find((x) => x.piece === "grades").fillPath.tool === "submit_grade" && h.items.find((x) => x.piece === "grades").fillPath.args.checkId === "AC.s12.01",
     () => `proof: ${brief(h.checklist.filter((x) => x.area === "proof"))}`);
   await fileThrough([{ grade: { checkId: "AC.s12.01", verdict: "proven", proof: "curl /map/screens -> A drawn (smoke s12)" } }]);
   h = await holes();

@@ -448,7 +448,7 @@ export function restoreTargetOf(sub) {
 export const ITEM_KIND = "item";
 export const PUBLISH_KIND = "publish";
 export const EQUIP_KIND = "equip";
-// kind "knowledge": the ONE ledger row a preview then file call files (src/knowledge/write.js), lane leader, routed auto
+// kind "knowledge": the ONE ledger row a preview then save_knowledge call files (src/knowledge/write.js), lane leader, routed auto
 export const KNOWLEDGE_KIND = "knowledge";
 // RESERVED_KINDS: the kinds only their own seam files — publish and equip by src/broadcast.js, knowledge by
 // src/knowledge/write.js (core.js fileTransmission / fileTransmissionsBatch refuse them on every other door)

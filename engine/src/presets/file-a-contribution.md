@@ -2,17 +2,17 @@
 kind: skill
 slug: file-a-contribution
 order: 10
-version: 2
+version: 3
 title: File a contribution
 purpose: Record what you changed, decided or learned, aimed at the goal it moves, so the team sees it land.
-calls: goals, preview, file, read
+calls: goals, preview, file_contribution, read
 ---
 
 # File a contribution
 
 Use this whenever you changed something, decided something, or learned something the team should see. A contribution is
-one item through the one door: `preview` shows it to the person, then `file` files it. sharingu grades it at the door
-and answers at once.
+one item through the one door: `preview` shows it to the person, then `file_contribution` files it. sharingu grades it
+at the door and answers at once.
 
 ## The procedure
 
@@ -32,7 +32,8 @@ and answers at once.
    - needs one more thing: `needs` names the field, a hint and an example. Fix exactly that field and preview again,
      with the same `clientRef`.
    - a `goalRef` the goal tree does not know files, but moves no goal until it is corrected.
-5. **File it, once the person says so.** `file {previewId, items}` with the same items. The receipt names each id.
+5. **File it, once the person says so.** `file_contribution {previewId, items}` with the same items. The receipt names
+   each id.
 6. **Check it later.** `read {ref: "<id>"}` reads one filing back with its grade and route.
 
 ## Never

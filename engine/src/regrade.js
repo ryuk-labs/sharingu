@@ -5,7 +5,7 @@
 //
 // WHAT IT REGRADES: the stale (or ungraded) checks of ONE scope: a flow (the checks naming the flow or any screen or door of
 // its steps), a node (the checks naming it) or a list of check ids. Each check the WORKER CAN OBSERVE ITSELF is observed and
-// graded; the rest are answered as needsProof with the preview call that would file them.
+// graded; the rest are answered as needsProof with the submit_grade calls that would file them.
 //   · observable: a screen check in the code model's own grammar (tools/import/read-code.mjs: "GET <path> with Accept:
 //     text/html" / "200 HTML holding data-screen=… and the regions …; when it has them, also …", optionally "; it links
 //     <path>"), and a rail check ("the rail links <href> labelled "<label>""). An id placeholder in the path (<ref>, <id>,
@@ -50,7 +50,7 @@ import { orgPath } from "./orgpath.js";   // sprint 7, 7.4: the observation unde
 export const REGRADE_CAP = 8;
 export const CHECKS_MAX = 60;
 const CANDIDATES_MAX = 200;
-// the checks listed for a person (and the items of their preview call): no page is rendered for them, so this bounds only
+// the checks listed for a person (and their submit_grade calls): no page is rendered for them, so this bounds only
 // the answer's size, not the request's CPU
 const NEEDS_MAX = 24;
 export const SELF_PAGE = Symbol("self-page");
@@ -175,9 +175,10 @@ export function judge(obs, res) {
 }
 // proofText(path, credential, said) -> the grade's proof: the request this worker made as the caller and what came back
 export const proofText = (path, credential, said) => `GET ${path} (Accept: text/html, as the caller's ${credential}) -> ${said}`;
-// previewCall(project, list) -> the preview call that files a person's grades of these checks (every filing is previewed first)
-export const previewCall = (project, list) => `preview ${JSON.stringify({ project, items: list.slice(0, NEEDS_MAX).map((c) => ({ grade: { checkId: c.id,
-  verdict: "<proven | refused | incomplete: what you observe now>", proof: "<the command you ran and what it printed, a link, or an artifact id>" } })) })}`;
+// gradeCall(project, list) -> the calls that file a person's grades of these checks: submit_grade, one a check (sprint 19: a grade
+// files at once through its own tool, never through a preview)
+export const gradeCall = (project, list) => list.slice(0, NEEDS_MAX).map((c) => `submit_grade ${JSON.stringify({ project, checkId: c.id,
+  verdict: "<proven | refused | incomplete: what you observe now>", proof: "<the command you ran and what it printed, a link, or an artifact id>" })}`).join("\n");
 
 // ---- the scope and the plan ----
 // scopeOf(a) -> { kind: "flow" | "node" | "checks", value } | { error }: the ONE scope a call names (flow, else node, else checks)
@@ -255,7 +256,7 @@ export async function regradeAnswer(env, person, a = {}, o = {}) {
   if (!pl.plan) return pl;
   const p = pl.plan;
   const needs = needsOut(p.needs);
-  const call = p.needs.length ? previewCall(p.project, p.needs) : null;
+  const call = p.needs.length ? gradeCall(p.project, p.needs) : null;
   const base = { project: p.project, scope: { kind: p.scope.kind, ref: p.scope.ref, name: p.scope.name, ...(p.scope.ids ? { checks: p.scope.ids } : {}) }, cap: REGRADE_CAP, counts: p.counts,
     ...(p.fresh ? { fresh: p.fresh } : {}), needsProof: needs, ...(call ? { call } : {}), more: p.more };
   if (!confirmed(a)) {
@@ -292,7 +293,7 @@ export async function regradeAnswer(env, person, a = {}, o = {}) {
   const unseen = observed.filter((x) => !x.verdict).map((x) => ({ id: x.id, title: x.title, why: `Answered ${x.status || "nothing"}` }));
   const counted = observed.filter((x) => x.counted).length;
   return { http: 200, ...base, observed, counted, needsProof: [...unseen, ...needs].slice(0, NEEDS_MAX),
-    ...(unseen.length || call ? { call: previewCall(p.project, [...unseen, ...p.needs]) } : {}),
+    ...(unseen.length || call ? { call: gradeCall(p.project, [...unseen, ...p.needs]) } : {}),
     note: `${counted} of ${observed.length} observed ${observed.length === 1 ? "check was" : "checks were"} graded from ${observed.length === 1 ? "its page" : "their pages"}${unseen.length ? `; ${unseen.length} did not answer as a page` : ""}${p.needs.length ? `; ${p.needs.length} need a person (call)` : ""}.${p.more ? ` At most ${REGRADE_CAP} a call: call again for the rest.` : ""}` };
 }
 

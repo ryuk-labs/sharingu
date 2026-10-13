@@ -1,6 +1,6 @@
 {
   "name": "sharingu",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Your tools. One company brain. A universal harness connecting contributions, decisions and goals through MCP, with humans in charge.",
   "author": {
     "name": "Ryuk Labs",
@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "sharingu",
     "shortDescription": "One company brain for your AI",
-    "longDescription": "sharingu is one company brain for the AI tools your team already uses. People and their assistants file contributions through one MCP server: goals and their progress, decisions with their reasons, open questions, docs, screens and a map of the product. Each org's work lands in its own walled space, and the app shows it live in eight tabs: Home, Build, GTM, Goals, Decisions, Map, Broadcast and Control, with a search across the project.\n\nEvery write is previewed before it lands. Your AI calls preview, you see exactly what would be filed and what it touches, and file files it only then; where the client supports confirmation, nothing is filed until you say yes. Questions go to the person who owns the decision, who rules on them; the record keeps who decided, when and why.\n\nRoles decide what each seat reads and does: an owner manages the org, its projects and its people; members work across the projects they are seated on; a partner sees only the project it was invited to. Reads never change anything, and every write tool is marked as such.\n\nStart with whoami (who you are and where your writes land), then missing (what a project still needs, each with the call that fills it), then preview and file.",
+    "longDescription": "sharingu is one company brain for the AI tools your team already uses. People and their assistants file contributions through one MCP server: goals and their progress, decisions with their reasons, open questions, docs, screens and a map of the product. Each org's work lands in its own walled space, and the app shows it live in eight tabs: Home, Build, GTM, Goals, Decisions, Map, Broadcast and Control, with a search across the project.\n\nEvery write is previewed before it lands. Your AI calls preview, you see exactly what would be filed and what it touches, and only then does it file each part with the tool its items name: file_contribution the contributions, save_knowledge the knowledge it adds or changes, remove_knowledge the knowledge it removes; where the client supports confirmation, nothing is filed until you say yes. Questions go to the person who owns the decision, who rules on them; the record keeps who decided, when and why.\n\nRoles decide what each seat reads and does: an owner manages the org, its projects and its people; members work across the projects they are seated on; a partner sees only the project it was invited to. Reads never change anything, and every write tool is marked as such.\n\nStart with whoami (who you are and where your writes land), then missing (what a project still needs, each with the call that fills it), then preview and the write tool each item names.",
     "developerName": "Ryuk Labs",
     "category": "Productivity",
     "capabilities": [
@@ -65,29 +65,29 @@
               "expected_behavior": "2) sharingu's goal tree, each goal with its status and progress. 3) Matching goals, questions, docs and map nodes, each with a link. 4) Home, Decisions and the Map show the same project."
             },
             {
-              "description": "File a contribution through preview, then file (as the member account)",
+              "description": "File a contribution through preview, then file_contribution (as the member account)",
               "prompt": "1) In the Sample project, file a note in the leader lane: what 'A reviewer's first note', why 'the store's test case'. Preview it first. 2) File it. 3) Read that contribution. 4) In the browser, open Build.",
-              "tools_triggered": "preview, file, read",
-              "expected_behavior": "1) The preview (the preview tool) shows the one item, \"files at once\", and says nothing is filed yet. 2) The receipt (the file tool) with the contribution's id, T- and the date and a number, and its link. 3) What you filed, by Reviewer Member, in the Sample project. 4) The note is in the list."
+              "tools_triggered": "preview, file_contribution, read",
+              "expected_behavior": "1) The preview (the preview tool) shows the one item, \"files at once\", names the tool that files it, and says nothing is filed yet. 2) The receipt (the file_contribution tool) with the contribution's id, T- and the date and a number, and its link. 3) What you filed, by Reviewer Member, in the Sample project. 4) The note is in the list."
             },
             {
               "description": "The confirm: nothing is filed until you say yes (as the admin account)",
-              "prompt": "1) In the Sample project, add a goal 'A reviewer goal' under the goal 'Every contribution closes the loop', and file it only after I confirm. 2) Decline (or, where you were not asked, do not file). 3) Read the goal 'A reviewer goal'. 4) Ask again and accept (or, where you were not asked, say \"File it.\": the file tool).",
-              "tools_triggered": "preview, read, file",
-              "expected_behavior": "1) Either your client asks you to confirm, showing what would be filed, or (a client that shows no confirm prompt) sharingu answers that you were not asked, shows the preview's text and files nothing. 2) \"The person declined: nothing was filed.\" where you were asked; nothing filed either way. 3) There is no such goal (not_found). 4) The goal is filed; it reads back under its parent, and the Goals tab shows it."
+              "prompt": "1) In the Sample project, add a goal 'A reviewer goal' under the goal 'Every contribution closes the loop', and file it only after I confirm. 2) Decline (or, where you were not asked, do not file). 3) Read the goal 'A reviewer goal'. 4) Ask again and accept (or, where you were not asked, say \"File it.\": save_knowledge again, without the confirm).",
+              "tools_triggered": "preview, save_knowledge, read",
+              "expected_behavior": "1) The preview shows the goal and files nothing; then either your client asks you to confirm, showing what would be filed, or (a client that shows no confirm prompt) sharingu answers that you were not asked and files nothing. 2) \"The person declined: nothing was filed.\" where you were asked; nothing filed either way. 3) There is no such goal (not_found). 4) The goal is filed; it reads back under its parent, and the Goals tab shows it."
             },
             {
               "description": "A partner works only where it is seated (as the partner account)",
               "prompt": "1) Sign in as the partner. 2) Call whoami. 3) Show the Sample project's goals. 4) In the Sample project, file a note in the leader lane: what 'A reviewer's first note', why 'the store's test case'. Preview it, then file it.",
-              "tools_triggered": "whoami, goals, preview, file",
+              "tools_triggered": "whoami, goals, preview, file_contribution",
               "expected_behavior": "2) The role partner and ONE project, the Sample project. 3) Its goal tree. 4) A receipt with its T- id."
             }
           ],
           "negative": [
             {
-              "description": "Nothing is deleted through the AI (as the admin account). Why: sharingu has no tool that deletes or archives a project; a project is the owner's to archive on Control, in the browser, and an archive is never a delete.",
+              "description": "Nothing is deleted through the AI (as the admin account). Why: sharingu has no tool that deletes or archives a project; a project is the owner's to archive on Control, in the browser, and an archive is never a delete. remove_knowledge removes a project's knowledge items (a goal, a doc, a Map node), never the project itself, and only items a preview showed first.",
               "prompt": "Delete the Sample project and everything in it.",
-              "expected_behavior": "Your AI says it cannot: no sharingu tool deletes a project. Nothing changes: whoami still lists both projects, and the Sample project's goals still read. If it offers to remove the project's items one by one instead, that is a preview, which files nothing until you file it."
+              "expected_behavior": "Your AI says it cannot: no sharingu tool deletes a project. Nothing changes: whoami still lists both projects, and the Sample project's goals still read. If it offers to remove the project's items one by one instead, that starts with a preview, which removes nothing; and a project is no item a preview can name (unknown_kind)."
             },
             {
               "description": "A partner cannot read a project it has no seat on (as the partner account). Why: A partner was invited to the Sample project only; the rest of the org is not its to read.",

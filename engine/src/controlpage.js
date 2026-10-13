@@ -194,8 +194,9 @@ const form = (action, fields, body, confirmText) =>
 // says so ("Connects to"), and the key row is labeled as the one any install connects with.
 // sprint 10, 10.1: the engine's repo is private (the proprietary ruling, 2026-10-09), so the add line names the plugin's
 // public distribution repo, ryuk-labs/sharingu-plugin (this tree's plugin/ mirrored there: make-plugin-skills.mjs --sync).
-// FIRST_CALLS — the first-run guide's calls, in order (the initialize instructions name the same five)
-export const FIRST_CALLS = ["whoami", "missing", "formats", "preview", "file"];
+// FIRST_CALLS — the first-run guide's calls, in order (the initialize instructions' five steps: the fifth names the three write
+// tools, each filing its own operation of a preview, sprint 19)
+export const FIRST_CALLS = ["whoami", "missing", "formats", "preview", "file_contribution", "save_knowledge", "remove_knowledge"];
 const PLUGIN_MARKET = "ryuk-labs/sharingu-plugin", PLUGIN_ID = "sharingu@sharingu";
 // sprint 12, 12.1 (the buttons): the two app ways in, each ONE constant to swap when its store's listing is published.
 // Claude: its documented install link for a custom connector, which prefills the "Add custom connector" dialog with this

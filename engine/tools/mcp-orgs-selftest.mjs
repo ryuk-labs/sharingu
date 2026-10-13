@@ -118,7 +118,7 @@ const fileGoal = async (W, key, project, id, orgSlug) => {
   const items = [goal(id)];
   const pv = await W.tool(key, "preview", { project, items, ...(orgSlug ? { orgSlug } : {}) });
   if (pv.isError || !pv.out.previewId) return { step: "preview", ...pv };
-  return { step: "file", previewId: pv.out.previewId, ...(await W.tool(key, "file", { previewId: pv.out.previewId, items, ...(orgSlug ? { orgSlug } : {}) })) };
+  return { step: "file", previewId: pv.out.previewId, ...(await W.tool(key, "save_knowledge", { previewId: pv.out.previewId, items, ...(orgSlug ? { orgSlug } : {}) })) };
 };
 const orgsOf = (o) => ((o && o.orgs) || []).map((x) => `${x.slug}:${x.role || ""}${x.current ? "*" : ""}`).join(" ");
 const brief = (v) => JSON.stringify(v).slice(0, 240);
@@ -178,7 +178,7 @@ const CASES = {
     out.push([!g2.isError && !g1.isError && at("ann-g2") === "o2--shop" && at("ann-g1") === "alpha",
       `C3 · the rows land in the org the call names: ann-g2 in ${at("ann-g2")}, ann-g1 in ${at("ann-g1")} (${g2.isError ? brief(g2.out) : "filed"}, ${g1.isError ? brief(g1.out) : "filed"})`]);
     const pv = await W.tool(A, "preview", { project: "shop", items: [goal("ann-x")], orgSlug: W.S.two });
-    const f = await W.tool(A, "file", { previewId: pv.out.previewId, items: [goal("ann-x")] });
+    const f = await W.tool(A, "save_knowledge", { previewId: pv.out.previewId, items: [goal("ann-x")] });
     out.push([pv.out.previewId && f.isError && !at("ann-x"), `C3 · a preview made in Two is not filed by a call acting in One (${f.out && f.out.error})`]);
     return out;
   },
@@ -283,9 +283,9 @@ const CASES = {
   async C11() {
     const W = await world(), out = [];
     const R = await W.oauth(ANN, ANN_PASS, "mcp:read");
-    // a read-only grant's preview stores nothing (no previewId: mcp-client-selftest), so file is called as a client would retry it
-    const f2 = await W.tool(R, "file", { previewId: "P-0000000000000000", items: [goal("ro-g2")], orgSlug: W.S.two });
-    const f1 = await W.tool(R, "file", { previewId: "P-0000000000000000", items: [goal("ro-g1")], orgSlug: W.S.one });
+    // a read-only grant's preview stores nothing (no previewId: mcp-client-selftest), so save_knowledge is called as a client would retry it
+    const f2 = await W.tool(R, "save_knowledge", { previewId: "P-0000000000000000", items: [goal("ro-g2")], orgSlug: W.S.two });
+    const f1 = await W.tool(R, "save_knowledge", { previewId: "P-0000000000000000", items: [goal("ro-g1")], orgSlug: W.S.one });
     out.push([f2.out.error === "insufficient_scope" && f1.out.error === "insufficient_scope" && !W.one("SELECT 1 AS x FROM k_goals WHERE id IN ('ro-g1','ro-g2')"),
       `C11 · a read-only account grant files in neither org (${f2.out.error}, ${f1.out.error})`]);
     return out;
@@ -345,12 +345,14 @@ const CASES = {
     const init = await fetchRaw(W, A, { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: { elicitation: {} }, clientInfo: { name: "t", version: "1" } } });
     const sid = init.headers.get("mcp-session-id");
     const items = [goal("ann-c4")];
-    const r = await fetchRaw(W, A, { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "preview", arguments: { project: "shop", items, fileOnConfirm: true, orgSlug: W.S.two } } },
+    // sprint 19: the confirm is the write tool's (save_knowledge {fileOnConfirm}), on a preview made in Two
+    const pv = await W.tool(A, "preview", { project: "shop", items, orgSlug: W.S.two });
+    const r = await fetchRaw(W, A, { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "save_knowledge", arguments: { previewId: pv.out && pv.out.previewId, items, fileOnConfirm: true, orgSlug: W.S.two } } },
       { "mcp-session-id": sid, accept: "application/json, text/event-stream" });
     const streamed = /event-stream/.test(r.headers.get("content-type") || "");
     let body = {};
     if (streamed) await r.body.cancel(); else { const j = await r.json().catch(() => ({})); try { body = JSON.parse(j.result.content[0].text); } catch { body = {}; } }
-    out.push([!!sid && !streamed && body.previewId && body.confirm && body.confirm.asked === false && /own org/.test(body.confirm.note || ""),
+    out.push([!!sid && !streamed && body.previewId && body.filed === false && body.confirm && body.confirm.asked === false && /own org/.test(body.confirm.note || "") && !W.one("SELECT 1 AS x FROM k_goals WHERE id = 'ann-c4'"),
       `C14 · the account grant's confirm in Two (not its own org): ${streamed ? "a STREAM (a confirm that never lands)" : `asked ${body.confirm && body.confirm.asked}: "${(body.confirm && body.confirm.note || "").slice(0, 60)}…"`}`]);
     return out;
   },
@@ -390,7 +392,7 @@ const CASES = {
       const items = [{ contribution: { lane: "leader", kind: "note", what, why: "C18 files it to see which AI is stamped" } }];
       const pv = await W.tool(key, "preview", { project: "alpha", items });
       if (pv.isError || !pv.out.previewId) return { step: "preview", ...pv };
-      return { step: "file", ...(await W.tool(key, "file", { previewId: pv.out.previewId, items })) };
+      return { step: "file", ...(await W.tool(key, "file_contribution", { previewId: pv.out.previewId, items })) };
     };
     const CC = await W.oauth(ANN, ANN_PASS, "mcp:read mcp:write", W.w.fetch, W.S.one, "Claude Code (sharingu)");
     const f1 = await note(CC, "c18 from Claude Code"), r1 = last();

@@ -310,7 +310,7 @@ async function e2e(src) {
   const fileC = async (n, from, key = "b-key", project = "web") => {
     const items = Array.from({ length: n }, (_, k) => contribution(from + k));
     const pv = await call("preview", { project, items }, key);
-    return call("file", { previewId: pv.out && pv.out.previewId, items }, key);
+    return call("file_contribution", { previewId: pv.out && pv.out.previewId, items }, key);
   };
   return { w, call, rest, fileC, count: (sql) => w.db.prepare(sql).get() };
 }

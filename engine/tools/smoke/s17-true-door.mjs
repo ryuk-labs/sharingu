@@ -10,7 +10,7 @@
 //     nothing filed; a seatless member is shown no project;
 //   · A5 (item 5): THE sign-in rule on the 25 doors the grading run named: a script (JSON, or a bearer, or no Accept) 401, a
 //     browser navigation 302 /login?next=; /scope is declared what it is (a retired alias).
-import { smoke, expect, brief, http, mcp, html, ownerKey, control, BASE, kwrite, kread, contribute, readTx, contributions } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, html, ownerKey, control, BASE, kwrite, kread, contribute, readTx, contributions, fileWith, fileParts } from "./lib.mjs";
 
 const P = "s17";
 const st = {};
@@ -22,11 +22,10 @@ const invite = async (name, email, role, projects) => {
   return key;
 };
 const fileVia = async (key, items, extra = {}) => {
-  const pv = await mcp(key, "preview", { project: P, items, ...extra });
-  expect(!pv.isError && pv.out.previewId, () => `preview: ${brief(pv.out)}`);
-  const f = await mcp(key, "file", { previewId: pv.out.previewId, items, only: "ready" });
-  expect(!f.isError, () => `file: ${brief(f.out)}`);
-  return { pv: pv.out, rc: f.out };
+  // sprint 19: preview, then each part with its write tool; a grade among the items goes to submit_grade (lib.mjs fileWith)
+  const f = await fileWith((n, a) => mcp(key, n, a), { project: P, items, only: "ready", ...extra });
+  expect(f.step === "file" && !f.isError, () => `${f.step}: ${brief(f.out)}`);
+  return { pv: f.preview, rc: f.out };
 };
 // raw(path, {accept, bearer, nav}) -> "status location?" exactly as a script, a bad key or a browser navigation is answered
 async function raw(path, { accept = "application/json", bearer = null, nav = false, method = "GET", body } = {}) {
@@ -209,7 +208,7 @@ smoke("true door · B6 a picture through the MCP: formats' imageExample files wh
 
 smoke("true door · B7 a re-filed batch never reports filed while writing nothing: the same batch files nothing twice, a changed item is refused saying so, changed knowledge too (G2: a clientRef names content on every door); under a new clientRef it files as the update", async () => {
   const R = "s17-b7";
-  const run = async (items) => { const pv = (await mcp(ownerKey, "preview", { project: P, items, clientRef: R })).out; const f = (await mcp(ownerKey, "file", { previewId: pv.previewId, items, only: "ready" })).out; return { pv, f }; };
+  const run = async (items) => { const pv = (await mcp(ownerKey, "preview", { project: P, items, clientRef: R })).out; const f = (await fileParts((n, a) => mcp(ownerKey, n, a), pv, items, { only: "ready" })).out; return { pv, f }; };
   const one = await run([C17({ what: "S17 b7 first", touches: ["engine/b7.js"], proof: "smoke 1/1" }), { kind: "goal", op: "upsert", data: { id: "s17-b7", parent: "s17-root", title: "S17 b7 one", dimensions: ["code"] } }]);
   const two = await run([C17({ what: "S17 b7 first", touches: ["engine/b7.js"], proof: "smoke 1/1" }), { kind: "goal", op: "upsert", data: { id: "s17-b7", parent: "s17-root", title: "S17 b7 one", dimensions: ["code"] } }]);
   const three = await run([C17({ what: "S17 b7 CHANGED", touches: ["engine/b7.js"], proof: "smoke 1/1" }), { kind: "goal", op: "upsert", data: { id: "s17-b7", parent: "s17-root", title: "S17 b7 two", dimensions: ["code"] } }]);
@@ -220,7 +219,7 @@ smoke("true door · B7 a re-filed batch never reports filed while writing nothin
   const g0 = (await kread(ownerKey, { project: P, kind: "goal", id: "s17-b7" })).out;
   // the same change under a NEW clientRef files as the update it is
   const pv4 = (await mcp(ownerKey, "preview", { project: P, items: [{ kind: "goal", op: "upsert", data: { id: "s17-b7", parent: "s17-root", title: "S17 b7 two", dimensions: ["code"] } }], clientRef: R + "-2" })).out;
-  const f4 = (await mcp(ownerKey, "file", { previewId: pv4.previewId, items: [{ kind: "goal", op: "upsert", data: { id: "s17-b7", parent: "s17-root", title: "S17 b7 two", dimensions: ["code"] } }] })).out;
+  const f4 = (await mcp(ownerKey, "save_knowledge", { previewId: pv4.previewId, items: [{ kind: "goal", op: "upsert", data: { id: "s17-b7", parent: "s17-root", title: "S17 b7 two", dimensions: ["code"] } }] })).out;
   const g = (await kread(ownerKey, { project: P, kind: "goal", id: "s17-b7" })).out;
   expect(g0.item && g0.item.title === "S17 b7 one" && f4.items[0].filed.status === "filed" && g.item && g.item.title === "S17 b7 two", () => brief({ g0, f4: f4 && f4.items, g }));
   return `refiled the same: ${id1} again, nothing twice; a changed contribution and a changed goal under the same clientRef: refused ("already filed different content"), never "filed"; under a new clientRef the goal files as its update`;
@@ -244,24 +243,26 @@ smoke("true door · B9 B10 holes: a stale grade's fill line carries no verdict; 
   await fileVia(ownerKey, [{ kind: "node", op: "upsert", data: { id: "screen:s17-home", type: "screen", name: "S17 Home, renamed", data: { surface: "s17-web" } } }]);
   const h = (await mcp(ownerKey, "missing", { project: P })).out;
   const gr = (h.items || []).find((x) => x.id === "grades");
-  expect(gr && gr.fillPath && /^<proven \| refused \| incomplete/.test(gr.fillPath.args.items[0].grade.verdict) && !/"verdict":"proven"/.test(gr.fill), () => brief(gr));
+  expect(gr && gr.fillPath && gr.fillPath.tool === "submit_grade" && /^<proven \| refused \| incomplete/.test(gr.fillPath.args.verdict) && !/"verdict":"proven"/.test(gr.fill), () => brief(gr));
   const page = await html(`/missing?project=${P}`);
   // sprint 3 L3: Complete is a card (region complete) with its count in the head (p-count)
   const sec = ((/<section[^>]*data-region="complete"[\s\S]*?<\/section>/.exec(page.text)) || [""])[0];
   const rowsN = (sec.match(/data-status="filed"/g) || []).length, countN = Number(((/p-count">(\d+)</.exec(sec)) || [])[1] || NaN);
   expect(rowsN === (h.filled || []).length && countN === rowsN && rowsN > 0, () => `Complete: ${rowsN} rows, filled ${(h.filled || []).length}, count ${countN}`);
-  return `the stale refused grade's fill line: verdict "${gr.fillPath.args.items[0].grade.verdict.slice(0, 40)}…"; Complete draws ${rowsN} rows for ${(h.filled || []).length} filled`;
+  return `the stale refused grade's fill line: verdict "${gr.fillPath.args.verdict.slice(0, 40)}…" (submit_grade); Complete draws ${rowsN} rows for ${(h.filled || []).length} filled`;
 });
 
 smoke("true door · B11 the first reply names missing and create_project; whoami and missing point a seatless owner of a many-project org at a project", async () => {
   const r = await http("POST", "/mcp", { key: ownerKey, body: { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "s17", version: "1" } } } });
   const ins = (r.json.result || {}).instructions || "";
-  // D5: the first-run guide is five numbered calls: whoami, missing, formats, preview, file
+  // D5: the first-run guide is five numbered calls: whoami, missing, formats, preview, then (sprint 19) the write tool each item
+  // names — file_contribution, save_knowledge, remove_knowledge
   const steps = (ins.match(/^\d\. Call `[a-z_]+`/gm) || []).map((x) => x.replace(/^\d\. Call `|`$/g, ""));
-  expect(/`missing`/.test(ins) && /create_project/.test(ins) && steps.join(",") === "whoami,missing,formats,preview,file", () => ins);
+  const five = (/^5\. Call the write tool each item names \(`filesWith`\)[^\n]*/m.exec(ins) || [""])[0];
+  expect(/`missing`/.test(ins) && /create_project/.test(ins) && steps.join(",") === "whoami,missing,formats,preview" && ["file_contribution", "save_knowledge", "remove_knowledge"].every((t) => five.includes(`\`${t}\``)), () => ins);
   const who = (await mcp(ownerKey, "whoami", {})).out;
   expect(/refused project_required/.test(who.projectGloss), () => who.projectGloss);
-  return "initialize names missing and create_project (five numbered calls: whoami, missing, formats, preview, file); whoami: an unnamed write is refused, never the org level";
+  return "initialize names missing and create_project (five numbered calls: whoami, missing, formats, preview, the write tool each item names); whoami: an unnamed write is refused, never the org level";
 });
 
 smoke("true door · B12 a new picture of a screen does not make its grades stale; a change to the node does", async () => {
@@ -301,15 +302,19 @@ smoke("true door · B13 one ref's history: screen:<id> and the bare id read the 
 
 smoke("true door · B14 the small ones: formats grade, map {ref}, read {kind, ref}, a grouped receipt names every item, an auto-routed contribution reads LANDED, an update says what it changes, the text keeps §", async () => {
   const fg = (await mcp(ownerKey, "formats", { kind: "grade" })).out;
-  expect(!fg.error && fg.example && /<proven \| refused \| incomplete/.test(fg.example.grade.verdict), () => brief(fg));
+  // sprint 19: a grade's form is submit_grade's arguments (it files at once, never through a preview)
+  expect(!fg.error && fg.example && /<proven \| refused \| incomplete/.test(fg.example.verdict) && /^submit_grade \{/.test(fg.call || ""), () => brief(fg));
   const mn = (await mcp(ownerKey, "map", { project: P, ref: "screen:s17-home" })).out, rk = (await kread(ownerKey, { project: P, kind: "goal", ref: "s17-root" })).out;
   expect(!mn.error && /s17-home/.test(JSON.stringify(mn)) && rk.item && rk.item.id === "s17-root", () => brief({ mn, rk }));
-  // a big batch of grades is stored grouped: the receipt still names each item and what it became
-  const checks = Array.from({ length: 130 }, (_, i) => ({ kind: "check", op: "upsert", data: { id: `AC.s17.many.${i}`, title: `S17 many ${i} — a check with a long enough title to make the summary big ${"x".repeat(60)}`, refs: ["screen:s17-home"] } }));
-  await fileVia(ownerKey, checks);
+  // a big batch is stored grouped (150 checks pass the 64 KB summary): the receipt (save_knowledge's, sprint 19) still names
+  // each item and what it became
+  const checks = Array.from({ length: 150 }, (_, i) => ({ kind: "check", op: "upsert", data: { id: `AC.s17.many.${i}`, title: `S17 many ${i} — a check with a long enough title to make the summary big ${"x".repeat(60)}`, refs: ["screen:s17-home"] } }));
+  const ck = await fileVia(ownerKey, checks);
+  expect(ck.pv.storedGrouped === true && ck.rc.items.length === 150 && ck.rc.items.every((x) => x.filed && x.filed.status === "filed" && /^T-/.test(x.filed.id || "") && x.key), () => `grouped ${ck.pv.storedGrouped}; receipt items ${ck.rc.items.length}: ${brief(ck.rc.items.slice(0, 2))}`);
+  // the grades file at once, one submit_grade a check (sprint 19: preview refuses a grade)
   const grades = checks.map((c) => ({ grade: { checkId: c.data.id, verdict: "proven", proof: `node tools/s17.mjs ${c.data.id} -> exit 0, 1 passing, ${"y".repeat(40)}` } }));
   const big = await fileVia(ownerKey, grades);
-  expect(big.rc.items.length === 130 && big.rc.items.every((x) => x.filed && x.filed.status === "filed" && /^T-/.test(x.filed.id || "") && x.key), () => `receipt items ${big.rc.items.length}: ${brief(big.rc.items.slice(0, 2))}`);
+  expect(big.rc.items.length === 150 && big.rc.items.every((x) => x.filed && x.filed.status === "filed" && /^T-/.test(x.filed.id || "") && x.key), () => `grades ${big.rc.items.length}: ${brief(big.rc.items.slice(0, 2))}`);
   const b = (await http("GET", `/build?project=${P}`, { key: ownerKey })).json;
   const auto = (b.rows || []).find((r) => r.tempo === "in");
   expect(auto && auto.chip === "LANDED", () => brief((b.rows || []).slice(0, 3)));
@@ -317,7 +322,7 @@ smoke("true door · B14 the small ones: formats grade, map {ref}, read {kind, re
   expect(up.items[0].effect === "updates 1" && JSON.stringify(up.items[0].changes) === JSON.stringify(["note", "status"]) && / updates note, st\.\.\.$/m.test(up.text) && !/^ +changes /m.test(up.text), () => `${brief(up.items[0])}\n${up.text}`);
   const tx = await fileVia(ownerKey, [C17({ what: "S17 §0 café", touches: ["engine/s.js"], proof: "smoke 1/1" })]);
   expect(/§0 café/.test(tx.pv.text) && !/\?0 caf/.test(tx.pv.text), () => tx.pv.text);
-  return `formats grade; map {ref}; read {kind, ref}; a 130-grade receipt names all 130; filed-at-once reads LANDED; "updates note, st..." (its fields in the effect column, cut); "§0 café" kept`;
+  return `formats grade; map {ref}; read {kind, ref}; a grouped 150-check receipt names all 150, and 150 grades file; filed-at-once reads LANDED; "updates note, st..." (its fields in the effect column, cut); "§0 café" kept`;
 });
 
 smoke("true door · B14 a ruling recorded by its words shows that ruling; a measure ruled absent completes the aim and says so", async () => {

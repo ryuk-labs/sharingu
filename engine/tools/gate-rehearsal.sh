@@ -133,7 +133,7 @@ if [ "$okcmd" = "1" ] && [ "$(printf '%s' "$NB" | wc -w | tr -d ' ')" -ge 4 ]; t
 row 3 "Control · Connect shows a setup per client ($NB) and Claude Code's command names this org's /mcp ('$CMD')" "$r" "$OUT/control.html"
 TWO=$(jget "$OUT/walk.json" 'd.steps.find(s=>s.id==="e").ok'); TXT=$(jget "$OUT/walk.json" '((s)=>{const c=s.calls.find(c=>c.tool==="preview"&&c.answer&&c.answer.result);if(!c)return "?";const t=JSON.parse(c.answer.result.content[0].text).text||"";const l=t.split("\n");return l.length+" lines, widest "+Math.max(...l.map(x=>x.length))})(d.steps.find(s=>s.id==="e"))')
 if [ "$TWO" = "true" ]; then r=✓; else r=✗; fi
-row 3 "the two-call fallback (preview, then file) end to end, and the preview's terminal text ($TXT): the walk's step e" "$r" "$OUT/walk.json"
+row 3 "the tools-only fallback (preview, then each part's write tool) end to end, and the preview's terminal text ($TXT): the walk's step e" "$r" "$OUT/walk.json"
 # sprint 3, D3: the confirm (elicitation) and the card (MCP Apps) through a minimal MCP client, on the FRESH org (it writes:
 # its own eval project, archived after): the session ids, the stream, accept/decline/cancel/timeout, the attacks, the OAuth
 # path, the ui:// document and the card's fragment (tools/mcp-client-selftest.mjs)
@@ -141,9 +141,9 @@ node "$SELF/tools/mcp-client-selftest.mjs" --url "$FRESH" --creds "$FDIR/credent
 CP=$(jget "$OUT/client.json" 'd.passed'); CF=$(jget "$OUT/client.json" 'd.failed')
 if [ "$CRC" = "0" ]; then r=✓; else r=✗; fi
 row 3 "the confirm (elicitation) and the card (MCP Apps) through a minimal MCP client: tools/mcp-client-selftest.mjs on the fresh org (${CP:-?} passed, ${CF:-?} failed, exit $CRC)" "$r" "$OUT/client.log, $OUT/client.json"
-row 3 "Claude Code: connected with Connect's command; the inline render shown, the confirm prompt (preview fileOnConfirm) answered yes and no, filed from a real session" "by hand" "claude mcp add … (BETA.md Stage C step 3; the D3 report's steps)"
+row 3 "Claude Code: connected with Connect's command; the inline render shown, the confirm prompt (a write tool's fileOnConfirm) answered yes and no, filed from a real session" "by hand" "claude mcp add … (BETA.md Stage C step 3; the D3 report's steps)"
 row 3 "Claude desktop or web: the custom connector (OAuth sign-in) and the card drawn in the chat, its File press" "live only" "needs the org on a public https URL; the card itself is proven in Chrome by tools/card-shots.mjs"
-row 3 "a tools-only client (Codex or ChatGPT) through the two-call fallback" "live only" "a real client connected to live; locally proven by the walk's step e"
+row 3 "a tools-only client (Codex or ChatGPT) through the tools-only fallback" "live only" "a real client connected to live; locally proven by the walk's step e"
 
 # ---------------- line 4: inside the free tier ----------------
 (cd "$ENGINE" && BUDGET_URL="$URL" BUDGET_CREDS="$CREDS" BUDGET_JSON="$OUT/budget.json" node tools/page-budget.mjs $(printf '%s' "$PROJECTS" | tr ',' ' ')) > "$OUT/budget.log" 2>&1; BUD_RC=$?

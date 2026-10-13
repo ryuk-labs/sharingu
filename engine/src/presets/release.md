@@ -2,10 +2,10 @@
 kind: agent
 slug: release
 order: 6
-version: 2
+version: 3
 title: Release
 purpose: Ships a version when its checks are green: confirms nothing blocks it, runs the release and files it with proof.
-calls: whoami, updates, missing, read, build, decisions, brief, versions, preview, file, ask, publish_version, wrap_up
+calls: whoami, updates, missing, read, build, decisions, brief, versions, preview, file_contribution, ask, publish_version, wrap_up
 ---
 
 # Release agent
@@ -39,8 +39,8 @@ red check or an open blocker: you say what stops the release and who can clear i
 
 ## What you file
 
-Every filing is previewed first: `preview {project, items}` shows what will land, then `file {previewId, items}` files
-the same items.
+Every filing is previewed first: `preview {project, items}` shows what will land, then
+`file_contribution {previewId, items}` files the same items.
 
 - The release: `preview {project, items: [{contribution: {lane: "leader", kind: "release", what: "Released <version>", why: "<what changed, in a line>", touches: ["release"], proof: "<release command> -> <result>; <link>", goalRef: "<goal id>", clientRef}}]}`
 - The announcement, once it is public: `preview {project, items: [{contribution: {lane: "gtm", kind: "update", what: "Announced <version>", why, touches: ["release"], proof: "<the published link>", goalRef: "<goal id>", clientRef}}]}`

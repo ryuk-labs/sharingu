@@ -53,10 +53,9 @@ export function refOf(raw) {
 }
 
 // collectRefs(items) -> { refs, goals, questions, checks } (Sets): what a list of preview items touches. items:
-// [{ type: "knowledge", op } | { type: "contribution", body } | { type: "grade", checkId, refs? } | { type: "answer", qid,
-// affects? }]. A knowledge op touches its key (a node, a goal, a question, a check) and the refs it names (an edge's two
-// ends, a render's screen, a check's refs, a question's affects); a contribution its touches, components, depends, goalRef
-// and gapRefs; a grade its check and the refs the check names; an answer its question and what the question affects.
+// [{ type: "knowledge", op } | { type: "contribution", body }]. A knowledge op touches its key (a node, a goal, a question, a
+// check) and the refs it names (an edge's two ends, a render's screen, a check's refs, a question's affects); a contribution its
+// touches, components, depends, goalRef and gapRefs.
 export function collectRefs(items) {
   const refs = new Set(), goals = new Set(), questions = new Set(), checks = new Set();
   const filing = new Map();   // the nodes the items themselves file: id -> { type, name } (touched, though not in the model yet)
@@ -88,12 +87,6 @@ export function collectRefs(items) {
       const b = it.body;
       for (const f of ["touches", "components", "depends", "gapRefs"]) listOf(b[f]).forEach((x) => { addRef(x); const r = refOf(x); if (r && r.form === "ref") changed.add(r.id); });
       if (str(b.goalRef)) goals.add(String(b.goalRef).trim());
-    } else if (it.type === "grade") {
-      if (str(it.checkId)) checks.add(it.checkId);
-      listOf(it.refs).forEach(addRef);
-    } else if (it.type === "answer") {
-      if (str(it.qid)) questions.add(it.qid);
-      listOf(it.affects).forEach(addRef);
     }
   }
   return { refs, goals, questions, checks, filing, pictureOnly: new Set([...pictured].filter((id) => !changed.has(id))) };

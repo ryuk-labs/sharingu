@@ -11,7 +11,7 @@
 //       (?from=gtm); Versions says "Not versioned yet" once; Measures fill their rows
 // (the Doors view's columns and the atlas's ring, minimap and plate are drawn by the canvas kits: tools/map-selftest.mjs and
 // the shots)
-import { smoke, expect, brief, http, mcp, html, ownerKey, control, kwrite } from "./lib.mjs";
+import { smoke, expect, brief, http, mcp, html, ownerKey, control, kwrite, fileParts } from "./lib.mjs";
 
 const P = "s24";
 const q = {};
@@ -30,7 +30,7 @@ function region(text, r) {
 const fileVia = async (items) => {
   const pv = await mcp(ownerKey, "preview", { project: P, items });
   expect(!pv.isError && pv.out.previewId, () => `preview: ${brief(pv.out)}`);
-  const f = await mcp(ownerKey, "file", { previewId: pv.out.previewId, items, only: "ready" });
+  const f = await fileParts((n, a) => mcp(ownerKey, n, a), pv.out, items, { only: "ready" });   // sprint 19: each part with its write tool
   expect(!f.isError, () => `file: ${brief(f.out)}`);
   return f.out;
 };

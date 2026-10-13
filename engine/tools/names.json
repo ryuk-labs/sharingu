@@ -1,5 +1,5 @@
 {
-  "_doc": "D5 (sprint 3): the door's names, old -> new, as data. Renamed AT ONCE, no aliases, no redirects (owner, MCQ 2026-10-01; MCP.md §5, §7). tools: every MCP tool of the head before D5 (9e97db345); verdict same | renamed | folds (into a new name: `how` says how its job is reached there) | goes (`why`: what replaces the need, or nothing) | rest-only (no tool; its REST door stays for its button). rest: every REST row that changes (a row not listed keeps its address). resources: the brain:// URIs that change. errors: refusal codes that change. tools/release-note.mjs writes the release note from this file; tools/check-vocab-selftest.mjs bans every old name it lists; tools/authority-table.mjs diffs the authority table by it. `through` (a fold into file): the call is gated by that one first (file files only what a preview of the caller checked). `readableBefore`: the same data was already served at that address's auth before the rename (the authority table compares with it).",
+  "_doc": "D5 (sprint 3): the door's names, old -> new, as data. Renamed AT ONCE, no aliases, no redirects (owner, MCQ 2026-10-01; MCP.md §5, §7). tools: every MCP tool of the head before D5 (9e97db345); verdict same | renamed | folds (into a new name: `how` says how its job is reached there) | goes (`why`: what replaces the need, or nothing) | rest-only (no tool; its REST door stays for its button). rest: every REST row that changes (a row not listed keeps its address). resources: the brain:// URIs that change. errors: refusal codes that change. tools/release-note.mjs writes the release note from this file; tools/check-vocab-selftest.mjs bans every old name it lists; tools/authority-table.mjs diffs the authority table by it. `through` (a fold into a write tool): the call is gated by that one first (a write tool files only what a preview of the caller checked). `readableBefore`: the same data was already served at that address's auth before the rename (the authority table compares with it).",
   "words": {
     "banned": [
       "transmission",
@@ -72,28 +72,29 @@
     },
     {
       "old": "file",
-      "new": "file",
-      "verdict": "same"
+      "new": "file_contribution",
+      "verdict": "goes",
+      "why": "split by what the write does (sprint 19): file_contribution files a preview's contributions, save_knowledge its knowledge upserts, remove_knowledge its knowledge removes"
     },
     {
       "old": "write_knowledge",
-      "new": "file",
+      "new": "save_knowledge",
       "verdict": "folds",
-      "how": "preview {project, items: [{kind, op, data}, ...]} then file {previewId, items}: the knowledge items land all or nothing",
+      "how": "preview {project, items: [{kind, op, data}, ...]} then save_knowledge {previewId, items} (the upserts) and remove_knowledge (the removes): each part lands all or nothing",
       "through": "preview"
     },
     {
       "old": "submit_transmission",
-      "new": "file",
+      "new": "file_contribution",
       "verdict": "folds",
-      "how": "preview {project, items: [{contribution: {lane, what, why, ...}}]} then file",
+      "how": "preview {project, items: [{contribution: {lane, what, why, ...}}]} then file_contribution",
       "through": "preview"
     },
     {
       "old": "record_event",
-      "new": "file",
+      "new": "file_contribution",
       "verdict": "folds",
-      "how": "a ruling, a correction or a drift is a contribution: preview then file (ruled by the plan's laws, HANDOFF D6)",
+      "how": "a ruling, a correction or a drift is a contribution: preview then file_contribution (ruled by the plan's laws, HANDOFF D6)",
       "through": "preview"
     },
     {
@@ -468,16 +469,16 @@
     },
     {
       "old": "POST /transmission",
-      "new": "POST /file",
+      "new": "POST /preview/file-contribution",
       "verdict": "folds",
-      "why": "preview then file",
+      "why": "preview then file_contribution",
       "through": "POST /preview"
     },
     {
       "old": "POST /transmission/batch",
-      "new": "POST /file",
+      "new": "POST /preview/file-contribution",
       "verdict": "folds",
-      "why": "preview then file (up to 200 items)",
+      "why": "preview then file_contribution (up to 200 items)",
       "through": "POST /preview"
     },
     {
@@ -488,9 +489,9 @@
     },
     {
       "old": "POST /knowledge",
-      "new": "POST /file",
+      "new": "POST /preview/save-knowledge",
       "verdict": "folds",
-      "why": "preview then file",
+      "why": "preview then save_knowledge (the removes: remove_knowledge, POST /preview/remove-knowledge)",
       "through": "POST /preview"
     },
     {

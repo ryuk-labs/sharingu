@@ -257,10 +257,11 @@ export function meterChangeWords(before, after) {
 
 // ---- the words and the calls ----
 const P = "<your project>";
-// every fill is previewed first (the owner's rule; the one-pass fix 8: fillPath points at preview, as the fill line always
-// said): a knowledge op and a grade are sent as preview's items, and `then` says the second call
+// every knowledge fill is previewed first (the owner's rule; the one-pass fix 8: fillPath points at preview, as the fill line
+// always said): a knowledge op is sent as preview's item, and `then` says the second call (sprint 19: save_knowledge, the write
+// tool of an upsert); a grade files at once through submit_grade
 // copy: off-screen (the fill's JSON `then`)
-export const FILL_THEN = "then file {previewId, items} with the same items";
+export const FILL_THEN = "then save_knowledge {previewId, items} with the same items";
 const wk = (project, kind, data) => ({ tool: "preview", args: { project: project || P, items: [{ kind, op: "upsert", data }] }, then: FILL_THEN });
 const LANES = `<one or more of ${LANE_KEYS.join(", ")}>`;
 const exampleOf = (kind) => structuredClone(KINDS[kind].example.op.data);
@@ -339,7 +340,7 @@ export function fillOf(it, project) {
       return { fillPath: wk(p, "check", { ...d, id: `AC.${slug}.01`, title: "<what the check proves, in a line>", given: "<who, and where>", when: "<what they do>", then: "<what they see>", refs: [f ? f.id : "<a screen or door id>"] }) }; }
     // D1b item 9: the verdict is never suggested (a stale REFUSED grade's line said "proven": copying it turned a red light
     // green) — it is a placeholder the client fills from what it observes when it runs the check now
-    case "grades": return { fillPath: { tool: "preview", args: { project: p, items: [{ grade: { checkId: f ? f.id : "<a check id>", verdict: VERDICT_PLACEHOLDER, proof: "<the command you ran and what it printed, a result with its numbers, a link, or an artifact id>" } }] }, then: FILL_THEN } };
+    case "grades": return { fillPath: { tool: "submit_grade", args: { project: p, checkId: f ? f.id : "<a check id>", verdict: VERDICT_PLACEHOLDER, proof: "<the command you ran and what it printed, a result with its numbers, a link, or an artifact id>" } } };
     case "gtm-lists": return it.kinds ? { fillPath: wk(p, "card", { kind: f ? f.id : "<a GTM card kind>", id: "<an id>", name: "<the card's name>", body: "<what it says>" }) }
       : { fillPath: wk(p, "card_kind", exampleOf("card_kind")) };
     case "gtm-template": return { fillPath: wk(p, "gtm", { template: { ...exampleOf("gtm").template, activityTemplate: { kinds: [{ kind: "outreach", holds: [{ field: "expected" }, { field: "proof" }], proofConcrete: "<the link or reply that proves it>" }] },
@@ -366,14 +367,12 @@ export function startOf(area, project) {
   if (area === "agents") return { piece: AREA_HOLE.agents, what: AREA_WHAT.agents, fillPath: null, href: orgPath("/broadcast") };
   return null;
 }
-// callText(fillPath) -> the call as one line; a knowledge write reads as its preview (every filing is previewed first: the
-// owner's ruling), the others as themselves
+// callText(fillPath) -> the call as one line: a knowledge write reads as its preview (every filing is previewed first: the
+// owner's ruling), a grade as its submit_grade (sprint 19: it files at once), the others as themselves
 export const callText = (f) => {
   if (!f || !f.tool) return "";
   // the line a person reads names the project by its slug (13.2); fillPath itself keeps the key
   const shown = (a) => (a && typeof a.project === "string" ? { ...a, project: projectSlug(a.project) } : a || {});
-  // a grade reads as its preview
-  if (f.tool === "submit_grade") { const { project, ...g } = shown(f.args); return `preview ${JSON.stringify({ project, items: [{ grade: g }] })}`; }
   return `${f.tool} ${JSON.stringify(shown(f.args))}`;
 };
 
