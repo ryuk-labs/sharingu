@@ -106,10 +106,12 @@ and files the form's Validate reads).
 2. **Not ready to submit** until: the domain verification answer at
    `https://agent.sharingu.xyz/.well-known/openai-apps-challenge` (live since sprint 11; the operator stores the portal's
    token: `node tools/operator.mjs set-openai-challenge --token <the portal's token> --live --config wrangler.jsonc
-   --confirm-live ryuklabs-agent-r` from `engine/`, then the portal's Verify), and a demo video
-   of the test cases at a URL reviewers can open (the owner's: add it to `listing/codex-listing.json` as
-   `demoRecordingURL`, then regenerate). The store asks that it show the main use cases and tools "across supported
-   platforms": record the test cases in ChatGPT on desktop AND on mobile (the ChatGPT app), in the one video.
+   --confirm-live ryuklabs-agent-r` from `engine/`, then the portal's Verify; stored 2026-10-13, both domains answer
+   it), and the demo. Its URL is fixed: `https://www.sharingu.xyz/docs.html#walkthrough` (`demoRecordingURL` in
+   `listing/codex-listing.json`; the docs page's walkthrough section, owner's MCQ 2026-10-13), so the ZIP never changes
+   for a new video. The store asks that it show the main use cases and tools "across supported platforms": the owner
+   records the test cases in ChatGPT on desktop AND on mobile (the ChatGPT app), and it joins that section BEFORE
+   submitting (the owner's ruling: submit only once it is there).
    Reviewer access goes in the dashboard, never in the ZIP; reviewer sign-in works without MFA or email codes (an email
    and its code), as the store asks.
 3. **Tool annotations:** the portal reads each tool and its three hints from its scan of the live server, and the final
@@ -175,8 +177,9 @@ and files the form's Validate reads).
 
 `listing/videos/` holds the four walkthroughs (1 join and connect, 2 the org and its people, 3 fill the product side,
 4 fill the GTM side and every contribution tracked; each under 90 s, captions only). Neither Claude form takes a video.
-The owner uploads them as unlisted YouTube videos (owner's MCQ, 2026-10-12) and links them where wanted; ChatGPT's
-`demoRecordingURL` is the owner's own ChatGPT recording of the test cases, not these.
+They are public on the site's docs page, section `#walkthrough` (owner's MCQ, 2026-10-13: the site first, YouTube may
+come later behind the same URL); the owner's ChatGPT recording of the test cases joins the same section, and that
+section's URL is ChatGPT's `demoRecordingURL`.
 
 ## Reviewer access (paste into the forms; the codes from the private file)
 

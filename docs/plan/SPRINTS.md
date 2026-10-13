@@ -616,6 +616,21 @@ and the AC eval both teach it); d1-hot's fixture lacked the org row the new sign
 socket failures under the shared Mini's spikes (patientFetch; s40's paced form creation). To S8's ledger: the
 account lockout, the per-seat grants epoch, and the squat's residual (`PLATFORM.md` §3).
 
+## Sprint 18 · The walkthrough (branch `sprint-18`, opened 2026-10-13; the owner's MCQ of the day) — DONE 2026-10-13
+
+The spec: the OpenAI portal refuses the draft without `review.demo_recording_url`; the owner ruled the videos go PUBLIC
+on the site's docs page (section `#walkthrough`, one fixed URL; YouTube may come later behind it) and the submission
+waits for the owner's ChatGPT recording (desktop and mobile) to join that section.
+
+- [x] **18.1 · The demo URL.** `listing/codex-listing.json`'s `demoRecordingURL` is
+  `https://www.sharingu.xyz/docs.html#walkthrough`; the manifest carries it as `review.demo_recording_url` (plugin
+  0.1.14); plugin-codex 129/129 (the case that pinned "no demo URL yet" now pins this one); `listing/SUBMISSION.md` says
+  where the videos live and that the submission waits for the ChatGPT recording.
+- [x] **18.2 · The site's section.** The four videos in `docs.html#walkthrough` (posters, captions, nothing loads until
+  play; a walkthrough spec at 390 and 1440 px in both engines); the site's `walkthrough` merged (9edafe7, verify 242/242)
+  and live. The owner's ChatGPT recording joins it after sprint 19 (the recording shows the split's tools).
+- [x] **The sprint end.** Smoke 327/327 and the gate; one PR, no worker change (no ship); the dist repo synced to 0.1.14.
+
 ## Sprint 17 · OpenAI's scan (branch `sprint-17`, opened 2026-10-12; the owner's MCQs of the day) — SHIPPED 2026-10-13
 
 The spec: the OpenAI portal's automated scan of the live server flagged three tools — `preview` "claims capabilities that

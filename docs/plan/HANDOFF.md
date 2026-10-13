@@ -187,6 +187,9 @@ end with the owner's OK. Clean all the way: no dead code, no dead docs; a finish
   previewed. A seventh hat, Quality, joins the six of 2026-10-01; the showcase world seats each class of an org.
 - **Which AI filed it (MCQ 2026-10-11):** each contribution stores one self-declared family word (claude,
   claude-code, chatgpt, codex, web, api, other), never the raw string; the privacy page says so.
+- **The walkthrough (MCQ 2026-10-13):** the videos are PUBLIC on the site's docs page, `#walkthrough` (one fixed URL:
+  ChatGPT's `demoRecordingURL`; YouTube may come later behind it); the OpenAI submission waits for the owner's ChatGPT
+  recording (desktop and mobile) to join that section.
 - **The graders are destructive (MCQ 2026-10-12):** `submit_grade` and `regrade` change a check's grade, so they carry
   `destructiveHint: true`; a write that only adds stays non-destructive (the MCP spec's meaning).
 - **Submission prep (MCQ 2026-10-12):** refresh the live reviewer world now, before any code goes into a form; the
