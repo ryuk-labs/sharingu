@@ -616,6 +616,28 @@ and the AC eval both teach it); d1-hot's fixture lacked the org row the new sign
 socket failures under the shared Mini's spikes (patientFetch; s40's paced form creation). To S8's ledger: the
 account lockout, the per-seat grants epoch, and the squat's residual (`PLATFORM.md` §3).
 
+## Sprint 20 · The agreed preview (branch `sprint-20`, opened 2026-10-13; the owner's MCQ of the day)
+
+The spec: in video 5's recording a smaller model previewed and filed a note in one go, without the person's yes
+(`file_contribution` only adds, so ChatGPT asks no approval). The owner ruled: the Claude side first, this fix with it.
+
+- [x] **20.1 · The write tools say whose yes they file.** `file_contribution`, `save_knowledge` and `remove_knowledge`
+  each file "a preview the person has seen and agreed to" (a statement of what the tool does, no instruction to the
+  model). The contract, SUBMISSION's annotation block follow; annotations 483/0, plugin-codex 129/129 (the plugin
+  unchanged: no new version, no new ZIP).
+- [ ] **The sprint end.** Smoke 329/329 and the gate green; one PR; the ship; then the owner's Claude side: connect in Claude, P1–P3,
+  "from Claude" on Activity, the two Claude forms.
+
+## Sprint 21 · First-time onboarding (planned; the owner's MCQ 2026-10-13)
+
+The scope the owner ruled: a short splash (the owl, under 1.5 s, first visit only, skippable, off under reduced motion);
+request access with a profile (name, work email, company, role, team size; optional website, LinkedIn, X, GitHub, the
+AI tools used, one line of use case), which prefills the org at sign-up; a "you're in line" page with the person's place
+and the live beta count (N of 50, read from D1, never invented), what comes next and the walkthrough while they wait;
+"see the walkthrough" as a showcase call to action; the platform's sign-in and sign-up pages in the website's look;
+Google sign-in (sign-up, sign-in and the connect page; matched by email; still behind the operator's approval; the
+reviewer accounts keep their passphrase; needs the owner's Google Cloud OAuth client — none exists in sharingu today).
+
 ## Sprint 19 · The write door split (branch `sprint-19`, opened 2026-10-13; the owner's MCQs of the day) — SHIPPED 2026-10-13
 
 The spec: OpenAI's rescan after sprint 17 kept "operations that are not individually exposed" on `preview` and `file` and

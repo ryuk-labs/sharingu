@@ -189,6 +189,8 @@ end with the owner's OK. Clean all the way: no dead code, no dead docs; a finish
   previewed. A seventh hat, Quality, joins the six of 2026-10-01; the showcase world seats each class of an org.
 - **Which AI filed it (MCQ 2026-10-11):** each contribution stores one self-declared family word (claude,
   claude-code, chatgpt, codex, web, api, other), never the raw string; the privacy page says so.
+- **Onboarding (MCQ 2026-10-13):** after the Claude side, sprint 21: splash, request access with a profile, the in-line
+  page with the live beta count, the walkthrough call to action, sign-in pages in the site's look, Google sign-in.
 - **The write door split (MCQ 2026-10-13):** each write is its own tool, by what it does (`file_contribution`,
   `save_knowledge`, `remove_knowledge`); `preview` only shows and names the tool for each item; grades through
   `submit_grade`, answers through `respond`; every write is still previewed first.
