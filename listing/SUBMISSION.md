@@ -84,9 +84,11 @@ and files the form's Validate reads).
    claude.ai with push access). **Validate**; it reads the manifest (`plugin/.claude-plugin/plugin.json`), the README (≥ 40 words) and the license
    (`Proprietary`, the `LICENSE` file).
 2. **Listing details:** read from the manifest and the README (the generator owns both; a change is a new version).
-3. **Data handling:** the plugin itself reads or stores no personal data and runs no code (skills and one MCP server
-   entry); it sends data only to its declared connector, the sharingu MCP server; it keeps nothing; not intended for
-   people under 18.
+3. **Data handling:** reads and stores (the form counts data pulled through connectors: through sharingu it reads the
+   team's names and emails and stores each filing with its author); no skill sends data anywhere but its declared
+   connector, the sharingu MCP server; retention longer (filings stay until removed); not intended for people under 18.
+   The plugin runs no code (skills and one MCP server entry). The manifest declares the docs, privacy, support and
+   terms URLs (plugin 0.1.16, the directory's link checks).
 4. **Compliance:** the contact email (acie@ryuklabs.io) and the four acknowledgements.
 5. **Review and submit:** keep the GitHub push webhook (it needs admin on the repo); the directory follows `main`.
    **Auto-publish passing versions:** leave it OFF for the first submission (the kit's advice): each version is then

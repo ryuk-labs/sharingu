@@ -616,7 +616,7 @@ and the AC eval both teach it); d1-hot's fixture lacked the org row the new sign
 socket failures under the shared Mini's spikes (patientFetch; s40's paced form creation). To S8's ledger: the
 account lockout, the per-seat grants epoch, and the squat's residual (`PLATFORM.md` §3).
 
-## Sprint 20 · The agreed preview (branch `sprint-20`, opened 2026-10-13; the owner's MCQ of the day)
+## Sprint 20 · The agreed preview (branch `sprint-20`, opened 2026-10-13; the owner's MCQ of the day) — SHIPPED 2026-10-13
 
 The spec: in video 5's recording a smaller model previewed and filed a note in one go, without the person's yes
 (`file_contribution` only adds, so ChatGPT asks no approval). The owner ruled: the Claude side first, this fix with it.
@@ -625,8 +625,14 @@ The spec: in video 5's recording a smaller model previewed and filed a note in o
   each file "a preview the person has seen and agreed to" (a statement of what the tool does, no instruction to the
   model). The contract, SUBMISSION's annotation block follow; annotations 483/0, plugin-codex 129/129 (the plugin
   unchanged: no new version, no new ZIP).
-- [ ] **The sprint end.** Smoke 329/329 and the gate green; one PR; the ship; then the owner's Claude side: connect in Claude, P1–P3,
-  "from Claude" on Activity, the two Claude forms.
+- [x] **The sprint end.** Smoke 329/329 and the gate green; merged as ryuk-labs/sharingu#6 (a1297dfe9); shipped:
+  `91c7572a` → `850b262c-b788-4844-92f0-f023a2fd25d3` at 100%, no migration; the walk 13/13 on live, verify-live 28/28.
+- [x] **20.2 · Plugin 0.1.16, the directory's checks** (the owner's Claude plugin form, 2026-10-13). The Claude manifest
+  declares its docs, privacy, support and terms URLs (the form's link warnings); `draw-the-architecture` and
+  `fill-the-product-side` name the outside services the code calls "by name" (they named env reads, and the directory's
+  scan held the plugin as "Uses a credential from the user's machine"); SUBMISSION's plugin data handling follows the
+  form's definition (data pulled through connectors counts). presets 57/0, plugin-codex 129/129, plugin-sync 48/48,
+  `claude plugin validate --strict` passes. The starter shelf's two presets follow at the next ship.
 
 ## Sprint 21 · First-time onboarding (planned; the owner's MCQ 2026-10-13)
 

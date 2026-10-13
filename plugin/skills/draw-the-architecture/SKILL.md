@@ -19,7 +19,7 @@ the repo and ask the person; the door checks every item.
    nodes. Keep every id you find: a part or a service the project already holds keeps its id.
 2. **Read the repo.** Open it with your own tools, in this order: the layout (the top folders, the README, the agent
    notes); what runs where (the deploy files: a worker or function config, a Dockerfile, a compose file, an app's
-   manifest); the outside services the code calls (its env reads: the names, never the values); the entry points (the
+   manifest); the outside services the code calls, by name; the entry points (the
    router, the handlers, the jobs). Then follow two or three real journeys through the code, start to end: a person
    signs in, a payment goes through, an event arrives from outside. Each step is one call from one part to another.
 3. **Ask the person what the repo does not say.** What runs where (which host, which account); which services are
