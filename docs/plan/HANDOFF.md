@@ -1,8 +1,10 @@
 # HANDOFF — where sharingu stands (rewritten at every stop; git holds the history)
 
 **As of 2026-10-13: sprint 20 is LIVE (the write tools file "a preview the person has seen and agreed to"); plugin
-0.1.16 clears the Claude directory's checks; the OpenAI submission is in review. Next: the owner's Claude side (the
-connector and plugin forms, after P1–P3 in the Claude app), then sprint 21 (onboarding).**
+0.1.16 clears the Claude directory's checks; the OpenAI submission is in review. Sprint 21 (onboarding) is OPEN on
+branch `sprint-21`, sliced from the owner's MCQs (`SPRINTS.md` sprint 21: 21.0 the plain note's default, then request
+access, you're in line, the showcase and the look, Google sign-in last). In parallel, the owner's Claude side (the
+connector and plugin forms, after P1–P3 in the Claude app).**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
 and must not trust its own memory over this file. Read, in order: `README.md` (the model, how we work) → this file →
@@ -11,9 +13,9 @@ the laws). `SPRINTS.md` holds every slice's record; `MARKETPLACE.md` the store r
 
 ## RESUME HERE — the order of work
 
-**0 · Orient (five minutes, read-only).** From the repo root: `git branch --show-current` (expect `sprint-14`),
+**0 · Orient (five minutes, read-only).** From the repo root: `git branch --show-current` (expect `sprint-21`),
 `git log --oneline -4`, `git status --short` (expect clean), `uptime` (load under 8 before anything heavy). Then tell
-the owner where things stand in two lines and ask for the step-1 ship OK (an MCQ, with the order drawn first).
+the owner where things stand in two lines, then resume the first unticked slice of sprint 21 in `SPRINTS.md`.
 
 **1 · Ship sprint 14 — DONE 2026-10-12** (`64aad029` at 100%; the steps below are the ship's recipe for the next one). What it ships: four tool descriptions that
 said "call this first" now say when a tool is useful (`whoami`, `updates`, `missing`, `impact`: the stores' reviewers

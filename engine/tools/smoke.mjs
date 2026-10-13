@@ -65,6 +65,7 @@ import "./smoke/s52-challenge.mjs";  // sprint 11, 11.3: OpenAI's domain verific
 import "./smoke/s53-invite.mjs";   // sprint 12, 12.3: an org's one-time invite link — minted by its admin, the invitee's own passphrase, signed in and seated; used, expired, an account that stands (nothing written); the invite-made account reaches its org alone; a member and another org mint nothing
 import "./smoke/s54-client.mjs";   // sprint 13, 13.1: which AI filed it — a Claude Code session files claude-code, a stateless Codex call codex, a REST key api; changes {org, list} and Activity say so
 import "./smoke/s60-split-door.mjs"; // sprint 19: the split door — preview never files; file_contribution, save_knowledge and remove_knowledge each file their own part (wrong tool, changed items, a grade refused; a repeat answers the first receipt); file is gone
+import "./smoke/s61-plain-note-default.mjs"; // sprint 21: in lane leader no kind is a plain note — a member's kind-less, touches-less leader contribution previews files, files, reads kind note; a code one still needs touches
 
 let failed = 0;
 for (const c of CASES) {

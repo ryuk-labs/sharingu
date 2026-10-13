@@ -634,7 +634,7 @@ The spec: in video 5's recording a smaller model previewed and filed a note in o
   form's definition (data pulled through connectors counts). presets 57/0, plugin-codex 129/129, plugin-sync 48/48,
   `claude plugin validate --strict` passes. The starter shelf's two presets follow at the next ship.
 
-## Sprint 21 · First-time onboarding (planned; the owner's MCQ 2026-10-13)
+## Sprint 21 · First-time onboarding (branch `sprint-21`; the owner's MCQs 2026-10-13)
 
 The scope the owner ruled: a short splash (the owl, under 1.5 s, first visit only, skippable, off under reduced motion);
 request access with a profile (name, work email, company, role, team size; optional website, LinkedIn, X, GitHub, the
@@ -643,6 +643,28 @@ and the live beta count (N of 50, read from D1, never invented), what comes next
 "see the walkthrough" as a showcase call to action; the platform's sign-in and sign-up pages in the website's look;
 Google sign-in (sign-up, sign-in and the connect page; matched by email; still behind the operator's approval; the
 reviewer accounts keep their passphrase; needs the owner's Google Cloud OAuth client — none exists in sharingu today).
+
+The shape the owner ruled (the second MCQ, 2026-10-13): request access is a worker page writing D1 (the site's waitlist
+button links to it; its Telegram-only form retires); an unsigned visitor at `/` gets a small showcase (the splash once,
+U-chan, one line, "See the walkthrough", "Request access", "Sign in"), replacing `/` → `/login`; a request is approved
+by `operator allow --request <id>` (the cap checked, the code printed once, the org prefilled from the profile), and the
+worker reads the SAME beta count for "N of 50" (the cap and its SQL move from `tools/operator.mjs` into `src/`, one
+source); Google sign-in lands last in this sprint, once the owner's OAuth client exists. Each slice: the table, the
+write, the screen, a smoke case; the old checks that pinned the replaced pages' text are deleted, not re-pinned.
+
+- [x] **21.0 · The plain note's default** (the owner's ruling, 2026-10-13: a client sent lane leader, what and why, no
+  kind and no touches, and was told it needed touches). In lane `leader` a contribution with no kind IS a plain note:
+  `plainNoteKind` (`src/transmission.js`), applied by both filing doors (`src/core.js`) after the clientRef digest; any
+  other lane keeps what it sent. The `kind` hint says so (contract regenerated). day1-door 192/192; smoke 331/331 (s61: a member's kind-less,
+  touches-less leader contribution previews files, files and reads kind note; a code one still needs touches).
+- [ ] **21.1 · Request access.** the next migration: a request table (the profile, its status, when); a
+  public request-access page and its POST (honeypot, one open request per email, rate-limited); the beta count in `src/`.
+- [ ] **21.2 · You're in line.** The request's own page: its place, N of 50 live from D1, what comes next, the
+  walkthrough; `operator allow --request <id>` approves it and `/orgs/new` reads the profile.
+- [ ] **21.3 · The showcase and the look.** `/` for an unsigned visitor (the splash: under 1.5 s, first visit only,
+  skippable, off under reduced motion); `/login`, `/signup`, `/orgs/new` and the connect page in the website's look.
+- [ ] **21.4 · Google sign-in** (waits on the owner's OAuth client). Sign-up, sign-in and the connect page; matched by
+  email; an email without an approved request goes to request access; the reviewer accounts keep their passphrase.
 
 ## Sprint 19 · The write door split (branch `sprint-19`, opened 2026-10-13; the owner's MCQs of the day) — SHIPPED 2026-10-13
 

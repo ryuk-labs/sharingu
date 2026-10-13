@@ -5821,7 +5821,7 @@
      {
       "name": "kind",
       "type": "text",
-      "hint": "what sort of contribution: note (a plain note, lane leader), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
+      "hint": "what sort of contribution: note (a plain note, lane leader: the default there, so a leader filing with no kind is a note), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
      },
      {
       "required": true,
@@ -6021,7 +6021,7 @@
      {
       "name": "kind",
       "type": "text",
-      "hint": "what sort of contribution: note (a plain note, lane leader), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
+      "hint": "what sort of contribution: note (a plain note, lane leader: the default there, so a leader filing with no kind is a note), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
      },
      {
       "required": true,
@@ -6210,7 +6210,7 @@
      {
       "name": "kind",
       "type": "text",
-      "hint": "what sort of contribution: note (a plain note, lane leader), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
+      "hint": "what sort of contribution: note (a plain note, lane leader: the default there, so a leader filing with no kind is a note), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
      },
      {
       "required": true,
@@ -6361,7 +6361,7 @@
      {
       "name": "kind",
       "type": "text",
-      "hint": "what sort of contribution: note (a plain note, lane leader), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
+      "hint": "what sort of contribution: note (a plain note, lane leader: the default there, so a leader filing with no kind is a note), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
      },
      {
       "required": true,
@@ -6523,7 +6523,7 @@
      {
       "name": "kind",
       "type": "text",
-      "hint": "what sort of contribution: note (a plain note, lane leader), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
+      "hint": "what sort of contribution: note (a plain note, lane leader: the default there, so a leader filing with no kind is a note), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
      },
      {
       "required": true,
@@ -6678,7 +6678,7 @@
      {
       "name": "kind",
       "type": "text",
-      "hint": "what sort of contribution: note (a plain note, lane leader), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
+      "hint": "what sort of contribution: note (a plain note, lane leader: the default there, so a leader filing with no kind is a note), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign"
      },
      {
       "required": true,

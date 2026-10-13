@@ -270,7 +270,8 @@ function gradeAndRoute(sub, verifyScreens, verifyComponents, verifyDepends) {
   }
 
   // 1 · binding — the core fields (the process borderline, ADR-019): what, why, and what it touches. B7e C1 (r109): touches
-  // is OPTIONAL for the plain note ONLY (lane leader, kind note — PLAIN_NOTE). The one-pass fix 1 (owner, 2026-10-01): the
+  // is OPTIONAL for the plain note ONLY (lane leader, kind note — PLAIN_NOTE; the doors give a kind-less leader filing kind
+  // note first, plainNoteKind). The one-pass fix 1 (owner, 2026-10-01): the
   // code and design lanes say what they touch in `touches` AND/OR `components` (doors, tables, services, tools, plain areas):
   // either one is enough, so a migration or a gate script names what it touches and no screen.
   const designOrCode = lane === "design" || lane === "code";
@@ -482,6 +483,16 @@ export function itemSourceOf(proof) {
 // PLAIN_NOTE — the path that needs no proof, no screen and no component ids: lane "leader", kind "note", what and why
 // (touches optional, B7e C1). It routes like any leader filing (auto, or the owner on a risk word) — never a new lane.
 export const PLAIN_NOTE = { lane: "leader", kind: "note" };
+// plainNoteKind(body) -> the contribution as the door grades and stores it (pure): in lane "leader" a contribution with no
+// kind IS a plain note (owner, 2026-10-13: a client that sent lane leader, what and why was told it needed touches), so an
+// absent or empty kind there becomes "note". Any other lane keeps what it sent: no kind is invented. The two filing doors
+// (core.js fileTransmission and planTransmissionsBatch, which the preview and every batch run) apply it after the clientRef
+// digest, which stays over the body as sent.
+export function plainNoteKind(body) {
+  if (!body || String(body.lane || "").toLowerCase() !== PLAIN_NOTE.lane) return body;
+  if (body.kind != null && String(body.kind).trim() !== "") return body;
+  return { ...body, kind: PLAIN_NOTE.kind };
+}
 const EXAMPLE_FIELD = {
   what: "what changed, in one line",
   why: "why it matters",

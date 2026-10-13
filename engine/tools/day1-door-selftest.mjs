@@ -8,7 +8,8 @@
 //       tools/dual-era-selftest.mjs).
 //   W1  whoami carries org · activeProject · projectGloss · laneGloss · consentGloss, the old fields unchanged.
 //   W6  project_required / project_forbidden say what to do (note + example), still refusals (ADR-100).
-//   W7  every incomplete route names `missing`; the note + example complete it; the plain note path files.
+//   W7  every incomplete route names `missing`; the note + example complete it; the plain note path files (in lane leader
+//       no kind is a plain note: plainNoteKind, the doors' default; no other lane is given a kind).
 //   W9  `ask` records an unknown event (payload ask:true), answers asked + tempo 'with <owner>'; question_required.
 //   security by absence: no land · deploy · publish · consent · reopen tool in the registry.
 //   B7d (the re-walk, Q60CCC574): S1 start-here renders the gloss's own org-note sentence · S3 the lane gloss names
@@ -40,7 +41,7 @@ import { entriesFrom, answerProjectOf, fileRound } from "../src/decisions.js";
 import { startHereText } from "../src/starthere.js";
 import { fileHandoffRecord, mcpHandoffReply } from "../src/handoff.js";
 import { TEMPO_WORDS } from "../src/tempo.js";
-import { gateGrade, completingExample, incompleteNote, PLAIN_NOTE } from "../src/transmission.js";
+import { gateGrade, completingExample, incompleteNote, PLAIN_NOTE, plainNoteKind } from "../src/transmission.js";
 
 const ENGINE = dirname(dirname(fileURLToPath(import.meta.url)));
 let checks = 0, failed = 0;
@@ -215,6 +216,17 @@ const ORG = { name: "Testorg" };
   ok(/missing: screens, proof, components\./.test(note) && /plain note — lane "leader", kind "note"/.test(note), `the note names the gaps and the plain note path -> ${note}`);
   const plain = g({ ...PLAIN_NOTE, ...base });
   ok(plain.route === "auto" && plain.grade.binding === true, `the plain note (lane leader, kind note) files binding with the three lines only -> ${plain.route}`);
+  // the door's default (owner, 2026-10-13): in lane leader no kind IS a plain note; no other lane is given a kind
+  const kinds = [{ lane: "leader" }, { lane: "Leader", kind: "" }, { lane: "leader", kind: "  " }, { lane: "leader", kind: null }, { lane: "leader", kind: "decision" }, { lane: "code" }, { lane: "design", kind: "" }]
+    .map((b) => plainNoteKind({ ...b, what: "w" }).kind);
+  ok(JSON.stringify(kinds) === JSON.stringify(["note", "note", "note", "note", "decision", undefined, ""]), `a kind-less leader filing becomes kind note, every other kind and lane as sent -> ${JSON.stringify(kinds)}`);
+  const sym = Symbol("door"), sent = { lane: "leader", what: "w", why: "y", [sym]: 1 };
+  const shaped = plainNoteKind(sent);
+  ok(shaped !== sent && !("kind" in sent) && shaped[sym] === 1 && plainNoteKind(shaped) === shaped, "the default copies (the body as sent unchanged, its door marks kept) and is idempotent");
+  const bare = g(plainNoteKind({ lane: "leader", what: "w", why: "y" }));
+  ok(bare.route === "auto" && bare.grade.binding === true, `a leader filing with no kind and no touches files as a plain note -> ${bare.route} ${JSON.stringify(bare.grade.missing || [])}`);
+  const codeBare = g(plainNoteKind({ lane: "code", what: "w", why: "y" }));
+  ok(codeBare.route === "incomplete" && JSON.stringify(codeBare.grade.missing) === '["touches"]', `a code filing with no kind and no touches still needs touches -> ${JSON.stringify(codeBare.grade.missing)}`);
 }
 
 // ===================== W9 · ask =====================

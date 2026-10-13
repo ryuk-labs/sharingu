@@ -3105,12 +3105,12 @@
     "core.js": {
       "constants": [
         {
-          "line": 1002,
+          "line": 1005,
           "name": "ACTIVE_COUNT_SQL",
           "role": "the org's ACTIVE project count (countActiveProjects; Home's who-is-here counts with the same predicate, src/hotsql.js)"
         },
         {
-          "line": 1000,
+          "line": 1003,
           "name": "ACTIVE_PROJECT_KEYS_SQL",
           "role": "every active project's key (whoami for a seatless owner, the one-pass fix 9: where the owner's writes can land); bounded"
         },
@@ -3120,7 +3120,7 @@
           "role": ""
         },
         {
-          "line": 1495,
+          "line": 1498,
           "name": "BANNED_KEYS",
           "role": ""
         },
@@ -3140,32 +3140,32 @@
           "role": "what gets captured / how it's sanitized is unchanged (mandate is who-enables, not what)."
         },
         {
-          "line": 861,
+          "line": 864,
           "name": "DECIDE_VERDICTS",
           "role": "`ruleNote` when the question was not ruled (the approve stands). opts.via is the door (\"mcp\" | \"http\") for that ruling."
         },
         {
-          "line": 753,
+          "line": 756,
           "name": "EVAL_INHERITED",
           "role": "fileRank) sets this on the body; the mark is then the row's, not the caller's choice, and the rule does not apply"
         },
         {
-          "line": 758,
+          "line": 761,
           "name": "EVAL_KNOWLEDGE_NOTE",
           "role": "accepted on an eval project ALONE: a test seat's marked knowledge on a real project would land unmarked on every real sc"
         },
         {
-          "line": 754,
+          "line": 757,
           "name": "EVAL_MARK_NOTE",
           "role": ""
         },
         {
-          "line": 597,
+          "line": 600,
           "name": "EVENTS_BATCH_SQL",
           "role": ""
         },
         {
-          "line": 1759,
+          "line": 1762,
           "name": "LEADER_NOTE_LINE",
           "role": "B7d S3: a non-\"all\" lane still says a plain note is lane \"leader\" \u2014 anyone may file one there (start-here's step 4)."
         },
@@ -3175,67 +3175,67 @@
           "role": "day's prefix walks idx_transmission_day_seq in order and reads ONE index row."
         },
         {
-          "line": 1848,
+          "line": 1851,
           "name": "NOT_MIND_TX",
           "role": "this module); this name stays the one every reader here imports."
         },
         {
-          "line": 1720,
+          "line": 1723,
           "name": "NO_PROJECT_YET",
           "role": "instructions and every empty state of a project-less org say: create the project, then preview and file into it"
         },
         {
-          "line": 1683,
+          "line": 1686,
           "name": "ORG_ARG_WORDS",
           "role": "ORG_ARG_WORDS \u2014 the one sentence that names the argument (src/index.js ORG_ARG: every tool's schema carries it)"
         },
         {
-          "line": 997,
+          "line": 1000,
           "name": "ORG_PROJECTS_SQL",
           "role": "the org a test on each row walked; on a database holding one org it reads exactly the rows it read before."
         },
         {
-          "line": 998,
+          "line": 1001,
           "name": "ORG_PROJECTS_TTL_MS",
           "role": ""
         },
         {
-          "line": 1206,
+          "line": 1209,
           "name": "PROFILE_COLS",
           "role": "hat admits them to nothing until the migration's backfill has run (less, never more)."
         },
         {
-          "line": 1043,
+          "line": 1046,
           "name": "PROJECT_ARG",
           "role": "PROJECT_ARG (D5) \u2014 the `project` property of a write tool: short, the rule itself is PROJECT_RULE (below) and doorProjec"
         },
         {
-          "line": 959,
+          "line": 962,
           "name": "PROJECT_ARG_NOTE",
           "role": "-> { project: string|null } | { error: \"project_forbidden\", note, seats?, example? }"
         },
         {
-          "line": 1710,
+          "line": 1713,
           "name": "PROJECT_RULE",
           "role": "behaves as it says: doorProject fills one seat or the active project and refuses the rest with project_required."
         },
         {
-          "line": 1380,
+          "line": 1383,
           "name": "READ_ONLY_SUFFIX",
           "role": "the route in as read-only-safe (readOnlyOk: true, below)."
         },
         {
-          "line": 1381,
+          "line": 1384,
           "name": "READ_ONLY_TOKEN_SHAPE",
           "role": ""
         },
         {
-          "line": 1041,
+          "line": 1044,
           "name": "READ_PROJECT_RULE",
           "role": "project-scoped read tool (src/index.js MCP_TOOLS). The writes take PROJECT_ARG."
         },
         {
-          "line": 1050,
+          "line": 1053,
           "name": "READ_SCOPE",
           "role": "module global. Symbol.for so a selftest can read it by name."
         },
@@ -3250,37 +3250,37 @@
           "role": ""
         },
         {
-          "line": 789,
+          "line": 792,
           "name": "REPORT_OWNER_SQL",
           "role": "-> { backfilled, report (the first report's id), reports: [{ id, project, rows }] }"
         },
         {
-          "line": 1384,
+          "line": 1387,
           "name": "ROSTER_SQL",
           "role": ""
         },
         {
-          "line": 1499,
+          "line": 1502,
           "name": "SANCTIONED_TEXT_FIELD",
           "role": "Everything else conversational stays a 422, forever."
         },
         {
-          "line": 1163,
+          "line": 1166,
           "name": "SESSION_COOKIE",
           "role": "name also carried a tenant fact; this one carries none."
         },
         {
-          "line": 1164,
+          "line": 1167,
           "name": "SESSION_COOKIE_ATTRS",
           "role": ""
         },
         {
-          "line": 1276,
+          "line": 1279,
           "name": "SESSION_LIVE_SQL",
           "role": "answers the plain 404 (membership never told) rather than the sign-in page. A yes or no. Binds: ?1 the token's hash, ?2 "
         },
         {
-          "line": 1281,
+          "line": 1284,
           "name": "SESSION_PLACE_SQL",
           "role": "any org its account holds a seat in (src/accounts.js orgsOfAccount). Binds: ?1 the hash, ?2 now."
         },
@@ -3300,17 +3300,17 @@
           "role": ""
         },
         {
-          "line": 595,
+          "line": 598,
           "name": "TX_BATCH_SQL",
           "role": ""
         },
         {
-          "line": 601,
+          "line": 604,
           "name": "TX_CHUNK_BYTES",
           "role": "a bound list stays far under D1's 2 MB value cap (a filing's digest alone may be 8,000 characters)"
         },
         {
-          "line": 592,
+          "line": 595,
           "name": "TX_COLS",
           "role": "submitter (the same for every row of a call), ?2 the rows as JSON arrays in the column order named here"
         }
@@ -3329,195 +3329,195 @@
           "sql": "<dynamic: CLIENT_REF_SQL>"
         },
         {
-          "line": 266,
+          "line": 267,
           "sql": "SELECT id, project FROM transmission WHERE id = ? AND org = {org}"
         },
         {
-          "line": 325,
+          "line": 326,
           "sql": "INSERT INTO transmission (id, submitter, lane, kind, what, why, touches, screens"
         },
         {
-          "line": 358,
+          "line": 359,
           "sql": "INSERT INTO events (id,session_id,person_id,kind,lane,payload_json,touches,basis"
         },
         {
-          "line": 372,
+          "line": 373,
           "sql": "<dynamic: CLIENT_REF_SQL>"
         },
         {
-          "line": 497,
+          "line": 498,
           "sql": "SELECT id, route, status, client_ref, json_extract(grade, '$.refDigest') AS rd F"
         },
         {
-          "line": 579,
+          "line": 582,
           "sql": "SELECT id, project FROM transmission WHERE id IN (${chunk.map(() => \"?\").join(\","
         },
         {
-          "line": 680,
+          "line": 683,
           "sql": "<dynamic: TX_BATCH_SQL>"
         },
         {
-          "line": 681,
+          "line": 684,
           "sql": "<dynamic: EVENTS_BATCH_SQL>"
         },
         {
-          "line": 682,
+          "line": 685,
           "sql": "<dynamic: REFS_BATCH_SQL>"
         },
         {
-          "line": 762,
+          "line": 765,
           "sql": "SELECT eval FROM projects WHERE key = ? AND org = {org}"
         },
         {
-          "line": 793,
+          "line": 796,
           "sql": "SELECT t.*, p.name AS by_name, COALESCE(p.title, p.role) AS by_role FROM transmi"
         },
         {
-          "line": 797,
+          "line": 800,
           "sql": "<dynamic: REPORT_OWNER_SQL>"
         },
         {
-          "line": 811,
+          "line": 814,
           "sql": "INSERT INTO artifacts (id,person_id,kind,title,r2_key,sha256,bytes,group_tag,cre"
         },
         {
-          "line": 816,
+          "line": 819,
           "sql": "UPDATE transmission SET report=? WHERE id=? AND org = {org}"
         },
         {
-          "line": 867,
+          "line": 870,
           "sql": "SELECT * FROM transmission WHERE id = ? AND org = {org}"
         },
         {
-          "line": 873,
+          "line": 876,
           "sql": "INSERT INTO approval_audit (id, transmission_id, verdict, note, decided_by, crea"
         },
         {
-          "line": 877,
+          "line": 880,
           "sql": "UPDATE transmission SET decision=?, decided_by=?, decided_at=?, decision_note=?"
         },
         {
-          "line": 884,
+          "line": 887,
           "sql": "INSERT INTO events (id,session_id,person_id,kind,lane,payload_json,touches,basis"
         },
         {
-          "line": 907,
+          "line": 910,
           "sql": "SELECT s.project_key AS key, p.name FROM project_seats s JOIN projects p ON p.ke"
         },
         {
-          "line": 922,
+          "line": 925,
           "sql": "SELECT key, name FROM projects WHERE active = 1 AND org = {org} ORDER BY slug LI"
         },
         {
-          "line": 932,
+          "line": 935,
           "sql": "<dynamic: ACTIVE_COUNT_SQL>"
         },
         {
-          "line": 948,
+          "line": 951,
           "sql": "SELECT key FROM projects WHERE active = 1 AND org = {org} ORDER BY slug"
         },
         {
-          "line": 1015,
+          "line": 1018,
           "sql": "<dynamic: ORG_PROJECTS_SQL>"
         },
         {
-          "line": 1088,
+          "line": 1091,
           "sql": "SELECT key FROM projects WHERE key = ? AND active = 1 AND org = {org}"
         },
         {
-          "line": 1236,
+          "line": 1239,
           "sql": "SELECT id, name, email, role, title, capture_mode, lane, org"
         },
         {
-          "line": 1244,
+          "line": 1247,
           "sql": "SELECT p.id, p.name, p.email, p.role, p.title, p.capture_mode, p.lane, p.org"
         },
         {
-          "line": 1311,
+          "line": 1314,
           "sql": "<dynamic: SESSION_LIVE_SQL>"
         },
         {
-          "line": 1320,
+          "line": 1323,
           "sql": "<dynamic: SESSION_PLACE_SQL>"
         },
         {
-          "line": 1408,
+          "line": 1411,
           "sql": "<dynamic: rosterSql(x)>"
         },
         {
-          "line": 1455,
+          "line": 1458,
           "sql": "SELECT id, name, email, role, title, capture_mode, lane, org, key_hash, pass_has"
         },
         {
-          "line": 1519,
+          "line": 1522,
           "sql": "<dynamic: KNOWLEDGE_AT_SQL>"
         },
         {
-          "line": 1540,
+          "line": 1543,
           "sql": "SELECT MAX(created_at) AS t FROM events WHERE person_id = ?"
         },
         {
-          "line": 1551,
+          "line": 1554,
           "sql": "<dynamic: HEARTBEAT_LANDED_SQL(includeEval, evalSeats.length, fenced.length)>"
         },
         {
-          "line": 1568,
+          "line": 1571,
           "sql": "SELECT id, title, opened_at, ref FROM loops WHERE person_id = ? AND status='open"
         },
         {
-          "line": 1626,
+          "line": 1629,
           "sql": "<dynamic: LOOPS_OPEN_SQL(true)>"
         },
         {
-          "line": 1627,
+          "line": 1630,
           "sql": "SELECT COUNT(*) AS n FROM loops WHERE person_id = ? AND status = 'open'"
         },
         {
-          "line": 1647,
+          "line": 1650,
           "sql": "<dynamic: ACTIVE_PROJECT_KEYS_SQL>"
         },
         {
-          "line": 1857,
+          "line": 1860,
           "sql": "<dynamic: LOOPS_OPEN_SQL(false)>"
         },
         {
-          "line": 1858,
+          "line": 1861,
           "sql": "SELECT COUNT(*) AS n FROM loops WHERE person_id=? AND status='open' AND (ref IS "
         },
         {
-          "line": 1865,
+          "line": 1868,
           "sql": "<dynamic: OWNER_OPEN_COUNT_SQL(sc && sc.filter, includeEval)>"
         },
         {
-          "line": 1866,
+          "line": 1869,
           "sql": "SELECT COUNT(*) AS n FROM transmission t WHERE"
         },
         {
-          "line": 1904,
+          "line": 1907,
           "sql": "<dynamic: TX_ONE_SQL(false)>"
         },
         {
-          "line": 1905,
+          "line": 1908,
           "sql": "<dynamic: TX_ONE_SQL(true)>"
         },
         {
-          "line": 1940,
+          "line": 1943,
           "sql": "<dynamic: FILING_COUNTERS_SQL(withEval, !owner)>"
         },
         {
-          "line": 1965,
+          "line": 1968,
           "sql": "<dynamic: sql>"
         },
         {
-          "line": 1965,
+          "line": 1968,
           "sql": "<dynamic: sql>"
         },
         {
-          "line": 2023,
+          "line": 2026,
           "sql": "INSERT INTO artifacts (id,person_id,kind,title,r2_key,sha256,bytes,group_tag,cre"
         },
         {
-          "line": 2027,
+          "line": 2030,
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         }
       ],
@@ -3738,7 +3738,8 @@
             "RESERVED_KINDS",
             "completingExample",
             "gateGrade",
-            "incompleteNote"
+            "incompleteNote",
+            "plainNoteKind"
           ]
         },
         {
@@ -15517,37 +15518,37 @@
           "role": ""
         },
         {
-          "line": 393,
+          "line": 394,
           "name": "COUNTER_KIND",
           "role": "---- kind \"counter\" (UI-B4a) ----"
         },
         {
-          "line": 450,
+          "line": 451,
           "name": "EQUIP_KIND",
           "role": ""
         },
         {
-          "line": 485,
+          "line": 496,
           "name": "EXAMPLE_FIELD",
           "role": ""
         },
         {
-          "line": 396,
+          "line": 397,
           "name": "FILING_COUNTER_CALL",
           "role": "copy: off-screen (the door's JSON call (gtm rows); What is missing carries calls on glass)"
         },
         {
-          "line": 461,
+          "line": 462,
           "name": "FILING_ITEM_CALL",
           "role": "copy: off-screen (Broadcast's JSON call)"
         },
         {
-          "line": 400,
+          "line": 401,
           "name": "GOAL_COUNTER_CALL",
           "role": "copy: off-screen (the goals JSON's call)"
         },
         {
-          "line": 404,
+          "line": 405,
           "name": "GOAL_REF_PREFIX",
           "role": "refTokensFor), so the goal/ range is one index range (src/hotsql.js GOALS_COUNTERS_SQL)"
         },
@@ -15557,22 +15558,22 @@
           "role": "copy: off-screen (the door's refusal hint)"
         },
         {
-          "line": 448,
+          "line": 449,
           "name": "ITEM_KIND",
           "role": "project the target, parent the publish row. No table, no migration (owner MCQ 2026-09-29, Fork 1 (a))."
         },
         {
-          "line": 457,
+          "line": 458,
           "name": "ITEM_KINDS",
           "role": "the three kinds an item may be (Q2485A7FD: publish a skill, an agent or a workflow)"
         },
         {
-          "line": 458,
+          "line": 459,
           "name": "ITEM_SLUG",
           "role": ""
         },
         {
-          "line": 452,
+          "line": 453,
           "name": "KNOWLEDGE_KIND",
           "role": "kind \"knowledge\": the ONE ledger row a preview then save_knowledge call files (src/knowledge/write.js), lane leader, rou"
         },
@@ -15602,7 +15603,7 @@
           "role": ""
         },
         {
-          "line": 484,
+          "line": 485,
           "name": "PLAIN_NOTE",
           "role": "(touches optional, B7e C1). It routes like any leader filing (auto, or the owner on a risk word) \u2014 never a new lane."
         },
@@ -15642,22 +15643,22 @@
           "role": "copy: off-screen (the door's refusal hint and formats' field hint)"
         },
         {
-          "line": 449,
+          "line": 450,
           "name": "PUBLISH_KIND",
           "role": ""
         },
         {
-          "line": 427,
+          "line": 428,
           "name": "RANK_KIND",
           "role": "(src/build.js fileRank); a plain file with kind: \"rank\" and a parent routes the same way."
         },
         {
-          "line": 455,
+          "line": 456,
           "name": "RESERVED_KINDS",
           "role": "src/knowledge/write.js (core.js fileTransmission / fileTransmissionsBatch refuse them on every other door)"
         },
         {
-          "line": 434,
+          "line": 435,
           "name": "RESTORE_KIND",
           "role": "\"restored\" version whose ref is this filing's id."
         },
@@ -15723,6 +15724,7 @@
         "itemKindOf",
         "itemSlugOf",
         "itemSourceOf",
+        "plainNoteKind",
         "proofArtifact",
         "proofKind",
         "proofOf",

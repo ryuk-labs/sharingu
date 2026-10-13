@@ -11,7 +11,7 @@
 import { db, signIn, readerOrg, orgCache, atAddress, addressServes } from "./data.js";
 import { store, artifactKey, CRON_REPORT_OWNER, CRON_REPORT_KEY_RE } from "./storage.js";   // sprint 6, 6.4: every R2 key carries the org
 import { uid, now, sha256, TX_LANES, isEvalSeat, isD1Quota } from "./util.js";
-import { gateGrade, completingExample, incompleteNote, RESERVED_KINDS, KNOWLEDGE_KIND } from "./transmission.js";
+import { gateGrade, completingExample, incompleteNote, plainNoteKind, RESERVED_KINDS, KNOWLEDGE_KIND } from "./transmission.js";
 import { checkShape, shapeColumns, decodeShape } from "./shapes.js";
 import { resolveMapRefs } from "./maprefs.js";
 import { projectOf, projectScopeOf, projectClause, scopedProjectOf, keyInOrg, orgOfKey, projectSlug } from "./project.js";   // sprint 13 (13.2): a sentence names a project by its slug
@@ -249,6 +249,7 @@ export async function fileTransmission(person, body, env, internal = null) {
     try { dup = await db(env).prepare(CLIENT_REF_SQL).bind(person.id, clientRef).first(); } catch { dup = null; /* pre-migration DB — files normally */ }
     if (dup) return replayOf(dup, clientRef, refDigest);   // G2 item 7: different content is client_ref_taken
   }
+  body = plainNoteKind(body);   // lane leader with no kind is a plain note (src/transmission.js), graded and stored as kind note
   // The project stamp (ADR-100): server-side, from the submitter's seat — the client
   // is never trusted; a multi-seat submitter without a valid claim is a loud 422.
   let project;
@@ -541,7 +542,9 @@ export async function planTransmissionsBatch(person, items, env, o = {}) {
     // G2: the eval mark only where it hides nothing real (one read per project, memoized for the request)
     if (body.eval || (body.payload && body.payload.eval)) { const er = await evalMarkRefused(person, projRes.project, env); if (er) { pre.push({ skip: true, result: er }); continue; } }
     if (cr) firstOfRef.set(cr, pre.length);
-    pre.push({ skip: false, body, lane, project: projRes.project, refDigest });
+    // lane leader with no kind is a plain note (src/transmission.js plainNoteKind): the preview's grade, the filing's grade and
+    // the stored kind all read it from here; the digest above stays over the body as sent
+    pre.push({ skip: false, body: plainNoteKind(body), lane, project: projRes.project, refDigest });
   }
   // the one-pass fix 2 and 5: the Map refs of every item, resolved per stamped project in one statement (src/maprefs.js; a
   // second only when some ref misses), never one read per ref. o.near (the preview, after its read-scope check) adds the
