@@ -26,14 +26,15 @@
 //   O8 · the key is in no row (only its sha256) and in no answer but the creation's own
 //   O9 · migrate-072's default path name for an org the operator's tools insert with none (org 1 and the suites' org plain,
 //        any other <name>-<id>; a held one, a name of no letters, a cleared slug)
-//   O10 · (sprint 7's review, D3) the plain base is never a name the platform uses: the reserved list written in migrate-072's two
-//        triggers (and boot.sql's) EQUALS the derivation (src/orgnames.js reservedNames over CAPABILITIES, the path-name form) —
+//   O10 · (sprint 7's review, D3) the plain base is never a name the platform uses: the reserved list written in the two slug
+//        triggers by the newest migration that makes them (migrate-072, re-made by migrate-081) and boot.sql EQUALS the derivation
+//        (src/orgnames.js reservedNames over CAPABILITIES, the path-name form) —
 //        red the day a route is added until a migration re-creates them; a self-hosted org 1 named "Support" (and a suites' org
 //        named "Docs") gets <base>-<id> and stays reachable at its address; the same database with the list taken out gives
 //        "support", which the router never serves as an org (the inline mutation: red without the fix)
 // And the MUTATION PROOF: each named mutant (a scratch copy of src/) must turn its case(s) red.
 // Exit 1 on any failure. A gate step.
-import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync, readdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
@@ -267,10 +268,14 @@ const CASES = {
     const FORM = /^[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9]))*$/;
     const want = [...reservedNames(capabilitiesOf(join(ENGINE, "src")))].filter((n) => n.length >= 2 && FORM.test(n)).sort();
     const listsOf = (sql) => [...sql.matchAll(/AND s\.b NOT IN \(([^)]*)\) THEN s\.b/g)].map((m) => [...m[1].matchAll(/'([^']*)'/g)].map((x) => x[1]).sort());
-    const m072 = readFileSync(join(ENGINE, "migrate-072.sql"), "utf8"), boot = readFileSync(join(ENGINE, "boot.sql"), "utf8");
-    const lists = [...listsOf(m072), ...listsOf(boot)];
+    // the newest migration that writes the two slug triggers (migrate-072 made them; a migration adding a route's first segment
+    // re-creates them with the new list: migrate-081, sprint 21's /request-access) and boot.sql
+    const latest = readdirSync(ENGINE).filter((f) => /^migrate-\d{3}\.sql$/.test(f)).sort()
+      .filter((f) => readFileSync(join(ENGINE, f), "utf8").includes("CREATE TRIGGER IF NOT EXISTS org_slug_on_insert")).pop();
+    const mig = readFileSync(join(ENGINE, latest), "utf8"), boot = readFileSync(join(ENGINE, "boot.sql"), "utf8");
+    const lists = [...listsOf(mig), ...listsOf(boot)];
     out.push([lists.length === 4 && lists.every((l) => JSON.stringify(l) === JSON.stringify(want)),
-      `O10 · the reserved list in migrate-072's and boot.sql's two slug triggers (${lists.length} lists, ${lists.map((l) => l.length).join("/")} names) equals the derivation (${want.length} names of the path-name form)`]);
+      `O10 · the reserved list in ${latest}'s and boot.sql's two slug triggers (${lists.length} lists, ${lists.map((l) => l.length).join("/")} names) equals the derivation (${want.length} names of the path-name form)`]);
     // a self-hosted org 1 named "Support", a suites' org named "Docs": <base>-<id>, reachable at their address
     const { DatabaseSync } = await import("node:sqlite");
     const slugOf = (bootSql) => { const d = new DatabaseSync(":memory:"); d.exec(bootSql);

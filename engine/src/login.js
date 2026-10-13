@@ -13,7 +13,8 @@
 //   brand    — { org } from the tenant seam (DEFAULT_BRAND fallback); the product name is sharingu (authBrand)
 //   action   — the form's POST target (default "/login"; "" = this URL, for OAuth)
 //   lede     — the one-line prompt under the wordmark
-//   footnote — the small print under the form (TEXT — escaped; footnoteHtml for trusted markup)
+//   footnote — the small print under the form (TEXT — escaped; footnoteHtml for trusted markup); none given on the platform's
+//              own sign-in (action "/login"): the one link to request access
 //   hidden   — extra [{ name, value }] hidden fields (default: web=1, the org login marker)
 //   submit   — the button label (default "Sign in")
 //
@@ -178,12 +179,15 @@ export function renderLogin(opts) {
     lede: lede !== undefined ? esc(lede) : "Sign in",
     banner: errorBanner,
     body,
-    // every text slot is escaped here; only footnoteHtml (a renderer's own constant markup) is raw
+    // every text slot is escaped here; only footnoteHtml (a renderer's own constant markup) is raw. The platform's own sign-in
+    // (action /login) carries one quiet way in for a person with no account yet (sprint 21, 21.1: GET /request-access)
     footnote: footnoteHtml !== undefined ? footnoteHtml
-      : footnote !== undefined ? esc(footnote) : "",
+      : footnote !== undefined ? esc(footnote) : action === "/login" ? REQUEST_ACCESS_LINK : "",
     css: choice ? ORG_CHOICE_CSS : "",
   });
 }
+// the sign-in's way to request access (sprint 21, 21.1), constant markup
+const REQUEST_ACCESS_LINK = `No account yet? <a href="/request-access" data-region="request-access-link">Request access</a>`;
 // the OAuth form's org choice: one bordered list, a radio per org (its name, its address)
 const ORG_CHOICE_CSS = `
   .org-choice{margin:0;padding:0;border:0;min-width:0}

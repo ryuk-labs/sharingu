@@ -497,6 +497,7 @@ function postCalls(route, V, VAL, evalMark = false) {
 // the paths a walk never takes, and why
 const SKIP = new Map([["/logout", "ends the session"], ["/mcp", "walked as the MCP door itself"], ["/login", "walked by the account moves (a sign-in at the root lands in the seat it chooses, never the victim's for the attacker's values)"],
   ["/signup", "walked by the sign-up moves (its every call spends the address's sign-in budget, LOGIN_LIMIT, shared with /login)"],
+  ["/request-access", "a platform door before any account or org (its every POST spends the address's sign-in budget, LOGIN_LIMIT, shared with /login): smoke s62 and tools/request-access-selftest.mjs"],
   ["/favicon.svg", "static bytes"], ["/fonts/:file", "static bytes"], ["/install", "static page"], ["/health", "the platform's check, names no org"]]);
 
 // ---- the snapshot: every row of an org, table by table (count and content hash) ----

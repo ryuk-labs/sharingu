@@ -104,6 +104,7 @@
 import { db, signInEnv, HOME_ORG } from "./data.js";
 import { uid, now, pbkdf2, sha256, hex } from "./util.js";
 import { revokeOAuthGrants } from "./oauthgrants.js";
+import { BETA_ORGS_SQL, BETA_CODES_SQL, placesOf } from "./beta.js";   // sprint 21, 21.1: the beta's places, one source with the operator's
 
 export const LOCKOUT_FAILS = 8;
 // the words a right secret with no seat at the address gets (POST /login, the OAuth sign-in form): said plainly, never another org
@@ -672,4 +673,14 @@ export async function redeemInvite(env, url, { token, password, client = "" } = 
   const r = { ...out, account, seat, how: "invited", session: seat ? "account" : null, seatCount: seat ? 1 : 0, pendingCount: 0, verdict: "ok" };
   await countSignIn(env, { ...r, vouched: true }, true);   // the link the org's admin handed over proved it: it vouches, as a code does
   return r;
+}
+
+// ---- THE BETA'S PLACES, read by the worker (sprint 21, 21.1; src/beta.js: the cap and the two counts the operator's allow makes
+// before it mints, tools/operator.mjs betaPlaces). Here because its statements name signup_codes and accounts, whose one module this
+// is. Two aggregate statements in one batch: each answers one count (SQL aggregates), never the rows themselves.
+// betaCount(env, at) -> { cap, orgs, codes, taken, left } at time `at` (the codes unexpired then)
+export async function betaCount(env, at = now()) {
+  const [o, c] = await db(env).batch([db(env).prepare(BETA_ORGS_SQL), db(env).prepare(BETA_CODES_SQL).bind(at, null)]);
+  const n = (r) => Number((((r && r.results) || [])[0] || {}).n || 0);
+  return placesOf(n(o), n(c));
 }

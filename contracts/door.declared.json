@@ -1428,6 +1428,15 @@
    "nextAction": "Sign up from the door's own page; a script client sends neither header and is never flagged.",
    "class": "not-allowed"
   },
+  "bad_request_access": {
+   "meaning": "POST /request-access (sprint 21, 21.1): a field is missing or malformed, checked before anything is written (`field`: name · email · company · role · team_size · website · linkedin · x · github · ai_tools · use_case, with a `note`): name, a plain-ASCII work email, company, role and a team size of 1, 2-10, 11-50, 51-200 or 201+ are required; website an http(s) address (a bare domain is taken), linkedin, x and github that service's address or a handle. It says nothing about who asked before or holds an account.",
+   "nextAction": "Fix the named field and send again; leave an optional field empty rather than guessing."
+  },
+  "cross_site_request_access": {
+   "meaning": "POST /request-access was flagged as arriving from a different site than this door (Sec-Fetch-Site, or Origin when that header is absent), the same guard as POST /login's cross_site_login. Refused before the body is read: nothing written.",
+   "nextAction": "Request access from the door's own page (GET /request-access); a script client sends neither header and is never flagged.",
+   "class": "not-allowed"
+  },
   "bad_org": {
    "meaning": "POST /orgs (sprint 7, 7.3): a field is missing or malformed, checked before anything is read (`field`: email · password · name · slug · project · you, with a `note`): the slug (the org's address) takes a-z, 0-9 and single dashes, 2 to 40 characters, never opening or closing on a dash; the first project's slug 2 to 30 the same way. It says nothing about accounts or about which addresses orgs hold.",
    "nextAction": "Fix the named field and send again."

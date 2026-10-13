@@ -96,6 +96,31 @@
 -- tables' name order and its one index (idx_seat_invites_person) in the export's name order.
 -- Sprint 13's 13.1, which AI filed it (2026-10-11): migrate-080.sql's transmission column (client: the one family word the
 -- filing client declares, NULL unknown) in the transmission table below.
+-- Sprint 21's 21.1, request access (2026-10-13): migrate-081.sql's access_requests table (a person's request for a beta place,
+-- its profile and its private link's hash; a platform table: no org) in the tables' name order (first), and its two indexes
+-- (idx_access_requests_line, idx_access_requests_open) in the export's name order; its re-made slug triggers (org_slug_on_insert,
+-- org_slug_on_update: 'request-access' among the reserved names) in place at the END of this file.
+
+-- migrate-081: a person's request for a beta place (one open request per email; only its private link's hash is kept)
+CREATE TABLE IF NOT EXISTS access_requests (
+  id          TEXT PRIMARY KEY,
+  email       TEXT NOT NULL CHECK (email = lower(trim(email)) AND email <> ''),
+  name        TEXT NOT NULL,
+  company     TEXT NOT NULL,
+  role        TEXT NOT NULL,
+  team_size   TEXT NOT NULL,
+  website     TEXT,
+  linkedin    TEXT,
+  x           TEXT,
+  github      TEXT,
+  ai_tools    TEXT,
+  use_case    TEXT,
+  status      TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'approved', 'declined')),
+  token_hash  TEXT NOT NULL UNIQUE,
+  created_at  TEXT NOT NULL,
+  updated_at  TEXT NOT NULL,
+  approved_at TEXT
+);
 
 -- migrate-070: one account per email (the holder's own passphrase, none until they set one); a people row is its seat in one org
 CREATE TABLE IF NOT EXISTS accounts (
@@ -778,6 +803,11 @@ BEGIN
     ON CONFLICT (project, clean, goal_ref, lane, month, kind) DO UPDATE SET n = n + excluded.n, s = s + excluded.s,
       no_outcome = no_outcome + excluded.no_outcome, awaiting = awaiting + excluded.awaiting;
 END;
+
+-- migrate-081: the open requests in the order they came (the place in line), and one open request per email
+CREATE INDEX IF NOT EXISTS idx_access_requests_line ON access_requests(created_at) WHERE status = 'open';
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_access_requests_open ON access_requests(email) WHERE status = 'open';
 
 CREATE INDEX IF NOT EXISTS idx_approval_audit_decided_by ON approval_audit(decided_by);
 
@@ -1871,7 +1901,7 @@ BEGIN
         'install', 'legal', 'library', 'log', 'login', 'logout', 'map', 'mcp', 'missing', 'new', 'oauth',
         'open-items', 'operator', 'org', 'orgs', 'platform', 'preview', 'pricing', 'privacy', 'profile',
         'project', 'projects', 'public', 'question', 'questions', 'rank', 'read', 'register', 'regrade',
-        'render', 'respond', 'round', 'search', 'security', 'settings', 'sharingu', 'signin', 'signout',
+        'render', 'request-access', 'respond', 'round', 'search', 'security', 'settings', 'sharingu', 'signin', 'signout',
         'signup', 'static', 'status', 'storage', 'support', 'terms', 'token', 'updates', 'versions', 'view',
         'whoami', 'wrap-up', 'www') THEN s.b
       WHEN NOT EXISTS (SELECT 1 FROM org o WHERE o.slug = s.b || '-' || NEW.id) THEN s.b || '-' || NEW.id
@@ -1897,7 +1927,7 @@ BEGIN
         'install', 'legal', 'library', 'log', 'login', 'logout', 'map', 'mcp', 'missing', 'new', 'oauth',
         'open-items', 'operator', 'org', 'orgs', 'platform', 'preview', 'pricing', 'privacy', 'profile',
         'project', 'projects', 'public', 'question', 'questions', 'rank', 'read', 'register', 'regrade',
-        'render', 'respond', 'round', 'search', 'security', 'settings', 'sharingu', 'signin', 'signout',
+        'render', 'request-access', 'respond', 'round', 'search', 'security', 'settings', 'sharingu', 'signin', 'signout',
         'signup', 'static', 'status', 'storage', 'support', 'terms', 'token', 'updates', 'versions', 'view',
         'whoami', 'wrap-up', 'www') THEN s.b
       WHEN NOT EXISTS (SELECT 1 FROM org o WHERE o.slug = s.b || '-' || NEW.id) THEN s.b || '-' || NEW.id

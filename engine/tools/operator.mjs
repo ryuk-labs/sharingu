@@ -22,7 +22,7 @@
 //                       many active seats, in how many orgs (never an org's name), and that its sign-up takes them — an account
 //                       passphrase opens every seat of the account, so the code is the key to those seats too (an org admin's
 //                       seat for the email included).
-//                       THE BETA'S 50 (sprint 12, 12.7; BETA_ORG_CAP below): BEFORE it mints it counts the beta's places — the
+//                       THE BETA'S 50 (sprint 12, 12.7; src/beta.js BETA_ORG_CAP): BEFORE it mints it counts the beta's places — the
 //                       outside orgs that stand plus the allowed emails holding an open code (unused, unrevoked, unexpired) whose
 //                       account made no org yet (each could make one) — and says how many are left after this one ("37 of 50
 //                       left"). With all 50 taken it is REFUSED (exit 1, nothing written), unless --beyond-cap (the owner's
@@ -104,6 +104,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { normEmail, signupCodeHash, SIGNUP_CODE_ALPHABET, SIGNUP_CODE_LENGTH } from "../src/accounts.js";
+import { BETA_ORG_CAP, BETA_ORGS_SQL, BETA_CODES_SQL, placesOf } from "../src/beta.js";   // sprint 21, 21.1: the beta's places, one source
 import { readConfig, liveD1 } from "./org-undo.mjs";
 import { OPENAI_CHALLENGE_KEY, challengeTokenProblem } from "../src/wellknown.js";
 
@@ -140,18 +141,10 @@ export const LIST_SQL = "SELECT s.email, s.created_at, s.expires_at, s.used_at, 
   "AND (?1 IS NULL OR s.email = ?1) ORDER BY s.created_at DESC LIMIT 500";
 
 // ---- 12.7 · the beta's 50 places (the owner's ruling, 2026-10-10: the beta's 50 orgs, first come first served, stay on the
-// WAITLIST and the owner approves each — through `allow`). ONE number for the whole platform, never per org; the worker does not
-// enforce it (an account that holds a code may create its org: src/orgs.js), the operator's allow does, before it mints.
-export const BETA_ORG_CAP = 50;
-// A place is held by an outside org that stands, or by an allowed email whose open code could still make one. The platform's own
-// orgs hold none, each by its durable marker: org 1 (isOperatingOrg below), an org whose settings say suites (the suites' org),
-// an org on the plan `reviewer` (tools/make-reviewer-org.mjs's worlds) or on `suite` (the ship's throwaway orgs, SUITE_PLAN).
-export const BETA_ORGS_SQL = "SELECT COUNT(*) AS n FROM org WHERE id <> 1 AND COALESCE(json_extract(settings, '$.suites'), 0) <> 1 AND plan NOT IN ('reviewer', 'suite')";
-// the emails with an open code (unused, unrevoked, unexpired at ?1) whose account founded no org that stands (one org per account:
-// src/orgs.js FOUNDED_SQL — a holder who made one is counted once, by its org); ?2 an email left out (the one being allowed: its
-// new code replaces its open one)
-export const BETA_CODES_SQL = "SELECT COUNT(DISTINCT s.email) AS n FROM signup_codes s WHERE s.used_at IS NULL AND s.revoked_at IS NULL AND s.expires_at > ?1 " +
-  "AND (?2 IS NULL OR s.email <> ?2) AND NOT EXISTS (SELECT 1 FROM accounts a JOIN org o ON o.created_by_account = a.id WHERE a.email = s.email)";
+// WAITLIST and the owner approves each — through `allow`). The cap and its two counting statements live in src/beta.js (sprint 21,
+// 21.1: the ONE source the worker's request page reads too); the worker does not enforce it, the operator's allow does, before it
+// mints. Re-exported here for the operator's callers and its selftest.
+export { BETA_ORG_CAP, BETA_ORGS_SQL, BETA_CODES_SQL };
 export const FOUNDED_BY_EMAIL_SQL = "SELECT COUNT(*) AS n FROM accounts a JOIN org o ON o.created_by_account = a.id WHERE a.email = ?1";
 // betaPlaces(DB, { email, at }) -> { cap, orgs, codes, taken, left, founded }: the places taken now (email's own open code left
 // out); founded: whether email's account already made an org (then its code takes no new place)
@@ -160,7 +153,7 @@ export async function betaPlaces(DB, { email = null, at = new Date().toISOString
   const n = async (sql, ...b) => Number(((await DB.prepare(sql).bind(...b).first()) || {}).n || 0);
   const orgs = await n(BETA_ORGS_SQL), codes = await n(BETA_CODES_SQL, at, e);
   const founded = e ? (await n(FOUNDED_BY_EMAIL_SQL, e)) > 0 : false;
-  return { cap: BETA_ORG_CAP, orgs, codes, taken: orgs + codes, left: BETA_ORG_CAP - orgs - codes, founded };
+  return { ...placesOf(orgs, codes), founded };
 }
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 // placesLine(p) -> the head line of list and list-orgs

@@ -69,7 +69,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
 <h2>One MCP address</h2>
 <p>Every organization is reached at the same address. Add it to your AI client as a remote MCP server; the client opens sharingu's sign-in (OAuth) and you sign in with your email and passphrase. No header and no key go in the client's configuration.</p>
 <div class="address"><code data-address="mcp">https://agent.sharingu.xyz/mcp</code></div>
-<p>37 tools (18 read, 19 write) and 90 routes, listed below from the door's own inventory.</p>
+<p>37 tools (18 read, 19 write) and 93 routes, listed below from the door's own inventory.</p>
 </section>
 
 <section class="card" id="tools" data-region="tools">
@@ -122,7 +122,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
 
 <section class="card" id="routes" data-region="routes">
 <div class="label">REST routes</div>
-<h2>90 routes</h2>
+<h2>93 routes</h2>
 <p>The same door over HTTP, each route with who may call it.</p>
 <div class="scroll"><table>
 <thead><tr><th>Route</th><th>Kind</th><th>Who may call it</th><th>How it fails</th></tr></thead>
@@ -202,6 +202,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
 <tr><td class="name"><code>POST /regrade</code></td><td><span class="kind write">write</span></td><td>anyone signed in (a key or a session)</td><td class="fails"><a href="#fail-not-authenticated">not-authenticated</a></td></tr>
 <tr><td class="name"><code>GET /render/:hash</code></td><td><span class="kind read">read</span></td><td>anyone signed in (a key or a session)</td><td class="fails"><a href="#fail-not-authenticated">not-authenticated</a></td></tr>
 <tr><td class="name"><code>POST /render/restore</code></td><td><span class="kind write">write</span></td><td>anyone signed in (a key or a session)</td><td class="fails"><a href="#fail-not-authenticated">not-authenticated</a></td></tr>
+<tr><td class="name"><code>GET /request-access</code></td><td><span class="kind read">read</span></td><td>anyone</td><td class="fails"></td></tr>
+<tr><td class="name"><code>POST /request-access</code></td><td><span class="kind write">write</span></td><td>anyone</td><td class="fails"></td></tr>
+<tr><td class="name"><code>GET /request-access/:token</code></td><td><span class="kind read">read</span></td><td>anyone</td><td class="fails"></td></tr>
 <tr><td class="name"><code>POST /respond</code></td><td><span class="kind write">write</span></td><td>anyone signed in (a key or a session)</td><td class="fails"><a href="#fail-not-authenticated">not-authenticated</a></td></tr>
 <tr><td class="name"><code>POST /round</code></td><td><span class="kind write">write</span></td><td>anyone signed in (a key or a session)</td><td class="fails"><a href="#fail-not-authenticated">not-authenticated</a></td></tr>
 <tr><td class="name"><code>GET /search</code></td><td><span class="kind read">read</span></td><td>anyone signed in (a key or a session)</td><td class="fails"><a href="#fail-not-authenticated">not-authenticated</a></td></tr>

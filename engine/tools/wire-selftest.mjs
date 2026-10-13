@@ -159,6 +159,7 @@ import { tempoChip } from "../src/tempo.js";
 import { renderLogin, authPage, authBrand } from "../src/login.js";
 import { renderSignup, renderSignupDone, SIGNUP_REFUSED_WORDS } from "../src/signup.js";
 import { renderOrgNew, renderOrgMade } from "../src/orgpage.js";
+import { renderRequestAccess, renderRequestReceived, renderRequestAsked, renderRequestMissing, REQUEST_FIELD_WORDS } from "../src/requestpage.js";
 import { ORG_WORDS } from "../src/orgs.js";
 import { renderProfilePage } from "../src/profile.js";
 import { renderDocs } from "../src/docs.js";
@@ -590,7 +591,7 @@ ok(srcF.length === 0, `every src/*.js: Brand v2 colour tokens only, no Geist${sr
 // vector (ui.js); a screen moved onto the shared parts (MIGRATED, the ratchet: it only grows) reads no --bv-* name at all
 // (the Map, sprint 2: its page, its layout kit, its client and its inspector included).
 const PALETTE_HOMES = new Set(["shell.js", "ui.js", "fontdata.js", "doorcontract.js"]);
-const MIGRATED = ["home.js", "decisions.js", "login.js", "signup.js", "orgpage.js", "goals.js", "gtm.js", "holes.js", "build.js", "txpage.js", "versionsview.js", "broadcastpage.js", "controlpage.js", "mappage.js", "maplayout.js", "mapclient.js", "mapnode.js", "broadcastlive.js"];
+const MIGRATED = ["home.js", "decisions.js", "login.js", "signup.js", "orgpage.js", "goals.js", "gtm.js", "holes.js", "build.js", "txpage.js", "versionsview.js", "broadcastpage.js", "controlpage.js", "mappage.js", "maplayout.js", "mapclient.js", "mapnode.js", "broadcastlive.js", "requestpage.js"];
 function semanticAudit(sources) {
   const f = [];
   const fail = (id, why) => f.push(`${id}: ${why}`);
@@ -748,6 +749,12 @@ const STANDALONE = {
   signup: [renderSignup({ brand: servedBrand }), "Northwind"],
   signupRefused: [renderSignup({ brand: servedBrand, error: SIGNUP_REFUSED_WORDS, email: "a@b.test" }), "Northwind"],
   signupDone: [renderSignupDone({ brand: servedBrand }), "Northwind"],
+  // sprint 21, 21.1: request access and the request's own pages are the front door's own too
+  requestAccess: [renderRequestAccess({ brand: servedBrand }), "Northwind"],
+  requestAccessRefused: [renderRequestAccess({ brand: servedBrand, error: REQUEST_FIELD_WORDS.email, values: { name: "Ada", email: "ada" } }), "Northwind"],
+  requestReceived: [renderRequestReceived({ brand: servedBrand, request: { name: "Ada", company: "Analytical" } }), "Northwind"],
+  requestAsked: [renderRequestAsked({ brand: servedBrand }), "Northwind"],
+  requestMissing: [renderRequestMissing({ brand: servedBrand }), "Northwind"],
   // sprint 7, 7.3: the create-an-org pages: the platform's (the product's wordmark alone), and the made page the new org's
   orgNew: [renderOrgNew({ host: "agent.example.test" }), ""],
   orgNewRefused: [renderOrgNew({ host: "agent.example.test", error: ORG_WORDS.org_name_taken, values: { email: "a@b.test", name: "Acme", slug: "acme" } }), ""],

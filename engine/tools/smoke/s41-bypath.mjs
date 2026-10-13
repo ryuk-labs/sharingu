@@ -37,7 +37,7 @@ const secretOf = (t) => (String(t).match(/(?:API key\)|shown again): ([0-9a-f]{4
 const add = async (adminKey, name, email) => { const k = secretOf((await http("POST", "/control", { key: adminKey, form: { action: "add-person", name, email } })).text); acceptWaiting(email); return k; };   // a seat that waits for its holder's yes (A1): accepted
 const orgOf = (id) => ((rows(`SELECT org FROM people WHERE id = ${q(id)}`)[0]) || {}).org;
 // the platform's own doors (src/orgpath.js PLATFORM_PATHS): the only root paths an org's page may link
-const PLATFORM = new Set(["login", "logout", "signup", "orgs", "install", "mcp", "oauth", ".well-known", "health", "fonts", "favicon.svg"]);
+const PLATFORM = new Set(["login", "logout", "signup", "request-access", "orgs", "install", "mcp", "oauth", ".well-known", "health", "fonts", "favicon.svg"]);
 // unprefixed(html, slug) -> the links, forms and script paths of a page that are NOT under /<slug> and not a platform door
 function unprefixed(html, slug) {
   const out = [];

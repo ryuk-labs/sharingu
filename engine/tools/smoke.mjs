@@ -66,6 +66,7 @@ import "./smoke/s53-invite.mjs";   // sprint 12, 12.3: an org's one-time invite 
 import "./smoke/s54-client.mjs";   // sprint 13, 13.1: which AI filed it — a Claude Code session files claude-code, a stateless Codex call codex, a REST key api; changes {org, list} and Activity say so
 import "./smoke/s60-split-door.mjs"; // sprint 19: the split door — preview never files; file_contribution, save_knowledge and remove_knowledge each file their own part (wrong tool, changed items, a grade refused; a repeat answers the first receipt); file is gone
 import "./smoke/s61-plain-note-default.mjs"; // sprint 21: in lane leader no kind is a plain note — a member's kind-less, touches-less leader contribution previews files, files, reads kind note; a code one still needs touches
+import "./smoke/s62-request-access.mjs"; // sprint 21, 21.1: request access, signed out — the form; a full profile 303s to its private link naming the company; a repeat changes nothing and 303s to the asked page (one row, the first profile, the first link still works); an account's email and the honeypot answer as a new request (the honeypot writes none); a bad email 422 naming the field; a wrong token 404
 
 let failed = 0;
 for (const c of CASES) {

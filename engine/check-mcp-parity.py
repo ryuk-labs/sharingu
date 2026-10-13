@@ -25,6 +25,8 @@ NOT_TOOLS = {"/install", "/map", "/docs", "/home", "/projects", "/audit", "/logo
     # sprint 7, 7.3: creating an org is proven by the ACCOUNT's passphrase, before any seat of the new org exists (like /signup):
     # a door for a person, never an agent's verb (an agent's key is a seat's, which never creates an org)
     "/orgs", "/orgs/new",
+    # sprint 21, 21.1: request access, a person's first step before any account or org (like /signup), and its private page
+    "/request-access", "/request-access/:token",
     # sprint 7's review, A1: the holder's answer to a seat that waits for their yes — their own ACCOUNT session in a browser,
     # same-origin only, never an agent's verb (a seat's key or grant answers nothing there: src/accounts.js answerSeat)
     "/orgs/seat",

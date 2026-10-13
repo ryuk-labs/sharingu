@@ -71,6 +71,8 @@ import { runControlAction } from "./admin.js";
 import { passphraseSignIn, countSignIn, mintSession, landingOf, clientOf, NO_SEAT_HERE_WORDS, chooseOrgWords, PENDING_ONLY_WORDS, EMAIL_NOT_ASCII_WORDS, signUp, orgsOfAccount, answerSeat, SEAT_ANSWER_WORDS, PICKER_PATH } from "./accounts.js";   // sprint 7, 7.1: one account per email, a seat per org; 7.2: sign-up
 import { renderSignup, renderSignupDone, renderInvite, signupProblem, SIGNUP_REFUSED_WORDS, SIGNUP_FIELD_WORDS } from "./signup.js";   // sprint 7, 7.2: sign-up by allowlist
 import { inviteSignup, isInviteBody, INVITE_HEADERS } from "./invite.js";   // sprint 12, 12.3: an org's invite link (src/accounts.js THE INVITE LINK)
+import { readRequest, trapped, fileRequest, requestByToken, newRequestToken, REQUEST_FIELDS, REQUEST_TRAP, REQUEST_PATH, REQUEST_ASKED_PATH } from "./requestaccess.js";   // sprint 21, 21.1: request access
+import { renderRequestAccess, renderRequestReceived, renderRequestAsked, renderRequestMissing, REQUEST_FIELD_WORDS } from "./requestpage.js";
 import { createOrg, orgFields, orgFormProblem, ORG_FIELD_WORDS, ORG_WORDS } from "./orgs.js";   // sprint 7, 7.3: create an org
 import { renderOrgNew, renderOrgMade } from "./orgpage.js";
 import { renderOrgPicker } from "./orgpicker.js";   // sprint 7, 7.4b: the org picker at the root (GET /orgs)
@@ -110,6 +112,9 @@ const CAPABILITIES = [
   { m:"GET",  p:"/login",         auth:"none",   does:"the sign-in page, at the platform's root (?next=<same-origin path> is carried to the POST; an org's page sends you here with next=/<org>/<page>)" },
   { m:"POST", p:"/signup",        auth:"none",   does:"sign up by allowlist (sprint 7, 7.2; no email is ever sent): email + code (the one-time code the operator gave for THAT email, by hand) + password (+ confirm: equal when sent) -> the account's passphrase: a new account, an account with none (every migrated person) takes it, an account that has one is reset (every session of every seat of the account, in every org, ends, and their connected apps); the code is spent in the same write. Then a 90-day token for the account's seat in the org the sign-up chose (sprint 7, 7.4: its org-1 seat, else its first: the ACCOUNT's session, which a browser carries to any of the account's orgs at /<org>/…), or, with no seat in any org, signed up and signed in to nothing (a form: the done page). JSON {account: created|set|reset, signedIn, person?, role?, title?, token?, expiresAt?, note}. An email not allowed and a wrong, used, expired or revoked code are ONE answer, 401 invalid_signup, writing only the attempt (it counts in the account's lockout: 8 failures in 15 minutes, with the sign-in's, are 429 too_many_attempts); a missing or malformed field is 422 bad_signup {field}; a cross-site form is 403 cross_site_signup. Only the operator allows an email and mints its code (tools/operator.mjs, the deployment's credentials): no route of the door does. AN ORG'S INVITE LINK (sprint 12, 12.3; src/accounts.js THE INVITE LINK): {via: invite, invite (the link's token, the whole link taken too), password (+ confirm)} -> the invited seat's account takes the passphrase, only when it has none and no seat in another org (then marked with that org: it reaches that org alone, creates no org, and answers no other org's seat until the operator's code confirms the email), the link spent in the same write; then the ACCOUNT session on that seat (a form: 302 to the org's address /<slug>, its cookie set). JSON {account: invited, signedIn, org, person?, role?, title?, token?, expiresAt?, note}. 401 invalid_invite, ONE answer (no such open link, used, expired, replaced by a newer one, its seat removed, reissued or pending) and 409 account_stands (the email's account has its own passphrase or a seat in another org: sign in and accept the seat on /orgs), each writing NOTHING; 422 bad_invite {field: invite|passphrase|confirm}; the same-origin guard and the address's flood filter as above" },
   { m:"GET",  p:"/signup",        auth:"none",   does:"the sign-up page (sprint 7, 7.2): email, the one-time code the operator gave you by hand, a passphrase twice; ?done=1 is the page a sign-up with no seat in any org lands on (signed up: creating an org is the next step, its link GET /orgs/new); ?via=invite is the page an org's invite link opens (sprint 12, 12.3: <origin>/signup?via=invite#<token> — the token rides the fragment, which no request carries; the page's script moves it into the form): the passphrase twice, no session set before it is" },
+  { m:"POST", p:"/request-access", auth:"none", does:"request access to the beta (sprint 21, 21.1; migrate-081; no session, no account, no org yet): name, email (your work email), company, role, team_size (1 | 2-10 | 11-50 | 51-200 | 201+) required; website, linkedin, x, github (each an http(s) address or that service's handle: the door stores the service's address it builds), ai_tools, use_case (one line) optional -> 303 to /request-access/<token>, your request's own private link (only its hash is kept). One open request per email, and the FIRST stands: a repeat for an email whose request is open changes nothing (no profile, no new link: the first link keeps working) and is a 303 to /request-access/asked, which says the email already asked. Nothing about accounts is read: an account's email with no open request files a request as any other. A request whose hidden field (trap) is filled is dropped with a new request's answer (its link opens nothing). 422 bad_request_access {field, note} before anything is written; 403 cross_site_request_access (a cross-site form, refused before the body is read); 429 too_many_attempts_ip (the address's flood filter, the budget POST /login and POST /signup spend). A form gets the page again with its values for a wrong field" },
+  { m:"GET",  p:"/request-access", auth:"none", does:"the request-access page (sprint 21, 21.1): the profile's form, required and optional apart; a link to sign in" },
+  { m:"GET",  p:"/request-access/:token", auth:"none", does:"your request's own page at its private link (sprint 21, 21.1): received, its name and company, what comes next; a link that opens no request (wrong or malformed) is ONE 404 page. /request-access/asked (no token's shape) is the repeat's page: the email already asked, the first request's link shows its place; it names nothing the request typed" },
   { m:"GET",  p:"/orgs",          auth:"reader",   does:"your orgs (sprint 7, 7.4b): the browser's org picker at the platform's root. With an ACCOUNT session (signed in with your account's passphrase) whose account holds seats in several orgs: the page listing them (each org's name, its address and your role there), each a link to /<org>/home (or to the page ?to=<path> names, under that org). A one-org account and a SEAT session (signed in with a seat's own secret: that seat only) never see it: 302 straight to their org. No session: the sign-in rule (a page navigation goes to /login?next=…, a script 401 auth_required). It lists only your own account's seats; a bearer names one seat: 302 straight to its org" },
   { m:"POST", p:"/orgs/seat",     auth:"session",   does:"answer a seat that waits for your yes (sprint 7's review, A1): an org's admin who adds your email while your account already stands elsewhere (it holds your passphrase, or a seat in another org) makes a PENDING seat — it signs nothing in and counts nowhere until you accept it. Your org list (GET /orgs) shows it with Accept and Decline; each posts {seat, answer: accept|decline} here with your ACCOUNT session (signed in with your account's passphrase; a seat session answers nothing), same-origin only. accept: the seat becomes active (409 already_seated when your account already holds an active seat in that org); decline: it stays inactive. A form is sent back to /orgs; JSON {seat, answer: accepted|declined}. Any other seat, a seat no longer waiting, another account's: 404 not_yours, the same for every case; no session: the sign-in rule" },
   { m:"GET",  p:"/orgs/new",      auth:"none",   does:"the create-an-org page (sprint 7, 7.3): your account's email and passphrase (the ACCOUNT's own, chosen at sign-up: never a key an org's admin gave you), the org's name, its address (its path name: a to z, 0 to 9 and single dashes, 2 to 40 characters, never a name the platform uses), its first project's short name (default: the address) and your name; the page belongs to the platform (the product's wordmark, no org's)" },
@@ -1001,6 +1006,65 @@ const ABOVE_ROUTES = [
         ? new Response(null, { status: 302, headers: { location: await landingOf(env, r), "set-cookie": `${SESSION_COOKIE}=${token}; ${SESSION_COOKIE_ATTRS}; Max-Age=${90 * 24 * 60 * 60}` } })
         : new Response(null, { status: 302, headers: { location: r.seat ? "/login" : "/signup?done=1" } });
       return json({ account: r.how, signedIn: !!token, ...(token ? { person: r.seat.name, role: r.seat.role, title: r.seat.title, token, expiresAt: expires } : {}), note });
+    },
+  },
+    // ---- request access (sprint 21, 21.1; src/requestaccess.js, migrate-081): the beta's first step, before any account or org. Public
+    // (no session), at the platform's root only (src/orgpath.js PLATFORM_PATHS). A new request is answered with a 303 to its private
+    // link; a repeat for an email whose request is open changes nothing and is sent to the asked page (the owner's ruling,
+    // 2026-10-13: the first request stands; that an email asked is said, which the owner accepted); one the honeypot drops gets a
+    // link that opens nothing. Nothing reads accounts: an answer never says whether an email holds one ----
+  {
+    test: (path, method) => path === "/request-access" && method === "GET",
+    run: async (c) => new Response(renderRequestAccess({ brand: (await getTenantConfig(c.env)).brand }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }),
+  },
+  {
+    test: (path, method) => path === "/request-access" && method === "POST",
+    run: async (c) => {
+      const { request, env, url } = c;
+      const ct = request.headers.get("content-type") || "";
+      const isForm = ct.includes("form");
+      const page = async (status, error, values = {}, extra = {}) => new Response(renderRequestAccess({ error, values, brand: (await getTenantConfig(env)).brand }),
+        { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...extra } });
+      // the same-origin guard as POST /login and POST /signup (src/util.js crossSiteLogin), FIRST: a cross-site form is never read
+      if (crossSiteLogin(request, url)) return isForm ? page(403, "Cross-site request refused.") : json({ error: "cross_site_request_access" }, 403);
+      let body = {};
+      if (isForm) {
+        const fd = await request.formData().catch(() => null);
+        if (fd) for (const k of REQUEST_FIELDS) body[k] = fd.get(k);
+      } else {
+        body = await request.json().catch(() => ({}));
+        if (!body || typeof body !== "object" || Array.isArray(body)) body = {};
+      }
+      const isWeb = isForm || !!body.web;
+      // what a form gets back when a field was wrong: the person's own strings (never the honeypot's), each cut short
+      const kept = Object.fromEntries(REQUEST_FIELDS.filter((k) => k !== REQUEST_TRAP && typeof body[k] === "string").map((k) => [k, body[k].slice(0, 300)]));
+      // the address's flood filter, the budget POST /login and POST /signup spend (addressFlooded)
+      if (await addressFlooded(request, env)) return isWeb
+        ? page(429, "Too many attempts from this address. Wait a minute and try again.", kept, { "retry-after": "60" })
+        : json({ error: "too_many_attempts_ip", retryAfterSeconds: 60 }, 429);
+      // the fields, before anything is written (src/requestaccess.js readRequest: nothing here depends on who asked before)
+      const read = readRequest(body);
+      if (read.field) return isWeb ? page(422, REQUEST_FIELD_WORDS[read.field], kept)
+        : json({ error: "bad_request_access", field: read.field, note: REQUEST_FIELD_WORDS[read.field] }, 422);
+      // the honeypot filled: a new request's answer, a link that opens nothing, nothing written; a repeat (null): the asked page
+      const token = trapped(body) ? newRequestToken() : await fileRequest(env, read.request);
+      return new Response(null, { status: 303, headers: { location: token ? `${REQUEST_PATH}/${token}` : REQUEST_ASKED_PATH, "cache-control": "no-store", "referrer-policy": "no-referrer" } });
+    },
+  },
+  {
+    // the repeat's page (a fixed path no token can be): it names nothing the request typed
+    test: (path, method) => path === REQUEST_ASKED_PATH && method === "GET",
+    run: async (c) => new Response(renderRequestAsked({ brand: (await getTenantConfig(c.env)).brand }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }),
+  },
+  {
+    test: (path, method) => path.startsWith("/request-access/") && method === "GET",
+    run: async (c) => {
+      const { env, path } = c;
+      const brand = (await getTenantConfig(env)).brand;
+      // the link's token is the path's last segment: read by its hash; any link that opens no request is the one 404
+      const r = await requestByToken(env, path.slice("/request-access/".length));
+      const headers = { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "referrer-policy": "no-referrer" };
+      return r ? new Response(renderRequestReceived({ brand, request: r }), { headers }) : new Response(renderRequestMissing({ brand }), { status: 404, headers });
     },
   },
     // ---- the org picker (sprint 7, 7.4b; docs/plan/PLATFORM.md §2 item 8: "sign-in lists the person's orgs"): the browser's

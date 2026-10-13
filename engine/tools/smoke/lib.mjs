@@ -82,7 +82,7 @@ export async function addPerson(name, email) {
 
 // ---- the address (sprint 7, 7.4): each org at /<its path name> ----
 // the platform's root doors (src/orgpath.js PLATFORM_PATHS): a cookie request to one of them is never sent under an address
-const PLATFORM = new Set(["login", "logout", "signup", "orgs", "install", "mcp", "oauth", ".well-known", "health", "fonts", "favicon.svg"]);
+const PLATFORM = new Set(["login", "logout", "signup", "request-access", "orgs", "install", "mcp", "oauth", ".well-known", "health", "fonts", "favicon.svg"]);
 let RESERVED = null;
 // unbased(text) -> the text with every org base taken off its paths: "/<org>/home" -> "/home", "/<org>" -> "/". An org's path name
 // is never a reserved name (src/orgnames.js: the registry's first segments and the platform's words), so a reserved name after it

@@ -657,8 +657,14 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   `plainNoteKind` (`src/transmission.js`), applied by both filing doors (`src/core.js`) after the clientRef digest; any
   other lane keeps what it sent. The `kind` hint says so (contract regenerated). day1-door 192/192; smoke 331/331 (s61: a member's kind-less,
   touches-less leader contribution previews files, files and reads kind note; a code one still needs touches).
-- [ ] **21.1 · Request access.** the next migration: a request table (the profile, its status, when); a
-  public request-access page and its POST (honeypot, one open request per email, rate-limited); the beta count in `src/`.
+- [x] **21.1 · Request access.** migrate-081: `access_requests` (the profile, its status, only the private link's token
+  HASH; one open request per email; a line index for 21.2) and migrate-072's two slug triggers re-made with
+  `request-access` reserved (the ship's preflight: `check-org-names --slugs` on live's slugs first). `GET/POST
+  /request-access` (public: the same-origin guard and the flood filter `/login` spends; a honeypot; nothing reads
+  accounts) and the private page `/request-access/:token`; the FIRST request stands (the owner's MCQ): a repeat changes
+  nothing and lands on `/request-access/asked`. The cap and its two counts moved to `src/beta.js`, which
+  `tools/operator.mjs` imports. request-access selftest 47/47; smoke 336/337, its one red the listing page generated
+  from the contract (regenerated, `make-listing-docs --check` green).
 - [ ] **21.2 · You're in line.** The request's own page: its place, N of 50 live from D1, what comes next, the
   walkthrough; `operator allow --request <id>` approves it and `/orgs/new` reads the profile.
 - [ ] **21.3 · The showcase and the look.** `/` for an unsigned visitor (the splash: under 1.5 s, first visit only,

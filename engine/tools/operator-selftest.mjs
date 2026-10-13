@@ -39,7 +39,8 @@
 //        suite org (plan suite). RED then GREEN: counted, the 50th is refused
 //   O23 · an expired, used or revoked code holds no place; a code whose holder already made an org is counted once (by the org),
 //        and that holder's allow takes no new place. RED then GREEN for each count
-//   O24 · BETA_ORG_CAP is one constant, 50, under the owner's ruling (2026-10-10); no file of src/ names it (the worker does not
+//   O24 · BETA_ORG_CAP is one constant, 50, in src/beta.js under the owner's ruling (2026-10-10; sprint 21 moved it there, the one
+//        source the worker's request page reads too); the tool imports it; no other file of src/ names it (the worker does not
 //        enforce it)
 // Exit 1 on any failure. A gate step.
 import { DatabaseSync } from "node:sqlite";
@@ -242,10 +243,24 @@ const cliOn = (db) => async (...argv) => {
 // ======== sprint 8, 8.5 · the orgs, their plans, the suspension (each claim RED on a mutant copy, then GREEN) ========
 // a mutant copy of tools/operator.mjs (beside it, so its relative imports resolve), loaded once and removed
 const mutantsLeft = [];
+// mutantOp(pairs) -> a scratch copy of the tool with each [from, to] applied: in tools/operator.mjs, or in src/beta.js (the beta's
+// places, sprint 21: a copy of it beside the tool, which the scratch tool imports in its place — src/beta.js is pure, it imports
+// nothing)
 async function mutantOp(pairs) {
-  let t = readFileSync(join(ENGINE, "tools", "operator.mjs"), "utf8");
-  for (const [from, to] of pairs) { if (!t.includes(from)) throw new Error(`mutantOp: operator.mjs does not hold ${from.slice(0, 70)}`); t = t.split(from).join(to); }
-  const path = join(ENGINE, "tools", `.operator-mutant-${Math.random().toString(36).slice(2)}.mjs`);
+  let t = readFileSync(join(ENGINE, "tools", "operator.mjs"), "utf8"), b = readFileSync(join(ENGINE, "src", "beta.js"), "utf8"), beta = false;
+  for (const [from, to] of pairs) {
+    if (t.includes(from)) t = t.split(from).join(to);
+    else if (b.includes(from)) { b = b.split(from).join(to); beta = true; }
+    else throw new Error(`mutantOp: neither operator.mjs nor src/beta.js holds ${from.slice(0, 70)}`);
+  }
+  const tag = Math.random().toString(36).slice(2);
+  if (beta) {
+    const bp = join(ENGINE, "tools", `.beta-mutant-${tag}.mjs`);
+    writeFileSync(bp, b); mutantsLeft.push(bp);
+    if (!t.includes('"../src/beta.js"')) throw new Error("mutantOp: operator.mjs no longer imports ../src/beta.js");
+    t = t.split('"../src/beta.js"').join(`"./.beta-mutant-${tag}.mjs"`);
+  }
+  const path = join(ENGINE, "tools", `.operator-mutant-${tag}.mjs`);
   writeFileSync(path, t); mutantsLeft.push(path);
   return import(pathToFileURL(path).href);
 }
@@ -632,12 +647,15 @@ try {
       const red2 = await tryAllow(RED2, founder(fill(world(), { orgs: 48 })), "next@example.org");
       ok(red2.r.refused && !red2.written, `O23 · RED then GREEN: counting the founder's code beside its org refuses the 50th (${red2.r.places && red2.r.places.orgs} orgs, ${red2.r.places && red2.r.places.codes} codes); the real tool allows it`);
     }
-    // O24 · the cap is ONE constant, 50, the owner's ruling named beside it; the worker holds no copy of it
+    // O24 · the cap is ONE constant, 50, the owner's ruling named beside it, in src/beta.js (sprint 21, 21.1: the worker's request page
+    // reads the same count); the operator's tool holds no copy of it, and the worker does not enforce it (no other file of src/
+    // names the cap, none names beyond-cap)
     {
-      const src = readFileSync(join(ENGINE, "tools", "operator.mjs"), "utf8");
-      const inSrc = readdirSync(join(ENGINE, "src")).filter((f) => f.endsWith(".js")).filter((f) => /BETA_ORG_CAP|beyond-cap/.test(readFileSync(join(ENGINE, "src", f), "utf8")));
-      ok(OP.BETA_ORG_CAP === 50 && (src.match(/export const BETA_ORG_CAP = /g) || []).length === 1 && /the owner's ruling, 2026-10-10[^\n]*\n(?:\/\/[^\n]*\n){0,3}export const BETA_ORG_CAP = 50;/.test(src) && inSrc.length === 0,
-        `O24 · BETA_ORG_CAP is one constant (${OP.BETA_ORG_CAP}) under the owner's ruling (2026-10-10); no file of src/ names it (${inSrc.length})`);
+      const tool = readFileSync(join(ENGINE, "tools", "operator.mjs"), "utf8"), beta = readFileSync(join(ENGINE, "src", "beta.js"), "utf8");
+      const named = readdirSync(join(ENGINE, "src")).filter((f) => f.endsWith(".js") && f !== "beta.js").filter((f) => /BETA_ORG_CAP|beyond-cap/.test(readFileSync(join(ENGINE, "src", f), "utf8")));
+      ok(OP.BETA_ORG_CAP === 50 && (beta.match(/export const BETA_ORG_CAP = /g) || []).length === 1 && /the owner's ruling, 2026-10-10[^\n]*\n(?:\/\/[^\n]*\n){0,3}export const BETA_ORG_CAP = 50;/.test(beta)
+        && !/BETA_ORG_CAP = /.test(tool) && /from "\.\.\/src\/beta\.js"/.test(tool) && named.length === 0,
+        `O24 · BETA_ORG_CAP is one constant (${OP.BETA_ORG_CAP}) in src/beta.js under the owner's ruling (2026-10-10); the tool imports it; no other file of src/ names it (${named.join(", ") || "none"})`);
     }
   }
 } finally {

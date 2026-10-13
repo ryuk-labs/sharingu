@@ -39,6 +39,11 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   (a seat session and a one-org account go straight in); the rail's org switcher lists the same account's orgs. A page at the
   root before a sign-in wears the platform's brand (sharingu), the sign-in from an org's address that org's; the one not-here
   answer is a page in the platform's brand (`src/login.js renderNotHere`).
+- `src/requestaccess.js` · `src/requestpage.js` — request access (sprint 21, `migrate-081`'s `access_requests`, a platform table:
+  no org): POST /request-access, public, reads the profile strictly (`readRequest`), files ONE open request per email and answers
+  a 303 to its private link `/request-access/<token>` (only its hash kept); the first request stands: a repeat changes nothing and
+  goes to `/request-access/asked`; the honeypot gets a link that opens nothing; nothing reads accounts. `src/beta.js` — the beta's 50 places,
+  the ONE source of the cap and its two counts (`tools/operator.mjs` imports it; the worker reads it by `src/accounts.js betaCount`).
 - `src/data.js` — THE scoped data layer (sprint 6): every statement runs on `db(env)`; `{org}`/`{orgbucket}` tokens
   take the signed-in reader's org (a validated integer, from the sign-in only — never a parameter); no token and no
   sign-in is refused loudly (org unknown), never org 1. `tools/check-scoped-data.py` (a gate step) fails any statement outside it.
@@ -130,7 +135,7 @@ first). The operator's tools run on the deployment's credentials, never through 
 set-plan, raise — a NAMED plan row, never free's or team's ruled numbers — and suspend / unsuspend, one reversible 403
 at the org's resolve; sprint 11: set-openai-challenge / clear-openai-challenge, the platform's one OpenAI domain-verification
 token in the deployment's KV, answered at `/.well-known/openai-apps-challenge` by `src/wellknown.js`; sprint 12: allow counts the
-beta's 50 places — `BETA_ORG_CAP`, the owner's one number: the outside orgs that stand plus the allowed emails with an open code and
+beta's 50 places — `BETA_ORG_CAP` (`src/beta.js` since sprint 21), the owner's one number: the outside orgs that stand plus the allowed emails with an open code and
 no org yet — and refuses past them unless `--beyond-cap`; list and list-orgs say the count at their head; the worker does not
 enforce it) and `tools/org-undo.mjs` (one org's export, restore,
 verify, delete). Credentials: `set -a; . ~/.sharingu/env-sharingu.sh; set +a` (a bare
