@@ -1,7 +1,7 @@
 {
   "name": "sharingu",
   "displayName": "sharingu",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Your tools. One company brain. A universal harness connecting contributions, decisions and goals through MCP, with humans in charge.",
   "author": {
     "name": "Ryuk Labs",
@@ -9,6 +9,10 @@
   },
   "homepage": "https://www.sharingu.xyz",
   "repository": "https://github.com/ryuk-labs/sharingu-plugin",
+  "documentationUrl": "https://www.sharingu.xyz/docs.html",
+  "privacyPolicyUrl": "https://www.sharingu.xyz/privacy.html",
+  "supportUrl": "https://www.sharingu.xyz/support.html",
+  "termsOfServiceUrl": "https://www.sharingu.xyz/terms.html",
   "license": "Proprietary",
   "keywords": [
     "mcp",

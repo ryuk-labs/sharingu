@@ -33,8 +33,8 @@ architecture go deeper on one layer each; this one fills every layer once, then 
    `source: [{kind: "commit" | "file" | "url", ref, label}]` (`label` optional, at most 10). A node or an edge has no
    `source` field (an unknown field refuses the whole batch): it keeps the same list in its `data`, as `data.source`.
    - The code: the routes and pages, the navigation, the handlers and the tools the product serves, the schema and its
-     migrations, what each handler reads and writes, the outside services it calls (its env reads: the names, never the
-     values).
+     migrations, what each handler reads and writes, the outside services it calls, by
+     name.
    - The docs and the tickets: the goals and their order, the decisions and why each was made, what is still open.
    - The design files: each screen's layout and states.
 5. **Learn the shapes.** `formats {kind: "goal"}`, `formats {kind: "node"}`, `formats {kind: "edge"}`,
