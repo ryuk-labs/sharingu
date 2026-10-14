@@ -60,6 +60,8 @@ def main():
     if not BASE or not TESTKEY:
         print("AC 0 1 0"); print("  .AC FAIL no target or no tester key minted"); return
     rows = json.load(open(CONTRACT))["rest"]
+    # the owner doors that answer anyone else with the one not-here 404 (never 403: a 403 tells the door exists)
+    HIDDEN_DOORS = {("GET", "/operator"), ("POST", "/operator")}
     ok = bad = 0
     lines = []
 
@@ -84,7 +86,10 @@ def main():
         # a non-owner seated nowhere
         if (m, p) != ("POST", "/signout"):
             st, _, raw = hit(m, path, {"accept": "application/json", "authorization": "Bearer " + TESTKEY}, PROBE_BODY.get((m, p)))
-            if auth == "owner":
+            if (m, p) in HIDDEN_DOORS:
+                # an owner door that tells no one it is there (sprint 21's review, B5: the operator page): the one not-here 404
+                check(st == 404, f"{label} non-owner want the one 404 (a hidden door) got {st} {err_of(raw)}")
+            elif auth == "owner":
                 check(st == 403, f"{label} non-owner want 403 got {st} {err_of(raw)}")
             elif auth == "session":
                 # a session-only door (sprint 7's review, A1): only the holder's own browser session answers; a bearer is a key

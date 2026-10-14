@@ -74,7 +74,7 @@ smoke("orgtwo · a row written without its org is refused loudly, on each of the
   expect(tries.length === 9 && NINE.every((t) => tries.some(([x]) => x === t)), "the case does not try each of the nine tables");
   for (const [what, , q] of tries) {
     const r = d1(q);
-    expect(r.error && /org_required/.test(r.error), () => `${what} without an org: ${r.error ? String(r.error).slice(0, 200) : "LANDED"}`);
+    expect(r.error && /org_required/.test(r.error), () => `${what} without an org: ${r.error ? String(r.error).replace(/\x1b\[[0-9;]*m/g, "").replace(/\s+/g, " ").trim().slice(0, 200) : "LANDED"}`);
   }
   const keyCol = { tokens: "token_hash" };
   const gone = rows("SELECT " + tries.map(([t, id]) => `(SELECT COUNT(*) FROM ${t} WHERE ${keyCol[t] || "id"} = '${id}')`).join(" + ") + " AS n");

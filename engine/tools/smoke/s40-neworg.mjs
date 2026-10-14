@@ -3,7 +3,8 @@
 // operator's tool allows the email (its CLI, --local on the smoke's own state; the code read from its output, held in memory),
 // then POST /signup. Every key is held in memory, never printed. Runs after s39.
 //   · an account signed up by the operator's code creates an org: the org row with its path name and its founder, the owner seat
-//     joined to the account, the first project o<id>--<slug>; a form creation answers the made page with the key once
+//     joined to the account, the first project o<id>--<slug>; a form creation answers the made page with the key once, and its
+//     session (sprint 21, 21.P D17: s66 walks it into the org)
 //   · the new owner's key files a contribution through /mcp into the new org's project
 //   · refused, nothing written: a reserved name, a taken name, a bad path name, a second org for the same account, a wrong
 //     account passphrase, a seat's secret instead of the account passphrase
@@ -50,7 +51,7 @@ const create = (body) => http("POST", "/orgs", { body });
 const settle = () => new Promise((r) => setTimeout(r, 20));
 const N = {};   // what the first case leaves for the next ones
 
-smoke("neworg · an account signed up by the operator's code creates an org: its row with its path name and founder, the owner seat joined to the account, the first project o<id>--<slug>; a form creation shows the key once", async () => {
+smoke("neworg · an account signed up by the operator's code creates an org: its row with its path name and founder, the owner seat joined to the account, the first project o<id>--<slug>; a form creation shows the key once and signs in", async () => {
   N.email = `neworg-${TAG}@smoke.local`; N.pass = `smoke-neworg-pass-${TAG}`; N.slug = `neworg-${TAG}`;
   await account(N.email, N.pass);
   const r = await create({ email: N.email, password: N.pass, name: `Neworg ${TAG}`, slug: N.slug, project: "web", you: "Neworg Owner" });
@@ -67,24 +68,24 @@ smoke("neworg · an account signed up by the operator's code creates an org: its
   // sprint 8 (8.2f, main's ruling): the org is made free, as on live; the harness then raises it to the local-only plan, as the
   // operator raises an org by hand, so the cases built on it (its walk, its attack) never trip free's limits (s46 tests free)
   rows(`UPDATE org SET plan = 'local' WHERE id = ${Number(N.org) || 0}`);
-  // a form: the made page (the key once, no cookie, no Location), from a second account
+  // a form: the made page (the key once, no Location; since 21.P D17 its session cookie: s66 walks it), from a second account
   const e2 = `neworg-form-${TAG}@smoke.local`;
   await account(e2, N.pass);
   // paced as the case's http is: one retry after the address's window when the flood filter refused (that proves nothing)
   const formPost = () => fetch(`${BASE}/orgs`, { method: "POST", redirect: "manual", headers: { "content-type": "application/x-www-form-urlencoded", accept: "text/html" },
-    body: new URLSearchParams({ email: e2, password: N.pass, name: `Neworg Form ${TAG}`, slug: `neworg-form-${TAG}`, web: "1" }).toString() });
+    body: new URLSearchParams({ email: e2, password: N.pass, name: `Neworg Form ${TAG}`, slug: `neworg-form-${TAG}`, product: "Neworg App", line: "Neworg one line", stage: "launched", web: "1" }).toString() });
   let f = await formPost();
   if (f.status === 429) { await new Promise((ok) => setTimeout(ok, 61000)); f = await formPost(); }
   const t = await f.text();
   const fk = (/data-secret="owner-key">([0-9a-f]{40})</.exec(t) || [])[1];
   await settle();
   const fseat = fk ? rows(`SELECT org FROM people WHERE key_hash = ${q(sha(fk))}`)[0] || {} : {};
-  expect(f.status === 200 && fk && fseat.org > N.org && !f.headers.get("set-cookie") && !f.headers.get("location") && f.headers.get("cache-control") === "no-store",
+  expect(f.status === 200 && fk && fseat.org > N.org && /^__Host-ar_session=[^;]+; HttpOnly; Secure; SameSite=Lax; Path=\/; Max-Age=7776000$/.test(f.headers.get("set-cookie") || "") && !f.headers.get("location") && f.headers.get("cache-control") === "no-store",
     () => `the form creation: ${f.status}, a key ${!!fk}, its seat's org ${fseat.org}, cookie ${!!f.headers.get("set-cookie")}, location ${f.headers.get("location")}`);
   const page = await fetch(`${BASE}/orgs/new`, { headers: { accept: "text/html" } });
   const pt = await page.text();
   expect(page.status === 200 && /action="\/orgs"/.test(pt) && /name="slug"/.test(pt), () => `GET /orgs/new ${page.status}`);
-  return `org ${N.org} (${N.slug}) made by POST /orgs: founded by the account, its owner seat the account's (the key's hash), its project ${N.project}; a form creation answered the made page with the key once (org ${fseat.org}); GET /orgs/new 200`;
+  return `org ${N.org} (${N.slug}) made by POST /orgs: founded by the account, its owner seat the account's (the key's hash), its project ${N.project}; a form creation answered the made page with the key once and its session cookie (org ${fseat.org}); GET /orgs/new 200`;
 });
 
 smoke("neworg · the new owner's key files a contribution through /mcp into the new org's project", async () => {

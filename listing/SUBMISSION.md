@@ -187,6 +187,11 @@ They are public on the site's docs page, section `#walkthrough` (owner's MCQ, 20
 come later behind the same URL); the owner's ChatGPT recording of the test cases joins the same section, and that
 section's URL is ChatGPT's `demoRecordingURL`.
 
+On YouTube (the owner's uploads, 2026-10-14; the channel https://www.youtube.com/@SharinguAIApp): 1 join and connect
+https://youtu.be/uriCywoKUds · 2 the org and its people https://youtu.be/tQqznIrS5t4 · 3 fill the product side
+https://youtu.be/9G8QML-7yHY · 4 fill the GTM side https://youtu.be/UCBdg8f2wL8 · 5 the ChatGPT walkthrough (the test
+cases) https://youtu.be/oZtAL5Uf4Ak. The worker's showcase lists them (sprint 21, 21.3).
+
 ## Reviewer access (paste into the forms; the codes from the private file)
 
 The reviewer org is "sharingu review" at `https://agent.sharingu.xyz/sharingu-review`. It holds the real sharingu

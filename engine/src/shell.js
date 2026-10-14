@@ -87,8 +87,11 @@ export const BRAND_MOTION_CSS = "@media (prefers-reduced-motion:reduce){*,*::bef
 // word) · --on-needs text on a solid needs · --stone-text small incomplete text · --focus the focus ring · --shadow-pop
 // popovers · --shadow-card a lifted card · --shadow-pin and --note-line the one pinned note (the brand's own pin: 5px ink on
 // Paper, 5px orange on Ink, design-law depth) · --scrim the ground under a modal (the palette, the phone's drawer) ·
-// --uchan-line / --uchan-rim U-chan's outline (the silhouette, the lens rims) · --wash the sign-in's top light · --field-ring
-// the focus of a field being typed in (neutral: the orange stays the page's one accent). Motion: --ease, --dur-fast, --dur.
+// --uchan-line / --uchan-rim U-chan's outline (the silhouette, the lens rims; the brand's ink in both worlds) · --uchan-key the
+// keyline under the silhouette (none in Paper; in Ink it lifts the ink outline off the dark ground) · --field-ring
+// the focus of a field being typed in (neutral: the orange stays the page's one accent) · --media / --on-media and
+// --media-chip / --on-media-chip / --media-chip-line: a picture's own ground and the text and chips laid over it (a video's
+// poster, sprint 21, 21.P: the same in both worlds, a still is the same still). Motion: --ease, --dur-fast, --dur.
 export const INK_WORLD = `
     color-scheme:dark;
     --page:var(--bv-dark); --surface:var(--bv-dark-2); --well:var(--bv-dark-3);
@@ -103,7 +106,8 @@ export const INK_WORLD = `
     --focus:var(--bv-identity);
     --shadow-pop:0 1px 2px rgba(15,14,13,.4),0 16px 40px rgba(15,14,13,.55); --shadow-card:0 1px 2px rgba(15,14,13,.35),0 10px 28px rgba(15,14,13,.3);
     --shadow-pin:var(--bv-shadow-pin-ink); --note-line:var(--bv-dark-line-2);
-    --scrim:rgba(15,14,13,.62); --uchan-line:var(--bv-dark-text-2); --uchan-rim:var(--bv-ink); --wash:var(--bv-dark); --field-ring:var(--bv-dark-text-2);
+    --scrim:rgba(15,14,13,.62); --uchan-line:var(--bv-ink); --uchan-rim:var(--bv-ink); --uchan-key:var(--bv-dark-text-2); --field-ring:var(--bv-dark-text-2);
+    --media:var(--bv-ink); --on-media:var(--bv-paper); --media-chip:var(--bv-surface); --on-media-chip:var(--bv-ink); --media-chip-line:var(--bv-line);
 `;
 export const PAPER_WORLD = `
     color-scheme:light;
@@ -119,7 +123,8 @@ export const PAPER_WORLD = `
     --focus:var(--bv-orange-deep);
     --shadow-pop:0 1px 2px rgba(28,25,23,.06),0 12px 32px rgba(28,25,23,.12); --shadow-card:var(--bv-shadow-lift);
     --shadow-pin:var(--bv-shadow-pin); --note-line:var(--bv-ink);
-    --scrim:rgba(28,25,23,.16); --uchan-line:var(--bv-ink); --uchan-rim:var(--bv-ink); --wash:var(--bv-peach); --field-ring:var(--bv-ink-2);
+    --scrim:rgba(28,25,23,.16); --uchan-line:var(--bv-ink); --uchan-rim:var(--bv-ink); --uchan-key:none; --field-ring:var(--bv-ink-2);
+    --media:var(--bv-ink); --on-media:var(--bv-paper); --media-chip:var(--bv-surface); --on-media-chip:var(--bv-ink); --media-chip-line:var(--bv-line);
     --bv-dark:var(--page); --bv-dark-2:var(--surface); --bv-dark-3:var(--well); --bv-dark-text:var(--text); --bv-dark-text-2:var(--text-muted);
     --bv-dark-line-2:var(--line-strong); --bv-orange-well:var(--accent-tint); --bv-orange:var(--accent-text);
     --bv-verified-ink:var(--ok); --bv-verified-well:var(--ok-tint); --bv-needs-ink:var(--needs); --bv-needs-well:var(--needs-tint);
@@ -249,7 +254,9 @@ export const BASE_CSS = `
   input:not([type="radio"]):not([type="checkbox"]):focus-visible,textarea:focus-visible,select:focus-visible{outline-color:var(--field-ring)}
   .u-uchan .uc-line{stroke:var(--uchan-line,#1C1917)}
   .u-uchan .uc-rim{stroke:var(--uchan-rim,#1C1917)}
+  .u-uchan .uc-key{stroke:var(--uchan-key,none)}
   .u-uchan-sm .uc-line,.u-uchan-sm .uc-rim{stroke-width:11}
+  .u-uchan-sm .uc-key{stroke-width:19}
   details:not([open])>:not(summary){display:none}
   .u-sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   ${BRAND_MOTION_CSS}`;

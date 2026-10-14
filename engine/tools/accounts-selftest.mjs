@@ -54,7 +54,8 @@
 //   C15 · A2 + B1 + A4: an admin's Reissue and removal of a seat end its SEAT sessions only — an ACCOUNT session anchored there
 //        reads on in the other org; the holder's proven account passphrase change ends every other session of the account (the
 //        one it was proven on stays), rotate-my-key proven by it every one; proven by a seat's own key, only that seat's
-//   C16 · A6: a sign-in for an email no account holds costs one passphrase hash, as an account's does
+//   C16 · A6 (and the sprint-21 review): a WRONG sign-in costs WRONG_HASHES passphrase hashes whoever holds the email — no account, an
+//        account with one seat, an account with its own passphrase and two seats: the same count
 //   C17 · B5: a session's project stamp set in org 2 is no stamp in org 1 (its project picker shows again)
 //   C18 · A5: add-person refuses a non-ASCII email (email_not_ascii), nothing created
 //   C19 · migrate-074 over a database as live holds it at 073: every row NOT pending, active flags, accounts, keys and secrets
@@ -554,6 +555,7 @@ const CASES = {
   async C16() {
     // A6: a sign-in hashes once whether or not an account answers the email (the time tells no platform membership)
     const W = await world(), out = [];
+    const { WRONG_HASHES } = await import(pathToFileURL(join(MUT.src || join(ENGINE, "src"), "accounts.js")).href);
     const sub = globalThis.crypto.subtle, real = sub.deriveBits.bind(sub);
     let n = 0;
     sub.deriveBits = (...a) => { n++; return real(...a); };
@@ -562,7 +564,12 @@ const CASES = {
       const noneN = n;
       await W.seatPass("one-mia", "mia-pass");
       n = 0; const some = await W.login("mia@one.test", "a-guess-of-twelve");
-      out.push([none.status === 401 && some.status === 401 && noneN >= 1, `C16 · a sign-in for an email no account holds costs ${noneN} passphrase hash(es) (one for an account's: ${n}): the time says nothing of membership`]);
+      const someN = n;
+      await W.ownPass("owner@one.test", "owner-account-pass");
+      await W.add("two-owner-key", "Owner One (in Two)", "owner@one.test");
+      n = 0; const many = await W.login("owner@one.test", "a-guess-of-twelve");
+      out.push([none.status === 401 && some.status === 401 && many.status === 401 && WRONG_HASHES === 6 && noneN === WRONG_HASHES && someN === WRONG_HASHES && n === WRONG_HASHES,
+        `C16 · a wrong sign-in costs ${WRONG_HASHES} passphrase hashes whoever holds the email (no account ${noneN}, one seat ${someN}, a passphrase and two seats ${n}): the time says nothing of membership`]);
     } finally { sub.deriveBits = real; }
     return out;
   },
@@ -643,6 +650,8 @@ const CASES = {
     const W = await world(), out = [];
     const A = await import(pathToFileURL(join(MUT.src || join(ENGINE, "src"), "accounts.js")).href);
     await W.ownPass("mia@one.test", "mia-own-passphrase"); await W.seatPass("one-mia", "mia-seat-pass");
+    // (sprint 21, 21.4a) Mia's email was approved as the operator's code approves one (a used code): create-org's proof answers her
+    W.w.db.prepare("INSERT INTO signup_codes (id, email, code_hash, created_at, expires_at, used_at, used_how) VALUES ('c20-used', 'mia@one.test', 'x', ?1, ?1, ?1, 'set')").run("2026-10-01T00:00:00.000Z");
     const env = W.w.env, url = new URL(W.w.origin + "/login");
     const tryAt = async (password, client) => {
       const r = await A.passphraseSignIn(env, url, { email: "mia@one.test", password, client });
@@ -787,6 +796,13 @@ const PRE070 = (() => {
   cut(/,\n  slug {7}TEXT CHECK [^\n]*\n  created_by_account TEXT\n\);/, "migrate-072's org columns");
   b = b.replace(/settings IS NULL OR json_valid\(settings\)\)$/m, "settings IS NULL OR json_valid(settings))\n);");
   for (const ix of ["idx_org_founder", "idx_org_slug"]) cut(new RegExp(`CREATE (?:UNIQUE )?INDEX IF NOT EXISTS ${ix} [^;]*;\\n`), ix);
+  // migrate-081 (sprint 21, 21.4a) came after: its account tables and their indexes out too
+  cut(/-- migrate-081: a forgotten passphrase's single-use link[^\n]*\nCREATE TABLE IF NOT EXISTS account_resets \([\s\S]*?\n\);\n/, "migrate-081's account_resets");
+  cut(/-- migrate-081: an account's browser session[^\n]*\nCREATE TABLE IF NOT EXISTS account_sessions \([\s\S]*?\n\);\n/, "migrate-081's account_sessions");
+  // (21.4c) and the accounts' Google subject's index (the column goes with the accounts table above)
+  for (const ix of ["idx_account_resets_account", "idx_account_sessions_account", "idx_accounts_google_sub"]) cut(new RegExp(`CREATE (?:UNIQUE )?INDEX IF NOT EXISTS ${ix} [^;]*;\\n`), ix);
+  // and (21.4b) access_requests' account link (the person's path: the account the verification made)
+  cut(/\n  account_id      TEXT,\n  account_at      TEXT,/, "migrate-081's access_requests.account_id and account_at");
   cut(/-- migrate-070\.sql \(sprint 7, 7\.1\)[\s\S]*$/, "migrate-070's triggers");
   if (b.split("\n").some((l) => !/^\s*--/.test(l) && /account/.test(l))) throw new Error("PRE070: boot.sql still names an account after the strip");
   return b;
@@ -855,8 +871,10 @@ const MUTANTS = [
     from: 'const client = clientNamed(r.client, ok, r.session === "account" || r.vouched === true);', to: "const client = clientNamed(r.client, ok, true);", red: ["C20"] },
   { name: "/profile vouches for any credential (the seat's key too)", file: "src/secrets.js",
     from: "const vouched = !!(reader && reader.viaCookie && person.account_id && String(reader.session_account || \"\") === String(person.account_id));", to: "const vouched = true;", red: ["C21"] },
-  { name: "a sign-in for an unknown email hashes nothing (A6)", file: "src/accounts.js",
-    from: 'if (!account) { await pbkdf2(String(password == null ? "" : password), NO_SALT); return { ...out, verdict: "wrong" }; }', to: 'if (!account) return { ...out, verdict: "wrong" };', red: ["C16"] },
+  { name: "a sign-in for an unknown email pads nothing (A6)", file: "src/accounts.js",
+    from: "    const ok = await matches(join);\n    await padHashes(pw, spent);\n", to: "    const ok = await matches(join);\n", red: ["C16"] },
+  { name: "a wrong sign-in of an account pads nothing", file: "src/accounts.js",
+    from: "  const unverified = await matches(join);\n  await padHashes(pw, spent);\n", to: "  const unverified = await matches(join);\n", red: ["C16"] },
   { name: "a stamp of another org is this org's (B5)", file: "src/core.js",
     from: "return o && Number(o.org) === Number(row.org) ? row : { ...row, token_project: null };", to: "return row;", red: ["C17"] },
   { name: "add-person takes a non-ASCII email (A5)", file: "src/admin.js",

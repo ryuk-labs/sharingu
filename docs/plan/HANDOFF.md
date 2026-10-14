@@ -1,8 +1,13 @@
 # HANDOFF — where sharingu stands (rewritten at every stop; git holds the history)
 
 **As of 2026-10-13: sprint 20 is LIVE (the write tools file "a preview the person has seen and agreed to"); plugin
-0.1.16 clears the Claude directory's checks; the OpenAI submission is in review. Next: the owner's Claude side (the
-connector and plugin forms, after P1–P3 in the Claude app), then sprint 21 (onboarding).**
+0.1.16 clears the Claude directory's checks; the OpenAI submission is in review. Sprint 21 (onboarding) is BUILT AND PROVEN on branch `sprint-21` (14 commits, not pushed; smoke 371/371, the gate green,
+evals 42/42, sims 10/10, tabs-verify 40/40, the one review's findings fixed; `sh tools/ship-plan.sh ryuklabs --no-import`
+complete: migrate-081 BEFORE the code, no live org holds `request-access`). NEXT: the owner's OK, then the ship in the
+plan's order (push, ONE PR, merge; the dry run; migrate-081; the name and grant checks; `ship.sh`; store the Google
+client: `node tools/operator.mjs set-google-client --file ~/.sharingu/google-oauth.env --live --config wrangler.jsonc
+--confirm-live ryuklabs-agent-r`; the walk and verify-live; the first real emails, to ryuk@ only; then the site's
+`journey-polish` with the buttons to `/request-access`). Live is still sprint 20.**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
 and must not trust its own memory over this file. Read, in order: `README.md` (the model, how we work) → this file →
@@ -11,9 +16,9 @@ the laws). `SPRINTS.md` holds every slice's record; `MARKETPLACE.md` the store r
 
 ## RESUME HERE — the order of work
 
-**0 · Orient (five minutes, read-only).** From the repo root: `git branch --show-current` (expect `sprint-14`),
+**0 · Orient (five minutes, read-only).** From the repo root: `git branch --show-current` (expect `sprint-21`),
 `git log --oneline -4`, `git status --short` (expect clean), `uptime` (load under 8 before anything heavy). Then tell
-the owner where things stand in two lines and ask for the step-1 ship OK (an MCQ, with the order drawn first).
+the owner where things stand in two lines, then resume the first unticked slice of sprint 21 in `SPRINTS.md`.
 
 **1 · Ship sprint 14 — DONE 2026-10-12** (`64aad029` at 100%; the steps below are the ship's recipe for the next one). What it ships: four tool descriptions that
 said "call this first" now say when a tool is useful (`whoami`, `updates`, `missing`, `impact`: the stores' reviewers
@@ -57,8 +62,7 @@ Activity row of P1's filing reads "from Claude" (if it reads "another client", s
 (c) for ChatGPT: store the portal's domain token (`node tools/operator.mjs set-openai-challenge --token <it> --live
 --config wrangler.jsonc --confirm-live ryuklabs-agent-r`), record the ChatGPT demo video and put its URL in
 `listing/codex-listing.json` as `demoRecordingURL`, then regenerate (`node tools/make-plugin-skills.mjs`) and build the
-ZIP (`--openai-zip <out.zip>`); (d) upload the four videos as unlisted YouTube links (`listing/videos/`, also copied to
-`~/Desktop/sharingu-videos/`); (e) submit from `listing/SUBMISSION.md`: the Claude connector, the Claude plugin, the
+ZIP (`--openai-zip <out.zip>`); (d) DONE 2026-10-14: the five videos on YouTube (the links and the channel in `listing/SUBMISSION.md`, The videos); (e) submit from `listing/SUBMISSION.md`: the Claude connector, the Claude plugin, the
 ChatGPT plugin. The stores' pages were re-read on 2026-10-12; re-read them again on the day (sources at the foot of
 `MARKETPLACE.md`).
 
@@ -79,7 +83,7 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   changed later on github.com, org People). The plugin's dist repo moved to `ryuk-labs/sharingu-plugin` (a transfer:
   the old path redirects). `engine/.runs/` is machine-local (gitignored): the ship
   logs, the video recorder (`engine/.runs/b12-videos/`: `record.mjs`, `compose-take.sh`, `sweep-take.sh`, `join.sh`).
-- **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at 6fbd4d5: the install line naming
+- **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at a3b43ec (2026-10-14: the walkthrough plays from YouTube in place behind our own posters, the MP4s gone, Walkthrough in every nav; played on live): the install line naming
   ryuk-labs/sharingu-plugin, the walkthrough section `docs.html#walkthrough` (five videos: video 5 first, the ChatGPT test cases beside the live app, 4:34 at 1920×1080, the OpenAI submission's demo), the tools page at sprint 19's
   contract (37 tools). Its tools page matches the engine's contract (`npm run check:mcp-tools`).
 - **The plugin:** this tree 0.1.12 (`claude plugin validate --strict ./plugin` passes); the public dist repo 0.1.16 (in sync; a team member on a plugin older than 0.1.15 updates: it still names `file`).
@@ -94,6 +98,15 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   not listed there; never attach one by hand alone.
 - **Beta is green** (`BETA.md`). Active people on live: Acie, Dr Vasu, Rein, Tyag, Ryuk, Agent Ops; every test seat is
   inactive or in the suites' org.
+- **Sprint 21's outside setup (2026-10-14):** the Google OAuth client (project in the ryuklabs Google org, redirect
+  `https://agent.sharingu.xyz/auth/google/callback` and the agent.ryuklabs.io twin) lives ONLY in
+  `~/.sharingu/google-oauth.env` (mode 600, two lines; never print it; an operator command stores it in the worker's KV);
+  Cloudflare Email Routing destination addresses ryuk@ryuklabs.io (verified) and acie@ryuklabs.io (waiting for its
+  click); Email Sending onboarded for sharingu.xyz through the API (sending subdomain c2ed4c4d…, return path
+  cf-bounce.sharingu.xyz): its MX, SPF and DKIM records are live (the owner's dashboard, 2026-10-14); DMARC stays the
+  zone's older record (p=quarantine, relaxed alignment, reports to a GoDaddy mailbox), which passes our DKIM-signed mail.
+  Check records with DNS-over-HTTPS (`curl -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=…&type=TXT'`):
+  this Mini's resolver answers empty or times out at times. acie@ryuklabs.io still waits for its click.
 - **The Cloudflare token** in `~/.sharingu/env-sharingu.sh` is ACCOUNT-scoped: its token-verify endpoint calls it
   invalid (it only verifies user tokens); wrangler and the account APIs work.
 
@@ -126,6 +139,14 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   <its persist> --file migrate-0NN.sql`) before `dev-local.sh up` (a `PLATFORM.md` §3 row will automate it).
 
 **Videos and screens**
+- Screenshots of a LOCAL worker under the public name (agent.sharingu.xyz) LEAK: Playwright's request interception does
+  not catch the request a redirect leads to, and in 21.P a few read-only GETs reached live (nothing written). Map the
+  name and refuse every other host: Chromium `--host-resolver-rules=MAP agent.sharingu.xyz 127.0.0.1:<port>, MAP *
+  ~NOTFOUND`, with wrangler `--local-protocol https --upstream-protocol https`.
+  AND Playwright's `ctx.request` / `page.request` resolve with node's own DNS, not the browser's rules: in 21.4c four
+  `POST /oauth/register` reached live and left client records in OAUTH_KV (deleted 2026-10-14 with the owner's OK, after a
+  read-only check that no grant named them). Send every request from inside the page (`page.evaluate(fetch)`), never the
+  request context, when the public name is mapped.
 - Claude can NEVER be granted computer-use control of Claude's own app (a platform rule): a Claude Desktop take is the
   owner's to record; the session cuts it.
 - A macOS screen recording is variable-frame-rate: seeking into it lands 1–5 s off, unevenly. Transcode to constant

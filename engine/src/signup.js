@@ -1,27 +1,28 @@
 // src/signup.js — the sign-up pages (sprint 7, slice 7.2; docs/plan/PLATFORM.md §2 item 10): GET /signup (the form: email,
-// the operator's one-time code, the passphrase twice) and its done page (signed up, with no seat in the org this address
-// serves). The same front door as the sign-in (src/login.js authPage: one card, both worlds, the one accent), never a second
+// the operator's one-time code, the passphrase twice). The same front door as the sign-in (src/login.js authPage: one card, both worlds, the one accent), never a second
 // skin. No statement here: the sign-up itself is src/accounts.js signUp, the route POST /signup (src/index.js).
 //
 // signupProblem({ email, code, password, confirm }) -> "" or the field that is wrong (email · email_ascii: an address holding a
 // letter outside ASCII, src/accounts.js asciiEmail · code · passphrase · confirm),
 // checked BEFORE anything is read: it says nothing about which emails are allowed (an unallowed email and a wrong code are
 // one answer, src/accounts.js).
-// renderSignup({ error, brand, email }) · renderSignupDone({ brand }) -> the pages.
+// renderSignup({ error, brand, email }) -> the page (a sign-up with no seat answers the create-an-org page: src/orgpage.js).
 // THE INVITE PAGE (sprint 12, 12.3; src/accounts.js THE INVITE LINK): GET /signup?via=invite, the page an org's invite link opens
 // (<origin>/signup?via=invite#<token>). The token rides the URL's FRAGMENT, which the browser never sends: the page's script moves
 // it into the form (and drops it from the address bar and the history entry), and the form POSTs it. It sets no session: only the
 // POST, after the passphrase is set, does. inviteProblem({ invite, password, confirm }) -> "" or the field that is wrong (invite ·
 // passphrase · confirm), checked before anything is read; renderInvite({ error, brand, invite }) -> the page (invite: the token the
 // person already sent, kept in the form when a field was wrong, never on a refusal).
-import { esc, errorState } from "./ui.js";
+import { esc, errorState, uchanPose } from "./ui.js";
 import { DEFAULT_BRAND } from "./tenant.js";
 import { authPage, authBrand } from "./login.js";
 import { passphraseProblem, ACCOUNT_MIN_PASSPHRASE } from "./secrets.js";
 import { asciiEmail, normInvite, INVITE_TOKEN_RE } from "./accounts.js";
 
 // the one refusal (an email not allowed; a wrong, used, expired or revoked code): the same words for every case
-export const SIGNUP_REFUSED_WORDS = "That email and code do not open a sign-up. Check both with the person who gave you the code.";
+// (the sprint-21 review: the code is the operator's own, handed over for that email — a request's approval sends "You're in" and no
+// code, src/accounts.js THE ACCOUNT FLOW; never "from the person who invited you")
+export const SIGNUP_REFUSED_WORDS = "That email and code do not open a sign-up. Check both against what the sharingu operator gave you.";
 // the field problems, in the words the page shows (nothing here depends on the allowlist)
 export const SIGNUP_FIELD_WORDS = {
   email: "Type the email the code was given for.",
@@ -79,21 +80,10 @@ export function renderSignup(opts) {
     lede: "Sign up",
     banner: error ? errorState({ what: error }) : "",
     body,
-    footnote: `The email and code come from the person who invited you. Already signed up? <a href="/login">Sign in</a>`,
+    footnote: `Already signed up? <a href="/login">Sign in</a>`,
+    intro: { eyebrow: "Your place is open", heading: "Welcome to the beta.", lede: "Your sign-up code is the one the sharingu operator gave you, for your email. Joined the beta? Sign in instead: no code is needed.",
+      art: `<div class="art-pose" data-art="verify">${uchanPose({ pose: "verify", size: 240 })}</div>`, phone: false },
   });
-}
-
-// the done page: signed up, and no seat in the org this address serves (a new person: creating an org is the next step, GET
-// /orgs/new, sprint 7, 7.3)
-export function renderSignupDone(opts) {
-  const { brand = DEFAULT_BRAND } = opts || {};
-  const { title, wordmark } = brandOf(brand);
-  const body = `<div class="done" data-screen="signup-done" data-region="signed-up">
-      <p class="done-what">Your account is ready.</p>
-      <p class="done-why">It holds no seat in any org yet. Create your own org with it, or, if an org's admin adds you, <a href="/login">sign in</a> to reach theirs.</p>
-      <a class="done-action" href="/orgs/new">Create your org</a>
-    </div>`;
-  return authPage({ title: title.replace(/^Sign up/, "Signed up"), wordmark, lede: "You are signed up", body });
 }
 
 // ---- the invite page (sprint 12, 12.3) ----
@@ -145,6 +135,8 @@ export function renderInvite(opts) {
     banner: error ? errorState({ what: error }) : "",
     body,
     css: ".field[hidden]{display:none}",
-    footnote: `An admin of the org that invited you made this link; it works once. Already have an account? <a href="/login">Sign in</a>`,
+    footnote: `Already have an account? <a href="/login">Sign in</a>`,
+    intro: { eyebrow: "An invite", heading: "Join your team.", lede: "An admin of the org that invited you made this link; it works once.",
+      art: `<div class="art-pose" data-art="pair">${uchanPose({ pose: "pair", size: 240 })}</div>`, phone: false },
   });
 }

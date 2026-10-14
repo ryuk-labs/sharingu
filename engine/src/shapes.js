@@ -62,7 +62,7 @@ const str = (v) => typeof v === "string" && v.trim() !== "";
 // ---- the fields ----
 const COMMON = [
   f("lane", "text", { required: true, values: LANE_KEYS, hint: "the shape it is filed in: one of the lanes" }),
-  f("kind", "text", { hint: "what sort of contribution: note (a plain note, lane leader), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign" }),
+  f("kind", "text", { hint: "what sort of contribution: note (a plain note, lane leader: the default there, so a leader filing with no kind is a note), counter (disputes a contribution, a question or a goal), pr, screen, doc, social, outreach, update, content, campaign" }),
   f("what", "text", { required: true, hint: "what changed, in one line" }),
   f("why", "text", { required: true, hint: "why it matters" }),
   f("touches", "list", { hint: "the ids or areas it touches (leave it out for a plain note)" }),

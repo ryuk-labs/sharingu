@@ -1398,7 +1398,7 @@
   },
   "invalid_signup": {
    "meaning": "POST /signup (sprint 7, 7.2): the email and code do not open a sign-up. ONE answer for every case: the email was never allowed by the operator, or the code is wrong, already used, expired, revoked, or was given for another email. Nothing was written but the attempt, which counts in the account's lockout with the sign-in's failures.",
-   "nextAction": "Check the email and the code with the person who gave them to you; a lost, used or expired code is replaced only by the operator, by hand.",
+   "nextAction": "Check the email and the code against the email that brought the code (sharingu sends it when a place opens); a lost, used or expired code is replaced only by the operator.",
    "class": "not-authenticated"
   },
   "bad_signup": {
@@ -1427,6 +1427,63 @@
    "meaning": "POST /signup was flagged as arriving from a different site than this door (Sec-Fetch-Site, or Origin when that header is absent), the same guard as POST /login's cross_site_login. Refused before the body is read: nothing written, not even an attempt.",
    "nextAction": "Sign up from the door's own page; a script client sends neither header and is never flagged.",
    "class": "not-allowed"
+  },
+  "bad_request_access": {
+   "meaning": "POST /request-access (sprint 21, 21.1): a field is missing or malformed, checked before anything is written (`field`: name · email · company · role · team_size · website · linkedin · x · github · ai_tools · use_case, with a `note`): name, a plain-ASCII work email, company, role and a team size of 1, 2-10, 11-50, 51-200 or 201+ are required; website an http(s) address (a bare domain is taken), linkedin, x and github that service's address or a handle. It says nothing about who asked before or holds an account.",
+   "nextAction": "Fix the named field and send again; leave an optional field empty rather than guessing."
+  },
+  "cross_site_request_access": {
+   "meaning": "POST /request-access was flagged as arriving from a different site than this door (Sec-Fetch-Site, or Origin when that header is absent), the same guard as POST /login's cross_site_login. Refused before the body is read: nothing written.",
+   "nextAction": "Request access from the door's own page (GET /request-access); a script client sends neither header and is never flagged.",
+   "class": "not-allowed"
+  },
+  "email_unverified": {
+   "meaning": "POST /login (a script) for an email that holds no account yet, with the passphrase of its newest unverified join (sprint 21, 21.4a: the account flow): the email was never verified, so no account exists and nothing is signed in.",
+   "nextAction": "Open the verification link the join's email carries (POST /account/resend {email} sends a new one), type the passphrase there, then sign in."
+  },
+  "invalid_link": {
+   "meaning": "POST /account/verify or POST /account/reset with a link that opens nothing (sprint 21, 21.4a): expired (a verification works 24 hours, a reset 30 minutes), used already, never sent, or (a verification) a verified request of that email stands. ONE answer for every case; nothing written.",
+   "nextAction": "Ask for a new link: POST /account/resend {email} (a verification) or POST /account/forgot {email} (a reset)."
+  },
+  "wrong_passphrase": {
+   "meaning": "POST /account/verify with a live link but a passphrase that is not the one the join chose (sprint 21, 21.4a): the mailbox alone does not verify a request, so a stranger's join for an address cannot be completed by its owner's click. The attempt counts in the email's lockout; the request stays unverified.",
+   "nextAction": "Type the passphrase chosen when asking to join (8 failures in 15 minutes are 429 too_many_attempts)."
+  },
+  "google_join_expired": {
+   "meaning": "POST /request-access with google=1 (sprint 21, 21.4c: the form Google filled in) when this browser holds no live Google identity for it: the join ticket was used, is past its 30 minutes, or was made in another browser. HTTP 410; nothing written.",
+   "nextAction": "Continue with Google again (GET /auth/google/start?intent=join), or join with your email and a passphrase (POST /request-access without google)."
+  },
+  "account_exists": {
+   "meaning": "POST /request-access with google=1 (sprint 21, 21.4c) for an email an account holds by now (or a Google account another account is linked to): nothing was filed. HTTP 409.",
+   "nextAction": "Sign in instead: Continue with Google (GET /auth/google/start?intent=signin) or POST /login with the account's passphrase."
+  },
+  "bad_email": {
+   "meaning": "POST /account/resend or POST /account/forgot whose email is not one plain ASCII address (sprint 21, 21.4a). Checked before anything is read: it says nothing about which emails hold an account.",
+   "nextAction": "Send {email} as one plain address."
+  },
+  "bad_reset": {
+   "meaning": "POST /account/reset whose new passphrase breaks the account rule (field password: at least 12 characters) or whose confirm differs (field confirm) (sprint 21, 21.4a). Nothing written; the link stays live.",
+   "nextAction": "Choose a passphrase of at least 12 characters and send the same one as confirm."
+  },
+  "cross_site_verify": {
+   "meaning": "POST /account/verify flagged as arriving from a different site than this door (Sec-Fetch-Site, or Origin when that header is absent), the same guard as POST /login's cross_site_login (sprint 21, 21.4a). Refused before the body is read: nothing written.",
+   "nextAction": "Verify from the link's own page (GET /account/verify/<token>); a script client sends neither header."
+  },
+  "cross_site_resend": {
+   "meaning": "POST /account/resend flagged as arriving from a different site than this door, the same guard as POST /login's (sprint 21, 21.4a). Refused before the body is read: nothing sent.",
+   "nextAction": "Ask from the door's own page (GET /account/resend)."
+  },
+  "cross_site_forgot": {
+   "meaning": "POST /account/forgot flagged as arriving from a different site than this door, the same guard as POST /login's (sprint 21, 21.4a). Refused before the body is read: nothing sent.",
+   "nextAction": "Ask from the door's own page (GET /account/forgot)."
+  },
+  "cross_site_reset": {
+   "meaning": "POST /account/reset flagged as arriving from a different site than this door, the same guard as POST /login's (sprint 21, 21.4a). Refused before the body is read: nothing written.",
+   "nextAction": "Set the passphrase from the link's own page (GET /account/reset/<token>)."
+  },
+  "org_waiting": {
+   "meaning": "POST /orgs by an account whose own passphrase is right but whose email holds neither a used operator's code nor an approved request (sprint 21, 21.4a): a verified person still in line. The beta's orgs stay on the waitlist; nothing made but the proof's attempt.",
+   "nextAction": "Wait for the approval (the person's status: GET /account; the operator's allow --request sends \"You're in\"), then create the org."
   },
   "bad_org": {
    "meaning": "POST /orgs (sprint 7, 7.3): a field is missing or malformed, checked before anything is read (`field`: email · password · name · slug · project · you, with a `note`): the slug (the org's address) takes a-z, 0-9 and single dashes, 2 to 40 characters, never opening or closing on a dash; the first project's slug 2 to 30 the same way. It says nothing about accounts or about which addresses orgs hold.",

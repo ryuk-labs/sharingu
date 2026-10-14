@@ -15,7 +15,7 @@
 import { readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { smoke, expect, ownerKey, BASE } from "./lib.mjs";
+import { smoke, expect, ownerKey, BASE, patientFetch } from "./lib.mjs";
 import { checkDocs, contractInventory, inventoryOf, sameInventory, mcpAddress, DOCS_PAGE, SITE } from "../make-listing-docs.mjs";
 import { run as makeReviewerOrg, ROLES } from "../make-reviewer-org.mjs";
 import { walkCases, codesOf } from "../listing-walk.mjs";
@@ -40,7 +40,8 @@ smoke("listing · the docs page is the contract's (--check); it names every tool
   expect(!/<script\b|<link\b(?![^>]*rel="icon")|\ssrc="/i.test(page), "the page loads a script, a stylesheet or an asset");
   const hrefs = [...page.matchAll(/href="([^"#][^"]*)"/g)].map((m) => m[1]).filter((h) => !h.startsWith("data:") && !h.startsWith("mailto:"));
   expect(hrefs.every((h) => h.startsWith(SITE.home) || h === SITE.credit.href), () => `a link outside the site: ${hrefs.filter((h) => !h.startsWith(SITE.home)).join(", ")}`);
-  const r = await fetch(BASE + "/capabilities", { headers: { accept: "application/json", authorization: "Bearer " + ownerKey } });
+  const r = await patientFetch(BASE + "/capabilities", {   // a socket wrangler dropped is retried (lib.mjs patientFetch); an answer never is
+   headers: { accept: "application/json", authorization: "Bearer " + ownerKey } });
   const cap = inventoryOf(await r.json());
   expect(r.status === 200 && sameInventory(cap, inv), () => `GET /capabilities ${r.status}: not the contract's inventory (${cap.tools.length} tools, ${cap.routes.length} routes)`);
   return `--check green; ${named.length} tools and ${routes.length} routes, ${Object.keys(inv.failures).length} failure classes; the address ${mcpAddress()}; no script, stylesheet or asset; this worker's inventory = the contract's`;

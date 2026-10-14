@@ -12,7 +12,7 @@
 //   · a wrong code, a reused code, an expired code, a revoked code, an email never allowed: one answer (401 invalid_signup),
 //     nothing written but the attempt; and 8 wrong codes lock the email (a 9th wrong code then 429, still open), while its right
 //     code still signs up (sprint 8, 8.3a: a valid code bypasses the email's bucket)
-//   · the pages: GET /signup (the form) and its done page
+//   · the page: GET /signup (the form)
 import { execFile } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -153,17 +153,14 @@ smoke("signup · a wrong, a reused, an expired and a revoked code, and an email 
   return `${tries.length} refusals (wrong, reused, expired, revoked, never allowed, another email's code): one answer 401 invalid_signup, rows unchanged, ${tries.length} attempts counted; 8 wrong codes -> a 9th 429 (the code still open), the right one still signs up (${passed.status}, spent)`;
 });
 
-smoke("signup · the pages: GET /signup is the form (email, code, passphrase twice) and ?done=1 the signed-up page; no sign-up route mints a code", async () => {
+smoke("signup · the page: GET /signup is the form (email, code, passphrase twice); no sign-up route mints a code", async () => {
   const p = await fetch(`${process.env.SMOKE_URL.replace(/\/+$/, "")}/signup`, { headers: { accept: "text/html" } });
   const t = await p.text();
-  const d = await fetch(`${process.env.SMOKE_URL.replace(/\/+$/, "")}/signup?done=1`, { headers: { accept: "text/html" } });
-  const dt = await d.text();
-  expect(p.status === 200 && /name="email"/.test(t) && /name="code"/.test(t) && /name="password"/.test(t) && /name="confirm"/.test(t) && d.status === 200 && /You are signed up/.test(dt),
-    () => `GET /signup ${p.status}, ?done=1 ${d.status}`);
+  expect(p.status === 200 && /name="email"/.test(t) && /name="code"/.test(t) && /name="password"/.test(t) && /name="confirm"/.test(t), () => `GET /signup ${p.status}`);
   const c0 = rows("SELECT COUNT(*) AS n FROM signup_codes")[0].n;
   const tries = [await http("POST", "/signup", { key: ownerKey, body: { action: "allow", email: `signup-mint-${TAG}@smoke.local` } }),
     await http("POST", "/control", { key: ownerKey, form: { action: "allow", email: `signup-mint-${TAG}@smoke.local` } })];
   await settle();
   expect(rows("SELECT COUNT(*) AS n FROM signup_codes")[0].n === c0, () => `the owner's would-be mints: ${tries.map((r) => r.status).join("/")}, codes ${c0} -> more`);
-  return `GET /signup 200 (the four fields), ?done=1 200 (signed up); the org owner asking POST /signup and POST /control to allow an email minted nothing (${tries.map((r) => r.status).join("/")})`;
+  return `GET /signup 200 (the four fields); the org owner asking POST /signup and POST /control to allow an email minted nothing (${tries.map((r) => r.status).join("/")})`;
 });

@@ -326,7 +326,7 @@ smoke("review · the OAuth consent names where the code goes (the redirect's hos
   const q = new URLSearchParams({ response_type: "code", client_id: codes._client, redirect_uri: "https://attacker.example/callback/path", scope: "mcp:read mcp:write", state: "s", code_challenge: "x".repeat(43), code_challenge_method: "S256" });
   const page = await raw("GET", "/oauth/authorize?" + q, { accept: "text/html" });
   const host = (/<b data-redirect-host title="([^"]*)">([^<]*)<\/b>/.exec(page.text) || []);
-  const lede = /calling itself “Claude”/.test(page.text) && !/>Claude is asking/.test(page.text);
+  const lede = /calls itself “Claude”: that name is its own claim/.test(page.text) && !/>Claude is asking/.test(page.text) && !/data-client-logo/.test(page.text);   // 21.P: a name with another host gets no logo
   const scopes = (/<span data-scopes>([^<]*)<\/span>/.exec(page.text) || [])[1] || "";
   delete codes._client;
   const want = { "http elsewhere": "400 invalid_redirect_uri", "a custom scheme": "400 invalid_redirect_uri", "one good, one bad": "400 invalid_redirect_uri", https: "201", localhost: "201", "127.0.0.1": "201" };

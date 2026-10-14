@@ -1,0 +1,29 @@
+{
+  "_": "The desktop clients client-drive drives on the Mini (1920x1080 screen, points). frames: a window's [x, y, width, height]; points: screen points that hold only in that frame; quietBottom: the pixels at the window's foot (the composer, its caret) the wait leaves out; menus: [menu, item] of the app's menu bar. Found with `client-drive.mjs menus <client> <menu>` (read only).",
+  "chatgpt": {
+    "app": "ChatGPT",
+    "bundle": "com.openai.codex",
+    "path": "/Applications/ChatGPT.app",
+    "menus": { "newChat": ["File", "New Chat"], "sidebar": ["View", "Toggle Sidebar"] },
+    "frames": { "full": [283, 133, 1280, 820], "left": [0, 25, 960, 1055] },
+    "points": {
+      "full": {
+        "composer": [643, 859],
+        "setModel": [[1160, 910], [1172, 828], [1087, 755], [1119, 863]],
+        "setModelIs": "GPT-6 Sol, Medium: the composer's model button, then the picker's three steps (2026-10-13)"
+      }
+    },
+    "quietBottom": 220,
+    "connections": "codex"
+  },
+  "claude": {
+    "app": "Claude",
+    "bundle": "com.anthropic.claudefordesktop",
+    "path": "/Applications/Claude.app",
+    "menus": { "mode": ["Go", "Chat and Cowork"], "newChat": ["File", "New Session"], "sidebar": ["View", "Hide Sidebar"] },
+    "frames": { "full": [283, 133, 1280, 820], "left": [0, 25, 960, 1055] },
+    "points": {},
+    "quietBottom": 220,
+    "connections": "account"
+  }
+}

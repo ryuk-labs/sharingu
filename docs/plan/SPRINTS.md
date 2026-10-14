@@ -634,7 +634,7 @@ The spec: in video 5's recording a smaller model previewed and filed a note in o
   form's definition (data pulled through connectors counts). presets 57/0, plugin-codex 129/129, plugin-sync 48/48,
   `claude plugin validate --strict` passes. The starter shelf's two presets follow at the next ship.
 
-## Sprint 21 · First-time onboarding (planned; the owner's MCQ 2026-10-13)
+## Sprint 21 · First-time onboarding (branch `sprint-21`; the owner's MCQs 2026-10-13)
 
 The scope the owner ruled: a short splash (the owl, under 1.5 s, first visit only, skippable, off under reduced motion);
 request access with a profile (name, work email, company, role, team size; optional website, LinkedIn, X, GitHub, the
@@ -643,6 +643,147 @@ and the live beta count (N of 50, read from D1, never invented), what comes next
 "see the walkthrough" as a showcase call to action; the platform's sign-in and sign-up pages in the website's look;
 Google sign-in (sign-up, sign-in and the connect page; matched by email; still behind the operator's approval; the
 reviewer accounts keep their passphrase; needs the owner's Google Cloud OAuth client — none exists in sharingu today).
+
+The shape the owner ruled (the second MCQ, 2026-10-13): request access is a worker page writing D1 (the site's waitlist
+button links to it; its Telegram-only form retires); an unsigned visitor at `/` gets a small showcase (the splash once,
+U-chan, one line, "See the walkthrough", "Request access", "Sign in"), replacing `/` → `/login`; a request is approved
+by `operator allow --request <id>` (the cap checked, the code printed once, the org prefilled from the profile), and the
+worker reads the SAME beta count for "N of 50" (the cap and its SQL move from `tools/operator.mjs` into `src/`, one
+source); Google sign-in lands last in this sprint, once the owner's OAuth client exists. Each slice: the table, the
+write, the screen, a smoke case; the old checks that pinned the replaced pages' text are deleted, not re-pinned.
+
+- [x] **21.0 · The plain note's default** (the owner's ruling, 2026-10-13: a client sent lane leader, what and why, no
+  kind and no touches, and was told it needed touches). In lane `leader` a contribution with no kind IS a plain note:
+  `plainNoteKind` (`src/transmission.js`), applied by both filing doors (`src/core.js`) after the clientRef digest; any
+  other lane keeps what it sent. The `kind` hint says so (contract regenerated). day1-door 192/192; smoke 331/331 (s61: a member's kind-less,
+  touches-less leader contribution previews files, files and reads kind note; a code one still needs touches).
+- [x] **21.1 · Request access.** migrate-081: `access_requests` (the profile, its status, only the private link's token
+  HASH; one open request per email; a line index for 21.2) and migrate-072's two slug triggers re-made with
+  `request-access` reserved (the ship's preflight: `check-org-names --slugs` on live's slugs first). `GET/POST
+  /request-access` (public: the same-origin guard and the flood filter `/login` spends; a honeypot; nothing reads
+  accounts) and the private page at its link (retired by 21.4a: one way in, sign in); the FIRST request stands (the owner's
+  MCQ): a repeat changed nothing and landed on an asked page (21.4a: one answer for every email). The cap and its two counts moved to `src/beta.js`, which
+  `tools/operator.mjs` imports. request-access selftest 47/47; smoke 336/337, its one red the listing page generated
+  from the contract (regenerated, `make-listing-docs --check` green).
+- [x] **21.2 · You're in line.** The private page: the place (1 + the open requests before it, on the line index), the
+  live "N of 50 places taken" (`betaCount`; left out if unread, never guessed), what comes next and the walkthrough; an
+  approved request's page says its place is open, a declined one says so plainly; the asked page shows the count.
+  `operator requests` lists the line; `operator allow --request <id>` does what `allow --email` does (the cap, the code
+  once) and approves the request in the same batch. A web sign-up with no seat answers the org form filled in from the
+  email's approved request (company, name; read only after the code is proven, on migrate-081's email index), so
+  `/signup?done=1` and its page are gone. operator 91/91, request-access 60/60, signup 51/51; smoke 341/341 (s63).
+- [x] **21.3 · The showcase and the look.** `/` for a browser that signs no one in is the showcase (`src/showcase.js`:
+  the site's hero line, U-chan, Request access, the beta's places taken, the walkthrough's five videos and the channel as
+  new-tab YouTube links from `src/walkthrough.js`, the one list the request pages link to as `/#walkthrough`); the splash
+  the website's `uchan-nod` (1.2 s, first visit only, hidden until its script shows it, skipped by any key or tap, never
+  under reduced motion); a session still goes to its org, a script still gets 401. Every page before a session stands on
+  ONE frame in the website's look (`<body data-shell="front">`, Paper and Ink). The arch client regenerated (its
+  selftest had gone red at 21.1). showcase 23/23, wire 428/428, arch 111/111; smoke 345/345 (s64).
+- [x] **21.4 · Trusted requests, the data, Google sign-in** (the owner's MCQs, 2026-10-14). THE ACCOUNT FLOW (the owner's MCQ,
+  2026-10-14, the standard): Join the beta takes the profile AND a passphrase; ONE verification email (a random single-use
+  link, only its hash kept, 24 h, resent at most three a day); an unverified request holds no place and expires after 24 h;
+  signing in before verifying is refused with "check your inbox" and a resend; a verified, pending account signs in and
+  sees its status (a session with no seat: a schema change inside unshipped migrate-081); approval sends ONE "you're in"
+  email and the person signs in to the prefilled org form (no hand-carried code; the operator's code stays for the
+  operator's own and the reviewer accounts); a forgotten passphrase gets a reset link (the same answer whether or not the
+  account exists, 30 min, single use, three a day, every session signed out after); Google skips the verification email.
+  The private status link retires (one way: sign in). The team's alert per new request to acie@ryuklabs.io, cc
+  ryuk@ryuklabs.io (both verified once as Cloudflare destination addresses: free). About two emails a person.
+  EVERY email is sent From hello@sharingu.xyz (the owner, 2026-10-14): to a person, only verify, you're in and reset (counted);
+  to acie@ cc ryuk@, only a new application and the cap reached (counted in the cap too: the sprint end's review). A reply to hello@ is forwarded to acie@ryuklabs.io
+  (Cloudflare Email Routing, the owner's dashboard). DMARC stays as it is; no report feature. A request counts only once its
+  email is VERIFIED, by Google or by an emailed check (Cloudflare Email Service, the owner's MCQ 2026-10-14: our Workers Paid plan,
+  a `send_email` binding, from an address at sharingu.xyz; Cloudflare's page read 2026-10-14: 3,000 a month included on
+  Workers Paid, then $0.35 per 1,000, a beta). THE CAP (the owner, 2026-10-14: stay inside the 3,000): the worker counts its
+  sends per day in D1 and sends only while the last 31 days hold fewer than 2,900, so any billing cycle stays under 3,000;
+  at the cap it sends nothing, the page offers Google, and the owner is told once; three verification emails per address
+  a day and the flood filter, so no one burns the quota; the owner's own alerts one per request (counted in the cap too, the cap's own alert once a day past it: the sprint end's review);
+  the status page reached again by either. The data, approved as shown: two required consent boxes (the terms and
+  privacy; keeping the profile to review the request) and two optional (updates, a feedback call), each with its version
+  and time; the source (`?from=`, never a cookie); the request linked to its account (signed up at) and its org (created
+  at); a product step on the org form (the product and one line, its stage, what it is, the AI it connects, where the
+  work lives, what it wants first, the people joining in the first month); an operator page for org 1's admins (the
+  funnel, the line, each profile, Approve showing the code once); an email to the owner per new request (company, role, team
+  size, source: no name or email; Cloudflare's send to a verified address, free; the owner's MCQ 2026-10-14, not Telegram); a declined or abandoned profile
+  cleared after 90 days; the site's privacy page names it all. Google: sign-up, sign-in and the connect page, matched by
+  email, still behind the operator's approval; the reviewer accounts keep their passphrase (needs the owner's Google
+  Cloud OAuth client).
+- [x] **21.4a · The account flow** — committed with its proof (email 27/27, every selftest green, smoke 359/359, s67):
+  verify once (the confirm POST takes the join's passphrase), a seatless pending session in its own table
+  (`account_sessions`), "You're in" by `operator allow --request`, the reset signing out every session, ONE send function
+  under the cap (`mail_days`, `mail_addresses`), the emails From hello@sharingu.xyz, a local capture. For the review: a
+  distributed bot can still spend the cap (it then fails safe); a reset clears an invite-made account's one-org mark (the
+  reset email proves the address); the operator's live REST send has never run (its first send to ryuk@, counted in the cap).
+- [x] **21.4b · The data** — committed with its proof (data 53/53, every node selftest green, smoke 366/366, s68): consent
+  on the join (two required, two optional, each with its wording's version and time), the source (`?from=`, allowed
+  values only), the request linked to its account and its org, the product step on the org form (`org_profile`, in the
+  org's own batch), the operator page at `/<org 1>/operator` (org 1's owners only, the one 404 for anyone else; the
+  funnel in one statement; Approve under the cap, Decline), the cron's 90-day clearing (the profile emptied; status, dates,
+  team size, source and the consent record kept).
+- [x] **21.4c · Google sign-in** — committed with its proof (google 77/77, every node selftest green, smoke 371/371, s69):
+  the OpenID Connect code flow (state, nonce and PKCE in KV for 10 minutes, the state's cookie against login CSRF; the
+  id_token RS256 against Google's cached keys, iss, aud and azp, exp, the nonce, `email_verified`); matched by email, the
+  Google subject linked on first use and pinned; a new person's join with the email locked, filed verified; the connect
+  page; the client in OAUTH_KV by `operator set-google-client` (never env); a fake IdP locally (`GOOGLE_LOCAL_IDP`,
+  loopback only, never in wrangler.jsonc). Creating the org takes the passphrase OR a Google sign-in under 10 minutes old
+  (the owner, 2026-10-14; `account_sessions.proven_how/proven_at`). At the ship: `node tools/operator.mjs
+  set-google-client --file ~/.sharingu/google-oauth.env --live --config wrangler.jsonc --confirm-live ryuklabs-agent-r`.
+- [x] **21.4's order** (the main session, 2026-10-14): three builders one after another, each briefed, reviewed, smoked and
+  committed: 21.4a the account flow (verify once, the passphrase, the reset, the cap, the alerts, the emails in the
+  website's look with a plain-text twin); 21.4b the data (consent, the source, the request -> account -> org link, the
+  product step, the operator page, the 90-day clearing); 21.4c Google sign-in (the code flow with PKCE, state and nonce,
+  only an email Google says it verified, the client in the worker's KV by an operator command). Then the sprint end.
+- [x] **21.P · The journey, polished** (the owner, 2026-10-14: the website's join, the sign-in, the onboarding, the status
+  check, the walkthrough and the nav clean and clear). One audit of every screen from the site's nav to the first Home,
+  both worlds, 1440 and 390, then the fixes. Ruled: ONE word for the main button on the site and in the app, "Join the
+  beta" (the form's own title stays "Request access"); "Check my request" sits beside Sign in (one door, two paths: the
+  private link now, Google or an emailed link after 21.4).
+  The audit (2026-10-14, 25 findings, `engine/.runs/polish-audit/`): ALL five bundles ruled (the owner's MCQ): the words
+  (one button word, the beta's 50 said one way, sign-up's code from the operator, a calm OAuth heading), one accent per
+  view, the status pages (the place prominent, the link copied, a shorter form, `operator decline`), after the org
+  (signed in at once: the account passphrase is proven by the create, an adversarial read before it ships; the done
+  page leads with Connect your AI, the owner key folded behind "Show the owner key"; the first Home opens on Connect;
+  Connect leads with Claude and ChatGPT; the org's address suggested from the company), the walkthrough and the doors
+  (the same five titles and order as the site, playing in place; Sign in, Check my request and the way back to the
+  site on every front page). Out: YouTube's auto-captions (the owner, YouTube Studio), the site's buttons (after the
+  ship), a lost status link (21.4).
+  And (the owner, 2026-10-14): every page in the website's own branding, quality and structure, never drifting: composed
+  scenes rich in the site's assets (U-chan's poses, the marks, the clients' logos), not bare forms; one primary action and
+  a clear "where you are, what is next" on each. No local address in anything shown: screenshots taken under the public
+  host name.
+  DONE: E1 (a81db1f75: the words, one accent, the status pages, the walkthrough playing in place, the doors, the
+  connect page's logo only on the client's own host) and E2 (signed in at once after creating an org: the one session
+  mint POST /login uses, `openSession`; the done page leads with Connect your AI, the owner key folded; Home opens on
+  "Connect an AI" until the first filing; Control > Connect leads with Claude and ChatGPT; the org's address suggested
+  from its name). orgs 42/42, wire 428/428, showcase 32/32; smoke 355/355 (s65, s66). The adversarial read of the sign-in
+  change rides the sprint-end review.
+- [ ] **The sprint end's fix list** (found in review, folded here so none is lost): the org form's top bar (DONE in the review's
+  fixes: Sign out for an account or an org session, as every account page); the site's privacy page gains 21.4b's paragraph (in the site's `journey-polish` branch,
+  shipped with the buttons): "When you join the beta we collect your name, work email, company, role and team size, and
+  anything optional you add (website, LinkedIn, X, GitHub, the AI tools you use, one line on your use). We record which
+  page sent you, and your consent: you agree to our Terms and Privacy policy and that we may keep this profile to review
+  your request and email you about the beta; product updates and a feedback call are your choice. Each consent is stored
+  with the wording's version and its time. When you create an org we ask what you'll build (product, stage, tools, team)
+  to set it up and improve the beta. Only you and the sharingu operator see this. If your request is declined, or
+  approved but no org is created, we clear your profile 90 days later and keep only anonymous counts. To ask for
+  deletion, email acie@ryuklabs.io."
+- [ ] **The sprint end's review fixes** (the independent review, 2026-10-14; the main session smokes and commits them): the gate's
+  four reds (parity's Google doors, the brand gate — the Google client's origins now ride the client in OAUTH_KV, from the config's
+  custom domains — the code atlas, the cross-org suite's stale mutation); Google answers only for its own mailboxes (gmail.com,
+  googlemail.com, a Workspace `hd`), any other email's first link takes the account's passphrase (POST /auth/google/link); THE FIRST
+  LINK IS A RESET (every session, reset link and connected app ends; an invite-set passphrase cleared, its seats waiting for the
+  holder's yes); a reset unlinks Google; the team's alerts TO acie@ CC ryuk@ and counted in the cap (the cap's own alert past it,
+  once a day); an add-person shell is no one's (it joins, by email or Google); the operator page in a browser only; a wrong sign-in
+  costs the same hashes whoever holds the email; the per-address limit by mailbox; a Google-only person seated elsewhere steps up
+  by an org session; org_profile in the scoped-data gate; idx_signup_used; migrate-081's partial-run recovery; a cleared request's
+  own words on /account; the sign-up code's words; the threat notes (engine/CLAUDE.md).
+- [x] **The sprint end's proofs** (2026-10-14): smoke 371/371, `sh gate.sh` GREEN, every node selftest green, evals 42/42
+  (auth-coverage knows the operator page answers the one 404, a hidden door), sims 10/10, tabs-verify 40/40; the ONE
+  independent review (no blocker; 5 should-fix and 12 nits, all fixed in 8639f6daa). The ship's preflight: live's slugs
+  against `request-access` (the one new reserved name; `account`, `auth`, `assets`, `operator` reserved since sprint 7).
+- [ ] **The sprint end.** The site's access buttons move to the worker's request page and the site's waitlist page redirects there,
+  merged right after the ship (live must answer the page first), together with the site's 21.P polish (branch
+  `journey-polish`, 29e6a17, verify 260/260; held by the owner, 2026-10-14).
 
 ## Sprint 19 · The write door split (branch `sprint-19`, opened 2026-10-13; the owner's MCQs of the day) — SHIPPED 2026-10-13
 

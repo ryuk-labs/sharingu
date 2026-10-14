@@ -39,8 +39,28 @@
 //        suite org (plan suite). RED then GREEN: counted, the 50th is refused
 //   O23 · an expired, used or revoked code holds no place; a code whose holder already made an org is counted once (by the org),
 //        and that holder's allow takes no new place. RED then GREEN for each count
-//   O24 · BETA_ORG_CAP is one constant, 50, under the owner's ruling (2026-10-10); no file of src/ names it (the worker does not
-//        enforce it)
+//   O24 · BETA_ORG_CAP is one constant, 50, in src/beta.js under the owner's ruling (2026-10-10; sprint 21 moved it there, the one
+//        source the worker's request page reads too); the tool imports it; no other file of src/ names it (the worker enforces it
+//        nowhere but where the operator approves: the operator page's Approve, sprint 21, 21.4b, counts the same places by betaCount
+//        and refuses at the cap, and past it only the terminal approves)
+//   O25 · (sprint 21, 21.2; 21.4a) requests: the beta's places at its head (an approved request with no org holds one), then the
+//        OPEN (verified) requests in line order (verified_at, then id: two at the same instant in id order), each with its place, id,
+//        company, role, team size in words, name, email and when it was verified; an unverified, approved or declined request is
+//        not listed; no code. Each place equals the worker's REQUEST_PLACE_SQL
+//   O26 · allow --request <id> (21.4a: no code): the open request read, the cap's line, the request approved in its ONE guarded
+//        write (approved_at = updated_at), the next request moves up to place 1; ONE "You're in" to the request's email in the
+//        capture (the sign-in link at --origin, its company, no code), COUNTED in the cap (mail_days) and never held to the
+//        per-address limit (mail_addresses untouched); no signup code minted. A request decided between the read and the write:
+//        refused, nothing written, no email (RED then GREEN: the status guard removed approves a request already declined)
+//   O27 · the refusals, nothing written and nothing sent (exit 1): an id that is no request, a malformed id, an unverified, an
+//        approved and a declined request; at 50 places the cap refuses it and the request stays OPEN (--beyond-cap approves it).
+//        Usage (exit 2, nothing opened): --request with --email, --request with no id, --local without --origin, --live with no
+//        sharingu.xyz route and no --origin. At the email cap (2,900 in the window) the approval stands, the line says the email was
+//        NOT sent, and the team's cap alert is captured once
+//   O28 · decline --request <id> (sprint 21, 21.P): the open request declined in one guarded write (no code, no approval stamped),
+//        the ones after it move up; declined already, approved, no such id, a malformed id refused, nothing written; no request,
+//        an email or no id a usage error (2, nothing opened); a request approved between the read and the write stays approved
+//        (RED then GREEN: the status guard removed declines it)
 // Exit 1 on any failure. A gate step.
 import { DatabaseSync } from "node:sqlite";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -49,7 +69,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 
 const ENGINE = dirname(dirname(fileURLToPath(import.meta.url)));
-const { d1 } = await import(pathToFileURL(join(ENGINE, "tools", "fixtures", "sqlite-worker.mjs")).href);
+const { d1, kv } = await import(pathToFileURL(join(ENGINE, "tools", "fixtures", "sqlite-worker.mjs")).href);
+const { captureMailer, MAIL_CAPTURE_PREFIX, MAIL_CAP, windowStartOf } = await import(pathToFileURL(join(ENGINE, "src", "email.js")).href);
+// mailsOf(K) -> the captured emails, in the order sent (the keys' own order)
+const mailsOf = async (K) => (await Promise.all(((await K.list({ prefix: MAIL_CAPTURE_PREFIX })).keys || []).map(async (k) => JSON.parse(await K.get(k.name)))));
 const OP = await import(pathToFileURL(join(ENGINE, "tools", "operator.mjs")).href);
 const { signupCodeHash } = await import(pathToFileURL(join(ENGINE, "src", "accounts.js")).href);
 const DAY = 24 * 60 * 60 * 1000;
@@ -242,10 +265,33 @@ const cliOn = (db) => async (...argv) => {
 // ======== sprint 8, 8.5 · the orgs, their plans, the suspension (each claim RED on a mutant copy, then GREEN) ========
 // a mutant copy of tools/operator.mjs (beside it, so its relative imports resolve), loaded once and removed
 const mutantsLeft = [];
+// mutantOp(pairs) -> a scratch copy of the tool with each [from, to] applied: in tools/operator.mjs, in src/beta.js (the beta's
+// places, sprint 21: a copy of it beside the tool, which the scratch tool imports in its place — src/beta.js is pure, it imports
+// nothing) or in src/operatorread.js (the request statements the operator page shares, sprint 21, 21.4b: a copy beside it in src/,
+// so its own relative imports resolve, which the scratch tool imports in its place)
 async function mutantOp(pairs) {
-  let t = readFileSync(join(ENGINE, "tools", "operator.mjs"), "utf8");
-  for (const [from, to] of pairs) { if (!t.includes(from)) throw new Error(`mutantOp: operator.mjs does not hold ${from.slice(0, 70)}`); t = t.split(from).join(to); }
-  const path = join(ENGINE, "tools", `.operator-mutant-${Math.random().toString(36).slice(2)}.mjs`);
+  let t = readFileSync(join(ENGINE, "tools", "operator.mjs"), "utf8"), b = readFileSync(join(ENGINE, "src", "beta.js"), "utf8"), beta = false;
+  let r = readFileSync(join(ENGINE, "src", "operatorread.js"), "utf8"), reads = false;
+  for (const [from, to] of pairs) {
+    if (t.includes(from)) t = t.split(from).join(to);
+    else if (b.includes(from)) { b = b.split(from).join(to); beta = true; }
+    else if (r.includes(from)) { r = r.split(from).join(to); reads = true; }
+    else throw new Error(`mutantOp: neither operator.mjs, src/beta.js nor src/operatorread.js holds ${from.slice(0, 70)}`);
+  }
+  const tag = Math.random().toString(36).slice(2);
+  if (reads) {
+    const rp = join(ENGINE, "src", `.operatorread-mutant-${tag}.js`);
+    writeFileSync(rp, r); mutantsLeft.push(rp);
+    if (!t.includes('"../src/operatorread.js"')) throw new Error("mutantOp: operator.mjs no longer imports ../src/operatorread.js");
+    t = t.split('"../src/operatorread.js"').join(`"../src/.operatorread-mutant-${tag}.js"`);
+  }
+  if (beta) {
+    const bp = join(ENGINE, "tools", `.beta-mutant-${tag}.mjs`);
+    writeFileSync(bp, b); mutantsLeft.push(bp);
+    if (!t.includes('"../src/beta.js"')) throw new Error("mutantOp: operator.mjs no longer imports ../src/beta.js");
+    t = t.split('"../src/beta.js"').join(`"./.beta-mutant-${tag}.mjs"`);
+  }
+  const path = join(ENGINE, "tools", `.operator-mutant-${tag}.mjs`);
   writeFileSync(path, t); mutantsLeft.push(path);
   return import(pathToFileURL(path).href);
 }
@@ -262,13 +308,14 @@ const world = () => {
 };
 const planRow = (db, p) => db.prepare("SELECT people, projects, items_month, calls_day, burst_minute, storage_bytes FROM plan_limits WHERE plan = ?").get(p);
 const orgOf = (db, id) => db.prepare("SELECT * FROM org WHERE id = ?").get(id);
-const cliRec = (db, recordDir, DB = null) => async (...argv) => {
+// K: the capture an allow --request writes its email to (21.4a: the local capture's own shape, src/email.js captureMailer)
+const cliRec = (db, recordDir, DB = null, K = kv()) => async (...argv) => {
   const said = [], errs = [];
   let opened = 0;
   const dir = mkdtempSync(join(tmpdir(), "operator-selftest-")), cfg = join(dir, "wrangler.jsonc");
-  writeFileSync(cfg, `{ "name": "t", "d1_databases": [{ "binding": "DB", "database_name": "test-db", "database_id": "00000000-0000-0000-0000-000000000000" }] }\n`);
+  writeFileSync(cfg, `{ "name": "t", "routes": [{ "pattern": "agent.sharingu.xyz", "custom_domain": true }], "d1_databases": [{ "binding": "DB", "database_name": "test-db", "database_id": "00000000-0000-0000-0000-000000000000" }] }\n`);
   try {
-    const rc = await OP.run(argv.map((a) => (a === "CFG" ? cfg : a === "DIR" ? dir : a)), { recordDir, open: async () => { opened++; return { DB: DB || d1(db), database: "test:db", close: async () => {} }; }, say: (x) => said.push(String(x)), err: (x) => errs.push(String(x)) });
+    const rc = await OP.run(argv.map((a) => (a === "CFG" ? cfg : a === "DIR" ? dir : a)), { recordDir, open: async () => { opened++; return { DB: DB || d1(db), database: "test:db", mailer: captureMailer(K), close: async () => {} }; }, say: (x) => said.push(String(x)), err: (x) => errs.push(String(x)) });
     return { rc, said, errs, opened };
   } finally { rmSync(dir, { recursive: true, force: true }); }
 };
@@ -286,7 +333,7 @@ try {
       `O11 · list-orgs: each org's id, name, path name, plan, operating mark, and its usage by the check's own definitions (org 3: people ${l3 && l3.people.used}/${l3 && l3.people.allowed}, projects ${l3 && l3.projects.used}/${l3 && l3.projects.allowed}, stored ${l3 && l3.storage_bytes.used})`);
     const c = await cliRec(db, recDir)("list-orgs", "--local", "DIR", "--config", "CFG"), cj = await cliRec(db, recDir)("list-orgs", "--live", "--config", "CFG", "--confirm-live", "test-db", "--json");
     let j = null; try { j = JSON.parse(cj.said.join("\n")); } catch { j = null; }
-    ok(c.rc === 0 && /^the beta's places: 1 of 50 taken \(1 org, 0 open codes with no org yet\), 49 left/.test(c.said[0]) && /^3 orgs on test:db:/.test(c.said[1]) && c.said.some((x) => /^ {2}3 {2}Acme {2}\/\S+ {2}plan free/.test(x) && /people 2\/10 · projects 1\/3/.test(x)) && cj.rc === 0 && j && j.orgs.length === 3,
+    ok(c.rc === 0 && /^the beta's places: 1 of 50 taken \(1 org, 0 open codes and 0 approved requests with no org yet\), 49 left/.test(c.said[0]) && /^3 orgs on test:db:/.test(c.said[1]) && c.said.some((x) => /^ {2}3 {2}Acme {2}\/\S+ {2}plan free/.test(x) && /people 2\/10 · projects 1\/3/.test(x)) && cj.rc === 0 && j && j.orgs.length === 3,
       `O11 · the CLI prints the beta's places at its head (12.7), then one entry per org with its usage, --json answers the same (${c.rc}/${cj.rc})`);
   }
   // O12 · set-plan
@@ -571,7 +618,7 @@ try {
       const db = fill(world(), { orgs: 48, codes: 1 });
       const p = await OP.betaPlaces(d1(db));
       const a = await cliRec(db, recDir)("allow", "--email", "fiftieth@example.org", "--local", "DIR", "--config", "CFG");
-      ok(p.orgs === 48 && p.codes === 1 && p.left === 1 && a.rc === 0 && a.said.some((x) => /^ {2}the beta's places: 0 of 50 left after this one \(48 orgs, 1 open code before it\)$/.test(x)) && /^ {2}code: /.test(a.said[a.said.length - 2]),
+      ok(p.orgs === 48 && p.codes === 1 && p.left === 1 && a.rc === 0 && a.said.some((x) => /^ {2}the beta's places: 0 of 50 left after this one \(48 orgs, 1 open code and 0 approved requests with no org yet before it\)$/.test(x)) && /^ {2}code: /.test(a.said[a.said.length - 2]),
         `O21 · at 49 places taken (48 orgs, 1 open code) the 50th allow is minted and says 0 of 50 left (${a.rc}: ${(a.said.find((x) => /places/.test(x)) || "").trim()})`);
       const before = allText(db), rows = codeRows(db);
       const b = await cliRec(db, recDir)("allow", "--email", "fifty-first@example.org", "--local", "DIR", "--config", "CFG");
@@ -583,7 +630,7 @@ try {
       const l = await cliRec(db, recDir)("list", "--local", "DIR", "--config", "CFG"), lo = await cliRec(db, recDir)("list-orgs", "--local", "DIR", "--config", "CFG");
       const lj = await cliRec(db, recDir)("list", "--local", "DIR", "--config", "CFG", "--json");
       let j = null; try { j = JSON.parse(lj.said.join("\n")); } catch { j = null; }
-      const HEAD = /^the beta's places: 51 of 50 taken \(48 orgs, 3 open codes with no org yet\), 0 left \(1 beyond the cap\)/;
+      const HEAD = /^the beta's places: 51 of 50 taken \(48 orgs, 3 open codes and 0 approved requests with no org yet\), 0 left \(1 beyond the cap\)/;
       ok(HEAD.test(l.said[0]) && HEAD.test(lo.said[0]) && j && j.places.taken === 51 && j.places.cap === 50 && j.allowed.length === 3,
         `O21 · list and list-orgs say the same count at their head, list --json carries it (${l.said[0].slice(0, 80)}…)`);
       const RED = await mutantOp([["    if (places.beyond && !beta.beyond) return { refused:", "    if (false) return { refused:"]]);
@@ -632,12 +679,135 @@ try {
       const red2 = await tryAllow(RED2, founder(fill(world(), { orgs: 48 })), "next@example.org");
       ok(red2.r.refused && !red2.written, `O23 · RED then GREEN: counting the founder's code beside its org refuses the 50th (${red2.r.places && red2.r.places.orgs} orgs, ${red2.r.places && red2.r.places.codes} codes); the real tool allows it`);
     }
-    // O24 · the cap is ONE constant, 50, the owner's ruling named beside it; the worker holds no copy of it
+    // O24 · the cap is ONE constant, 50, the owner's ruling named beside it, in src/beta.js (sprint 21, 21.1: the worker's request page
+    // reads the same count); the operator's tool holds no copy of it, and the worker does not enforce it (no other file of src/
+    // names the cap, none names beyond-cap)
     {
-      const src = readFileSync(join(ENGINE, "tools", "operator.mjs"), "utf8");
-      const inSrc = readdirSync(join(ENGINE, "src")).filter((f) => f.endsWith(".js")).filter((f) => /BETA_ORG_CAP|beyond-cap/.test(readFileSync(join(ENGINE, "src", f), "utf8")));
-      ok(OP.BETA_ORG_CAP === 50 && (src.match(/export const BETA_ORG_CAP = /g) || []).length === 1 && /the owner's ruling, 2026-10-10[^\n]*\n(?:\/\/[^\n]*\n){0,3}export const BETA_ORG_CAP = 50;/.test(src) && inSrc.length === 0,
-        `O24 · BETA_ORG_CAP is one constant (${OP.BETA_ORG_CAP}) under the owner's ruling (2026-10-10); no file of src/ names it (${inSrc.length})`);
+      const tool = readFileSync(join(ENGINE, "tools", "operator.mjs"), "utf8"), beta = readFileSync(join(ENGINE, "src", "beta.js"), "utf8");
+      const named = readdirSync(join(ENGINE, "src")).filter((f) => f.endsWith(".js") && f !== "beta.js").filter((f) => /BETA_ORG_CAP|beyond-cap/.test(readFileSync(join(ENGINE, "src", f), "utf8")));
+      ok(OP.BETA_ORG_CAP === 50 && (beta.match(/export const BETA_ORG_CAP = /g) || []).length === 1 && /the owner's ruling, 2026-10-10[^\n]*\n(?:\/\/[^\n]*\n){0,3}export const BETA_ORG_CAP = 50;/.test(beta)
+        && !/BETA_ORG_CAP = /.test(tool) && /from "\.\.\/src\/beta\.js"/.test(tool) && named.length === 0,
+        `O24 · BETA_ORG_CAP is one constant (${OP.BETA_ORG_CAP}) in src/beta.js under the owner's ruling (2026-10-10); the tool imports it; no other file of src/ names it (${named.join(", ") || "none"})`);
+    }
+  }
+  // ======== sprint 21, 21.2 / 21.4a · the requests for a place: requests, allow --request (each guard RED on a mutant copy, then GREEN) ========
+  {
+    const { REQUEST_PLACE_SQL } = await import(pathToFileURL(join(ENGINE, "src", "requestaccess.js")).href);
+    // ask(db, id, email, at, status): one request as the worker leaves it once its email is verified (verified_at: its place)
+    const ask = (db, id, email, at, status = "open") => db.prepare("INSERT INTO access_requests (id, email, name, company, role, team_size, status, verified_at, created_at, updated_at) " +
+      "VALUES (?, ?, ?, ?, 'Founder', '2-10', ?, ?, ?, ?)").run(id, email, `Name ${id}`, `Company ${id}`, status, status === "unverified" ? null : at, at, at);
+    const line = (db) => {
+      ask(db, "r-b", "b@ask.test", "2026-10-13T10:00:00.000Z"); ask(db, "r-a", "a@ask.test", "2026-10-13T10:00:00.000Z");   // the same instant: id order
+      ask(db, "r-c", "c@ask.test", "2026-10-13T11:00:00.000Z"); ask(db, "r-0", "z@ask.test", "2026-10-13T09:00:00.000Z");
+      ask(db, "r-done", "done@ask.test", "2026-10-13T08:00:00.000Z", "approved"); ask(db, "r-no", "no@ask.test", "2026-10-13T08:30:00.000Z", "declined");
+      ask(db, "r-un", "un@ask.test", "2026-10-13T07:00:00.000Z", "unverified");
+      return db;
+    };
+    const reqOf = (db, id) => db.prepare("SELECT status, approved_at, updated_at FROM access_requests WHERE id = ?").get(id);
+    const placeOf = (db, id) => { const r = db.prepare("SELECT id, verified_at FROM access_requests WHERE id = ?").get(id); return db.prepare(REQUEST_PLACE_SQL).get(r.verified_at, r.id).place; };
+    const counted = (db) => Number((db.prepare("SELECT COALESCE(SUM(n), 0) AS n FROM mail_days").get() || {}).n);
+    const ORIGIN = ["--origin", "https://agent.example.test"];
+    // O25 · requests
+    {
+      const db = line(world());
+      const c = await cliRec(db, recDir)("requests", "--local", "DIR", "--config", "CFG");
+      const ids = c.said.slice(2).map((x) => (/^ {2}(\d+) {2}(\S+) /.exec(x) || []).slice(1, 3).join(":"));
+      ok(c.rc === 0 && /^the beta's places: 2 of 50 taken \(1 org, 0 open codes and 1 approved request with no org yet\)/.test(c.said[0]) && /^4 open requests on test:db, in line order/.test(c.said[1]) && ids.join(" ") === "1:r-0 2:r-a 3:r-b 4:r-c",
+        `O25 · requests: the places at its head (the approved request holds one: ${c.said[0].slice(0, 90)}), then the open ones in line order, ties by id (${ids.join(" ")})`);
+      ok(c.said[3] === "  2  r-a  Company r-a · Founder · 2 to 10  Name r-a <a@ask.test>  verified 2026-10-13T10:00:00.000Z" && !c.said.some((x) => /r-done|r-no |r-un|code: /.test(x)),
+        `O25 · each line: place, id, company, role, team size in words, name, email, when verified; no unverified, approved or declined request, no code (${c.said[3]})`);
+      ok(["r-0", "r-a", "r-b", "r-c"].every((id, i) => placeOf(db, id) === i + 1), "O25 · each listed place equals the worker's REQUEST_PLACE_SQL");
+    }
+    // O26 · allow --request approves, and sends its one email
+    {
+      const db = line(world()), K = kv();
+      const c = await cliRec(db, recDir, null, K)("allow", "--request", "r-0", ...ORIGIN, "--local", "DIR", "--config", "CFG");
+      const row = reqOf(db, "r-0"), mails = await mailsOf(K);
+      const m = mails[0] || {};
+      ok(c.rc === 0 && /^ {2}request r-0: Name r-0, Company r-0 <z@ask\.test>, place 1 in line$/.test(c.said[0]) && /request r-0 approved/.test(c.said.join(" ")) && !c.said.some((x) => /code: /.test(x))
+        && c.said.some((x) => /the beta's places: \d+ of 50 left after this one/.test(x)) && c.said.some((x) => /"You're in" sent to z@ask\.test \(the local capture, counted in the cap\)/.test(x)),
+        `O26 · allow --request: the request said, the cap's line, "approved", the email sent, no code (${c.rc}: ${c.said.slice(1).join(" | ").slice(0, 200)})`);
+      ok(row.status === "approved" && row.approved_at && row.updated_at === row.approved_at && rowsOf(db).length === 0, `O26 · one guarded write: the request approved (${row.status} ${row.approved_at}), no signup code minted`);
+      ok(mails.length === 1 && m.to === "z@ask.test" && m.subject === "You're in" && m.from && m.from.email === "hello@sharingu.xyz" && /https:\/\/agent\.example\.test\/login/.test(m.text) && /Company r-0/.test(m.text)
+        && /<a href="https:\/\/agent\.example\.test\/login"/.test(m.html) && !/[A-Z0-9]{5}-[A-Z0-9]{5}/.test(m.text) && counted(db) === 1 && db.prepare("SELECT COUNT(*) AS n FROM mail_addresses").get().n === 0,
+        `O26 · ONE "You're in" from hello@sharingu.xyz to the request's email: sign in at --origin, its company, no code; counted in the cap (${counted(db)}), not per address`);
+      ok(placeOf(db, "r-a") === 1 && placeOf(db, "r-c") === 3, "O26 · the next request moves up to place 1");
+      // a request declined between the read and the write: the guarded write approves nothing
+      const raced = (M, rdb) => { const DB = d1(rdb); return M.approveRequest({ prepare: (q) => { if (/^UPDATE access_requests SET status = 'approved'/.test(q)) rdb.prepare("UPDATE access_requests SET status = 'declined' WHERE id = 'r-0'").run(); return DB.prepare(q); } }, { id: "r-0", email: "z@ask.test" }); };
+      const gdb = line(world()), g = await raced(OP, gdb);
+      ok(g.refused && /decided since it was read/.test(g.refused) && reqOf(gdb, "r-0").status === "declined", `O26 · a request declined between the read and the write: refused, it stays declined (${(g.refused || "").slice(0, 60)})`);
+      const RED = await mutantOp([["\"UPDATE access_requests SET status = 'approved', approved_at = ?2, updated_at = ?2 WHERE id = ?1 AND status = 'open'\";", "\"UPDATE access_requests SET status = 'approved', approved_at = ?2, updated_at = ?2 WHERE id = ?1\";"]]);
+      const rdb = line(world());
+      await raced(RED, rdb);
+      ok(reqOf(rdb, "r-0").status === "approved", `O26 · RED: with the status guard removed a declined request is approved (${reqOf(rdb, "r-0").status})`);
+    }
+    // O27 · the refusals
+    {
+      const db = line(world()), K = kv();
+      const before = allText(db);
+      const run = (...a) => cliRec(db, recDir, null, K)("allow", ...a, ...ORIGIN, "--local", "DIR", "--config", "CFG");
+      const r = { none: await run("--request", "r-nobody"), odd: await run("--request", "r'; DROP"), un: await run("--request", "r-un"), done: await run("--request", "r-done"), no: await run("--request", "r-no") };
+      ok(Object.values(r).every((x) => x.rc === 1 && /^refused \(nothing written\)/.test(x.errs[0] || "")) && allText(db) === before && (await mailsOf(K)).length === 0
+        && /no request r-nobody/.test(r.none.errs[0]) && /not a request's id/.test(r.odd.errs[0]) && /is unverified, not open/.test(r.un.errs[0]) && /is approved, not open/.test(r.done.errs[0]) && /is declined, not open/.test(r.no.errs[0]),
+        `O27 · no such id, a malformed id, unverified, approved, declined: each refused, nothing written, nothing sent (${Object.values(r).map((x) => x.rc).join("/")})`);
+      const cr = cliRec(db, recDir, null, K);
+      const u = [await cr("allow", "--request", "r-a", "--email", "a@ask.test", ...ORIGIN, "--local", "DIR", "--config", "CFG"), await cr("allow", "--request", ...ORIGIN, "--local", "DIR", "--config", "CFG"),
+        await cr("allow", "--request", "r-a", "--local", "DIR", "--config", "CFG")];
+      ok(u.every((x) => x.rc === 2 && x.opened === 0), `O27 · --request with --email, with no id, or --local without --origin: usage errors that open nothing (${u.map((x) => x.rc).join("/")})`);
+      ok(OP.linkOrigin({ routes: [{ pattern: "agent.ryuklabs.io", custom_domain: true }, { pattern: "agent.sharingu.xyz", custom_domain: true }] }, { live: true }) === "https://agent.sharingu.xyz"
+        && OP.linkOrigin({ routes: [{ pattern: "agent.ryuklabs.io", custom_domain: true }] }, { live: true }) === null && OP.linkOrigin({}, { live: false }) === null
+        && OP.linkOrigin({}, { given: "javascript:alert(1)" }) === null && OP.linkOrigin({}, { given: "http://127.0.0.1:8899/x" }) === "http://127.0.0.1:8899",
+        "O27 · the links' origin: --live the config's sharingu.xyz route, else none; --origin an http(s) address's origin only");
+      // (the sprint-21 review) the Google client's origins: the config's custom domains, the worker naming none of its own
+      const live2 = { routes: [{ pattern: "agent.ryuklabs.io", custom_domain: true }, { pattern: "x.test/*", zone_name: "x.test" }, { pattern: "agent.sharingu.xyz", custom_domain: true }] };
+      ok(JSON.stringify(OP.clientOrigins(live2).origins) === JSON.stringify(["https://agent.ryuklabs.io", "https://agent.sharingu.xyz"]) && !!OP.clientOrigins(live2, "http://127.0.0.1:1").refused
+        && !!OP.clientOrigins({}).refused && JSON.stringify(OP.clientOrigins({}, "http://127.0.0.1:8899").origins) === '["http://127.0.0.1:8899"]' && !!OP.clientOrigins({}, "http://agent.x.test").refused && !!OP.clientOrigins({}, "https://a.test/x").refused,
+        "O27 · the Google client's origins: one https://<pattern> per custom domain of the routes (a zone route none); a config with none takes --origin (https, or http on loopback; no path); none, or both, refused");
+      // the cap: 50 places taken (49 outside orgs beside Acme's): refused, the request stays open, nothing sent; --beyond-cap approves
+      const full = line(world());
+      for (let i = 0; i < 48; i++) full.prepare("INSERT INTO org (id, name, created_at, updated_at) VALUES (?, ?, '2026-10-01', '2026-10-01')").run(200 + i, `Full ${i}`);
+      const fb = allText(full), FK = kv();
+      const capped = await cliRec(full, recDir, null, FK)("allow", "--request", "r-a", ...ORIGIN, "--local", "DIR", "--config", "CFG");
+      ok(capped.rc === 1 && /the beta's 50 places are taken/.test(capped.errs[0] || "") && reqOf(full, "r-a").status === "open" && allText(full) === fb && (await mailsOf(FK)).length === 0,
+        `O27 · at 50 places the cap refuses allow --request (${capped.rc}); the request stays open, nothing written, nothing sent`);
+      const past = await cliRec(full, recDir, null, FK)("allow", "--request", "r-a", "--beyond-cap", ...ORIGIN, "--local", "DIR", "--config", "CFG");
+      ok(past.rc === 0 && reqOf(full, "r-a").status === "approved" && past.said.some((x) => /--beyond-cap: approved PAST/.test(x)) && (await mailsOf(FK)).length === 1, `O27 · --beyond-cap approves it and sends its email (${past.rc})`);
+      // THE EMAIL CAP: the window holds 2,900 counted sends — the approval stands, its email is not sent, the team told once
+      const edb = line(world()), EK = kv();
+      edb.prepare("INSERT INTO mail_days (day, n) VALUES (?, ?)").run(windowStartOf(new Date().toISOString()), MAIL_CAP);
+      const e1 = await cliRec(edb, recDir, null, EK)("allow", "--request", "r-a", ...ORIGIN, "--local", "DIR", "--config", "CFG");
+      const e2 = await cliRec(edb, recDir, null, EK)("allow", "--request", "r-b", ...ORIGIN, "--local", "DIR", "--config", "CFG");
+      const em = await mailsOf(EK);
+      ok(e1.rc === 0 && reqOf(edb, "r-a").status === "approved" && e1.said.some((x) => /"You're in" was NOT sent \(cap\)/.test(x)) && e2.rc === 0 && counted(edb) === MAIL_CAP + 1
+        && em.length === 1 && em[0].to === "acie@ryuklabs.io" && em[0].cc === "ryuk@ryuklabs.io" && /paused/i.test(em[0].subject),
+        `O27 · at the email cap the approvals stand, their emails are not sent (counted ${counted(edb)}: the cap's one alert past it), the team's alert captured once (${em.map((x) => x.subject).join(" | ")})`);
+    }
+    // O28 · decline --request (sprint 21, 21.P): an open request declined in one guarded write; nothing else touched
+    {
+      const db = line(world());
+      const codesBefore = rowsOf(db).length;
+      const c = await cliRec(db, recDir)("decline", "--request", "r-a", "--local", "DIR", "--config", "CFG");
+      const row = db.prepare("SELECT status, updated_at, approved_at FROM access_requests WHERE id = 'r-a'").get();
+      ok(c.rc === 0 && /^✓ request r-a declined on test:db: Name r-a, Company r-a <a@ask\.test> \(was place 2 in line\)/.test(c.said[0] || "") && row.status === "declined" && row.approved_at === null
+        && row.updated_at > "2026-10-13T10:00:00.000Z" && rowsOf(db).length === codesBefore && !c.said.some((x) => /code: /.test(x)),
+        `O28 · decline --request: the request declined, said once, no code minted, no approval stamped (${c.rc} ${row.status})`);
+      ok(placeOf(db, "r-b") === 2 && placeOf(db, "r-c") === 3, "O28 · the requests after it move up a place");
+      const before = allText(db);
+      const r = { again: await cliRec(db, recDir)("decline", "--request", "r-a", "--local", "DIR", "--config", "CFG"), done: await cliRec(db, recDir)("decline", "--request", "r-done", "--local", "DIR", "--config", "CFG"),
+        none: await cliRec(db, recDir)("decline", "--request", "r-nobody", "--local", "DIR", "--config", "CFG"), odd: await cliRec(db, recDir)("decline", "--request", "r'; DROP", "--local", "DIR", "--config", "CFG") };
+      ok(Object.values(r).every((x) => x.rc === 1 && /^refused \(nothing written\)/.test(x.errs[0] || "")) && allText(db) === before
+        && /is declined, not open/.test(r.again.errs[0]) && /is approved, not open/.test(r.done.errs[0]) && /no request r-nobody/.test(r.none.errs[0]) && /not a request's id/.test(r.odd.errs[0]),
+        `O28 · declined already, approved, no such id, a malformed id: each refused, nothing written (${Object.values(r).map((x) => x.rc).join("/")})`);
+      const u = [await cliRec(db, recDir)("decline", "--local", "DIR", "--config", "CFG"), await cliRec(db, recDir)("decline", "--request", "r-b", "--email", "b@ask.test", "--local", "DIR", "--config", "CFG"), await cliRec(db, recDir)("decline", "--request", "--local", "DIR", "--config", "CFG")];
+      ok(u.every((x) => x.rc === 2 && x.opened === 0), `O28 · decline with no request, with an email, or with no id: usage errors that open nothing (${u.map((x) => x.rc).join("/")})`);
+      // a request decided between the read and the write (approved meanwhile): the guarded write changes nothing
+      const rdb = line(world()), DB = d1(rdb);
+      const raced = await OP.declineRequest({ prepare: (q) => { if (/^UPDATE access_requests SET status = 'declined'/.test(q)) rdb.prepare("UPDATE access_requests SET status = 'approved', approved_at = 'x' WHERE id = 'r-0'").run(); return DB.prepare(q); } }, "r-0");
+      ok(raced.refused && /decided since it was read/.test(raced.refused) && reqOf(rdb, "r-0").status === "approved", `O28 · a request approved between the read and the write: refused, it stays approved (${(raced.refused || "").slice(0, 60)})`);
+      const RED = await mutantOp([["\"UPDATE access_requests SET status = 'declined', declined_at = ?2, updated_at = ?2 WHERE id = ?1 AND status = 'open'\";", "\"UPDATE access_requests SET status = 'declined', declined_at = ?2, updated_at = ?2 WHERE id = ?1\";"]]);
+      const mdb = line(world()), MDB = d1(mdb);
+      await RED.declineRequest({ prepare: (q) => { if (/^UPDATE access_requests SET status = 'declined'/.test(q)) mdb.prepare("UPDATE access_requests SET status = 'approved', approved_at = 'x' WHERE id = 'r-0'").run(); return MDB.prepare(q); } }, "r-0");
+      ok(reqOf(mdb, "r-0").status === "declined", `O28 · RED: with the status guard removed an approved request is declined (${reqOf(mdb, "r-0").status})`);
     }
   }
 } finally {

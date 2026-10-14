@@ -23,7 +23,12 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   and answers no other org's seat until the operator's code confirms the email. `src/orgs.js` · `src/orgpage.js` · `src/orgnames.js` — creating an
   org (POST /orgs): an account holder, proven by the ACCOUNT's passphrase, makes the org, its owner seat and its first
   project in one batch, one org per account; an org's address (its path name) is never a name the platform uses, the
-  reserved list DERIVED from the route registry (`tools/check-org-names.mjs`, a gate step).
+  reserved list DERIVED from the route registry (`tools/check-org-names.mjs`, a gate step). Sprint 21 (21.P): the web form signs
+  its creator in as the new owner seat (`src/accounts.js openSession`, the ONE session mint POST /login, POST /signup and the
+  invite link use; `src/core.js sessionSetCookie`), its address suggested from the org's name (`src/orgnames.js suggestSlug`), and
+  its done page leads with Connect your AI (`src/connectcards.js`: the MCP address, Claude, ChatGPT, Claude Code and Codex, the
+  owner key folded behind "Show the owner key"); the same cards open the first Home until anything is filed, and Control ·
+  Connect leads with Claude and ChatGPT.
 - `src/orgpath.js` — THE address (sprint 7, 7.4): each org at `/<org slug>/…` for every page, the platform's own doors at the
   root (`PLATFORM_PATHS`). `src/index.js` routeRequest resolves the path's first segment ONCE (`installAddress`): under an org's
   address only that org's people sign in (a bearer of its org, a browser session as its seat there), and anything else is the
@@ -39,6 +44,78 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   (a seat session and a one-org account go straight in); the rail's org switcher lists the same account's orgs. A page at the
   root before a sign-in wears the platform's brand (sharingu), the sign-in from an org's address that org's; the one not-here
   answer is a page in the platform's brand (`src/login.js renderNotHere`).
+- `src/requestaccess.js` · `src/requestpage.js` · `src/accountpage.js` — request access and THE ACCOUNT FLOW (sprint 21, 21.1, 21.2,
+  21.4a; `migrate-081`'s platform tables: no org): POST /request-access, public, reads the profile strictly (`readRequest`) and a
+  passphrase twice, and answers EVERY email the same 303 to /account/sent (the work that differs runs after the answer): a new email
+  files an UNVERIFIED request holding the passphrase's hash (no account row yet, so nothing reads an unverified passphrase) and gets
+  ONE verification email; an email that holds an account files nothing and gets "you already have an account"; the honeypot,
+  nothing. The link's GET (/account/verify/<token>) only shows the confirm page; its POST takes the token AND the passphrase
+  (`src/accounts.js verifyJoin`, one batch: the request open — its place in line by verification time, `placeInLine` — the account
+  made with that passphrase, the email's other unverified joins gone, an ACCOUNT session) and tells the team (company, role, team
+  size, never the person). THE ACCOUNT SESSION (`account_sessions`, the same cookie, prefix `t_a_`) belongs to an account with no
+  seat: no reader of `tokens` finds it, so it signs in to no org, no /mcp, no bearer; only GET /account (the status: in line, its
+  place open with Create your org, closed), /orgs/new's prefill and /logout read it (`accountSessionOf`). A sign-in before verifying
+  is "check your inbox" with a resend (/account/resend: three emails a day per mailbox — the address's +tag, and at Gmail its dots,
+  dropped); /account/forgot answers the same for any
+  email, a reset link (`account_resets`, 30 minutes, once) sets the passphrase and ends EVERY session of the account. POST /orgs
+  still asks the passphrase (before an owner key is minted) and waits for the approval (`mayFound`: a used code or an approved
+  request; else 403 org_waiting). The org form is filled in from the email's approved request (`approvedProfile`: only for an email a
+  session or a code proved). An add-person shell (an account an admin made by seating the email: no passphrase, no Google subject) is
+  no one's: its person joins as anyone does (`accountHolds`). THREAT NOTES (the sprint-21 review, recorded): a stranger's join with a
+  victim's email spends that address's three emails of the day (the victim's own join or resend that day may then send nothing; the
+  cap and the flood filter bound it, and it reaches no account); a distributed bot can still spend the 31-day cap (it then fails
+  safe: nothing is sent, the pages say so).
+  THE DATA (21.4b, the owner's approved data collection): the join's four consent boxes (`readConsent`: two required, each stored
+  with the words' version `CONSENT_VERSION` and its time), the page that sent the person (`sourceOf`: a `?from=` tag, site · showcase
+  · direct, never a cookie), the person's path on the request row (the account its verification made, the org it founded); the
+  90-day clearing (`clearStale`, the cron's step: `CLEAR_FIELDS` emptied, the counts kept). `src/orgprofile.js` — the product step
+  on the org form (`readProductStep`; migrate-081's `org_profile`, written in the org's own batch, src/orgs.js), required from the
+  web form, optional from a script's JSON. `src/operatorread.js` · `src/operatorpage.js` — the operator page (`/<org 1>/operator`,
+  org 1's admins alone, in a browser: their session cookie, never a bearer key or the read-only credential; anyone else signed in
+  the one not-here 404): the funnel (one aggregate over the newest 1,000 requests), one
+  keyset page of people with their profile, consent, source, path and product answers, Approve and Decline (same-origin; the
+  request statements `tools/operator.mjs` shares).
+- `src/google.js` · `src/googlepage.js` — GOOGLE SIGN-IN (sprint 21, 21.4c): OpenID Connect's code flow with PKCE (S256), a single-use
+  state and a nonce held in OAUTH_KV under the state's hash, the state bound to the browser by a `__Host-g_state` cookie; the id_token
+  verified here (RS256 against Google's JWKS, cached in KV by its Cache-Control; iss, aud, exp/iat, the nonce, `email_verified`
+  true). The client is the deployment's, in OAUTH_KV, written only by `tools/operator.mjs set-google-client --file <mode-600 file>`
+  (the worker reads no env secret) WITH its origins (the config's custom domains; a local config's `--origin`: the worker names no
+  domain of its own); none stored, a client stored without origins, or an origin not among them: no button, every door refused.
+  `src/accounts.js` GOOGLE SIGN-IN matches by email (signed in as the account's passphrase would; its Google `sub` linked on first
+  use, `accounts.google_sub`, and a different one refused) — only where Google runs the mailbox (gmail.com, googlemail.com, or the
+  token's `hd` naming the email's own domain: `identityOf`'s authoritative; any other address's first link takes the account's
+  passphrase on the link page, POST `/auth/google/link`, `googleLinkByPassphrase`, and a new person joins by the emailed check) — and
+  THE FIRST LINK IS A RESET (`linkGoogle`: every session, reset link and connected app of the account ends; a passphrase an invite
+  link set is cleared with its mark, that account's seats then waiting for its yes); a reset unlinks the subject. A join through
+  Google filed ALREADY VERIFIED (googleJoin, an add-person shell with no seat taken, never a 409; the form's email
+  is the join ticket's, `__Host-g_join`), creating the org takes the passphrase OR a Google sign-in under 10 minutes old (THE STEP-UP: `accountStepUp`, account_sessions'
+  `proven_how`/`proven_at`, or for an org session — a Google-only person seated elsewhere — its proof in OAUTH_KV beside it,
+  `putGoogleProof`; the web form only), the connect page's authorization completed as that account (`src/oauth.js connectByGoogle`;
+  a connect starts only from that page's same-origin POST). `/auth/google/start`, `/auth/google/callback` and `/auth/google/link` (src/index.js). Locally
+  the config's GOOGLE_LOCAL_IDP (only `tools/lib-r-local.sh` writes it) points the endpoints at `tools/fake-google.mjs`
+  (`tools/google-selftest.mjs`, smoke s69); production's wrangler.jsonc never names it.
+- `src/email.js` · `src/mails.js` — THE SEND (sprint 21, 21.4a): every email the worker or the operator sends goes through
+  `sendMail`, From hello@sharingu.xyz, under THE CAP (fewer than 2,900 counted in any 31 days: `mail_days`, one conditional upsert a
+  send) and three a day per address (`mail_addresses`, a digest; a refused address never spends the cap); at the cap nothing is sent,
+  the pages say email checks are paused and the team is told once a day. The team's sends count too (the new request's alert under the cap, the cap's own alert once a day past it: at most 2,900 + 31). The transport: the `send_email`
+  binding EMAIL (wrangler.jsonc), or THE LOCAL CAPTURE when the config's MAIL_CAPTURE var is "kv" (every local config: tools/lib-r-local.sh)
+  — each email in the worker's own OAUTH_KV under `mail-capture:`, read by `tools/mail-capture.mjs`; nothing local reaches Cloudflare.
+  `src/mails.js` holds the six emails (verify, you're in, reset, already; the team's new request and cap) in the website's look,
+  each with a plain-text twin.
+  `src/beta.js` — the beta's 50 places, the ONE source of the cap and its three counts (`tools/operator.mjs` imports it; the worker
+  reads it by `src/accounts.js betaCount`; a count that cannot be read is left out of a page, never guessed).
+- `src/showcase.js` · `src/walkthrough.js` · `src/login.js` (`frontHead`, `frontTop`, `frontFoot`, `authPage`) — the front door (sprint 21,
+  21.3; 21.P): `/` at the root, for a browser navigation that signs no one in, is the showcase (the hero line, Join the beta, the
+  beta's places taken, the walkthrough's five videos from `src/walkthrough.js` — the website's titles and order — each playing in
+  place behind its poster, youtube-nocookie on a press, a youtu.be link without a script; the ONE list the request's pages link to
+  as `/#walkthrough`; a first-visit splash under 1.5 s, skippable, never under reduced motion); a session still goes to its org or
+  the picker, a script still gets 401. Every page drawn before a session (sign-in, sign-up and its invite, creating an org, request
+  access and its pages, the OAuth connect page, the org picker, not-here) stands on ONE frame in the website's look, `<body
+  data-shell="front">`: the top bar (the website, Sign in; Sign out on an account session's pages), the quiet foot, one orange primary a view, the card,
+  the scene or the solo page (`authPage`), U-chan's poses and the brand's marks from `src/ui.js` (`uchanPose`, `brandMark`, the
+  website's own vectors) (`tools/showcase-selftest.mjs`). `src/frontassets.js` serves the posters and the connect page's client
+  logos at `/assets/:path` (the website's files under `assets/walkthrough`, `assets/clients` — Google's G mark beside them — and `assets/brand`'s U-chan mark the emails carry; `tools/make-front-assets.mjs` bundles them
+  into `src/frontassetdata.js`, `--check` for drift).
 - `src/data.js` — THE scoped data layer (sprint 6): every statement runs on `db(env)`; `{org}`/`{orgbucket}` tokens
   take the signed-in reader's org (a validated integer, from the sign-in only — never a parameter); no token and no
   sign-in is refused loudly (org unknown), never org 1. `tools/check-scoped-data.py` (a gate step) fails any statement outside it.
@@ -69,6 +146,9 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   `src/fonts.js` serves the self-hosted faces (`tools/make-fonts.mjs` builds `src/fontdata.js`, the MCP App card's cut faces
   from `assets/fonts/card/` included: `tools/make-card-fonts.py` cuts them, the card inlines them as data: fonts); `tools/shots.mjs`
   screenshots the local app in both worlds.
+- `tools/client-drive/` — drives a desktop AI client on the Mini (the ChatGPT app, the Claude app, Claude Code) through
+  `listing/test-cases.md` as one reviewer account, and records it (sprint 21; its README: the owner's one-time sign-ins,
+  the verbs, the traps). Screen verbs run inside the Mini's Terminal, which holds the Screen Recording grant.
 - `src/knowledge/schema.js` (`KINDS`) and `src/shapes.js` — the two registries (the kinds, the contribution shapes);
   `src/formats.js` answers `formats` from them and generates the item schemas of `preview` and the three write tools
   (`file_contribution`, `save_knowledge`, `remove_knowledge`; `WRITE_TOOLS`, sprint 19).
@@ -127,9 +207,13 @@ first). The operator's tools run on the deployment's credentials, never through 
 set-plan, raise — a NAMED plan row, never free's or team's ruled numbers — and suspend / unsuspend, one reversible 403
 at the org's resolve; sprint 11: set-openai-challenge / clear-openai-challenge, the platform's one OpenAI domain-verification
 token in the deployment's KV, answered at `/.well-known/openai-apps-challenge` by `src/wellknown.js`; sprint 12: allow counts the
-beta's 50 places — `BETA_ORG_CAP`, the owner's one number: the outside orgs that stand plus the allowed emails with an open code and
+beta's 50 places — `BETA_ORG_CAP` (`src/beta.js` since sprint 21), the owner's one number: the outside orgs that stand plus the allowed emails with an open code and
 no org yet — and refuses past them unless `--beyond-cap`; list and list-orgs say the count at their head; the worker does not
-enforce it) and `tools/org-undo.mjs` (one org's export, restore,
+enforce it; sprint 21: `requests` lists the open (verified) requests for a place in line order, and `allow --request <id>`
+approves one — the same cap, then one guarded write and ONE "You're in" email through src/email.js sendMail (counted in the cap;
+--live by Cloudflare's REST send, --local into the local capture; `--origin` the links' start), no code; an approved request with no
+org holds a place; `decline --request <id>` declines an open one in one guarded write, no code; 21.4c: `set-google-client --file <path>` /
+`clear-google-client`, the platform's one Google OAuth client in the deployment's KV, read from a mode-600 file and never printed) and `tools/org-undo.mjs` (one org's export, restore,
 verify, delete). Credentials: `set -a; . ~/.sharingu/env-sharingu.sh; set +a` (a bare
 `wrangler` hangs on a login prompt).
 

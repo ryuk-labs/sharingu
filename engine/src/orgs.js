@@ -1,11 +1,15 @@
 // src/orgs.js — CREATE AN ORG, a write through the door (sprint 7, slice 7.3; docs/plan/PLATFORM.md §2 items 1, 2, 6, 8 and 9;
 // §4 sprint 8's free tier; migrate-072). What tools/new-org.sh did by SQL, a person now does through POST /orgs (src/index.js,
 // the page src/orgpage.js): the org's row (its name and its PATH NAME, src/orgnames.js), the creator's OWNER seat in it (a people
-// row of their account, PLATFORM §2.8) and its first project (src/project.js projectKeyOf: o<id>--<slug>), in ONE batch.
+// row of their account, PLATFORM §2.8) and its first project (src/project.js projectKeyOf: o<id>--<slug>), in ONE batch; with them
+// (sprint 21, 21.4b) the org's product profile when the form answered the product step (migrate-081's org_profile), and the
+// founder's request names the org (the person's path).
 //
 // WHO MAY CREATE (the no-widening argument, said once here):
-//   · an ACCOUNT holder, proven by the ACCOUNT's own passphrase (src/accounts.js accountProof: the one a person chose at
-//     sign-up with the operator's code, or proved on /profile). No seat is needed (a person freshly signed up holds none) and
+//   · an ACCOUNT holder, proven by the ACCOUNT's own passphrase (or, from the web form, by a Google sign-in less than 10 minutes old:
+//     src/accounts.js THE STEP-UP, sprint 21, 21.4c) (src/accounts.js accountProof: the one a person chose at
+//     sign-up with the operator's code, at the join and verified by email (sprint 21, 21.4a), or proved on /profile), whose email
+//     the operator approved (a used code or an approved request: src/accounts.js mayFound). No seat is needed (a person freshly signed up holds none) and
 //     none is used: a SEAT's secret (the key an org's admin minted or set) never creates an org — what an org's admin knows
 //     proves nothing about the account's holder. The attempt counts in the account's lockout, as a sign-in's does, keyed by the
 //     account and the caller's client (sprint 8, 8.3a: src/accounts.js THE LOCKOUT — a stranger's failures on the email never
@@ -25,7 +29,9 @@
 // Refusals (the route's answer: src/index.js POST /orgs): before anything is read, a malformed field (bad_org {field}) or a
 // reserved path name (org_name_reserved); then the account proof (invalid_account, one answer for every case; too_many_attempts);
 // then the account's founded org (org_limit) and the path name held (org_name_taken); an account an invite link made is refused
-// (org_by_invite, sprint 12, 12.3: the waitlist). Nothing is written on a refusal but the proof's attempt.
+// (org_by_invite, sprint 12, 12.3: the waitlist), and so is an account whose email holds neither a used operator's code nor an
+// approved request (org_waiting, sprint 21, 21.4a: a verified person still in line). Nothing is written on a refusal but the proof's
+// attempt.
 import { db, foundingEnv } from "./data.js";
 import { uid, now, sha256, pbkdf2, hex } from "./util.js";
 import { TOKEN_PREFIX } from "./tenant.js";
@@ -60,6 +66,15 @@ export const FOUND_PROJECT_SQL = "INSERT INTO projects (key, name, active, creat
   "WHERE EXISTS (SELECT 1 FROM org WHERE id = {org} AND created_by_account = ?4)";
 // 4 · the org row names its creator seat and its home project (both exist now). ?1 the owner seat, ?2 the project, ?3 the account
 export const FOUND_HOME_SQL = "UPDATE org SET created_by = ?1, updated_by = ?1, home = ?2 WHERE id = {org} AND created_by_account = ?3";
+// 5 · (sprint 21, 21.4b: THE PRODUCT STEP) the org's profile, when the form answered it (src/orgprofile.js readProductStep), only beside
+// THIS account's new org row: ?1 product, ?2 line, ?3 stage, ?4 kinds, ?5 ais, ?6 places (JSON arrays), ?7 first_want, ?8 people,
+// ?9 now, ?10 the account
+export const FOUND_PROFILE_SQL = "INSERT INTO org_profile (org, product, line, stage, kinds, ais, places, first_want, people, created_at) " +
+  "SELECT {org}, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9 WHERE EXISTS (SELECT 1 FROM org WHERE id = {org} AND created_by_account = ?10)";
+// 6 · (21.4b: THE PATH) the email's one verified request names the org it founded and when, only beside THIS account's new org row and
+// only once (a request names one org: the first). ?1 the account's email, ?2 now, ?3 the account
+export const FOUND_REQUEST_SQL = "UPDATE access_requests SET org_id = {org}, org_at = ?2, updated_at = ?2 WHERE email = ?1 AND status IN ('open', 'approved', 'declined') AND org_id IS NULL " +
+  "AND EXISTS (SELECT 1 FROM org WHERE id = {org} AND created_by_account = ?3)";
 
 // ---- the words ----
 export const ORG_FIELD_WORDS = {
@@ -75,8 +90,11 @@ export const ORG_WORDS = {
   org_name_reserved: "That name belongs to the platform (one of its pages or doors). Choose another address for your org.",
   org_name_taken: "That address is taken. Choose another address for your org.",
   org_by_invite: "Your account was made by an org's invite link, so it does not create an org during the beta: orgs join by the waitlist. Ask the sharingu operator for a sign-up code (it confirms your email), then create your org.",
+  org_waiting: "Your request waits for its place: you can create your org once it is approved (we email you). Your status: /account.",
   org_limit: "Your account has already created its org. During the beta an account creates one org, and may be a member of any number.",
   too_many_attempts: "Too many attempts. Wait 15 minutes and try again.",
+  // (sprint 21, 21.4c) the step-up's refusal: the form's Google sign-in is older than STEP_UP_MINUTES
+  step_up_stale: "Your Google sign-in is more than 10 minutes old: continue with Google again, or type your passphrase.",
 };
 
 // orgFields(raw) -> the fields as the door reads them: { email, password, name, slug, project, projectName, you }
@@ -90,12 +108,13 @@ export function orgFields(raw = {}) {
   return { email, password: String(raw.password == null ? "" : raw.password), name, slug, project,
     projectName: s(raw.projectName, ORG_NAME_MAX) || name.slice(0, ORG_NAME_MAX), you: s(raw.you, ORG_NAME_MAX + 1) || email.split("@")[0].slice(0, ORG_NAME_MAX) };
 }
-// orgFormProblem(f, reserved) -> null, or { error, field?, status }: checked BEFORE anything is read (it says nothing about
-// accounts, nor about which names orgs hold; a reserved name is the platform's own, public list)
-export function orgFormProblem(f, reserved) {
+// orgFormProblem(f, reserved, { stepUp }) -> null, or { error, field?, status }: checked BEFORE anything is read (it says nothing about
+// accounts, nor about which names orgs hold; a reserved name is the platform's own, public list). stepUp (sprint 21, 21.4c): a fresh
+// Google sign-in proves the account (src/accounts.js accountStepUp), so no passphrase is asked
+export function orgFormProblem(f, reserved, { stepUp = false } = {}) {
   const bad = (field) => ({ error: "bad_org", field, status: 422 });
   if (!f.email || !EMAIL_RE.test(f.email)) return bad("email");
-  if (!f.password || f.password.length > 1024) return bad("password");
+  if (!stepUp && (!f.password || f.password.length > 1024)) return bad("password");
   if (!f.name || f.name.length > ORG_NAME_MAX) return bad("name");
   const sp = orgSlugProblem(f.slug, reserved);
   if (sp === "slug") return bad("slug");
@@ -105,16 +124,23 @@ export function orgFormProblem(f, reserved) {
   return null;
 }
 
-// createOrg(env, url, f, { client }) -> { org: {id, name, slug}, project: {key, name}, person: {id, name, email}, key } | { error, status }
+// createOrg(env, url, f, { client, profile }) -> { org: {id, name, slug}, project: {key, name}, person: {id, name, email}, key, signin } | { error, status }
 // f is orgFields' answer that orgFormProblem passed; client, the caller's (src/accounts.js clientOf; "" for none: the lockout is
-// then the account's alone). The key is the owner seat's secret, returned here ONCE: never stored (its hashes only), never
-// logged; the caller shows it and forgets it.
-export async function createOrg(env, url, f, { client = "" } = {}) {
-  const proof = await accountProof(env, url, { email: f.email, password: f.password, client });
+// then the account's alone); profile, the product step's answer (src/orgprofile.js readProductStep: written in the SAME batch as
+// the org, so an org and its profile land together or not at all; null: none, a script's JSON or the operator's tools). The key is
+// the owner seat's secret, returned here ONCE: never stored (its hashes only), never logged; the caller shows it and forgets it.
+// The batch also names the new org on the email's verified request (FOUND_REQUEST_SQL: the person's path, request -> account -> org).
+// proof (sprint 21, 21.4c, the owner's ruling: the step-up): a FRESH Google sign-in's answer (src/accounts.js accountStepUp, its
+// verdict ok, invited or waiting), in place of the passphrase's — the same rules follow it
+export async function createOrg(env, url, f, { client = "", profile = null, proof: given = null } = {}) {
+  const proof = given || await accountProof(env, url, { email: f.email, password: f.password, client });
   if (proof.verdict === "locked") return { error: "too_many_attempts", status: 429 };
   // sprint 12, 12.3: an account whose passphrase an org's invite link set (src/accounts.js THE INVITE LINK) creates no org — the
   // beta's orgs stay on the waitlist, and the operator's code alone makes an account that creates one
   if (proof.verdict === "invited") return { error: "org_by_invite", status: 403 };
+  // sprint 21, 21.4a: an account still in line (its email verified, its request not approved: src/accounts.js mayFound) creates no
+  // org — the operator's approval (allow --request) or code comes first
+  if (proof.verdict === "waiting") return { error: "org_waiting", status: 403 };
   if (proof.verdict !== "ok" || !proof.account) return { error: "invalid_account", status: 401 };
   const account = proof.account;
   const limit = async () => !!(await db(env).prepare(FOUNDED_SQL).bind(account.id).first());
@@ -133,6 +159,9 @@ export async function createOrg(env, url, f, { client = "" } = {}) {
         db(fe).prepare(FOUND_OWNER_SQL).bind(personId, f.you, account.email, kh, ph, salt, at, account.id),
         db(fe).prepare(FOUND_PROJECT_SQL).bind(key, f.projectName, at, account.id),
         db(fe).prepare(FOUND_HOME_SQL).bind(personId, key, account.id),
+        ...(profile ? [db(fe).prepare(FOUND_PROFILE_SQL).bind(profile.product, profile.line, profile.stage, JSON.stringify(profile.kinds || []), JSON.stringify(profile.ais || []),
+          JSON.stringify(profile.places || []), profile.first_want || null, profile.people || null, at, account.id)] : []),
+        db(fe).prepare(FOUND_REQUEST_SQL).bind(account.email, at, account.id),
       ]);
     } catch (e) {
       // the batch landed nothing: this account's org appeared (a concurrent creation), the name was taken meanwhile, or the id
@@ -143,6 +172,11 @@ export async function createOrg(env, url, f, { client = "" } = {}) {
       continue;
     }
     forgetOrgProjects(fe);   // an id a deleted org once held (tools/org-undo.mjs delete) keeps no isolate memo of its projects
-    return { org: { id: n, name: f.name, slug: f.slug }, project: { key, name: f.projectName }, person: { id: personId, name: f.you, email: account.email }, key: ownerKey };
+    // signin (sprint 21, 21.P D17): the creation's own answer as a sign-in's, for the web form's session (src/accounts.js openSession,
+    // the mint POST /login uses): an ACCOUNT session, proven by the account's passphrase this request checked, on the owner seat this
+    // batch made (its hashes as written, so a rotate or a passphrase change landing meanwhile mints nothing). Not enumerable: no
+    // answer that serialises `made` carries the account's hashes.
+    const made = { org: { id: n, name: f.name, slug: f.slug }, project: { key, name: f.projectName }, person: { id: personId, name: f.you, email: account.email }, key: ownerKey };
+    return Object.defineProperty(made, "signin", { value: { session: "account", account, seat: { id: personId, org: n, key_hash: kh, pass_hash: ph } } });
   }
 }

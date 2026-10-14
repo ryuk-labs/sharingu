@@ -157,8 +157,11 @@ import { readVersionsView, renderVersions, VERSIONS_REGIONS, TIMELINE_EMPTY, DIF
 import { versionsFixture, RULED_QID as V_RULED_QID } from "./fixtures/versions.mjs";
 import { tempoChip } from "../src/tempo.js";
 import { renderLogin, authPage, authBrand } from "../src/login.js";
-import { renderSignup, renderSignupDone, SIGNUP_REFUSED_WORDS } from "../src/signup.js";
+import { renderShowcase } from "../src/showcase.js";
+import { renderSignup, SIGNUP_REFUSED_WORDS } from "../src/signup.js";
 import { renderOrgNew, renderOrgMade } from "../src/orgpage.js";
+import { renderRequestAccess, REQUEST_FIELD_WORDS } from "../src/requestpage.js";
+import { renderSent, renderVerify, renderLinkDead, renderResend, renderForgot, renderForgotSent, renderReset, renderAccountStatus } from "../src/accountpage.js";
 import { ORG_WORDS } from "../src/orgs.js";
 import { renderProfilePage } from "../src/profile.js";
 import { renderDocs } from "../src/docs.js";
@@ -590,7 +593,7 @@ ok(srcF.length === 0, `every src/*.js: Brand v2 colour tokens only, no Geist${sr
 // vector (ui.js); a screen moved onto the shared parts (MIGRATED, the ratchet: it only grows) reads no --bv-* name at all
 // (the Map, sprint 2: its page, its layout kit, its client and its inspector included).
 const PALETTE_HOMES = new Set(["shell.js", "ui.js", "fontdata.js", "doorcontract.js"]);
-const MIGRATED = ["home.js", "decisions.js", "login.js", "signup.js", "orgpage.js", "goals.js", "gtm.js", "holes.js", "build.js", "txpage.js", "versionsview.js", "broadcastpage.js", "controlpage.js", "mappage.js", "maplayout.js", "mapclient.js", "mapnode.js", "broadcastlive.js"];
+const MIGRATED = ["home.js", "decisions.js", "login.js", "signup.js", "orgpage.js", "goals.js", "gtm.js", "holes.js", "build.js", "txpage.js", "versionsview.js", "broadcastpage.js", "controlpage.js", "mappage.js", "maplayout.js", "mapclient.js", "mapnode.js", "broadcastlive.js", "requestpage.js"];
 function semanticAudit(sources) {
   const f = [];
   const fail = (id, why) => f.push(`${id}: ${why}`);
@@ -747,30 +750,49 @@ const STANDALONE = {
   // sprint 7, 7.2: the sign-up's pages are the front door's own (one card, the shell's tokens, declared inputs)
   signup: [renderSignup({ brand: servedBrand }), "Northwind"],
   signupRefused: [renderSignup({ brand: servedBrand, error: SIGNUP_REFUSED_WORDS, email: "a@b.test" }), "Northwind"],
-  signupDone: [renderSignupDone({ brand: servedBrand }), "Northwind"],
+  // sprint 21, 21.1: request access is the front door's own too; 21.4a: the account flow's pages
+  requestAccess: [renderRequestAccess({ brand: servedBrand }), "Northwind"],
+  requestAccessRefused: [renderRequestAccess({ brand: servedBrand, error: REQUEST_FIELD_WORDS.email, values: { name: "Ada", email: "ada" } }), "Northwind"],
+  accountSent: [renderSent({ brand: servedBrand }), "Northwind"],
+  accountPaused: [renderSent({ brand: servedBrand, paused: true }), "Northwind"],
+  accountVerify: [renderVerify({ brand: servedBrand, token: "ab".repeat(24), email: "ada@x.test" }), "Northwind"],
+  accountVerifyDead: [renderLinkDead({ brand: servedBrand, kind: "verify" }), "Northwind"],
+  accountResend: [renderResend({ brand: servedBrand }), "Northwind"],
+  accountForgot: [renderForgot({ brand: servedBrand }), "Northwind"],
+  accountForgotSent: [renderForgotSent({ brand: servedBrand }), "Northwind"],
+  accountReset: [renderReset({ brand: servedBrand, token: "ab".repeat(24) }), "Northwind"],
+  accountResetDead: [renderLinkDead({ brand: servedBrand, kind: "reset" }), "Northwind"],
+  accountInLine: [renderAccountStatus({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "open" }, place: 3, count: { taken: 7, cap: 50 } }), "Northwind"],
+  accountApproved: [renderAccountStatus({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "approved" } }), "Northwind"],
+  accountDeclined: [renderAccountStatus({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "declined" } }), "Northwind"],
   // sprint 7, 7.3: the create-an-org pages: the platform's (the product's wordmark alone), and the made page the new org's
   orgNew: [renderOrgNew({ host: "agent.example.test" }), ""],
+  // sprint 21, 21.2: the org form a web sign-up answers, filled in from the approved request
+  orgNewPrefilled: [renderOrgNew({ host: "agent.example.test", values: { email: "a@b.test", name: "Analytical", you: "Ada" } }), ""],
   orgNewRefused: [renderOrgNew({ host: "agent.example.test", error: ORG_WORDS.org_name_taken, values: { email: "a@b.test", name: "Acme", slug: "acme" } }), ""],
   orgMade: [renderOrgMade({ origin: "https://agent.example.test", made: { org: { id: 3, name: "Acme", slug: "acme" }, project: { key: "o3--acme", name: "Acme" }, key: "0123456789abcdef0123456789abcdef01234567" } }), "Acme"],
+  // sprint 21, 21.3: the showcase at `/` stands on the same front shell (the platform's own wordmark alone)
+  showcase: [renderShowcase({ count: { taken: 7, cap: 50 } }), ""],
   report: [renderReportShell("Backfilled Reports", "<h1>Backfilled</h1>"), null],
 };
 for (const [kind, [html, org]] of Object.entries(STANDALONE)) {
   const f = [...standaloneAudit(html, kind), ...(org === null ? [] : frontDoorAudit(html, kind, org))];
   ok(f.length === 0, `${kind} (standalone): the shell's own token block and faces, no em dash, reduced motion, declared inputs${org === null ? "" : ", the sharingu wordmark with the org as secondary text, no Agent R"}${f.length ? `\n      ${f.join("\n      ")}` : ""}`);
 }
-ok(/name="email"/.test(STANDALONE.signup[0]) && /name="code"/.test(STANDALONE.signup[0]) && /name="password"/.test(STANDALONE.signup[0]) && /name="confirm"/.test(STANDALONE.signup[0]) && /action="\/signup"/.test(STANDALONE.signup[0])
-  && /href="\/login"/.test(STANDALONE.signupDone[0]) && !/<form/.test(STANDALONE.signupDone[0]), "the sign-up keeps its fields (email · code · password · confirm, posting to /signup); its done page is a link to sign in, no form (sprint 7, 7.2)");
+ok(/name="email"/.test(STANDALONE.signup[0]) && /name="code"/.test(STANDALONE.signup[0]) && /name="password"/.test(STANDALONE.signup[0]) && /name="confirm"/.test(STANDALONE.signup[0]) && /action="\/signup"/.test(STANDALONE.signup[0]),
+  "the sign-up keeps its fields (email · code · password · confirm, posting to /signup) (sprint 7, 7.2)");
 ok(["email", "password", "name", "slug", "project", "you"].every((f) => new RegExp(`name="${f}"`).test(STANDALONE.orgNew[0])) && /action="\/orgs"/.test(STANDALONE.orgNew[0]) && /agent\.example\.test\//.test(STANDALONE.orgNew[0])
-  && !/<form/.test(STANDALONE.orgMade[0]) && /data-secret="owner-key">0123456789abcdef/.test(STANDALONE.orgMade[0]) && /data-region="first-project">Acme \(acme\)</.test(STANDALONE.orgMade[0]) && !/o3--/.test(STANDALONE.orgMade[0]) && /\/mcp/.test(STANDALONE.orgMade[0])
-  && /href="\/orgs\/new"/.test(STANDALONE.signupDone[0]) && !/value="[^"]*passphrase/i.test(STANDALONE.orgNewRefused[0]),
-  "the create-an-org page keeps its fields (email · password · name · slug under the address's host · project · you, posting to /orgs); the made page shows the owner key, the first project (its name and slug, never o3--) and the MCP address, no form; the sign-up's done page links to it (sprint 7, 7.3)");
+  && !/<form/.test(STANDALONE.orgMade[0]) && /data-secret="owner-key">0123456789abcdef/.test(STANDALONE.orgMade[0]) && /data-region="first-project">[\s\S]*?Acme \(acme\)</.test(STANDALONE.orgMade[0]) && !/o3--/.test(STANDALONE.orgMade[0]) && /\/mcp/.test(STANDALONE.orgMade[0]) && !/bearer/i.test(STANDALONE.orgMade[0])
+  && !/value="[^"]*passphrase/i.test(STANDALONE.orgNewRefused[0]) && !/request-access-link/.test(STANDALONE.orgNewRefused[0]) && !/request-access-link/.test(STANDALONE.orgNewPrefilled[0]) && /request-access-link/.test(STANDALONE.orgNew[0])
+  && /id="name"[^>]*value="Analytical"/.test(STANDALONE.orgNewPrefilled[0]) && /id="you"[^>]*value="Ada"/.test(STANDALONE.orgNewPrefilled[0]) && /id="password"[^>]*autofocus/.test(STANDALONE.orgNewPrefilled[0]),
+  "the create-an-org page keeps its fields (email · password · name · slug under the address's host · project · you, posting to /orgs); the made page shows the owner key, the first project (its name and slug, never o3--) and the MCP address, no form, never the word bearer; a web sign-up's answer holds the request's company and name, the passphrase focused; only a bare form offers Join the beta (sprint 7, 7.3; sprint 21, 21.2 and 21.P)");
 ok(/name="email"/.test(STANDALONE.login[0]) && /name="password"/.test(STANDALONE.login[0]) && /name="web" value="1"/.test(STANDALONE.login[0]) && /name="next" value="\/home"/.test(STANDALONE.login[0]) && /name="oauth_req" value="e30="/.test(STANDALONE.oauthConsent[0]),
   "the sign-in keeps its fields (email · password · web=1 · next; the consent page's oauth_req): E233b and the OAuth flow read them");
 
 // (e) both ways for (a) to (d): each injected defect goes red on its own check
 const srcMut = (file, from, to) => { const src = SOURCES[file] || ""; return src.includes(from) ? { ...SOURCES, [file]: src.replace(from, to) } : null; };
 const B1B = [
-  ["type", "Geist in login.js", () => srcAudit(srcMut("login.js", ".auth{width:100%;max-width:392px}", ".auth{width:100%;max-width:392px;font-family:'Geist'}") || {})],
+  ["type", "Geist in login.js", () => srcAudit(srcMut("login.js", ".auth{flex:1;display:flex;", ".auth{flex:1;font-family:'Geist';display:flex;") || {})],
   ["colour", "stamp purple #6B4FA8 in rt.js", () => srcAudit(srcMut("rt.js", "--stamp:var(--bv-verified-ink)", "--stamp:#6B4FA8") || {})],
   ["colour", "stamp purple #6B4FA8 in profile.js", () => srcAudit(srcMut("profile.js", "background:var(--ok-tint);color:var(--ok);font:500 13px/1.3 var(--sans)}", "background:#6B4FA8;color:var(--ok);font:500 13px/1.3 var(--sans)}") || {})],
   ["colour", "a black rgba shadow in home.js", () => srcAudit(srcMut("home.js", ".hm{display:block}", ".hm{display:block;box-shadow:0 20px 60px rgba(0,0,0,.35)}") || {})],
@@ -792,7 +814,7 @@ const B1B = [
   ["type", "a Google font back on the sign-in", () => standaloneAudit(STANDALONE.login[0].replace("</head>", '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope"></head>'), "login")],
   ["input", "a sign-in input without its auth declaration", () => standaloneAudit(STANDALONE.login[0].replace(' data-input-exception="auth"', ""), "login")],
   ["emdash", "an em dash on the report", () => standaloneAudit(STANDALONE.report[0].replace("<h1>Backfilled</h1>", "<h1>Backfilled — today</h1>"), "report")],
-  ["front-door", "the live defect: an 'Org · Agent R' wordmark", () => frontDoorAudit(STANDALONE.login[0].replace(/<p class="wordmark">[\s\S]*?<\/p>/, '<p class="wordmark">Northwind &middot; Agent R</p>'), "login", "Northwind")],
+  ["front-door", "the live defect: an 'Org · Agent R' wordmark", () => frontDoorAudit(STANDALONE.login[0].replace(/<span class="wordmark">[\s\S]*?<\/span><\/a>/, '<span class="wordmark">Northwind &middot; Agent R</span></a>'), "login", "Northwind")],
   ["front-door", "the live defect: a loginTitle with Agent R", () => frontDoorAudit(STANDALONE.login[0].replace(/<title>[^<]*<\/title>/, "<title>Sign in · Northwind · Agent R</title>"), "login", "Northwind")],
   ["front-door", "the fallback repeating sharingu as the org", () => frontDoorAudit(STANDALONE.loginFallback[0].replace('<span class="wm-product">sharingu</span>', '<span class="wm-product">sharingu</span> <span class="wm-org">sharingu</span>'), "loginFallback", "")],
 ];

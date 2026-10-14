@@ -82,9 +82,15 @@ const txid = await fetch(`${BASE}/build?project=${encodeURIComponent(PROJECT)}`,
 // M1, M5: the person's folds are kept in the browser, which a run's shots share: a fold's shot starts from none
 const FOLD_CLEAN = "try{Object.keys(localStorage).forEach(function(k){if(k.indexOf('sharingu-fold:')===0)localStorage.removeItem(k)})}catch(e){}";
 // the create-an-org form filled and sent (the shots of 7.3): every value as a JS string literal
-const ORG_FILL = (email, pass, name, slug) => `(function(){var f=document.querySelector('form[action="/orgs"]');if(!f)return;f.email.value=${JSON.stringify(email)};f.password.value=${JSON.stringify(pass)};f.name.value=${JSON.stringify(name)};f.slug.value=${JSON.stringify(slug)};f.submit();})()`;
+const ORG_FILL = (email, pass, name, slug) => `(function(){var f=document.querySelector('form[action="/orgs"]');if(!f)return;f.email.value=${JSON.stringify(email)};f.password.value=${JSON.stringify(pass)};f.name.value=${JSON.stringify(name)};f.slug.value=${JSON.stringify(slug)};if(f.product){f.product.value="Shots App";f.line.value="The shots' product, in one line";f.querySelector('input[name="stage"]').checked=true;}f.submit();})()`;
 const NEWORG = String(process.env.SHOTS_NEWORG || "").split(",").map((x) => x.trim().split(/\s+/)).filter((x) => x.length === 2 && x[0] && x[1]);
+// the showcase's splash flag (src/showcase.js SPLASH_KEY): set, a returning visitor's page; cleared, the first visit's splash
+const SPLASH_SEEN = "try{localStorage.setItem('sharingu-splash','1')}catch(e){}";
+const SPLASH_FIRST = "try{localStorage.removeItem('sharingu-splash')}catch(e){}";
 const ALL = [
+  // sprint 21, 21.3: the showcase at `/` (signed out): the page, and the first visit's splash caught mid-way (its timeline slowed)
+  ["showcase", "/", false, { before: SPLASH_SEEN }],
+  ["showcase-splash", "/", false, { before: SPLASH_FIRST, rate: 0.2, settle: 60 }],
   ["login", "/login", false],
   // sprint 7, 7.4b: an org's own sign-in (--brand-org <slug>: the page a signed-out visit to /<slug>/… is sent to, in that org's
   // brand), the one not-here page (a platform door asked for under an org's address), the org picker (GET /orgs: an ACCOUNT
@@ -106,10 +112,11 @@ const ALL = [
   ["gtm-lists", "/gtm", true, { steps: [{ js: "(function(){var r=document.querySelector('[data-region=\"lists\"]');if(r)r.scrollIntoView();})()" }, { wait: 300 }] }],
   ["holes", "/missing", true],
   ["holes-public", "/missing", false],
-  // sprint 7, 7.2: the sign-up (signed out): the form, the one refusal (a code typed for an email it does not open), the done page
+  // sprint 7, 7.2: the sign-up (signed out): the form, the one refusal (a code typed for an email it does not open)
   ["signup", "/signup", false],
   ["signup-refused", "/signup", false, { steps: [{ js: "(function(){var f=document.querySelector('form[action=\"/signup\"]');if(!f)return;f.email.value='someone@example.org';f.code.value='ABCDE-FGHJK-MNPQR-STVWX';f.password.value='a passphrase';f.confirm.value='a passphrase';f.submit();})()" }, { wait: 900 }] }],
-  ["signup-done", "/signup?done=1", false],
+  // sprint 21, 21.1: request access (signed out): the form
+  ["request-access", "/request-access", false],
   // sprint 7, 7.3: create an org (signed out): the form, a refusal (an address the platform uses), and the made page. Each made-page
   // shot is a REAL creation, and an account creates one org: SHOTS_NEWORG="<email> <passphrase>,…" names one fresh local account per
   // shot (allowed by tools/operator.mjs, signed up), read from the environment and never printed
@@ -244,7 +251,7 @@ const PAGES = want ? ALL.filter(([n]) => want.split(",").includes(n)) : ALL;
 // signs in only there (a page at the root would be sent there anyway); a page shot signed out, and a bearer's, at the root
 // (7.4b: a platform door, /orgs, /login, stays at the root whoever asks)
 let ORG_BASE = "";
-const PLATFORM_SEGS = new Set(["login", "logout", "signup", "orgs", "install", "mcp", "oauth", ".well-known", "health", "fonts", "favicon.svg"]);
+const PLATFORM_SEGS = new Set(["login", "logout", "signup", "request-access", "account", "orgs", "install", "mcp", "oauth", ".well-known", "health", "fonts", "favicon.svg"]);
 const atRoot = (path) => PLATFORM_SEGS.has((String(path).split(/[/?#]/)[1] || "").toLowerCase());
 // --project all (sprint 11, 11.2): no ?project= at all, the reader's own default (an owner's: the org rollup, All projects)
 const urlOf = (path, keyed = false) => `${BASE}${keyed && !atRoot(path) ? ORG_BASE : ""}${path}${PROJECT === "all" ? "" : `${path.includes("?") ? "&" : "?"}project=${encodeURIComponent(PROJECT)}`}`;

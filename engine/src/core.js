@@ -11,7 +11,7 @@
 import { db, signIn, readerOrg, orgCache, atAddress, addressServes } from "./data.js";
 import { store, artifactKey, CRON_REPORT_OWNER, CRON_REPORT_KEY_RE } from "./storage.js";   // sprint 6, 6.4: every R2 key carries the org
 import { uid, now, sha256, TX_LANES, isEvalSeat, isD1Quota } from "./util.js";
-import { gateGrade, completingExample, incompleteNote, RESERVED_KINDS, KNOWLEDGE_KIND } from "./transmission.js";
+import { gateGrade, completingExample, incompleteNote, plainNoteKind, RESERVED_KINDS, KNOWLEDGE_KIND } from "./transmission.js";
 import { checkShape, shapeColumns, decodeShape } from "./shapes.js";
 import { resolveMapRefs } from "./maprefs.js";
 import { projectOf, projectScopeOf, projectClause, scopedProjectOf, keyInOrg, orgOfKey, projectSlug } from "./project.js";   // sprint 13 (13.2): a sentence names a project by its slug
@@ -23,7 +23,7 @@ import { credEpoch, accountGrantStands, grantKindOf, GRANT_KINDS } from "./oauth
 import { verifyGoalRef, proposeGoalRef } from "./goals.js";
 import { orgUrl } from "./orgpath.js";   // sprint 7, 7.4: every URL under the org of its address
 import { requestClient } from "./client.js";   // sprint 13, 13.1: the client word the request's door set (migrate-080's transmission.client)
-import { orgsOfAccount, pendingOf, accountGrantSeat, normOrgArg, sessionAtRow } from "./accounts.js";   // sprint 7, 7.4b: an account session's own orgs (the root's picker); 7.5a: an account grant's seat
+import { orgsOfAccount, pendingOf, accountGrantSeat, normOrgArg, sessionAtRow, SESSION_DAYS } from "./accounts.js";   // sprint 7, 7.4b: an account session's own orgs (the root's picker); 7.5a: an account grant's seat
 import { tempoOf } from "./tempo.js";
 import { checkPlan, itemsTally, planShownOf } from "./plans.js";   // sprint 8, 8.2: every ledger row checks the org's plan and is counted with it; 8.4: whoami answers it
 import { readerKeys, hatsOf, roleClassOf, isOutsideLabel } from "./hats.js";
@@ -249,6 +249,7 @@ export async function fileTransmission(person, body, env, internal = null) {
     try { dup = await db(env).prepare(CLIENT_REF_SQL).bind(person.id, clientRef).first(); } catch { dup = null; /* pre-migration DB — files normally */ }
     if (dup) return replayOf(dup, clientRef, refDigest);   // G2 item 7: different content is client_ref_taken
   }
+  body = plainNoteKind(body);   // lane leader with no kind is a plain note (src/transmission.js), graded and stored as kind note
   // The project stamp (ADR-100): server-side, from the submitter's seat — the client
   // is never trusted; a multi-seat submitter without a valid claim is a loud 422.
   let project;
@@ -541,7 +542,9 @@ export async function planTransmissionsBatch(person, items, env, o = {}) {
     // G2: the eval mark only where it hides nothing real (one read per project, memoized for the request)
     if (body.eval || (body.payload && body.payload.eval)) { const er = await evalMarkRefused(person, projRes.project, env); if (er) { pre.push({ skip: true, result: er }); continue; } }
     if (cr) firstOfRef.set(cr, pre.length);
-    pre.push({ skip: false, body, lane, project: projRes.project, refDigest });
+    // lane leader with no kind is a plain note (src/transmission.js plainNoteKind): the preview's grade, the filing's grade and
+    // the stored kind all read it from here; the digest above stays over the body as sent
+    pre.push({ skip: false, body: plainNoteKind(body), lane, project: projRes.project, refDigest });
   }
   // the one-pass fix 2 and 5: the Map refs of every item, resolved per stamped project in one statement (src/maprefs.js; a
   // second only when some ref misses), never one read per ref. o.near (the preview, after its read-scope check) adds the
@@ -1162,6 +1165,8 @@ export async function stampProjectLoose(person, env) {
 // name also carried a tenant fact; this one carries none.
 export const SESSION_COOKIE = "__Host-ar_session";
 export const SESSION_COOKIE_ATTRS = "HttpOnly; Secure; SameSite=Lax; Path=/";
+// sessionSetCookie(token) -> the ONE Set-Cookie a sign-in answers (src/accounts.js openSession's token, SESSION_DAYS long)
+export const sessionSetCookie = (token) => `${SESSION_COOKIE}=${token}; ${SESSION_COOKIE_ATTRS}; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`;
 
 // sessionCookieToken(request) — the ONE parser for the web session cookie. Three hand-rolled
 // copies of this regex used to live in resolveReader, POST /project and the resolver below; one

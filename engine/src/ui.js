@@ -153,23 +153,75 @@ export function callLine(text) {
 }
 
 // ---- U-chan and the logo: ONE vector, the website's own (assets/brand/u-classic.svg and favicon.svg: the same paths, the
-// same order, no ids so two on a page never collide). Orange body, ink outline, peach lenses. The outline is drawn in two
-// groups so each world can keep it visible: .uc-line (the silhouette: feet, body, antennae, the bridge, all on the ground)
-// and .uc-rim (the lens rims, on peach). The shell points them at --uchan-line / --uchan-rim (ink in Paper; in Ink the
-// silhouette's line lifts off the dark ground, the rims stay ink). The attributes keep ink, so a page without the tokens
-// (the favicon file, a banked report) still draws the brand's own mascot.
+// same order, no ids so two on a page never collide). Orange body, ink outline, peach lenses, in BOTH worlds (the brand's own
+// line: the website draws U-chan with its ink outline on its dark cards too). The outline is drawn in two groups, .uc-line (the
+// silhouette: feet, body, antennae, the bridge) and .uc-rim (the lens rims, on peach); the shell points them at --uchan-line /
+// --uchan-rim. Under the silhouette lies .uc-key, the same feet, body and antennae drawn wider in --uchan-key (none in Paper):
+// in Ink a keyline that lifts the ink outline off the dark ground, so the outline stays the brand's ink and still reads
+// (sprint 21, 21.P F25: a grey outline read washed out). The attributes keep ink and no keyline, so a page without the
+// tokens (the favicon file, a banked report) still draws the brand's own mascot.
 const UC_ATTRS = 'fill="none" stroke="#1C1917" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"';
-const UC_BODY = '<ellipse cx="94" cy="258" rx="16" ry="10" fill="#FB923C"/><ellipse cx="146" cy="258" rx="16" ry="10" fill="#FB923C"/><path d="M40 96 L40 176 C40 226 72 250 120 250 C168 250 200 226 200 176 L200 96 A24 24 0 0 0 152 96 L152 176 C152 200 140 212 120 212 C100 212 88 200 88 176 L88 96 A24 24 0 0 0 40 96 Z" fill="#FB923C"/><path d="M58 106 q-15 -3 -24 -14"/><path d="M182 106 q15 -3 24 -14"/>';
+const UC_FEET = '<ellipse cx="94" cy="258" rx="16" ry="10" fill="#FB923C"/><ellipse cx="146" cy="258" rx="16" ry="10" fill="#FB923C"/>';
+const UC_SHAPE = '<path d="M40 96 L40 176 C40 226 72 250 120 250 C168 250 200 226 200 176 L200 96 A24 24 0 0 0 152 96 L152 176 C152 200 140 212 120 212 C100 212 88 200 88 176 L88 96 A24 24 0 0 0 40 96 Z" fill="#FB923C"/>';
+const UC_ANTENNAE = '<path d="M58 106 q-15 -3 -24 -14"/><path d="M182 106 q15 -3 24 -14"/>';
+const UC_BODY = UC_FEET + UC_SHAPE + UC_ANTENNAE;
+const UC_KEY = `<g class="uc-key" fill="none" stroke="none" stroke-width="15" stroke-linejoin="round" stroke-linecap="round">${UC_BODY.replace(/ fill="#FB923C"/g, "")}</g>`;
 const UC_RIMS = '<circle cx="84" cy="122" r="27" fill="#FBEEE3"/><circle cx="156" cy="122" r="27" fill="#FBEEE3"/>';
 const UC_BRIDGE = '<path d="M110 118 q10 -9 20 0"/>';
 const UC_EYES = '<g stroke="none"><circle cx="84" cy="126" r="8.5" fill="#1C1917"/><circle cx="156" cy="126" r="8.5" fill="#1C1917"/><circle cx="88" cy="122" r="3" fill="#FFFDF8"/><circle cx="160" cy="122" r="3" fill="#FFFDF8"/></g>';
-const UC_INNER = `<g class="uc-line" ${UC_ATTRS}>${UC_BODY}</g><g class="uc-rim" ${UC_ATTRS}>${UC_RIMS}</g><g class="uc-line" ${UC_ATTRS}>${UC_BRIDGE}</g>${UC_EYES}`;
+// the mascot without its eyes (a pose draws its own), then the classic one
+const UC_FRAME = `${UC_KEY}<g class="uc-line" ${UC_ATTRS}>${UC_BODY}</g><g class="uc-rim" ${UC_ATTRS}>${UC_RIMS}</g><g class="uc-line" ${UC_ATTRS}>${UC_BRIDGE}</g>`;
+const UC_INNER = `${UC_FRAME}${UC_EYES}`;
 export const UCHAN_VIEWBOX = "4 42 232 256";
 // uchan({ size, label }) — U-chan alone. Decorative unless a label is given. (logo({ wordmark: false }) is the same mark.)
 export function uchan(opts) {
   const { size = 32, label = "", cls = "" } = opts || {};
   const a11y = label ? `role="img" aria-label="${esc(label)}"` : 'aria-hidden="true"';
   return `<svg class="u-uchan${cls ? ` ${esc(cls)}` : ""}${size <= 20 ? " u-uchan-sm" : ""}" viewBox="${UCHAN_VIEWBOX}" width="${Math.round(size * 0.906)}" height="${size}" ${a11y}>${UC_INNER}</svg>`;
+}
+// U-chan's POSES (sprint 21, 21.P): the website's own assets/brand/u-comment.svg, u-inspect.svg, u-pair.svg and u-verify.svg
+// (u-classic is uchan above), each pose's own eyes and props copied from its file, path for path, on the same frame (no ids:
+// the files' <symbol>/<use> folded in, so two on a page never collide; their white is the brand's surface #FFFDF8 here, as the
+// classic eyes' highlight already is). The site's 0 0 240 285 box: a prop reaches past the mascot's own box. uchanPose({ pose, size, label }) -> the <svg>, decorative unless a label is given; size its height.
+const UC_W = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#FFFDF8"/>`;
+const POSE_EYES = {
+  classic: `<g stroke="none"><circle cx="84" cy="126" r="8.5" fill="#1C1917"/><circle cx="156" cy="126" r="8.5" fill="#1C1917"/>${UC_W(88, 122, 3)}${UC_W(160, 122, 3)}</g>`,
+  inspect: `<g stroke="none"><circle cx="88" cy="128" r="8.5" fill="#1C1917"/><circle cx="160" cy="128" r="8.5" fill="#1C1917"/>${UC_W(91, 125, 2.6)}${UC_W(163, 125, 2.6)}</g>`,
+  verify: `<g stroke="none"><circle cx="84" cy="126" r="8.5" fill="#1C1917"/>${UC_W(88, 122, 3)}</g><path d="M147 125 q9 -11 19 0" fill="none" stroke="#1C1917" stroke-width="6" stroke-linecap="round"/>`,
+};
+const POSE_PROPS = {
+  comment: '<g transform="translate(178,50)"><path d="M-36 -20 h72 a15 15 0 0 1 15 15 v20 a15 15 0 0 1 -15 15 h-28 l-18 18 l4 -18 h-26 a15 15 0 0 1 -15 -15 v-20 a15 15 0 0 1 15 -15 z" fill="#FFFDF8" stroke="#1C1917" stroke-width="7" stroke-linejoin="round"/><g stroke="none" fill="#FB923C"><circle cx="-15" cy="5" r="4.5"/><circle cx="1" cy="5" r="4.5"/><circle cx="17" cy="5" r="4.5"/></g></g>',
+  inspect: '<g transform="translate(196,150)"><line x1="21" y1="21" x2="41" y2="41" stroke="#1C1917" stroke-width="13" stroke-linecap="round"/><circle r="30" fill="#FBEEE3" stroke="#1C1917" stroke-width="7"/><path d="M-13 2 L-4 12 L13 -11" fill="none" stroke="#059669" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>',
+  verify: '<g transform="translate(186,58)"><circle r="26" fill="#FFFDF8" stroke="#1C1917" stroke-width="7"/><path d="M-12 1 L-3 11 L13 -11" fill="none" stroke="#059669" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></g>',
+};
+const POSE_CLASSIC = `${UC_FRAME}${POSE_EYES.classic}`;
+const POSES = {
+  classic: POSE_CLASSIC,
+  comment: `${POSE_CLASSIC}${POSE_PROPS.comment}`,
+  inspect: `${UC_FRAME}${POSE_EYES.inspect}${POSE_PROPS.inspect}`,
+  verify: `${UC_FRAME}${POSE_EYES.verify}${POSE_PROPS.verify}`,
+  pair: `<g transform="translate(96,80) scale(0.54)">${POSE_CLASSIC}</g><g transform="translate(0,58) scale(0.62)">${POSE_CLASSIC}</g>`,
+};
+export const UCHAN_POSES = Object.keys(POSES);
+export function uchanPose(opts) {
+  const { pose = "classic", size = 120, label = "", cls = "" } = opts || {};
+  const inner = POSES[pose] || POSES.classic;
+  const a11y = label ? `role="img" aria-label="${esc(label)}"` : 'aria-hidden="true"';
+  return `<svg class="u-uchan u-pose${cls ? ` ${esc(cls)}` : ""}" data-pose="${esc(POSES[pose] ? pose : "classic")}" viewBox="0 0 240 285" width="${Math.round(size * 240 / 285)}" height="${size}" ${a11y}>${inner}</svg>`;
+}
+// THE BRAND'S MARKS (sprint 21, 21.P): the website's assets/brand/goal.svg, decision.svg, proof.svg, question.svg and
+// contribution.svg, path for path (64 x 64, ink on peach). brandMark(name, size) -> the <svg>, decorative (its row names it).
+const MARK_ATTRS = 'fill="none" stroke="#1C1917" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"';
+const MARKS = {
+  goal: '<circle cx="32" cy="32" r="23" fill="#FBEEE3"/><circle cx="32" cy="32" r="12" fill="#FB923C"/><circle cx="32" cy="32" r="2" fill="#1C1917"/>',
+  decision: '<rect x="9" y="18" width="46" height="35" rx="6" fill="#FBEEE3"/><path d="M22 18v-7h20v7M21 34h22M21 43h14"/>',
+  proof: '<rect x="11" y="10" width="42" height="46" rx="7" fill="#FBEEE3"/><path d="m21 32 8 8 15-17"/>',
+  question: '<path d="M10 12h44v34H30L18 55v-9h-8Z" fill="#FBEEE3"/><path d="M26 24c0-9 16-9 16 0 0 6-9 5-9 12M33 40v1"/>',
+  contribution: '<path d="M14 9h24l12 12v34H14Z" fill="#FBEEE3"/><path d="M38 9v14h12M23 34h18M23 43h12"/>',
+};
+export const BRAND_MARKS = Object.keys(MARKS);
+export function brandMark(name, size = 40) {
+  return MARKS[name] ? `<svg class="u-mark" data-mark="${esc(name)}" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true"><g ${MARK_ATTRS}>${MARKS[name]}</g></svg>` : "";
 }
 // logo({ size, mark, wordmark, label }) — THE logo, the same everywhere (the rail, the phone's top bar, sign-in, the public
 // pages, the empty states that carry U-chan): U-chan beside the lowercase Fredoka wordmark "sharingu", nothing substituted

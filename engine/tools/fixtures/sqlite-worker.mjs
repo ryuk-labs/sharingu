@@ -77,7 +77,7 @@ export function kv() {
   };
 }
 import { orgKey } from "./two-orgs.mjs";
-// sqliteWorker({ projects, people, org, orgs, src, plan }) -> { fetch, db, env, origin, mcp(name, args, key), changes() }
+// sqliteWorker({ projects, people, org, orgs, src, plan }) -> { fetch, db, env, origin, mcp(name, args, key), changes(), settle() }
 //   plan: org 1's plan and every org's that names none (default 'local'); changes(): total_changes() less org_usage's
 //   people: [id, name, role, key, seats[], email?] — the key is stored as its sha256, as the worker keeps it; the email
 //   defaults to <id>@x.test (sprint 7: a seat's email is set once, at its insert, and names its account: migrate-070)
@@ -107,8 +107,11 @@ export async function sqliteWorker({ projects = [], people = [], org = "Northwin
   const changes = () => Number(db.prepare("SELECT total_changes() AS n").get().n) - env.DB.usageChanges();
   // a fresh ctx per request, as the runtime gives one: the OAuth provider writes the grant's props onto the ctx it is handed
   // (ctx.props), so a shared one would carry one request's grant into every later request (sprint 7, 7.5a)
+  // waitUntil's work (sprint 21, 21.4a: the account flow's emails run after the answer) is kept, so a selftest can settle() it
   const origin = "https://org.test";
-  const fetch = (req) => handler.fetch(req, env, { waitUntil() {}, passThroughOnException() {} });
+  const later = [];
+  const fetch = (req) => handler.fetch(req, env, { waitUntil(p) { later.push(p); }, passThroughOnException() {} });
+  const settle = () => Promise.allSettled(later.splice(0));
   let n = 0;
   const mcp = async (name, args, key) => {
     const r = await fetch(new Request(origin + "/mcp", { method: "POST", headers: { "content-type": "application/json", accept: "application/json", authorization: `Bearer ${key}` },
@@ -117,5 +120,5 @@ export async function sqliteWorker({ projects = [], people = [], org = "Northwin
     let out = null; try { out = JSON.parse(j.result.content[0].text); } catch { out = j && (j.error || j); }
     return { status: r.status, out, isError: !!(j && j.result && j.result.isError) };
   };
-  return { fetch, db, env, origin, mcp, changes };
+  return { fetch, db, env, origin, mcp, changes, settle };
 }
