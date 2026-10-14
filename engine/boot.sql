@@ -100,9 +100,11 @@
 -- (a person's request for a beta place: its profile, unverified until its email is, the passphrase it prepares and its verification
 -- link's hash until then; a platform table: no org), account_sessions (an account's browser session before its first seat),
 -- account_resets (a forgotten passphrase's single-use links), mail_days and mail_addresses (the email cap and the per-address limit)
--- in the tables' name order, and their indexes (idx_access_requests_email, idx_access_requests_line, idx_access_requests_unverified,
--- idx_access_requests_verified, idx_access_requests_verify, idx_account_resets_account, idx_account_sessions_account) in the
--- export's name order; its re-made slug triggers (org_slug_on_insert, org_slug_on_update: 'request-access' among the reserved
+-- and (21.4b, the data) org_profile (the product step, one row per org) in the tables' name order, access_requests' data columns
+-- (its source, its consent and the words' version, its account, its org, its decline and its clearing), and their indexes
+-- (idx_access_requests_abandoned, idx_access_requests_declined, idx_access_requests_email, idx_access_requests_line,
+-- idx_access_requests_people, idx_access_requests_unverified, idx_access_requests_verified, idx_access_requests_verify,
+-- idx_account_resets_account, idx_account_sessions_account) in the export's name order; its re-made slug triggers (org_slug_on_insert, org_slug_on_update: 'request-access' among the reserved
 -- names) in place at the END of this file.
 
 -- migrate-081: a person's request for a beta place (unverified until its email is; then one verified request per email, in line
@@ -128,7 +130,20 @@ CREATE TABLE IF NOT EXISTS access_requests (
   verified_at    TEXT,
   created_at     TEXT NOT NULL,
   updated_at     TEXT NOT NULL,
-  approved_at    TEXT
+  approved_at    TEXT,
+  source          TEXT NOT NULL DEFAULT 'direct',
+  consent_version TEXT,
+  consent_at      TEXT,
+  consent_terms   INTEGER NOT NULL DEFAULT 0,
+  consent_keep    INTEGER NOT NULL DEFAULT 0,
+  consent_updates INTEGER NOT NULL DEFAULT 0,
+  consent_call    INTEGER NOT NULL DEFAULT 0,
+  account_id      TEXT,
+  account_at      TEXT,
+  org_id          INTEGER,
+  org_at          TEXT,
+  declined_at     TEXT,
+  cleared_at      TEXT
 );
 
 -- migrate-081: a forgotten passphrase's single-use link (only its hash kept, 30 minutes)
@@ -502,6 +517,20 @@ CREATE TABLE IF NOT EXISTS org (
   plan       TEXT NOT NULL DEFAULT 'free' CHECK (length(plan) BETWEEN 1 AND 40 AND plan NOT GLOB '*[^a-z0-9-]*')
 );
 
+-- migrate-081: the product step, one row per org (what it will build: answered on the org form, written with the org)
+CREATE TABLE IF NOT EXISTS org_profile (
+  org        INTEGER PRIMARY KEY,
+  product    TEXT NOT NULL,
+  line       TEXT NOT NULL,
+  stage      TEXT NOT NULL CHECK (stage IN ('idea', 'building', 'launched', 'scaling')),
+  kinds      TEXT NOT NULL DEFAULT '[]',
+  ais        TEXT NOT NULL DEFAULT '[]',
+  places     TEXT NOT NULL DEFAULT '[]',
+  first_want TEXT,
+  people     TEXT,
+  created_at TEXT NOT NULL
+);
+
 -- migrate-076: the plan's running counters, ONE row per org (src/plans.js: the day's calls, the minute's burst, the month's items)
 CREATE TABLE IF NOT EXISTS org_usage (
   org          INTEGER PRIMARY KEY CHECK (org >= 1),
@@ -847,12 +876,20 @@ BEGIN
       no_outcome = no_outcome + excluded.no_outcome, awaiting = awaiting + excluded.awaiting;
 END;
 
--- migrate-081: an email's requests by status (the org form's prefill, the newest unverified one), the open requests in the order
--- their emails were verified (the place in line), the unverified ones by their end (the cleanup), one verified request per email,
--- the verification link's hash; an account's resets and its seatless sessions
+-- migrate-081: the requests the 90-day clearing may take (a declined one by its decline, an approved one with no org by its
+-- approval), an email's requests by status (the org form's prefill, the newest unverified one), the open requests in the order
+-- their emails were verified (the place in line), the requests by status in line order (the operator page), the unverified ones by
+-- their end (the cleanup), one verified request per email, the verification link's hash; an account's resets and its seatless
+-- sessions
+CREATE INDEX IF NOT EXISTS idx_access_requests_abandoned ON access_requests(approved_at) WHERE status = 'approved' AND org_id IS NULL AND cleared_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_access_requests_declined ON access_requests(declined_at) WHERE status = 'declined' AND cleared_at IS NULL;
+
 CREATE INDEX IF NOT EXISTS idx_access_requests_email ON access_requests(email, status, approved_at);
 
 CREATE INDEX IF NOT EXISTS idx_access_requests_line ON access_requests(verified_at) WHERE status = 'open';
+
+CREATE INDEX IF NOT EXISTS idx_access_requests_people ON access_requests(status, verified_at, id);
 
 CREATE INDEX IF NOT EXISTS idx_access_requests_unverified ON access_requests(verify_expires) WHERE status = 'unverified';
 

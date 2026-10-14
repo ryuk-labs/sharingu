@@ -1,7 +1,7 @@
 // tools/smoke/s67-account-flow.mjs — sprint 21, slice 21.4a (THE ACCOUNT FLOW: src/accounts.js, src/requestaccess.js, src/accountpage.js,
 // src/email.js, src/mails.js; tools/operator.mjs allow --request), walked end to end on the real local worker, its every email read
 // from the local capture (tools/mail-capture.mjs: never printed). Self-contained: its own emails (s67<tag>…@smoke.local); it runs
-// last (registered after s66), because its cap case fills the email window for a moment (and empties it again).
+// late (registered after s66; only s68 after it), because its cap case fills the email window for a moment (and empties it again).
 //   · join with a passphrase: a new email, an existing account's email and the honeypot answer the SAME 303 to /account/sent
 //   · before verifying: the sign-in with the joined passphrase is 403 check your inbox (with its resend); a second address's
 //     resends stop at three emails a day (the fourth answers the same, sends nothing)
@@ -29,7 +29,7 @@ const http = async (method, path, o) => {
   return r;
 };
 const PASS = `smoke-s67-pass-${TAG}`, NEW = `smoke-s67-new-${TAG}`;
-const FORM = { web: "1", name: "S67 Mary", role: "CTO", team_size: "2-10", password: PASS, confirm: PASS };
+const FORM = { web: "1", name: "S67 Mary", role: "CTO", team_size: "2-10", password: PASS, confirm: PASS, consent_terms: "1", consent_keep: "1" };
 const join = (email, company = `S67 Works ${TAG}`, extra = {}) => http("POST", "/request-access", { form: { ...FORM, email, company, ...extra }, accept: "text/html" });
 const shape = (r) => JSON.stringify([r.status, r.locationRaw, r.raw]);
 const cookieOf = (r) => (/__Host-ar_session=([^;]+)/.exec(r.setCookie || "") || [])[1] || "";
@@ -103,7 +103,7 @@ smoke("account flow · `operator allow --request`: the captured \"You're in\" ->
   const f = await http("GET", "/orgs/new", { cookie: S.acct2, accept: "text/html", nav: true });
   const val = (k) => (new RegExp(`id="${k}"[^>]*value="([^"]*)"`).exec(f.raw) || [])[1];
   expect(f.status === 200 && val("email") === S.a && val("name") === `S67 Works ${TAG}` && val("you") === FORM.name, () => `the org form: ${f.status} ${val("email")} ${val("name")} ${val("you")}`);
-  const made = await http("POST", "/orgs", { cookie: S.acct2, form: { web: "1", email: S.a, password: PASS, name: val("name"), slug: `s67-${TAG}`, you: val("you") }, accept: "text/html" });
+  const made = await http("POST", "/orgs", { cookie: S.acct2, form: { web: "1", email: S.a, password: PASS, name: val("name"), slug: `s67-${TAG}`, you: val("you"), product: "S67 App", line: "S67 one line", stage: "idea" }, accept: "text/html" });
   S.orgCookie = cookieOf(made);
   const tok = S.orgCookie ? rows(`SELECT org, revoked FROM tokens WHERE token_hash = ${q(sha(S.orgCookie))}`)[0] || {} : {};
   const org = rows(`SELECT id FROM org WHERE slug = ${q(`s67-${TAG}`)}`)[0] || {};

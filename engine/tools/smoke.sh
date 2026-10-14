@@ -11,6 +11,7 @@ SLUG="${SMOKE_SLUG:-smoke-local}"   # a second concurrent run takes its own slug
 R_LOCAL_STATE_ROOT="$ROOT/.runs/r-local"; export R_LOCAL_STATE_ROOT
 R_LOCAL_PORT_BASE="${SMOKE_PORT_BASE:-8890}"; export R_LOCAL_PORT_BASE   # clear of the suites' local R (8850 up)
 WRANGLER_SEND_METRICS=false; export WRANGLER_SEND_METRICS
+R_LOCAL_TEST_SCHEDULED=1; export R_LOCAL_TEST_SCHEDULED   # the smoke's worker answers GET /__scheduled (its cron, once: s68's clearing)
 keep=0
 for a in "$@"; do
   case "$a" in

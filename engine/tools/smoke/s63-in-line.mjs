@@ -24,7 +24,7 @@ const http = async (method, path, o) => {
   return r;
 };
 const PASS = `smoke-s63-pass-${TAG}`;
-const FORM = { web: "1", name: "S63 Grace", role: "Founder", team_size: "11-50", password: PASS, confirm: PASS };
+const FORM = { web: "1", name: "S63 Grace", role: "Founder", team_size: "11-50", password: PASS, confirm: PASS, consent_terms: "1", consent_keep: "1" };
 const cookieOf = (r) => (/__Host-ar_session=([^;]+)/.exec(r.setCookie || "") || [])[1] || "";
 // joined(email, company) -> the account session's cookie: the join, its captured email's link, the verification
 async function joined(email, company) {

@@ -20,7 +20,7 @@ const http = (method, path, o) => paced(() => http0(method, path, o));
 // a browser's form POST /orgs, as a same-origin page (or a cross-site one) sends it
 const formOrgs = (fields, site = "same-origin") => paced(() => patientFetch(`${BASE}/orgs`, { method: "POST", redirect: "manual",
   headers: { "content-type": "application/x-www-form-urlencoded", accept: "text/html", "sec-fetch-site": site, ...(site === "cross-site" ? { origin: "https://evil.test" } : {}) },
-  body: new URLSearchParams({ ...fields, web: "1" }).toString() }));
+  body: new URLSearchParams({ product: "After App", line: "After one line", stage: "building", ...fields, web: "1" }).toString() }));   // 21.4b: the product step
 const COOKIE = /^__Host-ar_session=([^;]+); HttpOnly; Secure; SameSite=Lax; Path=\/; Max-Age=7776000$/;
 const page = (path, token) => http0("GET", path, { cookie: token, accept: "text/html", nav: true, root: true });
 async function account(email, pass) {

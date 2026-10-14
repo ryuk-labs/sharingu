@@ -31,8 +31,8 @@ smoke("showcase · signed out, a browser at /: the hero line, Join the beta, the
   const r = await http("GET", "/", NAV);
   const h = r.raw;
   expect(r.status === 200 && SHELL.test(h) && /data-screen="showcase"/.test(h) && h.includes(esc(SHOWCASE_LINE)), () => `GET /: ${r.status} ${r.locationRaw || h.slice(0, 200)}`);
-  expect(/<a class="access" href="\/request-access"[^>]*>Join the beta<\/a>/.test(h) && /href="#walkthrough"/.test(h) && /<section [^>]*id="walkthrough"/.test(h),
-    "Join the beta -> /request-access and the walkthrough's section on the page");
+  expect(/<a class="access" href="\/request-access\?from=showcase"[^>]*>Join the beta<\/a>/.test(h) && /href="#walkthrough"/.test(h) && /<section [^>]*id="walkthrough"/.test(h),
+    "Join the beta -> /request-access?from=showcase (21.4b: the source) and the walkthrough's section on the page");
   const links = [...WALKTHROUGH.map((v) => v.url), WALKTHROUGH_CHANNEL.url].map((u) => [u, linkTo(h, u)]);
   const bad = links.filter(([u, a]) => !a || !/target="_blank"/.test(a) || !/rel="noopener"/.test(a) || !/^https:\/\/(youtu\.be\/[A-Za-z0-9_-]{11}|www\.youtube\.com\/@SharinguAIApp)$/.test(u));
   expect(WALKTHROUGH.length === 5 && !bad.length, () => `the walkthrough's links: ${bad.map(([u, a]) => `${u} ${a || "absent"}`).join("; ")}`);

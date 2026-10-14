@@ -24,18 +24,19 @@ const http = async (method, path, o) => {
 };
 const PASS = `smoke-s62-pass-${TAG}`;
 const FULL = { web: "1", name: "S62 Ada", company: `S62 Engines ${TAG}`, role: "Founder", team_size: "2-10", website: "s62.example.org",
-  linkedin: "s62-ada", x: "@s62ada", github: "s62-ada", ai_tools: "Claude, Codex", use_case: "S62 one line", password: PASS, confirm: PASS };
+  linkedin: "s62-ada", x: "@s62ada", github: "s62-ada", ai_tools: "Claude, Codex", use_case: "S62 one line", password: PASS, confirm: PASS,
+  consent_terms: "1", consent_keep: "1" };   // 21.4b: the two required boxes
 const ask = (fields) => http("POST", "/request-access", { form: { ...FULL, ...fields }, accept: "text/html" });
 // the answer's shape: the status, the Location, the body (none)
 const shape = (r) => JSON.stringify([r.status, r.locationRaw, r.raw]);
 const reqRows = (email) => rows(`SELECT id, email, company, status FROM access_requests WHERE email = ${q(email)}`);
 const S = {};
 
-smoke("request access · GET /request-access is the form (the required five and the passphrase twice, the optional six, the honeypot out of sight); /login links to it", async () => {
+smoke("request access · GET /request-access is the form (the required five and the passphrase twice, the optional six and two optional consents, the honeypot out of sight); /login links to it", async () => {
   const r = await http("GET", "/request-access", { accept: "text/html" });
   const fields = ["name", "email", "company", "role", "team_size", "password", "confirm", "website", "linkedin", "x", "github", "ai_tools", "use_case", "trap"];
   const missing = fields.filter((f) => !new RegExp(`name="${f}"`).test(r.raw));
-  expect(r.status === 200 && /action="\/request-access"/.test(r.raw) && !missing.length && (r.raw.match(/class="opt">optional</g) || []).length === 6 && /<div class="trap" aria-hidden="true">/.test(r.raw)
+  expect(r.status === 200 && /action="\/request-access"/.test(r.raw) && !missing.length && (r.raw.match(/class="opt">optional</g) || []).length === 8   /* the six optional fields and the two optional consent boxes (21.4b) */ && /<div class="trap" aria-hidden="true">/.test(r.raw)
     && /type="password" id="password" name="password" required/.test(r.raw), () => `GET /request-access: ${r.status}, missing ${missing.join(",")}`);
   const l = await http("GET", "/login", { accept: "text/html" });
   expect(l.status === 200 && /<a href="\/request-access"[^>]*>Join the beta<\/a>/.test(l.raw), () => `GET /login: ${l.status}, no Join the beta link`);

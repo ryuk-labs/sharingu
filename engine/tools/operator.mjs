@@ -44,7 +44,8 @@
 //                       declined already), the cap without --beyond-cap. At the email cap the approval stands and the line says the
 //                       email was not sent (tell the person yourself).
 //   decline --request <id>
-//                       (sprint 21, 21.P) declines an OPEN request: its status declined, updated_at now; its person's status page
+//                       (sprint 21, 21.P) declines an OPEN request: its status declined, declined_at and updated_at now (21.4b: the 90-day
+//                       clearing counts from declined_at); its person's status page
 //                       (/account) then says the request is closed (no reason, no count) with the walkthrough and the website. One guarded write (WHERE
 //                       status = 'open'): a request decided between the read and the write changes nothing. Refused, nothing
 //                       written: an id that is no request, or a request that is not open. No code, no account, no email touched.
@@ -132,6 +133,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { normEmail, signupCodeHash, SIGNUP_CODE_ALPHABET, SIGNUP_CODE_LENGTH } from "../src/accounts.js";
 import { BETA_ORG_CAP, BETA_ORGS_SQL, BETA_CODES_SQL, BETA_APPROVED_SQL, placesOf } from "../src/beta.js";   // sprint 21, 21.1: the beta's places, one source
 import { REQUEST_PLACE_SQL, TEAM_SIZES } from "../src/requestaccess.js";   // sprint 21, 21.2: the place the worker's page counts
+import { REQUEST_ROW_SQL, APPROVE_REQUEST_SQL, DECLINE_REQUEST_SQL, REQUEST_ID_RE } from "../src/operatorread.js";   // sprint 21, 21.4b: the page's statements, one source
 import { readConfig, liveD1 } from "./org-undo.mjs";
 import { sendMail, captureMailer } from "../src/email.js";   // sprint 21, 21.4a: THE send, under the worker's own cap
 import { inMail } from "../src/mails.js";
@@ -194,10 +196,10 @@ const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 // same order)
 export const REQUESTS_SQL = "SELECT id, email, name, company, role, team_size, verified_at FROM access_requests INDEXED BY idx_access_requests_line " +
   "WHERE status = 'open' ORDER BY verified_at, id LIMIT 500";
-export const REQUEST_ROW_SQL = "SELECT id, email, name, company, status, verified_at, approved_at FROM access_requests WHERE id = ?1";
-// the approval (?1 the request, ?2 when): guarded by its status, so only an open request is approved
-export const APPROVE_REQUEST_SQL = "UPDATE access_requests SET status = 'approved', approved_at = ?2, updated_at = ?2 WHERE id = ?1 AND status = 'open'";
-const REQUEST_ID_RE = /^[A-Za-z0-9-]{1,80}$/;   // the worker's ids are UUIDs; a quote or a space is never one
+// one request by its id, the approval and (21.P) the decline (?1 the request, ?2 when: guarded by its status, so only an open request
+// is decided; the decline sets declined_at, from which the 90-day clearing counts, sprint 21, 21.4b): src/operatorread.js's, the
+// operator page's own (one source for the terminal and the page), re-exported here for the selftest
+export { REQUEST_ROW_SQL, APPROVE_REQUEST_SQL, DECLINE_REQUEST_SQL };
 // openRequest(DB, id) -> { request: { id, email, name, company, place } } | { refused }: only an OPEN request is approved
 export async function openRequest(DB, id) {
   const rid = String(id == null ? "" : id).trim();
@@ -208,8 +210,6 @@ export async function openRequest(DB, id) {
   const p = await DB.prepare(REQUEST_PLACE_SQL).bind(String(r.verified_at), String(r.id)).first();
   return { request: { id: String(r.id), email: String(r.email), name: String(r.name), company: String(r.company), place: Number((p && p.place) || 0) } };
 }
-// 21.P · the decline (?1 the request, ?2 when): guarded by its status, so only an open request is declined
-export const DECLINE_REQUEST_SQL = "UPDATE access_requests SET status = 'declined', updated_at = ?2 WHERE id = ?1 AND status = 'open'";
 // declineRequest(DB, id, { at }) -> { request } | { refused }: the open request read first (openRequest), then the one guarded write
 export async function declineRequest(DB, id, { at = new Date().toISOString() } = {}) {
   const q = await openRequest(DB, id);

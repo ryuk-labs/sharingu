@@ -1,7 +1,9 @@
 // src/orgs.js — CREATE AN ORG, a write through the door (sprint 7, slice 7.3; docs/plan/PLATFORM.md §2 items 1, 2, 6, 8 and 9;
 // §4 sprint 8's free tier; migrate-072). What tools/new-org.sh did by SQL, a person now does through POST /orgs (src/index.js,
 // the page src/orgpage.js): the org's row (its name and its PATH NAME, src/orgnames.js), the creator's OWNER seat in it (a people
-// row of their account, PLATFORM §2.8) and its first project (src/project.js projectKeyOf: o<id>--<slug>), in ONE batch.
+// row of their account, PLATFORM §2.8) and its first project (src/project.js projectKeyOf: o<id>--<slug>), in ONE batch; with them
+// (sprint 21, 21.4b) the org's product profile when the form answered the product step (migrate-081's org_profile), and the
+// founder's request names the org (the person's path).
 //
 // WHO MAY CREATE (the no-widening argument, said once here):
 //   · an ACCOUNT holder, proven by the ACCOUNT's own passphrase (src/accounts.js accountProof: the one a person chose at
@@ -63,6 +65,15 @@ export const FOUND_PROJECT_SQL = "INSERT INTO projects (key, name, active, creat
   "WHERE EXISTS (SELECT 1 FROM org WHERE id = {org} AND created_by_account = ?4)";
 // 4 · the org row names its creator seat and its home project (both exist now). ?1 the owner seat, ?2 the project, ?3 the account
 export const FOUND_HOME_SQL = "UPDATE org SET created_by = ?1, updated_by = ?1, home = ?2 WHERE id = {org} AND created_by_account = ?3";
+// 5 · (sprint 21, 21.4b: THE PRODUCT STEP) the org's profile, when the form answered it (src/orgprofile.js readProductStep), only beside
+// THIS account's new org row: ?1 product, ?2 line, ?3 stage, ?4 kinds, ?5 ais, ?6 places (JSON arrays), ?7 first_want, ?8 people,
+// ?9 now, ?10 the account
+export const FOUND_PROFILE_SQL = "INSERT INTO org_profile (org, product, line, stage, kinds, ais, places, first_want, people, created_at) " +
+  "SELECT {org}, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9 WHERE EXISTS (SELECT 1 FROM org WHERE id = {org} AND created_by_account = ?10)";
+// 6 · (21.4b: THE PATH) the email's one verified request names the org it founded and when, only beside THIS account's new org row and
+// only once (a request names one org: the first). ?1 the account's email, ?2 now, ?3 the account
+export const FOUND_REQUEST_SQL = "UPDATE access_requests SET org_id = {org}, org_at = ?2, updated_at = ?2 WHERE email = ?1 AND status IN ('open', 'approved', 'declined') AND org_id IS NULL " +
+  "AND EXISTS (SELECT 1 FROM org WHERE id = {org} AND created_by_account = ?3)";
 
 // ---- the words ----
 export const ORG_FIELD_WORDS = {
@@ -109,11 +120,13 @@ export function orgFormProblem(f, reserved) {
   return null;
 }
 
-// createOrg(env, url, f, { client }) -> { org: {id, name, slug}, project: {key, name}, person: {id, name, email}, key, signin } | { error, status }
+// createOrg(env, url, f, { client, profile }) -> { org: {id, name, slug}, project: {key, name}, person: {id, name, email}, key, signin } | { error, status }
 // f is orgFields' answer that orgFormProblem passed; client, the caller's (src/accounts.js clientOf; "" for none: the lockout is
-// then the account's alone). The key is the owner seat's secret, returned here ONCE: never stored (its hashes only), never
-// logged; the caller shows it and forgets it.
-export async function createOrg(env, url, f, { client = "" } = {}) {
+// then the account's alone); profile, the product step's answer (src/orgprofile.js readProductStep: written in the SAME batch as
+// the org, so an org and its profile land together or not at all; null: none, a script's JSON or the operator's tools). The key is
+// the owner seat's secret, returned here ONCE: never stored (its hashes only), never logged; the caller shows it and forgets it.
+// The batch also names the new org on the email's verified request (FOUND_REQUEST_SQL: the person's path, request -> account -> org).
+export async function createOrg(env, url, f, { client = "", profile = null } = {}) {
   const proof = await accountProof(env, url, { email: f.email, password: f.password, client });
   if (proof.verdict === "locked") return { error: "too_many_attempts", status: 429 };
   // sprint 12, 12.3: an account whose passphrase an org's invite link set (src/accounts.js THE INVITE LINK) creates no org — the
@@ -140,6 +153,9 @@ export async function createOrg(env, url, f, { client = "" } = {}) {
         db(fe).prepare(FOUND_OWNER_SQL).bind(personId, f.you, account.email, kh, ph, salt, at, account.id),
         db(fe).prepare(FOUND_PROJECT_SQL).bind(key, f.projectName, at, account.id),
         db(fe).prepare(FOUND_HOME_SQL).bind(personId, key, account.id),
+        ...(profile ? [db(fe).prepare(FOUND_PROFILE_SQL).bind(profile.product, profile.line, profile.stage, JSON.stringify(profile.kinds || []), JSON.stringify(profile.ais || []),
+          JSON.stringify(profile.places || []), profile.first_want || null, profile.people || null, at, account.id)] : []),
+        db(fe).prepare(FOUND_REQUEST_SQL).bind(account.email, at, account.id),
       ]);
     } catch (e) {
       // the batch landed nothing: this account's org appeared (a concurrent creation), the name was taken meanwhile, or the id

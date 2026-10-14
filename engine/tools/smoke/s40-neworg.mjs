@@ -73,7 +73,7 @@ smoke("neworg · an account signed up by the operator's code creates an org: its
   await account(e2, N.pass);
   // paced as the case's http is: one retry after the address's window when the flood filter refused (that proves nothing)
   const formPost = () => fetch(`${BASE}/orgs`, { method: "POST", redirect: "manual", headers: { "content-type": "application/x-www-form-urlencoded", accept: "text/html" },
-    body: new URLSearchParams({ email: e2, password: N.pass, name: `Neworg Form ${TAG}`, slug: `neworg-form-${TAG}`, web: "1" }).toString() });
+    body: new URLSearchParams({ email: e2, password: N.pass, name: `Neworg Form ${TAG}`, slug: `neworg-form-${TAG}`, product: "Neworg App", line: "Neworg one line", stage: "launched", web: "1" }).toString() });
   let f = await formPost();
   if (f.status === 429) { await new Promise((ok) => setTimeout(ok, 61000)); f = await formPost(); }
   const t = await f.text();

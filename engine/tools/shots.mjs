@@ -82,7 +82,7 @@ const txid = await fetch(`${BASE}/build?project=${encodeURIComponent(PROJECT)}`,
 // M1, M5: the person's folds are kept in the browser, which a run's shots share: a fold's shot starts from none
 const FOLD_CLEAN = "try{Object.keys(localStorage).forEach(function(k){if(k.indexOf('sharingu-fold:')===0)localStorage.removeItem(k)})}catch(e){}";
 // the create-an-org form filled and sent (the shots of 7.3): every value as a JS string literal
-const ORG_FILL = (email, pass, name, slug) => `(function(){var f=document.querySelector('form[action="/orgs"]');if(!f)return;f.email.value=${JSON.stringify(email)};f.password.value=${JSON.stringify(pass)};f.name.value=${JSON.stringify(name)};f.slug.value=${JSON.stringify(slug)};f.submit();})()`;
+const ORG_FILL = (email, pass, name, slug) => `(function(){var f=document.querySelector('form[action="/orgs"]');if(!f)return;f.email.value=${JSON.stringify(email)};f.password.value=${JSON.stringify(pass)};f.name.value=${JSON.stringify(name)};f.slug.value=${JSON.stringify(slug)};if(f.product){f.product.value="Shots App";f.line.value="The shots' product, in one line";f.querySelector('input[name="stage"]').checked=true;}f.submit();})()`;
 const NEWORG = String(process.env.SHOTS_NEWORG || "").split(",").map((x) => x.trim().split(/\s+/)).filter((x) => x.length === 2 && x[0] && x[1]);
 // the showcase's splash flag (src/showcase.js SPLASH_KEY): set, a returning visitor's page; cleared, the first visit's splash
 const SPLASH_SEEN = "try{localStorage.setItem('sharingu-splash','1')}catch(e){}";

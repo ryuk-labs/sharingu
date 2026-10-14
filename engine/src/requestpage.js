@@ -1,6 +1,7 @@
 // src/requestpage.js — the request-access form (sprint 21, slices 21.1 and 21.4a; src/requestaccess.js reads and writes): GET
 // /request-access, the profile and a passphrase twice (the account it prepares: src/accounts.js THE ACCOUNT FLOW), the optional
-// fields folded under one disclosure, a field no person sees as the honeypot. Also the request's parts the account pages share
+// fields folded under one disclosure, (21.4b) the consent's four boxes and the page that sent the person (?from=, a hidden field), a
+// field no person sees as the honeypot. Also the request's parts the account pages share
 // (src/accountpage.js): the beta's count in words (betaWords) and the request's track. The front door's scenes (src/login.js
 // authPage: both worlds, the one accent, the website's marks and U-chan's poses, src/ui.js), never a second skin. No statement
 // here: the route reads and hands each page its numbers.
@@ -8,7 +9,7 @@
 import { esc, errorState, brandMark, uchanPose } from "./ui.js";
 import { DEFAULT_BRAND } from "./tenant.js";
 import { authPage, authBrand, JOIN_WORDS } from "./login.js";
-import { TEAM_SIZES, REQUEST_MAX, REQUEST_TRAP, REQUEST_PATH } from "./requestaccess.js";
+import { TEAM_SIZES, REQUEST_MAX, REQUEST_TRAP, REQUEST_PATH, CONSENT_BOXES, TERMS_URL, PRIVACY_URL, sourceOf } from "./requestaccess.js";
 import { ACCOUNT_MIN_PASSPHRASE } from "./secrets.js";
 
 export const REQUEST_FIELD_WORDS = {
@@ -25,6 +26,8 @@ export const REQUEST_FIELD_WORDS = {
   use_case: `Say what you would use sharingu for in one line (at most ${REQUEST_MAX.use_case} characters).`,
   password: `Choose a passphrase of at least ${ACCOUNT_MIN_PASSPHRASE} characters.`,
   confirm: "The two passphrases differ. Type the same one twice.",
+  consent_terms: "Tick this box to agree to the Terms and the Privacy policy: we need it to keep your request.",
+  consent_keep: "Tick this box so we may keep your profile to review your request and email you about the beta.",
 };
 
 // brandOf(brand, words) -> the page's title and wordmark: the front door's, the product named first (src/accountpage.js too)
@@ -49,6 +52,15 @@ const REQUEST_CSS = `
   .field-err{margin:0;font:600 12.5px/1.45 var(--sans);color:var(--err)}
   [aria-invalid="true"]{border-color:var(--err)!important}
   .trap{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+  .consent{margin:4px 0 0;padding:0;border:0;display:flex;flex-direction:column;gap:10px}
+  .consent legend{padding:0;margin:0 0 4px;font:600 13.5px/1.3 var(--sans);color:var(--text)}
+  .box{display:grid;grid-template-columns:20px minmax(0,1fr);column-gap:10px;align-items:start}
+  .box input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--text);cursor:pointer}
+  .box label{font:400 13.5px/1.45 var(--sans);color:var(--text);cursor:pointer}
+  .box label a{color:var(--text);text-decoration:underline;text-underline-offset:2px}
+  .box .opt{font:500 12px/1 var(--sans);color:var(--text-muted)}
+  .box .field-err{grid-column:2;margin-top:4px}
+  .box input[aria-invalid="true"]{outline:2px solid var(--err);outline-offset:1px}
   .get{position:relative;padding:24px 24px 20px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
   .get-list{margin:14px 0 0;padding:0;list-style:none;display:flex;flex-direction:column}
   .get-list li{display:flex;align-items:center;gap:14px;min-height:56px;border-top:1px solid var(--line)}
@@ -69,6 +81,23 @@ function field(name, label, { type = "text", required = false, value = "", auto 
         ${error ? `<p class="field-err" id="err-${name}" data-field-error="${name}">${esc(error)}</p>` : ""}
         ${hint ? `<p class="hint" id="hint-${name}">${esc(hint)}</p>` : ""}
       </div>`;
+}
+// THE CONSENT (21.4b): the four boxes, the two required first (the first names the Terms and the Privacy policy, each a link), the
+// two optional after; a box comes back ticked when it was; an empty required box is the field error on itself (aria-invalid, its
+// words under it, the focus on it)
+const ticked = (v) => v === "1" || v === "on" || v === true;
+function consentBoxes(values, wrong) {
+  const words = (k, w) => (k === "consent_terms" ? esc(w).replace("the Terms", `the <a href="${TERMS_URL}" target="_blank" rel="noopener">Terms</a>`)
+    .replace("the Privacy policy", `the <a href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy policy</a>`) : esc(w));
+  return `<fieldset class="consent" data-region="consent">
+        <legend>Your consent</legend>
+        ${CONSENT_BOXES.map(([k, required, w]) => {
+    const bad = wrong === k;
+    return `<div class="box"><input type="checkbox" id="${k}" name="${k}" value="1"${required ? " required" : ""}${ticked(values && values[k]) ? " checked" : ""}${bad ? ` aria-invalid="true" autofocus aria-describedby="err-${k}"` : ""} data-input-exception="auth">` +
+      `<label for="${k}">${words(k, w)}${required ? "" : ` <span class="opt">optional</span>`}</label>` +
+      `${bad ? `<p class="field-err" id="err-${k}" data-field-error="${k}">${esc(REQUEST_FIELD_WORDS[k])}</p>` : ""}</div>`;
+  }).join("\n        ")}
+      </fieldset>`;
 }
 // the optional fields, folded under one disclosure that opens itself when one holds a value or is the wrong one
 export const OPTIONAL_FIELDS = ["website", "linkedin", "x", "github", "ai_tools", "use_case"];
@@ -121,6 +150,8 @@ export function renderRequestAccess(opts) {
         ${f("use_case", "What you would use sharingu for, in one line")}
         </div>
       </details>
+      ${consentBoxes(values, at)}
+      <input type="hidden" name="from" value="${esc(sourceOf(v("from")))}">
       <div class="trap" aria-hidden="true"><label for="${REQUEST_TRAP}">Leave this empty</label><input type="text" id="${REQUEST_TRAP}" name="${REQUEST_TRAP}" tabindex="-1" autocomplete="off" data-input-exception="auth"></div>
       <button type="submit">Request access</button>
     </form>`;

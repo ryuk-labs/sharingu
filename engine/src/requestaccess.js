@@ -24,6 +24,17 @@
 // place. Its rows read are the requests ahead of it, never the table.
 // approvedProfile(env, email) -> { name, company } of the email's APPROVED request (one per email), or null (the org form is filled in from
 // it). The caller passes ONLY an email a session or a sign-up's code proved: the profile is the person's own.
+// THE DATA (sprint 21, 21.4b; the owner's approved data collection of 2026-10-14):
+// readConsent(input) -> { consent: { terms, keep, updates, call } } | { field }: the join's four boxes (CONSENT_BOXES), the two
+// REQUIRED ones (the terms and privacy; keeping the profile to review the request and email about the beta) a field error on the
+// box itself when unticked, the two optional ones (product updates; a feedback call) 1 or 0. Stored on the request with the words'
+// version (CONSENT_VERSION: the day the words were set — a change of the words is a new version, never an edit of an old one) and
+// the time (the request's own). The verification does not ask again.
+// sourceOf(v) -> which page sent the person: one of REQUEST_SOURCES (the ?from= tag on the link, carried by the form as a hidden
+// field), anything else "direct". Never a cookie, never a tracker: the one word, stored on the request and named in the team's alert.
+// clearStale(env, at) -> { declined, abandoned }: THE 90-DAY CLEARING (src/cron.js, once a run, CLEAR_BATCH rows each kind at most):
+// a DECLINED request 90 days after its decline, and an APPROVED request whose person founded no org 90 days after its approval,
+// have their profile emptied (CLEAR_FIELDS) and cleared_at set; the row stays, so the funnel's counts stay.
 import { db } from "./data.js";
 import { uid, now, sha256, hex, pbkdf2 } from "./util.js";
 import { normEmail, asciiEmail } from "./accounts.js";
@@ -48,6 +59,29 @@ export const newLinkToken = () => hex(LINK_TOKEN_BYTES);
 export const verifyTokenHash = (token) => sha256(`sharingu-verify:v1:${String(token == null ? "" : token)}`);
 export const resetTokenHash = (token) => sha256(`sharingu-reset:v1:${String(token == null ? "" : token)}`);
 
+// THE CONSENT (21.4b): the words' version, the four boxes in the form's order (key, required, the words; the links the first one's
+// words name), and the column each is stored in
+export const CONSENT_VERSION = "2026-10-14";
+export const TERMS_URL = "https://www.sharingu.xyz/terms.html";
+export const PRIVACY_URL = "https://www.sharingu.xyz/privacy.html";
+// copy: off-screen (the owner's approved consent words: the join form draws them beside their boxes, the operator page as a record)
+export const CONSENT_BOXES = [
+  ["consent_terms", true, "I agree to the Terms and the Privacy policy"],
+  ["consent_keep", true, "sharingu may keep this profile to review my request and email me about the beta"],
+  ["consent_updates", false, "Email me product updates"],
+  ["consent_call", false, "You may ask me for a 20-minute feedback call"],
+];
+// THE SOURCE (21.4b): the pages that may send a person, by the tag on their link (?from=); none or any other is "direct"
+export const REQUEST_SOURCES = ["site", "showcase", "direct"];
+export const sourceOf = (v) => { const s = typeof v === "string" ? v.trim().toLowerCase() : ""; return REQUEST_SOURCES.includes(s) ? s : "direct"; };
+// ticked(v) -> a box's answer as a form or a JSON body sends it (a form: its value "1" or "on"; JSON: true or 1)
+const ticked = (v) => v === true || v === 1 || v === "1" || v === "on" || v === "true";
+export function readConsent(input) {
+  const i = input && typeof input === "object" ? input : {};
+  for (const [k, required] of CONSENT_BOXES) if (required && !ticked(i[k])) return { field: k };
+  return { consent: { terms: 1, keep: 1, updates: ticked(i.consent_updates) ? 1 : 0, call: ticked(i.consent_call) ? 1 : 0 } };
+}
+
 // the team sizes the form offers, value -> the words it shows
 export const TEAM_SIZES = { "1": "Just me", "2-10": "2 to 10", "11-50": "11 to 50", "51-200": "51 to 200", "201+": "More than 200" };
 // each text field's longest form, after folding
@@ -55,7 +89,8 @@ export const REQUEST_MAX = { name: 100, company: 100, role: 80, email: 254, webs
 // the honeypot: a field no person sees (src/requestpage.js hides it); a request that fills it is answered as any other and dropped
 export const REQUEST_TRAP = "trap";
 // the fields a form or a JSON body sends (web: the form's marker)
-export const REQUEST_FIELDS = ["name", "email", "company", "role", "team_size", "website", "linkedin", "x", "github", "ai_tools", "use_case", "password", "confirm", REQUEST_TRAP, "web"];
+export const REQUEST_FIELDS = ["name", "email", "company", "role", "team_size", "website", "linkedin", "x", "github", "ai_tools", "use_case", "password", "confirm",
+  ...CONSENT_BOXES.map(([k]) => k), "from", REQUEST_TRAP, "web"];
 
 // fold(v) -> the text with every run of spaces and control characters one space, trimmed
 const fold = (v) => String(v == null ? "" : v).replace(/[\s\u0000-\u001f\u007f]+/g, " ").trim();
@@ -128,17 +163,20 @@ export async function joinPass(password) {
   return { hash: await pbkdf2(String(password == null ? "" : password), salt), salt };
 }
 
-// the cleanup on write (?1 now), then the one insert: an UNVERIFIED request, its passphrase's hash and its link's hash
+// the cleanup on write (?1 now), then the one insert: an UNVERIFIED request, its passphrase's hash and its link's hash, its source and
+// its consent (the four boxes, the words' version and the time: ?17 now)
 export const REQUEST_CLEANUP_SQL = "DELETE FROM access_requests WHERE status = 'unverified' AND verify_expires <= ?1";
-export const REQUEST_INSERT_SQL = "INSERT INTO access_requests (id, email, name, company, role, team_size, website, linkedin, x, github, ai_tools, use_case, status, pass_hash, pass_salt, verify_hash, verify_expires, created_at, updated_at) " +
-  "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, 'unverified', ?13, ?14, ?15, ?16, ?17, ?17)";
+export const REQUEST_INSERT_SQL = "INSERT INTO access_requests (id, email, name, company, role, team_size, website, linkedin, x, github, ai_tools, use_case, status, pass_hash, pass_salt, verify_hash, verify_expires, created_at, updated_at, source, consent_version, consent_at, consent_terms, consent_keep, consent_updates, consent_call) " +
+  "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, 'unverified', ?13, ?14, ?15, ?16, ?17, ?17, ?18, ?19, ?17, ?20, ?21, ?22, ?23)";
 const verifyEnd = (at = Date.now()) => new Date(at + VERIFY_HOURS * 60 * 60 * 1000).toISOString();
-export async function fileRequest(env, r, { pass, tokenHash }) {
-  const id = uid(), at = now();
+// fileRequest(env, request, { pass, tokenHash, consent, source }) — consent: readConsent's answer (the required boxes ticked, or the
+// door refused before here); source: sourceOf's word
+export async function fileRequest(env, r, { pass, tokenHash, consent, source }) {
+  const id = uid(), at = now(), c = consent || {};
   await db(env).batch([
     db(env).prepare(REQUEST_CLEANUP_SQL).bind(at),
     db(env).prepare(REQUEST_INSERT_SQL).bind(id, r.email, r.name, r.company, r.role, r.team_size, r.website, r.linkedin, r.x, r.github, r.ai_tools, r.use_case,
-      pass.hash, pass.salt, String(tokenHash), verifyEnd(), at),
+      pass.hash, pass.salt, String(tokenHash), verifyEnd(), at, sourceOf(source), CONSENT_VERSION, c.terms ? 1 : 0, c.keep ? 1 : 0, c.updates ? 1 : 0, c.call ? 1 : 0),
   ]);
   return id;
 }
@@ -173,4 +211,34 @@ export const APPROVED_PROFILE_SQL = "SELECT name, company FROM access_requests I
 export async function approvedProfile(env, email) {
   const row = await db(env).prepare(APPROVED_PROFILE_SQL).bind(normEmail(email)).first();
   return row ? { name: String(row.name || ""), company: String(row.company || "") } : null;
+}
+
+// ---- THE 90-DAY CLEARING (21.4b; src/cron.js runs it once a run) ----
+// CLEAR_DAYS after its decline (a declined request) or its approval (an approved request whose person founded no org), a request's
+// profile is emptied. WHAT GOES (CLEAR_FIELDS): every field a person typed or that names them — the name, company and role (emptied:
+// NOT NULL columns), the email (replaced by "cleared:<the row's id>": the column is NOT NULL and an email's one verified request is
+// unique, so the person may ask again), the website, LinkedIn, X and GitHub addresses, the AI tools and the use case, and the link to
+// their account (account_id). WHAT STAYS, and why: the id, the status and every date (created, verified, approved, declined, the
+// account's and the org's, the clearing's own) — the funnel's counts and the line's history; the team size and the source — two
+// coarse words that name no one and are the beta's own measures; the consent's four answers, its version and its time — the record
+// that the profile was given with consent and is now cleared. An approved request cleared holds no place any more (src/beta.js
+// BETA_APPROVED_SQL counts only uncleared ones) and its email no longer approves an org (src/accounts.js MAY_FOUND_SQL reads it by
+// email). The selection rides two partial indexes (idx_access_requests_declined, idx_access_requests_abandoned: only the uncleared
+// rows of their kind), CLEAR_BATCH at most each, so a run reads and writes a bounded few; what is left waits for the next run.
+export const CLEAR_DAYS = 90;
+export const CLEAR_BATCH = 100;
+export const CLEAR_FIELDS = ["name", "company", "role", "email", "website", "linkedin", "x", "github", "ai_tools", "use_case", "account_id"];
+// copy: off-screen (a statement's text)
+const CLEAR_SET = "name = '', company = '', role = '', email = 'cleared:' || id, website = NULL, linkedin = NULL, x = NULL, github = NULL, ai_tools = NULL, use_case = NULL, account_id = NULL, " +
+  "cleared_at = ?2, updated_at = ?2";
+// ?1 the line (90 days before now), ?2 now, ?3 the batch
+export const CLEAR_DECLINED_SQL = `UPDATE access_requests SET ${CLEAR_SET} WHERE id IN (SELECT id FROM access_requests INDEXED BY idx_access_requests_declined ` +
+  "WHERE status = 'declined' AND cleared_at IS NULL AND declined_at <= ?1 LIMIT ?3)";
+export const CLEAR_ABANDONED_SQL = `UPDATE access_requests SET ${CLEAR_SET} WHERE id IN (SELECT id FROM access_requests INDEXED BY idx_access_requests_abandoned ` +
+  "WHERE status = 'approved' AND org_id IS NULL AND cleared_at IS NULL AND approved_at <= ?1 LIMIT ?3)";
+export const clearLine = (at) => new Date(Date.parse(at) - CLEAR_DAYS * 86400000).toISOString();
+export async function clearStale(env, at = now()) {
+  const [d, a] = await db(env).batch([db(env).prepare(CLEAR_DECLINED_SQL).bind(clearLine(at), at, CLEAR_BATCH), db(env).prepare(CLEAR_ABANDONED_SQL).bind(clearLine(at), at, CLEAR_BATCH)]);
+  const n = (r) => (r && r.meta && r.meta.changes) || 0;
+  return { declined: n(d), abandoned: n(a) };
 }

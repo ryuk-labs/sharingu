@@ -60,6 +60,15 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   still asks the passphrase (before an owner key is minted) and waits for the approval (`mayFound`: a used code or an approved
   request; else 403 org_waiting). The org form is filled in from the email's approved request (`approvedProfile`: only for an email a
   session or a code proved).
+  THE DATA (21.4b, the owner's approved data collection): the join's four consent boxes (`readConsent`: two required, each stored
+  with the words' version `CONSENT_VERSION` and its time), the page that sent the person (`sourceOf`: a `?from=` tag, site · showcase
+  · direct, never a cookie), the person's path on the request row (the account its verification made, the org it founded); the
+  90-day clearing (`clearStale`, the cron's step: `CLEAR_FIELDS` emptied, the counts kept). `src/orgprofile.js` — the product step
+  on the org form (`readProductStep`; migrate-081's `org_profile`, written in the org's own batch, src/orgs.js), required from the
+  web form, optional from a script's JSON. `src/operatorread.js` · `src/operatorpage.js` — the operator page (`/<org 1>/operator`,
+  org 1's admins alone; anyone else signed in the one not-here 404): the funnel (one aggregate over the newest 1,000 requests), one
+  keyset page of people with their profile, consent, source, path and product answers, Approve and Decline (same-origin; the
+  request statements `tools/operator.mjs` shares).
 - `src/email.js` · `src/mails.js` — THE SEND (sprint 21, 21.4a): every email the worker or the operator sends goes through
   `sendMail`, From hello@sharingu.xyz, under THE CAP (fewer than 2,900 counted in any 31 days: `mail_days`, one conditional upsert a
   send) and three a day per address (`mail_addresses`, a digest; a refused address never spends the cap); at the cap nothing is sent,

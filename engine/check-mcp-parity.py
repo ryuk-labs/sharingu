@@ -44,6 +44,9 @@ NOT_TOOLS = {"/install", "/map", "/docs", "/home", "/projects", "/audit", "/logo
     "/control/people",
     # sprint 3 S3b: the beta measures, the admin's export (src/measures.js): an admin's read on Control, not an agent's verb
     "/control/measures",
+    # sprint 21, 21.4b: the operator page, org 1's admins' screen in a browser (the beta's funnel and its people, Approve and Decline:
+    # the operator's own decisions, as tools/operator.mjs makes them), never an agent's verb
+    "/operator",
     # the brand's self-hosted faces and the favicon: static bytes a page asks for, not a verb
     "/fonts/:file", "/favicon.svg",
     # sprint 11, 11.3: OpenAI's domain verification, the deployment's token for a store's crawler, not a verb

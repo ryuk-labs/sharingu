@@ -708,9 +708,12 @@ export async function redeemInvite(env, url, { token, password, client = "" } = 
 // ---- THE BETA'S PLACES, read by the worker (sprint 21, 21.1; src/beta.js: the cap and the two counts the operator's allow makes
 // before it mints, tools/operator.mjs betaPlaces). Here because its statements name signup_codes and accounts, whose one module this
 // is. Three aggregate statements in one batch: each answers one count (SQL aggregates), never the rows themselves.
-// betaCount(env, at) -> { cap, orgs, codes, approved, taken, left } at time `at` (the codes unexpired then)
-export async function betaCount(env, at = now()) {
-  const [o, c, a] = await db(env).batch([db(env).prepare(BETA_ORGS_SQL), db(env).prepare(BETA_CODES_SQL).bind(at, null), db(env).prepare(BETA_APPROVED_SQL).bind(at, null)]);
+// betaCount(env, at, email) -> { cap, orgs, codes, approved, taken, left } at time `at` (the codes unexpired then); email: one left out
+// of the codes and the approvals (the operator page's Approve, as the operator's allow --request counts: the email being approved,
+// whose own open code would otherwise count twice), none by default
+export async function betaCount(env, at = now(), email = null) {
+  const e = email ? normEmail(email) : null;
+  const [o, c, a] = await db(env).batch([db(env).prepare(BETA_ORGS_SQL), db(env).prepare(BETA_CODES_SQL).bind(at, e), db(env).prepare(BETA_APPROVED_SQL).bind(at, e)]);
   const n = (r) => Number((((r && r.results) || [])[0] || {}).n || 0);
   return placesOf(n(o), n(c), n(a));
 }
@@ -727,7 +730,7 @@ export async function betaCount(env, at = now()) {
 // for this address cannot be completed by its owner's click (the pre-account takeover) — and in ONE batch: the request verified
 // (status open, verified_at: its place in line), the passphrase's hash cleared from it, the account made with it (an account
 // with no passphrase takes it, as the operator's code does; one that has its own keeps it), and, when the account holds no seat,
-// an ACCOUNT SESSION. The first verified request per email stands (migrate-081's idx_access_requests_verified, and the batch's
+// an ACCOUNT SESSION; (21.4b) the request then names that account and when (account_id, account_at: the person's path). The first verified request per email stands (migrate-081's idx_access_requests_verified, and the batch's
 // guard before it).
 // THE ACCOUNT SESSION (account_sessions): a browser session for an account that holds no seat — a person in line, approved, or
 // signed up by the operator's code and before their org. It is the same cookie as an org session (__Host-ar_session), its token
@@ -803,7 +806,7 @@ export async function accountHolds(env, email) {
 
 // ---- the verification (POST /account/verify) ----
 // the open link (?1 the token's hash, ?2 now): an unverified request whose link is live
-export const VERIFY_OPEN_SQL = "SELECT id, email, name, company, role, team_size, pass_hash, pass_salt FROM access_requests WHERE verify_hash = ?1 AND status = 'unverified' AND verify_expires > ?2";
+export const VERIFY_OPEN_SQL = "SELECT id, email, name, company, role, team_size, source, pass_hash, pass_salt FROM access_requests WHERE verify_hash = ?1 AND status = 'unverified' AND verify_expires > ?2";
 // THE BATCH. 1 · the spend: the request verified (in line from now), the link and the passphrase's hash cleared — only while the
 // link is live and no verified request of its email stands. ?1 now, ?2 the request, ?3 the token's hash
 export const VERIFY_SPEND_SQL = "UPDATE access_requests SET status = 'open', verified_at = ?1, updated_at = ?1, verify_hash = NULL, verify_expires = NULL, pass_hash = NULL, pass_salt = NULL " +
@@ -822,6 +825,9 @@ export const VERIFY_SESSION_SQL = `INSERT INTO account_sessions (token_hash, acc
 // ?3 now
 export const VERIFY_DROP_OTHERS_SQL = "DELETE FROM access_requests WHERE email = ?1 AND status = 'unverified' AND id <> ?2 " +
   "AND EXISTS (SELECT 1 FROM access_requests r WHERE r.id = ?2 AND r.status = 'open' AND r.verified_at = ?3)";
+// 5 · (sprint 21, 21.4b: THE PATH) the request names the account the verification made or joined, and when — only when THIS batch
+// spent the link. ?1 the email, ?2 now, ?3 the request
+export const VERIFY_LINK_SQL = "UPDATE access_requests SET account_id = (SELECT a.id FROM accounts a WHERE a.email = ?1), account_at = ?2 WHERE id = ?3 AND status = 'open' AND verified_at = ?2";
 // verifyOpen(env, tokenHash) -> the live link's request ({ id, email, name, … }), or null (expired, used, never sent)
 export const verifyOpen = (env, tokenHash) => db(env).prepare(VERIFY_OPEN_SQL).bind(String(tokenHash), now()).first();
 // verifyJoin(env, { tokenHash, password, client }) -> { verdict, request, session }
@@ -840,6 +846,7 @@ export async function verifyJoin(env, { tokenHash, password, client = "" } = {})
     db(env).prepare(VERIFY_ACCOUNT_SQL).bind(hex(16), out.email, row.pass_hash, row.pass_salt, at, row.id),
     db(env).prepare(VERIFY_SESSION_SQL).bind(await sha256(token), "web", expires, out.email, at, row.id, row.pass_hash),
     db(env).prepare(VERIFY_DROP_OTHERS_SQL).bind(out.email, row.id, at),
+    db(env).prepare(VERIFY_LINK_SQL).bind(out.email, at, row.id),
   ]);
   const changed = (i) => ((res && res[i] && res[i].meta && res[i].meta.changes) || 0) >= 1;
   if (!changed(0)) return { verdict: "refused" };

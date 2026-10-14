@@ -96,6 +96,8 @@ async function world() {
 }
 const PASS = "a-long-account-passphrase";
 const base = (o = {}) => ({ email: "ada@fresh.test", password: PASS, name: "Ada Works", slug: "ada-works", ...o });
+// (sprint 21, 21.4b) the web form's product step, its three required answers (tools/data-selftest.mjs proves the step itself)
+const STEP = { product: "Ada App", line: "One picture of the work", stage: "building" };
 
 const CASES = {
   async O1() {
@@ -133,7 +135,7 @@ const CASES = {
     out.push([p.status === 200 && /action="\/orgs"/.test(p.text) && ["email", "password", "name", "slug", "project", "you"].every((f) => new RegExp(`name="${f}"`).test(p.text)) && /org\.test\//.test(p.text) && p.cache === "no-store" && !/class="wm-org"/.test(p.text),
       `O2 · GET /orgs/new: ${p.status}, the six fields posting to /orgs, the address's host before the path name, the platform's wordmark (no org's)`]);
     const acc = await W.account("ada@fresh.test", PASS);
-    const f = await W.call("POST", "/orgs", { form: { ...base(), web: "1" } });
+    const f = await W.call("POST", "/orgs", { form: { ...base(), ...STEP, web: "1" } });
     const key = (/data-secret="owner-key">([0-9a-f]{40})</.exec(f.text) || [])[1];
     const n = (W.one("SELECT id FROM org WHERE slug = 'ada-works'") || {}).id;
     const fold = (/<details class="key-fold"[^>]*>[\s\S]*?<\/details>/.exec(f.text) || [""])[0];
@@ -151,18 +153,18 @@ const CASES = {
     // an account with a seat elsewhere (Mia, a member of org 1, her account's own passphrase): ONE session, on the seat the creation made
     await W.w.db.prepare("UPDATE accounts SET pass_hash = ?, pass_salt = ? WHERE email = 'mia@one.test'").run(await pbkdf2("mia-account-pass", SALT), SALT);
     W.approve("mia@one.test");
-    const mf = await W.call("POST", "/orgs", { form: { email: "mia@one.test", password: "mia-account-pass", name: "Mia Co", slug: "mia-co", web: "1" } });
+    const mf = await W.call("POST", "/orgs", { form: { email: "mia@one.test", password: "mia-account-pass", name: "Mia Co", slug: "mia-co", ...STEP, web: "1" } });
     const mt = (/^__Host-ar_session=([^;]+);/.exec(mf.cookie || "") || [])[1];
     const mrow = mt ? W.one("SELECT person_id, account_id, org FROM tokens WHERE token_hash = ?", sha(mt)) || {} : {};
     const mseat = W.one("SELECT p.id, p.account_id, p.org FROM people p JOIN org o ON o.id = p.org WHERE o.slug = 'mia-co'") || {};
     out.push([mf.status === 200 && !!mt && mrow.person_id === mseat.id && mrow.account_id === mseat.account_id && mrow.org === mseat.org && W.one("SELECT COUNT(*) AS n FROM tokens WHERE account_id = ?", mseat.account_id).n === 1,
       `O2 · an account with a seat in another org: one session, on the new org's owner seat (${mrow.person_id === mseat.id}, org ${mrow.org}), never its org-1 seat`]);
     const s0 = W.snap(), a0 = W.attempts(0) + W.attempts(1);
-    const x = await W.call("POST", "/orgs", { form: { ...base({ email: "ada@fresh.test", slug: "cross-site" }), web: "1" }, headers: { "sec-fetch-site": "cross-site", origin: "https://evil.test" } });
+    const x = await W.call("POST", "/orgs", { form: { ...base({ email: "ada@fresh.test", slug: "cross-site" }), ...STEP, web: "1" }, headers: { "sec-fetch-site": "cross-site", origin: "https://evil.test" } });
     const xj = await W.call("POST", "/orgs", { body: base({ slug: "cross-site" }), headers: { "sec-fetch-site": "cross-site", origin: "https://evil.test" } });
     out.push([x.status === 403 && xj.status === 403 && xj.json.error === "cross_site_org" && !x.cookie && !xj.cookie && W.snap() === s0 && W.attempts(0) + W.attempts(1) === a0,
       `O2 · a cross-site form and JSON: ${x.status} / ${xj.status} ${xj.json && xj.json.error}, nothing written, not even an attempt`]);
-    const bad = await W.call("POST", "/orgs", { form: { ...base({ slug: "login" }), web: "1" } });
+    const bad = await W.call("POST", "/orgs", { form: { ...base({ slug: "login" }), ...STEP, web: "1" } });
     out.push([bad.status === 409 && /belongs to the platform/.test(bad.text) && /value="ada@fresh\.test"/.test(bad.text) && !bad.text.includes(PASS), `O2 · a refused form re-renders with what was typed but the passphrase (${bad.status})`]);
     return out;
   },

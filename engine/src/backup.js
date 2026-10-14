@@ -81,7 +81,7 @@ const ORG_COL = "+org = {org}";
 const ORG_PROJECT = (col) => `+${col} IN (SELECT key FROM projects WHERE +org = {org})`;
 const ORG = {
   projects: ORG_COL, people: ORG_COL, artifacts: ORG_COL, transmission: ORG_COL, approval_audit: ORG_COL, events: ORG_COL, loops: ORG_COL,
-  org: "id = {org}",
+  org: "id = {org}", org_profile: ORG_COL,
   project_seats: ORG_PROJECT("project_key"),
   transmission_refs: "EXISTS (SELECT 1 FROM transmission x WHERE x.id = transmission_refs.tid AND +x.org = {org})",
 };
@@ -93,6 +93,7 @@ export const BACKUP_DUMPED = [
   { table: "projects", why: "the projects, active and archived", cols: PROJECT_COLS },
   { table: "people", why: "the people, with their roles, hats and profile (no credential)", cols: PEOPLE_COLS },
   { table: "org", why: "the org row (its name, brand and home project)" },
+  { table: "org_profile", why: "what the org will build, as its founder answered the org form (sprint 21, 21.4b, migrate-081: the product step)" },
   { table: "project_seats", why: "who is seated on which project" },
   { table: "k_aim", why: "knowledge: each project's aim and measure" },
   { table: "k_goals", why: "knowledge: the goal trees" },

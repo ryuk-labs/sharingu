@@ -2,7 +2,7 @@
 // `/` gate in src/index.js): the showcase and the front door's one shell, through the REAL worker (src/index.js over node:sqlite
 // built from boot.sql, tools/fixtures/sqlite-worker.mjs) and the splash's own script run in a sandbox.
 //   F1 · GET / at the root, a browser with no session: 200 HTML on the front shell, the hero line and its lede, ONE orange Join the
-//        beta (-> /request-access) and the walkthrough beside it (#walkthrough, a section of the page), the five videos and the
+//        beta (-> /request-access?from=showcase: 21.4b, the source) and the walkthrough beside it (#walkthrough, a section of the page), the five videos and the
 //        channel as src/walkthrough.js lists them (each target=_blank rel=noopener), the beta's places as betaCount answers them
 //        ("N of 50 places taken"; past the cap "All 50 places taken"); nothing third-party loads (no iframe, no external src,
 //        stylesheet or script); a count that cannot be read is left out, the page still 200
@@ -78,9 +78,9 @@ const linkOf = (html, url) => (new RegExp(`<a [^>]*href="${url.replace(/[.?*+^$(
   const channel = linkOf(h, WALKTHROUGH_CHANNEL.url);
   ok(page.status === 200 && /^text\/html/.test(page.type) && /<body data-shell="front">/.test(h) && /data-screen="showcase"/.test(h) && h.includes(SHOWCASE_LINE.replace(/'/g, "&#39;")) && h.includes(SHOWCASE_LEDE),
     `F1 · GET / signed out: 200 HTML on the front shell, the hero line and its lede (${page.status} ${page.type})`);
-  ok(/<a class="access" href="\/request-access"[^>]*>Join the beta<\/a>/.test(h) && /<a class="see" href="#walkthrough">See the walkthrough<\/a>/.test(h) && /<section [^>]*id="walkthrough"/.test(h)
+  ok(/<a class="access" href="\/request-access\?from=showcase"[^>]*>Join the beta<\/a>/.test(h) && /<a class="see" href="#walkthrough">See the walkthrough<\/a>/.test(h) && /<section [^>]*id="walkthrough"/.test(h)
     && /<a class="front-link" href="\/login"[^>]*>Sign in<\/a>/.test(h) && (h.match(/class="access"|class="primary"/g) || []).length === 1,
-    "F1 · ONE orange Join the beta (-> /request-access), the walkthrough beside it (#walkthrough, on this page), Sign in top-right (-> /login)");
+    "F1 · ONE orange Join the beta (-> /request-access?from=showcase: 21.4b, the source), the walkthrough beside it (#walkthrough, on this page), Sign in top-right (-> /login)");
   ok(WALKTHROUGH.length === 5 && videos.every((a) => a && /target="_blank"/.test(a) && /rel="noopener"/.test(a)) && WALKTHROUGH.every((v) => /^https:\/\/youtu\.be\/[A-Za-z0-9_-]{11}$/.test(v.url))
     && channel && /target="_blank"/.test(channel) && /rel="noopener"/.test(channel) && WALKTHROUGH_CHANNEL.url === "https://www.youtube.com/@SharinguAIApp"
     && WALKTHROUGH.every((v) => h.includes(`>${v.title}<`)),

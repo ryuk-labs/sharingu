@@ -137,7 +137,7 @@ ${frontTop(wordmark)}
         <h1 id="hero-line">${esc(SHOWCASE_LINE)}</h1>
         <p class="hero-lede">${esc(SHOWCASE_LEDE)}</p>
         <div class="hero-acts">
-          <a class="access" href="${REQUEST_PATH}" data-region="request-access-link">${JOIN_WORDS}</a>
+          <a class="access" href="${REQUEST_PATH}?from=showcase" data-region="request-access-link">${JOIN_WORDS}</a>
           <a class="see" href="#walkthrough">See the walkthrough</a>
         </div>
         ${places ? `<p class="label" data-beta-count>${esc(places)}</p>` : ""}

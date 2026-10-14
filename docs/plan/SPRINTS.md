@@ -714,6 +714,12 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   under the cap (`mail_days`, `mail_addresses`), the emails From hello@sharingu.xyz, a local capture. For the review: a
   distributed bot can still spend the cap (it then fails safe); a reset clears an invite-made account's one-org mark (the
   reset email proves the address); the operator's live REST send has never run (its first send to ryuk@, free).
+- [x] **21.4b · The data** — committed with its proof (data 53/53, every node selftest green, smoke 366/366, s68): consent
+  on the join (two required, two optional, each with its wording's version and time), the source (`?from=`, allowed
+  values only), the request linked to its account and its org, the product step on the org form (`org_profile`, in the
+  org's own batch), the operator page at `/<org 1>/operator` (org 1's owners only, the one 404 for anyone else; the
+  funnel in one statement; Approve under the cap, Decline), the cron's 90-day clearing (the profile emptied; status, dates,
+  team size, source and the consent record kept).
 - [ ] **21.4's order** (the main session, 2026-10-14): three builders one after another, each briefed, reviewed, smoked and
   committed: 21.4a the account flow (verify once, the passphrase, the reset, the cap, the alerts, the emails in the
   website's look with a plain-text twin); 21.4b the data (consent, the source, the request -> account -> org link, the
@@ -743,6 +749,16 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   "Connect an AI" until the first filing; Control > Connect leads with Claude and ChatGPT; the org's address suggested
   from its name). orgs 42/42, wire 428/428, showcase 32/32; smoke 355/355 (s65, s66). The adversarial read of the sign-in
   change rides the sprint-end review.
+- [ ] **The sprint end's fix list** (found in review, folded here so none is lost): the org form's top bar says Sign in to a
+  signed-in, approved account; the site's privacy page gains 21.4b's paragraph (in the site's `journey-polish` branch,
+  shipped with the buttons): "When you join the beta we collect your name, work email, company, role and team size, and
+  anything optional you add (website, LinkedIn, X, GitHub, the AI tools you use, one line on your use). We record which
+  page sent you, and your consent: you agree to our Terms and Privacy policy and that we may keep this profile to review
+  your request and email you about the beta; product updates and a feedback call are your choice. Each consent is stored
+  with the wording's version and its time. When you create an org we ask what you'll build (product, stage, tools, team)
+  to set it up and improve the beta. Only you and the sharingu operator see this. If your request is declined, or
+  approved but no org is created, we clear your profile 90 days later and keep only anonymous counts. To ask for
+  deletion, email acie@ryuklabs.io."
 - [ ] **The sprint end.** The site's access buttons move to the worker's request page and the site's waitlist page redirects there,
   merged right after the ship (live must answer the page first), together with the site's 21.P polish (branch
   `journey-polish`, 29e6a17, verify 260/260; held by the owner, 2026-10-14).

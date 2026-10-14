@@ -104,14 +104,15 @@ export const resetMail = ({ origin, link }) => mail(origin, {
   link: { label: "Choose a new passphrase", href: link },
   after: [`The link works once, for ${RESET_MINUTES} minutes.`, "If you did not ask, ignore this email: your passphrase stays as it is."],
 });
-// teamRequestMail({ origin, request }) — to the team: a new verified request (no name, no email of the person)
+// teamRequestMail({ origin, request }) — to the team: a new verified request (no name, no email of the person); its source (21.4b: the
+// page that sent them, src/requestaccess.js sourceOf) among the facts
 export const teamRequestMail = ({ origin, request }) => mail(origin, {
   subject: `New beta request: ${request.company}`,
   preheader: `${request.company} verified its request for a place.`,
   heading: "A new verified request",
   paras: ["A request for a place in the beta was verified and is in line."],
   facts: [["Company", request.company], ["Role", request.role], ["Team size", request.team_size], ...(request.source ? [["Source", request.source]] : []), ["Request", request.id]],
-  after: ["Approve it from the operator's terminal: node tools/operator.mjs requests, then allow --request <id>."],
+  after: ["Approve it on the operator page (org 1's address, then /operator) or from the operator's terminal: node tools/operator.mjs requests, then allow --request <id>."],
 });
 // capMail({ total, cap, days }) — to the team, once a day: the cap is reached, nothing is sent to a person
 export const capMail = ({ total, cap, days }) => mail("", {

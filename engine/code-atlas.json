@@ -118,22 +118,22 @@
           "role": "the account's seats in every org: only after the holder proved the account's passphrase (their own seats' connected apps"
         },
         {
-          "line": 759,
+          "line": 762,
           "name": "ACCOUNT_SESSION_MINT_SQL",
           "role": "token's hash, ?2 device, ?3 now, ?4 the expiry, ?5 the account"
         },
         {
-          "line": 750,
+          "line": 753,
           "name": "ACCOUNT_SESSION_PREFIX",
           "role": "waitlist."
         },
         {
-          "line": 756,
+          "line": 759,
           "name": "ACCOUNT_SESSION_SQL",
           "role": "the account session's one read (?1 the token's hash, ?2 now)"
         },
         {
-          "line": 764,
+          "line": 767,
           "name": "ACCOUNT_STANDING_SQL",
           "role": "the operator's code signed it up (a used code: approved), and the org it founded (its path name)"
         },
@@ -173,7 +173,7 @@
           "role": "?2 the token hash kept"
         },
         {
-          "line": 761,
+          "line": 764,
           "name": "END_ACCOUNT_SESSION_SQL",
           "role": ""
         },
@@ -258,7 +258,7 @@
           "role": "pass_hash (NULL: none)."
         },
         {
-          "line": 767,
+          "line": 770,
           "name": "MAY_FOUND_SQL",
           "role": "whether the account's email may found an org (?1 the email): a used operator's code, or an approved request"
         },
@@ -303,42 +303,42 @@
           "role": ""
         },
         {
-          "line": 860,
+          "line": 867,
           "name": "RESET_ACCOUNT_SQL",
           "role": "2 \u00b7 the passphrase (the invite mark ends: the link proves the email). ?1 the account, ?2 now, ?3 the token's hash, ?4 ha"
         },
         {
-          "line": 864,
+          "line": 871,
           "name": "RESET_END_ACCOUNT_SESSIONS_SQL",
           "role": "4 \u00b7 its account sessions; 5 \u00b7 its other open reset links"
         },
         {
-          "line": 865,
+          "line": 872,
           "name": "RESET_END_LINKS_SQL",
           "role": ""
         },
         {
-          "line": 862,
+          "line": 869,
           "name": "RESET_END_TOKENS_SQL",
           "role": "3 \u00b7 every org session of the account, in every org (its account sessions and each of its seats' own). ?1 ?2 ?3 as above"
         },
         {
-          "line": 853,
+          "line": 860,
           "name": "RESET_INSERT_SQL",
           "role": "RESET_MINUTES (src/mails.js): a link works 30 minutes, once"
         },
         {
-          "line": 855,
+          "line": 862,
           "name": "RESET_OPEN_SQL",
           "role": "the live link (?1 the token's hash, ?2 now), with its account"
         },
         {
-          "line": 857,
+          "line": 864,
           "name": "RESET_SPEND_SQL",
           "role": "THE BATCH. 1 \u00b7 the spend (?1 now, ?2 the token's hash)"
         },
         {
-          "line": 858,
+          "line": 865,
           "name": "RESET_SPENT",
           "role": ""
         },
@@ -433,37 +433,42 @@
           "role": "every later statement of the batch is conditional. Binds: ?1 now, ?2 the nonce, ?3 the email, ?4 the code's id, ?5 its h"
         },
         {
-          "line": 812,
+          "line": 815,
           "name": "SPENT",
           "role": ""
         },
         {
-          "line": 753,
+          "line": 756,
           "name": "UNVERIFIED_PASS_SQL",
           "role": "the newest unverified join's passphrase for an email with no account (the sign-in's one hash; idx_access_requests_email)"
         },
         {
-          "line": 815,
+          "line": 818,
           "name": "VERIFY_ACCOUNT_SQL",
           "role": "spent the link. ?1 a new id, ?2 the email, ?3 the hash, ?4 the salt, ?5 now, ?6 the request"
         },
         {
-          "line": 823,
+          "line": 826,
           "name": "VERIFY_DROP_OTHERS_SQL",
           "role": "?3 now"
         },
         {
-          "line": 806,
+          "line": 830,
+          "name": "VERIFY_LINK_SQL",
+          "role": "spent the link. ?1 the email, ?2 now, ?3 the request"
+        },
+        {
+          "line": 809,
           "name": "VERIFY_OPEN_SQL",
           "role": "the open link (?1 the token's hash, ?2 now): an unverified request whose link is live"
         },
         {
-          "line": 819,
+          "line": 822,
           "name": "VERIFY_SESSION_SQL",
           "role": "expiry, ?4 the email, ?5 now, ?6 the request, ?7 the hash"
         },
         {
-          "line": 809,
+          "line": 812,
           "name": "VERIFY_SPEND_SQL",
           "role": "link is live and no verified request of its email stands. ?1 now, ?2 the request, ?3 the token's hash"
         }
@@ -598,95 +603,99 @@
           "sql": "<dynamic: ACCOUNT_BY_EMAIL_SQL>"
         },
         {
-          "line": 713,
+          "line": 716,
           "sql": "<dynamic: BETA_ORGS_SQL>"
         },
         {
-          "line": 713,
+          "line": 716,
           "sql": "<dynamic: BETA_CODES_SQL>"
         },
         {
-          "line": 713,
+          "line": 716,
           "sql": "<dynamic: BETA_APPROVED_SQL>"
         },
         {
-          "line": 776,
+          "line": 779,
           "sql": "<dynamic: ACCOUNT_SESSION_SQL>"
         },
         {
-          "line": 783,
+          "line": 786,
           "sql": "<dynamic: ACCOUNT_SESSION_MINT_SQL>"
         },
         {
-          "line": 788,
+          "line": 791,
           "sql": "<dynamic: END_ACCOUNT_SESSION_SQL>"
         },
         {
-          "line": 792,
+          "line": 795,
           "sql": "<dynamic: ACCOUNT_STANDING_SQL>"
         },
         {
-          "line": 796,
+          "line": 799,
           "sql": "<dynamic: MAY_FOUND_SQL>"
         },
         {
-          "line": 801,
+          "line": 804,
           "sql": "<dynamic: ACCOUNT_BY_EMAIL_SQL>"
         },
         {
-          "line": 826,
+          "line": 832,
           "sql": "<dynamic: VERIFY_OPEN_SQL>"
         },
         {
-          "line": 839,
+          "line": 845,
           "sql": "<dynamic: VERIFY_SPEND_SQL>"
         },
         {
-          "line": 840,
+          "line": 846,
           "sql": "<dynamic: VERIFY_ACCOUNT_SQL>"
         },
         {
-          "line": 841,
+          "line": 847,
           "sql": "<dynamic: VERIFY_SESSION_SQL>"
         },
         {
-          "line": 842,
+          "line": 848,
           "sql": "<dynamic: VERIFY_DROP_OTHERS_SQL>"
         },
         {
-          "line": 846,
+          "line": 849,
+          "sql": "<dynamic: VERIFY_LINK_SQL>"
+        },
+        {
+          "line": 853,
           "sql": "<dynamic: ACCOUNT_BY_EMAIL_SQL>"
         },
         {
-          "line": 869,
+          "line": 876,
           "sql": "<dynamic: RESET_INSERT_SQL>"
         },
         {
-          "line": 872,
+          "line": 879,
           "sql": "<dynamic: RESET_OPEN_SQL>"
         },
         {
-          "line": 880,
+          "line": 887,
           "sql": "<dynamic: RESET_SPEND_SQL>"
         },
         {
-          "line": 881,
+          "line": 888,
           "sql": "<dynamic: RESET_ACCOUNT_SQL>"
         },
         {
-          "line": 882,
+          "line": 889,
           "sql": "<dynamic: RESET_END_TOKENS_SQL>"
         },
         {
-          "line": 883,
+          "line": 890,
           "sql": "<dynamic: RESET_END_ACCOUNT_SESSIONS_SQL>"
         },
         {
-          "line": 884,
+          "line": 891,
           "sql": "<dynamic: RESET_END_LINKS_SQL>"
         },
         {
-          "line": 889,
+          "line": 896,
           "sql": "<dynamic: ACCOUNT_BY_EMAIL_SQL>"
         }
       ],
@@ -758,6 +767,7 @@
         "UNVERIFIED_PASS_SQL",
         "VERIFY_ACCOUNT_SQL",
         "VERIFY_DROP_OTHERS_SQL",
+        "VERIFY_LINK_SQL",
         "VERIFY_OPEN_SQL",
         "VERIFY_SESSION_SQL",
         "VERIFY_SPEND_SQL",
@@ -1841,7 +1851,7 @@
     "backup.js": {
       "constants": [
         {
-          "line": 127,
+          "line": 128,
           "name": "BACKUP_DERIVED",
           "role": "stale marks once the grades and the nodes' change times are in."
         },
@@ -1861,12 +1871,12 @@
           "role": ""
         },
         {
-          "line": 146,
+          "line": 147,
           "name": "BACKUP_NEVER",
           "role": "THE TABLES NEVER DUMPED, each with its reason"
         },
         {
-          "line": 163,
+          "line": 164,
           "name": "ENGINE_OWN",
           "role": "SQLite's and D1's own tables are not the org's"
         },
@@ -1916,7 +1926,7 @@
           "role": "projects: every stored column (migrate-067's org and slug are GENERATED from the key, so they are neither dumped nor wri"
         },
         {
-          "line": 184,
+          "line": 185,
           "name": "RESTORE_REBUILD_SQL",
           "role": ""
         }
@@ -1935,7 +1945,7 @@
           "sql": "<dynamic: LAST_BACKUP_SQL>"
         },
         {
-          "line": 232,
+          "line": 233,
           "sql": "<dynamic: pageSql(t, c.after != null)>"
         }
       ],
@@ -1984,9 +1994,9 @@
     "beta.js": {
       "constants": [
         {
-          "line": 25,
+          "line": 26,
           "name": "BETA_APPROVED_SQL",
-          "role": "NULL for none. One per email (migrate-081: one verified request per email)."
+          "role": "(cleared_at: approved 90 days ago and no org) holds no place any more."
         },
         {
           "line": 20,
@@ -4203,24 +4213,24 @@
     "cron.js": {
       "constants": [
         {
-          "line": 20,
+          "line": 25,
           "name": "CRON_ORGS_PER_RUN",
           "role": ""
         },
         {
-          "line": 22,
+          "line": 27,
           "name": "CRON_ORGS_SQL",
           "role": ""
         },
         {
-          "line": 21,
+          "line": 26,
           "name": "HALF_DAY_MS",
           "role": ""
         }
       ],
       "d1Queries": [
         {
-          "line": 34,
+          "line": 42,
           "sql": "<dynamic: CRON_ORGS_SQL>"
         }
       ],
@@ -7746,146 +7756,146 @@
     "index.js": {
       "constants": [
         {
-          "line": 730,
+          "line": 736,
           "name": "ABOVE_ROUTES",
           "role": ""
         },
         {
-          "line": 584,
+          "line": 590,
           "name": "ARTIFACT_CSP",
           "role": "G2 M2: a saved file is served as an inert document (GET /artifact/:id): no script, nothing loaded from anywhere"
         },
         {
-          "line": 2261,
+          "line": 2313,
           "name": "BELOW_ROUTES_1",
           "role": ""
         },
         {
-          "line": 2513,
+          "line": 2565,
           "name": "BELOW_ROUTES_2",
           "role": ""
         },
         {
-          "line": 111,
+          "line": 114,
           "name": "CAPABILITIES",
           "role": "STALENESS GUARD: evals parse this file for routes and assert every one is declared below."
         },
         {
-          "line": 105,
+          "line": 108,
           "name": "CONSENT_GRADES",
           "role": "NULL/absent = 'off'. Enforcement is STRIP + honest note, never a block \u2014 R never blocks."
         },
         {
-          "line": 582,
+          "line": 588,
           "name": "EXTRACT_STATUS",
           "role": "the HTTP status of an extract refusal (src/extract.js): a missing item reads 404 exactly as a hidden one"
         },
         {
-          "line": 421,
+          "line": 427,
           "name": "FLASH_CODES",
           "role": "code, a filing error, or that it filed. Only the codes the screens know are read; anything else reads as nothing."
         },
         {
-          "line": 726,
+          "line": 732,
           "name": "HEALTH_SQL",
           "role": "/health's one row (sprint 6, 6.3: the platform's, read off the schema; it names nothing of any org)"
         },
         {
-          "line": 594,
+          "line": 600,
           "name": "MCP_TOOLS",
           "role": "what it needs and what it answers, in at most three sentences. No tenant fact rides a description (check-brand.py guards"
         },
         {
-          "line": 240,
+          "line": 245,
           "name": "NOT_HERE",
           "role": ""
         },
         {
-          "line": 2737,
+          "line": 2789,
           "name": "OBSERVABLE_GETS",
           "role": "(it ends the session). Tested on the URL-normalised PATHNAME (installSelfPage), so a dot-segment path resolves first."
         },
         {
-          "line": 716,
+          "line": 722,
           "name": "ORG_ARG",
           "role": "plane and the attack suite's argument sets all see it."
         },
         {
-          "line": 448,
+          "line": 454,
           "name": "PLAN_WARNING_HEADER",
           "role": ""
         },
         {
-          "line": 435,
+          "line": 441,
           "name": "REQ_FROM",
           "role": ""
         },
         {
-          "line": 220,
+          "line": 225,
           "name": "RESERVED_ORG_NAMES",
           "role": "it exists. tools/check-org-names.mjs (a gate step) proves every route the tables below answer is in it."
         },
         {
-          "line": 102,
+          "line": 105,
           "name": "VERSION",
           "role": ""
         }
       ],
       "d1Queries": [
         {
-          "line": 394,
+          "line": 400,
           "sql": "${sql} WHERE project = ?1 AND ${ids.length > 1 ?"
         },
         {
-          "line": 741,
+          "line": 747,
           "sql": "<dynamic: HEALTH_SQL>"
         },
         {
-          "line": 772,
+          "line": 778,
           "sql": "UPDATE tokens SET revoked = 1 WHERE token_hash = ?"
         },
         {
-          "line": 807,
+          "line": 813,
           "sql": "SELECT key FROM projects WHERE key = ? AND active = 1 AND org = {org}"
         },
         {
-          "line": 821,
+          "line": 827,
           "sql": "UPDATE tokens SET project = ? WHERE token_hash = ? AND revoked = 0"
         },
         {
-          "line": 877,
+          "line": 883,
           "sql": "UPDATE people SET hats = ?, avatar = ? WHERE id = ?"
         },
         {
-          "line": 880,
+          "line": 886,
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         },
         {
-          "line": 903,
+          "line": 909,
           "sql": "UPDATE people SET trace_consent = ? WHERE id = ?"
         },
         {
-          "line": 908,
+          "line": 914,
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         },
         {
-          "line": 1653,
+          "line": 1671,
           "sql": "<dynamic: auditEventsSql(clauses)>"
         },
         {
-          "line": 1666,
+          "line": 1684,
           "sql": "SELECT project, id, name FROM k_nodes WHERE project = ? AND id IN (${ch.map(() ="
         },
         {
-          "line": 2157,
+          "line": 2209,
           "sql": "SELECT a.*, p.name AS by_name FROM artifacts a JOIN people p ON p.id = a.person_"
         },
         {
-          "line": 2272,
+          "line": 2324,
           "sql": "UPDATE tokens SET revoked = 1 WHERE token_hash = ? AND revoked = 0"
         },
         {
-          "line": 2892,
+          "line": 2944,
           "sql": "SELECT settings FROM org WHERE id = {org}"
         }
       ],
@@ -8266,6 +8276,12 @@
           ]
         },
         {
+          "from": "./operatorpage.js",
+          "names": [
+            "renderOperator"
+          ]
+        },
+        {
           "from": "./orgnames.js",
           "names": [
             "ORG_SLUG_MAX",
@@ -8360,6 +8376,7 @@
           "from": "./requestpage.js",
           "names": [
             "REQUEST_FIELD_WORDS",
+            "betaWords",
             "renderRequestAccess"
           ]
         },
@@ -8662,6 +8679,10 @@
         {
           "kind": "exact",
           "pattern": "/open-items"
+        },
+        {
+          "kind": "exact",
+          "pattern": "/operator"
         },
         {
           "kind": "exact",
@@ -12639,6 +12660,218 @@
       "r2Keys": [],
       "routes": []
     },
+    "operatorpage.js": {
+      "constants": [
+        {
+          "line": 21,
+          "name": "EMPTY_WORDS",
+          "role": ""
+        },
+        {
+          "line": 41,
+          "name": "NONE",
+          "role": ""
+        },
+        {
+          "line": 23,
+          "name": "OP_CSS",
+          "role": ""
+        },
+        {
+          "line": 22,
+          "name": "SOURCE_WORDS",
+          "role": ""
+        },
+        {
+          "line": 20,
+          "name": "STATUS_WORDS",
+          "role": ""
+        }
+      ],
+      "d1Queries": [],
+      "exports": [
+        "renderOperator"
+      ],
+      "imports": [
+        {
+          "from": "./orgpath.js",
+          "names": [
+            "orgPath"
+          ]
+        },
+        {
+          "from": "./parts.js",
+          "names": [
+            "btn",
+            "card",
+            "chip",
+            "empty",
+            "filterRow",
+            "line",
+            "lineDetail",
+            "lines",
+            "num",
+            "pageHead",
+            "stack",
+            "tile",
+            "tileRow"
+          ]
+        },
+        {
+          "from": "./ui.js",
+          "names": [
+            "dateOnly",
+            "errorState",
+            "esc"
+          ]
+        }
+      ],
+      "r2Keys": [],
+      "routes": []
+    },
+    "operatorread.js": {
+      "constants": [
+        {
+          "line": 64,
+          "name": "APPROVE_REQUEST_SQL",
+          "role": "the approval (?1 the request, ?2 when) and the decline (the same): guarded by the status, so only an open request is dec"
+        },
+        {
+          "line": 65,
+          "name": "DECLINE_REQUEST_SQL",
+          "role": ""
+        },
+        {
+          "line": 40,
+          "name": "FUNNEL_ROWS",
+          "role": ""
+        },
+        {
+          "line": 50,
+          "name": "FUNNEL_SQL",
+          "role": "the funnel: ?1 FUNNEL_ROWS"
+        },
+        {
+          "line": 41,
+          "name": "PAGE_ROWS",
+          "role": ""
+        },
+        {
+          "line": 56,
+          "name": "PEOPLE_SQL",
+          "role": "than shown: whether a next page follows)"
+        },
+        {
+          "line": 42,
+          "name": "PEOPLE_STATUSES",
+          "role": ""
+        },
+        {
+          "line": 43,
+          "name": "REQUEST_ID_RE",
+          "role": ""
+        },
+        {
+          "line": 62,
+          "name": "REQUEST_ROW_SQL",
+          "role": "one request by its id (the terminal's and the page's decision reads it first)"
+        }
+      ],
+      "d1Queries": [
+        {
+          "line": 78,
+          "sql": "<dynamic: FUNNEL_SQL>"
+        },
+        {
+          "line": 78,
+          "sql": "<dynamic: PEOPLE_SQL>"
+        },
+        {
+          "line": 107,
+          "sql": "<dynamic: REQUEST_ROW_SQL>"
+        },
+        {
+          "line": 118,
+          "sql": "<dynamic: APPROVE_REQUEST_SQL>"
+        },
+        {
+          "line": 126,
+          "sql": "<dynamic: DECLINE_REQUEST_SQL>"
+        },
+        {
+          "line": 132,
+          "sql": "<dynamic: REQUEST_PLACE_SQL>"
+        }
+      ],
+      "exports": [
+        "APPROVE_REQUEST_SQL",
+        "DECLINE_REQUEST_SQL",
+        "FUNNEL_ROWS",
+        "FUNNEL_SQL",
+        "PAGE_ROWS",
+        "PEOPLE_SQL",
+        "PEOPLE_STATUSES",
+        "REQUEST_ID_RE",
+        "REQUEST_ROW_SQL",
+        "afterOf",
+        "approveRequest",
+        "declineRequest",
+        "mayOperate",
+        "readOperator"
+      ],
+      "imports": [
+        {
+          "from": "./accounts.js",
+          "names": [
+            "betaCount"
+          ]
+        },
+        {
+          "from": "./data.js",
+          "names": [
+            "HOME_ORG",
+            "db",
+            "readerOrg"
+          ]
+        },
+        {
+          "from": "./email.js",
+          "names": [
+            "mailerOf",
+            "sendMail"
+          ]
+        },
+        {
+          "from": "./mails.js",
+          "names": [
+            "inMail"
+          ]
+        },
+        {
+          "from": "./orgprofile.js",
+          "names": [
+            "PRODUCT_CHOICES",
+            "wordsOf"
+          ]
+        },
+        {
+          "from": "./requestaccess.js",
+          "names": [
+            "CONSENT_BOXES",
+            "REQUEST_PLACE_SQL",
+            "TEAM_SIZES"
+          ]
+        },
+        {
+          "from": "./util.js",
+          "names": [
+            "now"
+          ]
+        }
+      ],
+      "r2Keys": [],
+      "routes": []
+    },
     "orgnames.js": {
       "constants": [
         {
@@ -12680,12 +12913,17 @@
     "orgpage.js": {
       "constants": [
         {
-          "line": 111,
+          "line": 172,
           "name": "MADE_CSS",
           "role": "across the card, the first project as a quiet fact under the lede"
         },
         {
-          "line": 32,
+          "line": 41,
+          "name": "PRODUCT_CSS",
+          "role": "field (field: readProductStep's) is marked on itself, its words under it, the focus on it; the answers come back as sent"
+        },
+        {
+          "line": 34,
           "name": "SLUG_JS",
           "role": "the address follows the org's name while it is the name's suggestion (or empty); a person's own address is left alone"
         }
@@ -12876,80 +13114,139 @@
       "r2Keys": [],
       "routes": []
     },
+    "orgprofile.js": {
+      "constants": [
+        {
+          "line": 16,
+          "name": "PRODUCT_CHOICES",
+          "role": ""
+        },
+        {
+          "line": 25,
+          "name": "PRODUCT_FIELDS",
+          "role": "the step's fields in the form's order (the two texts first), and the ones a web form must answer"
+        },
+        {
+          "line": 29,
+          "name": "PRODUCT_FIELD_WORDS",
+          "role": ""
+        },
+        {
+          "line": 15,
+          "name": "PRODUCT_MAX",
+          "role": "its list, a single field given twice, is the field's error, never dropped quietly."
+        },
+        {
+          "line": 28,
+          "name": "PRODUCT_NOTE",
+          "role": "the one line the step says about its data (the owner's words, approved as shown)"
+        },
+        {
+          "line": 26,
+          "name": "PRODUCT_REQUIRED",
+          "role": ""
+        }
+      ],
+      "d1Queries": [],
+      "exports": [
+        "PRODUCT_CHOICES",
+        "PRODUCT_FIELDS",
+        "PRODUCT_FIELD_WORDS",
+        "PRODUCT_MAX",
+        "PRODUCT_NOTE",
+        "PRODUCT_REQUIRED",
+        "answered",
+        "readProductStep",
+        "wordsOf"
+      ],
+      "imports": [],
+      "r2Keys": [],
+      "routes": []
+    },
     "orgs.js": {
       "constants": [
         {
-          "line": 53,
+          "line": 55,
           "name": "FOUNDED_SQL",
           "role": "the org this account created, if any (idx_org_founder: one row at most)"
         },
         {
-          "line": 65,
+          "line": 67,
           "name": "FOUND_HOME_SQL",
           "role": "4 \u00b7 the org row names its creator seat and its home project (both exist now). ?1 the owner seat, ?2 the project, ?3 the "
         },
         {
-          "line": 56,
+          "line": 58,
           "name": "FOUND_ORG_SQL",
           "role": "1 \u00b7 the org row: its id IS {org} (an existing id fails here, and the batch with it). ?1 name, ?2 slug, ?3 the account, ?"
         },
         {
-          "line": 59,
+          "line": 61,
           "name": "FOUND_OWNER_SQL",
           "role": "?2 name, ?3 email, ?4 key hash, ?5 pass hash, ?6 salt, ?7 now, ?8 the account"
         },
         {
-          "line": 62,
+          "line": 71,
+          "name": "FOUND_PROFILE_SQL",
+          "role": "?9 now, ?10 the account"
+        },
+        {
+          "line": 64,
           "name": "FOUND_PROJECT_SQL",
           "role": "3 \u00b7 the first project, only beside THIS account's new org row. ?1 key (projectKeyOf of the new id), ?2 name, ?3 now, ?4 "
         },
         {
-          "line": 49,
+          "line": 75,
+          "name": "FOUND_REQUEST_SQL",
+          "role": "only once (a request names one org: the first). ?1 the account's email, ?2 now, ?3 the account"
+        },
+        {
+          "line": 51,
           "name": "NEXT_ORG_SQL",
           "role": "the next free org id (the restore's rule too, tools/org-undo.mjs): a race is the batch's PRIMARY KEY failure, retried"
         },
         {
-          "line": 42,
+          "line": 44,
           "name": "ORGS_PER_ACCOUNT",
           "role": ""
         },
         {
-          "line": 68,
+          "line": 79,
           "name": "ORG_FIELD_WORDS",
           "role": "---- the words ----"
         },
         {
-          "line": 45,
+          "line": 47,
           "name": "ORG_NAME_MAX",
           "role": ""
         },
         {
-          "line": 76,
+          "line": 87,
           "name": "ORG_WORDS",
           "role": ""
         },
         {
-          "line": 44,
+          "line": 46,
           "name": "PROJECT_SLUG_MAX",
           "role": "the first project's slug: 2 to 30 characters, so its key o<id>--<slug> fits the key form (40) for any id up to 6 digits"
         },
         {
-          "line": 51,
+          "line": 53,
           "name": "SLUG_HELD_SQL",
           "role": "whether a path name is held (one bit; asked only after the account is proven)"
         }
       ],
       "d1Queries": [
         {
-          "line": 127,
+          "line": 140,
           "sql": "<dynamic: FOUNDED_SQL>"
         },
         {
-          "line": 128,
+          "line": 141,
           "sql": "<dynamic: SLUG_HELD_SQL>"
         },
         {
-          "line": 132,
+          "line": 145,
           "sql": "<dynamic: NEXT_ORG_SQL>"
         }
       ],
@@ -12958,7 +13255,9 @@
         "FOUND_HOME_SQL",
         "FOUND_ORG_SQL",
         "FOUND_OWNER_SQL",
+        "FOUND_PROFILE_SQL",
         "FOUND_PROJECT_SQL",
+        "FOUND_REQUEST_SQL",
         "NEXT_ORG_SQL",
         "ORGS_PER_ACCOUNT",
         "ORG_FIELD_WORDS",
@@ -15114,172 +15413,249 @@
     "requestaccess.js": {
       "constants": [
         {
-          "line": 37,
+          "line": 48,
           "name": "ACCOUNT_PATH",
           "role": ""
         },
         {
-          "line": 172,
+          "line": 210,
           "name": "APPROVED_PROFILE_SQL",
           "role": ""
         },
         {
-          "line": 41,
+          "line": 237,
+          "name": "CLEAR_ABANDONED_SQL",
+          "role": ""
+        },
+        {
+          "line": 229,
+          "name": "CLEAR_BATCH",
+          "role": ""
+        },
+        {
+          "line": 228,
+          "name": "CLEAR_DAYS",
+          "role": "rows of their kind), CLEAR_BATCH at most each, so a run reads and writes a bounded few; what is left waits for the next "
+        },
+        {
+          "line": 235,
+          "name": "CLEAR_DECLINED_SQL",
+          "role": "?1 the line (90 days before now), ?2 now, ?3 the batch"
+        },
+        {
+          "line": 230,
+          "name": "CLEAR_FIELDS",
+          "role": ""
+        },
+        {
+          "line": 232,
+          "name": "CLEAR_SET",
+          "role": "copy: off-screen (a statement's text)"
+        },
+        {
+          "line": 68,
+          "name": "CONSENT_BOXES",
+          "role": "copy: off-screen (the owner's approved consent words: the join form draws them beside their boxes, the operator page as "
+        },
+        {
+          "line": 64,
+          "name": "CONSENT_VERSION",
+          "role": "words name), and the column each is stored in"
+        },
+        {
+          "line": 52,
           "name": "FORGOT_PATH",
           "role": ""
         },
         {
-          "line": 45,
+          "line": 56,
           "name": "LINK_TOKEN_BYTES",
           "role": "hash is kept, each kind under its own domain tag"
         },
         {
-          "line": 46,
+          "line": 57,
           "name": "LINK_TOKEN_RE",
           "role": ""
         },
         {
-          "line": 146,
+          "line": 184,
           "name": "PENDING_JOIN_SQL",
           "role": "the email's newest live unverified request (?1 the email, ?2 now)"
         },
         {
-          "line": 70,
+          "line": 66,
+          "name": "PRIVACY_URL",
+          "role": ""
+        },
+        {
+          "line": 105,
           "name": "PROFILES",
           "role": "the three profiles: the hosts their addresses live on, a handle's form, and the address built from a handle"
         },
         {
-          "line": 132,
+          "line": 168,
           "name": "REQUEST_CLEANUP_SQL",
-          "role": "the cleanup on write (?1 now), then the one insert: an UNVERIFIED request, its passphrase's hash and its link's hash"
+          "role": "its consent (the four boxes, the words' version and the time: ?17 now)"
         },
         {
-          "line": 58,
+          "line": 92,
           "name": "REQUEST_FIELDS",
           "role": "the fields a form or a JSON body sends (web: the form's marker)"
         },
         {
-          "line": 133,
+          "line": 169,
           "name": "REQUEST_INSERT_SQL",
           "role": ""
         },
         {
-          "line": 54,
+          "line": 88,
           "name": "REQUEST_MAX",
           "role": "each text field's longest form, after folding"
         },
         {
-          "line": 36,
+          "line": 47,
           "name": "REQUEST_PATH",
           "role": "platform's fixed words, src/orgnames.js)"
         },
         {
-          "line": 165,
+          "line": 203,
           "name": "REQUEST_PLACE_SQL",
           "role": "it could not be used, never a quiet scan)"
         },
         {
-          "line": 56,
+          "line": 75,
+          "name": "REQUEST_SOURCES",
+          "role": "THE SOURCE (21.4b): the pages that may send a person, by the tag on their link (?from=); none or any other is \"direct\""
+        },
+        {
+          "line": 90,
           "name": "REQUEST_TRAP",
           "role": "the honeypot: a field no person sees (src/requestpage.js hides it); a request that fills it is answered as any other and"
         },
         {
-          "line": 40,
+          "line": 51,
           "name": "RESEND_PATH",
           "role": ""
         },
         {
-          "line": 42,
+          "line": 53,
           "name": "RESET_PATH",
           "role": ""
         },
         {
-          "line": 152,
+          "line": 190,
           "name": "ROTATE_VERIFY_SQL",
           "role": "a resend's new link (?1 the request, ?2 the new hash, ?3 its end, ?4 now): only while the request is unverified and live"
         },
         {
-          "line": 38,
+          "line": 49,
           "name": "SENT_PATH",
           "role": ""
         },
         {
-          "line": 52,
+          "line": 86,
           "name": "TEAM_SIZES",
           "role": "the team sizes the form offers, value -> the words it shows"
         },
         {
-          "line": 158,
+          "line": 65,
+          "name": "TERMS_URL",
+          "role": ""
+        },
+        {
+          "line": 196,
           "name": "VERIFIED_REQUEST_SQL",
           "role": "the email's one verified request (migrate-081's idx_access_requests_verified: at most one)"
         },
         {
-          "line": 39,
+          "line": 50,
           "name": "VERIFY_PATH",
           "role": ""
         }
       ],
       "d1Queries": [
         {
-          "line": 139,
+          "line": 177,
           "sql": "<dynamic: REQUEST_CLEANUP_SQL>"
         },
         {
-          "line": 140,
+          "line": 178,
           "sql": "<dynamic: REQUEST_INSERT_SQL>"
         },
         {
-          "line": 148,
+          "line": 186,
           "sql": "<dynamic: PENDING_JOIN_SQL>"
         },
         {
-          "line": 154,
+          "line": 192,
           "sql": "<dynamic: ROTATE_VERIFY_SQL>"
         },
         {
-          "line": 161,
+          "line": 199,
           "sql": "<dynamic: VERIFIED_REQUEST_SQL>"
         },
         {
-          "line": 168,
+          "line": 206,
           "sql": "<dynamic: REQUEST_PLACE_SQL>"
         },
         {
-          "line": 174,
+          "line": 212,
           "sql": "<dynamic: APPROVED_PROFILE_SQL>"
+        },
+        {
+          "line": 241,
+          "sql": "<dynamic: CLEAR_DECLINED_SQL>"
+        },
+        {
+          "line": 241,
+          "sql": "<dynamic: CLEAR_ABANDONED_SQL>"
         }
       ],
       "exports": [
         "ACCOUNT_PATH",
         "APPROVED_PROFILE_SQL",
+        "CLEAR_ABANDONED_SQL",
+        "CLEAR_BATCH",
+        "CLEAR_DAYS",
+        "CLEAR_DECLINED_SQL",
+        "CLEAR_FIELDS",
+        "CONSENT_BOXES",
+        "CONSENT_VERSION",
         "FORGOT_PATH",
         "LINK_TOKEN_BYTES",
         "LINK_TOKEN_RE",
         "PENDING_JOIN_SQL",
+        "PRIVACY_URL",
         "REQUEST_CLEANUP_SQL",
         "REQUEST_FIELDS",
         "REQUEST_INSERT_SQL",
         "REQUEST_MAX",
         "REQUEST_PATH",
         "REQUEST_PLACE_SQL",
+        "REQUEST_SOURCES",
         "REQUEST_TRAP",
         "RESEND_PATH",
         "RESET_PATH",
         "ROTATE_VERIFY_SQL",
         "SENT_PATH",
         "TEAM_SIZES",
+        "TERMS_URL",
         "VERIFIED_REQUEST_SQL",
         "VERIFY_PATH",
         "approvedProfile",
+        "clearLine",
+        "clearStale",
         "fileRequest",
         "joinPass",
         "joinProblem",
         "newLinkToken",
         "pendingJoinOf",
         "placeInLine",
+        "readConsent",
         "readRequest",
         "resetTokenHash",
         "rotateVerify",
+        "sourceOf",
         "trapped",
         "verifiedRequestOf",
         "verifyTokenHash"
@@ -15333,32 +15709,32 @@
     "requestpage.js": {
       "constants": [
         {
-          "line": 76,
+          "line": 105,
           "name": "BETA_GETS",
           "role": "the beta, beside the form: what a team gets, each with the website's own mark (src/ui.js brandMark), and U-chan's commen"
         },
         {
-          "line": 159,
+          "line": 190,
           "name": "LINE_CSS",
           "role": "LINE_CSS \u2014 the status pages' few rules on the front door's tokens: the track, what comes next, the place in line as the "
         },
         {
-          "line": 74,
+          "line": 103,
           "name": "OPTIONAL_FIELDS",
           "role": "the optional fields, folded under one disclosure that opens itself when one holds a value or is the wrong one"
         },
         {
-          "line": 37,
+          "line": 40,
           "name": "REQUEST_CSS",
           "role": "wrong field marked on itself, the honeypot out of sight; the beta panel beside the form (the website's marks, U-chan's c"
         },
         {
-          "line": 14,
+          "line": 15,
           "name": "REQUEST_FIELD_WORDS",
           "role": ""
         },
         {
-          "line": 152,
+          "line": 183,
           "name": "TRACK",
           "role": "org. track(at) -> the <ol>, the steps before `at` done, `at` the current one (aria-current=\"step\")"
         }
@@ -15387,10 +15763,14 @@
         {
           "from": "./requestaccess.js",
           "names": [
+            "CONSENT_BOXES",
+            "PRIVACY_URL",
             "REQUEST_MAX",
             "REQUEST_PATH",
             "REQUEST_TRAP",
-            "TEAM_SIZES"
+            "TEAM_SIZES",
+            "TERMS_URL",
+            "sourceOf"
           ]
         },
         {

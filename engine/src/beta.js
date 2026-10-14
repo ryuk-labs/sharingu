@@ -21,8 +21,9 @@ export const BETA_CODES_SQL = "SELECT COUNT(DISTINCT s.email) AS n FROM signup_c
   "AND (?2 IS NULL OR s.email <> ?2) AND NOT EXISTS (SELECT 1 FROM accounts a JOIN org o ON o.created_by_account = a.id WHERE a.email = s.email)";
 // (sprint 21, 21.4a: the approval sends "You're in" and mints no code) the APPROVED requests whose email's account founded no org
 // that stands and holds no open code (that email is counted by its code above): ?1 now, ?2 an email left out (the operator's allow),
-// NULL for none. One per email (migrate-081: one verified request per email).
-export const BETA_APPROVED_SQL = "SELECT COUNT(*) AS n FROM access_requests r WHERE r.status = 'approved' AND (?2 IS NULL OR r.email <> ?2) " +
+// NULL for none. One per email (migrate-081: one verified request per email). (21.4b) A request the 90-day clearing emptied
+// (cleared_at: approved 90 days ago and no org) holds no place any more.
+export const BETA_APPROVED_SQL = "SELECT COUNT(*) AS n FROM access_requests r WHERE r.status = 'approved' AND r.cleared_at IS NULL AND (?2 IS NULL OR r.email <> ?2) " +
   "AND NOT EXISTS (SELECT 1 FROM accounts a JOIN org o ON o.created_by_account = a.id WHERE a.email = r.email) " +
   "AND NOT EXISTS (SELECT 1 FROM signup_codes s WHERE s.email = r.email AND s.used_at IS NULL AND s.revoked_at IS NULL AND s.expires_at > ?1)";
 // placesOf(orgs, codes, approved) -> { cap, orgs, codes, approved, taken, left }: the three counts summed against the cap (left goes

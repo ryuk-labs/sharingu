@@ -40,8 +40,9 @@
 //   O23 · an expired, used or revoked code holds no place; a code whose holder already made an org is counted once (by the org),
 //        and that holder's allow takes no new place. RED then GREEN for each count
 //   O24 · BETA_ORG_CAP is one constant, 50, in src/beta.js under the owner's ruling (2026-10-10; sprint 21 moved it there, the one
-//        source the worker's request page reads too); the tool imports it; no other file of src/ names it (the worker does not
-//        enforce it)
+//        source the worker's request page reads too); the tool imports it; no other file of src/ names it (the worker enforces it
+//        nowhere but where the operator approves: the operator page's Approve, sprint 21, 21.4b, counts the same places by betaCount
+//        and refuses at the cap, and past it only the terminal approves)
 //   O25 · (sprint 21, 21.2; 21.4a) requests: the beta's places at its head (an approved request with no org holds one), then the
 //        OPEN (verified) requests in line order (verified_at, then id: two at the same instant in id order), each with its place, id,
 //        company, role, team size in words, name, email and when it was verified; an unverified, approved or declined request is
@@ -264,17 +265,26 @@ const cliOn = (db) => async (...argv) => {
 // ======== sprint 8, 8.5 · the orgs, their plans, the suspension (each claim RED on a mutant copy, then GREEN) ========
 // a mutant copy of tools/operator.mjs (beside it, so its relative imports resolve), loaded once and removed
 const mutantsLeft = [];
-// mutantOp(pairs) -> a scratch copy of the tool with each [from, to] applied: in tools/operator.mjs, or in src/beta.js (the beta's
+// mutantOp(pairs) -> a scratch copy of the tool with each [from, to] applied: in tools/operator.mjs, in src/beta.js (the beta's
 // places, sprint 21: a copy of it beside the tool, which the scratch tool imports in its place — src/beta.js is pure, it imports
-// nothing)
+// nothing) or in src/operatorread.js (the request statements the operator page shares, sprint 21, 21.4b: a copy beside it in src/,
+// so its own relative imports resolve, which the scratch tool imports in its place)
 async function mutantOp(pairs) {
   let t = readFileSync(join(ENGINE, "tools", "operator.mjs"), "utf8"), b = readFileSync(join(ENGINE, "src", "beta.js"), "utf8"), beta = false;
+  let r = readFileSync(join(ENGINE, "src", "operatorread.js"), "utf8"), reads = false;
   for (const [from, to] of pairs) {
     if (t.includes(from)) t = t.split(from).join(to);
     else if (b.includes(from)) { b = b.split(from).join(to); beta = true; }
-    else throw new Error(`mutantOp: neither operator.mjs nor src/beta.js holds ${from.slice(0, 70)}`);
+    else if (r.includes(from)) { r = r.split(from).join(to); reads = true; }
+    else throw new Error(`mutantOp: neither operator.mjs, src/beta.js nor src/operatorread.js holds ${from.slice(0, 70)}`);
   }
   const tag = Math.random().toString(36).slice(2);
+  if (reads) {
+    const rp = join(ENGINE, "src", `.operatorread-mutant-${tag}.js`);
+    writeFileSync(rp, r); mutantsLeft.push(rp);
+    if (!t.includes('"../src/operatorread.js"')) throw new Error("mutantOp: operator.mjs no longer imports ../src/operatorread.js");
+    t = t.split('"../src/operatorread.js"').join(`"../src/.operatorread-mutant-${tag}.js"`);
+  }
   if (beta) {
     const bp = join(ENGINE, "tools", `.beta-mutant-${tag}.mjs`);
     writeFileSync(bp, b); mutantsLeft.push(bp);
@@ -789,7 +799,7 @@ try {
       const rdb = line(world()), DB = d1(rdb);
       const raced = await OP.declineRequest({ prepare: (q) => { if (/^UPDATE access_requests SET status = 'declined'/.test(q)) rdb.prepare("UPDATE access_requests SET status = 'approved', approved_at = 'x' WHERE id = 'r-0'").run(); return DB.prepare(q); } }, "r-0");
       ok(raced.refused && /decided since it was read/.test(raced.refused) && reqOf(rdb, "r-0").status === "approved", `O28 · a request approved between the read and the write: refused, it stays approved (${(raced.refused || "").slice(0, 60)})`);
-      const RED = await mutantOp([["\"UPDATE access_requests SET status = 'declined', updated_at = ?2 WHERE id = ?1 AND status = 'open'\";", "\"UPDATE access_requests SET status = 'declined', updated_at = ?2 WHERE id = ?1\";"]]);
+      const RED = await mutantOp([["\"UPDATE access_requests SET status = 'declined', declined_at = ?2, updated_at = ?2 WHERE id = ?1 AND status = 'open'\";", "\"UPDATE access_requests SET status = 'declined', declined_at = ?2, updated_at = ?2 WHERE id = ?1\";"]]);
       const mdb = line(world()), MDB = d1(mdb);
       await RED.declineRequest({ prepare: (q) => { if (/^UPDATE access_requests SET status = 'declined'/.test(q)) mdb.prepare("UPDATE access_requests SET status = 'approved', approved_at = 'x' WHERE id = 'r-0'").run(); return MDB.prepare(q); } }, "r-0");
       ok(reqOf(mdb, "r-0").status === "declined", `O28 · RED: with the status guard removed an approved request is declined (${reqOf(mdb, "r-0").status})`);

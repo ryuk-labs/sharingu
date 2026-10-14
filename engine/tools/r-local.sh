@@ -98,8 +98,10 @@ cmd_up() {
   echo "· starting wrangler dev ($slug) on $ip:$port — persisted at $org_dir/persist"
   (
     cd "$ENGINE"
+    # R_LOCAL_TEST_SCHEDULED=1 (tools/smoke.sh only: sprint 21, 21.4b's s68 runs the cron once): wrangler's --test-scheduled, so
+    # GET /__scheduled on this local worker runs its cron (src/cron.js); never set for a world another machine reaches
     nohup npx --no-install wrangler dev --config "$cfg" --local --persist-to "$org_dir/persist" \
-      --port "$port" --ip "$ip" --local-protocol http >"$org_dir/dev.log" 2>&1 &
+      --port "$port" --ip "$ip" --local-protocol http ${R_LOCAL_TEST_SCHEDULED:+--test-scheduled} >"$org_dir/dev.log" 2>&1 &
     echo $! > "$org_dir/wrangler.pid"
   )
   sleep 1

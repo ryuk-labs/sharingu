@@ -10,7 +10,8 @@
 //        with no @, with a space, outside plain ASCII; a field past its length
 //   R3 · the addresses, strictly: javascript:, data:, ftp:, a user and password, a host with no dot are no website; an X, LinkedIn
 //        or GitHub value on another host or of another shape is refused; a LinkedIn company page is kept as one
-//   R4 · the form: the five required fields and the passphrase twice required, the six optional ones say so, the honeypot out of
+//   R4 · the form: the five required fields, the passphrase twice and (21.4b) the two consent boxes required, the six optional fields
+//        and the two optional boxes say so, the honeypot out of
 //        sight; GET /login carries Join the beta, Forgot your passphrase? and the resend; a short or differing passphrase is the
 //        form again marked on its field, nothing written, never echoed
 //   R5 · a join: 303 to /account/sent; ONE unverified row (the email lower-cased; the passphrase's pbkdf2 hash and salt; only the
@@ -69,7 +70,7 @@ const mod = (f) => import(pathToFileURL(join(MUT.src || join(ENGINE, "src"), f))
 const PASS = "a-long-passphrase-1";
 const FULL = { name: "  Ada   Lovelace ", email: " Ada@Analytical.Test ", company: "Analytical Engines", role: "Founder", team_size: "2-10",
   website: "analytical.test/about", linkedin: "ada-lovelace", x: "@ada", github: "https://github.com/ada-l/", ai_tools: "Claude,\n ChatGPT", use_case: "Share what\tour AI learns." };
-const JOIN = { ...FULL, password: PASS, confirm: PASS };
+const JOIN = { ...FULL, password: PASS, confirm: PASS, consent_terms: "1", consent_keep: "1" };   // 21.4b: the two required boxes ticked
 
 async function world() {
   const w = await sqliteWorker({ org: "One", projects: ["alpha"], src: MUT.src, people: [["one-owner", "Owner One", "owner", "one-owner-key", [], "owner@one.test"]] });
@@ -160,15 +161,15 @@ const CASES = {
     const W = await world();
     const { REQUEST_FIELD_WORDS } = await mod("requestpage.js");
     const g = await W.call("GET", "/request-access", { nav: true });
-    const fields = ["name", "email", "company", "role", "team_size", "password", "confirm", "website", "linkedin", "x", "github", "ai_tools", "use_case", "trap"];
+    const fields = ["name", "email", "company", "role", "team_size", "password", "confirm", "website", "linkedin", "x", "github", "ai_tools", "use_case", "consent_terms", "consent_keep", "consent_updates", "consent_call", "from", "trap"];
     const required = (n) => new RegExp(`<(?:input|select)[^>]*name="${n}"[^>]*\\brequired\\b`).test(g.text);
     const login = await W.call("GET", "/login", { nav: true });
     const short = await W.join({ ...JOIN, password: "short", confirm: "short" }), differ = await W.join({ ...JOIN, confirm: "another-long-passphrase" });
     return [
       [g.status === 200 && /action="\/request-access"/.test(g.text) && fields.every((f) => new RegExp(`name="${f}"`).test(g.text)), `R4 · GET /request-access is the form, every field on it (${g.status})`],
-      [["name", "email", "company", "role", "team_size", "password", "confirm"].every(required) && !["website", "linkedin", "x", "github", "ai_tools", "use_case", "trap"].some(required) && (g.text.match(/class="opt">optional</g) || []).length === 6
+      [["name", "email", "company", "role", "team_size", "password", "confirm", "consent_terms", "consent_keep"].every(required) && !["website", "linkedin", "x", "github", "ai_tools", "use_case", "consent_updates", "consent_call", "trap"].some(required) && (g.text.match(/class="opt">optional</g) || []).length === 8
         && /<input type="password" id="password" name="password" required minlength="12" autocomplete="new-password"/.test(g.text),
-        "R4 · the five required fields and the passphrase twice (new-password, at least 12) are required, the six optional ones say so"],
+        "R4 · the five required fields, the passphrase twice (new-password, at least 12) and (21.4b) the two consent boxes are required, the six optional fields and the two optional boxes say so"],
       [/<div class="trap" aria-hidden="true">[\s\S]*?name="trap" tabindex="-1"/.test(g.text) && /\.trap\{position:absolute;left:-10000px/.test(g.text), "R4 · the honeypot sits out of sight, out of the tab order"],
       [login.status === 200 && /<a href="\/request-access"[^>]*>Join the beta<\/a>/.test(login.text) && /<a href="\/account\/forgot"[^>]*>Forgot your passphrase\?<\/a>/.test(login.text) && /<a href="\/account\/resend"[^>]*>Didn&#39;t get the email\? Resend<\/a>|<a href="\/account\/resend"[^>]*>Didn't get the email\? Resend<\/a>/.test(login.text),
         "R4 · GET /login carries Join the beta, Forgot your passphrase? and Didn't get the email? Resend"],
@@ -318,7 +319,7 @@ const CASES = {
     const status = await W.call("GET", "/account", { cookie: v.cookie, nav: true });
     const form = await W.call("GET", "/orgs/new", { cookie: v.cookie, nav: true });
     const val = (f) => (new RegExp(`id="${f}"[^>]*value="([^"]*)"`).exec(form.text) || [])[1];
-    const made = await W.call("POST", "/orgs", { cookie: v.cookie, form: { web: "1", email: val("email"), password: PASS, name: val("name"), slug: val("slug"), you: val("you") } });
+    const made = await W.call("POST", "/orgs", { cookie: v.cookie, form: { web: "1", email: val("email"), password: PASS, name: val("name"), slug: val("slug"), you: val("you"), product: "Engine", line: "Computes tables", stage: "idea" } });
     const org = W.one("SELECT id, name, slug FROM org WHERE slug = 'analytical-engines'") || {};
     const tok = made.cookie ? W.one("SELECT person_id, org FROM tokens WHERE token_hash = ?", sha(made.cookie)) || {} : {};
     return [
@@ -467,9 +468,9 @@ const CASES = {
 // ---- the mutants: each must turn its case(s) red ----
 const MUTANTS = [
   { name: "the honeypot ignored", file: "src/index.js",
-    from: "if (!trapped(body)) await afterAnswer(c, () => joinMail(env, url.origin, read.request, pass));", to: "await afterAnswer(c, () => joinMail(env, url.origin, read.request, pass));", red: ["R6"] },
+    from: "if (!trapped(body)) await afterAnswer(c, () => joinMail(", to: "await afterAnswer(c, () => joinMail(", red: ["R6"] },
   { name: "an account's email files nothing (a join then a sign-in tells which emails hold an account)", file: "src/index.js",
-    from: "    await fileRequest(env, r, { pass, tokenHash: await verifyTokenHash(held ? newLinkToken() : token) });", to: "    if (!held) await fileRequest(env, r, { pass, tokenHash: await verifyTokenHash(token) });", red: ["R6"] },
+    from: "    await fileRequest(env, r, { pass, tokenHash: await verifyTokenHash(held ? newLinkToken() : token), consent, source });", to: "    if (!held) await fileRequest(env, r, { pass, tokenHash: await verifyTokenHash(token), consent, source });", red: ["R6"] },
   { name: "an account's email sent a verification link", file: "src/index.js",
     from: "    return held ? alreadyMail({ origin }) : verifyMail(", to: "    return verifyMail(", red: ["R6"] },
   { name: "the verification without the passphrase (the mailbox alone)", file: "src/accounts.js",
@@ -503,7 +504,7 @@ const MUTANTS = [
   { name: "the count past the cap said as it is", file: "src/requestpage.js",
     from: "return taken >= cap ? `All ${cap} places taken` : `${taken} of ${cap} places taken`;", to: "return `${taken} of ${cap} places taken`;", red: ["R13"] },
   { name: "the approved requests holding no place", file: "src/beta.js",
-    from: "WHERE r.status = 'approved' AND (?2 IS NULL OR r.email <> ?2) ", to: "WHERE r.status = 'never' AND (?2 IS NULL OR r.email <> ?2) ", red: ["R13"] },
+    from: "WHERE r.status = 'approved' AND r.cleared_at IS NULL AND (?2 IS NULL OR r.email <> ?2) ", to: "WHERE r.status = 'never' AND r.cleared_at IS NULL AND (?2 IS NULL OR r.email <> ?2) ", red: ["R13"] },
 ];
 
 let checks = 0, failed = 0;

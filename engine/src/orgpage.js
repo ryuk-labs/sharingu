@@ -4,7 +4,8 @@
 // both worlds, the one accent), never a second skin. No statement here: the creation is src/orgs.js createOrg, the routes
 // src/index.js.
 //
-// renderOrgNew({ error, values, host }) · renderOrgMade({ made, origin, signedIn }) -> the pages. `values` re-fills what was typed
+// renderOrgNew({ error, field, values, host }) · renderOrgMade({ made, origin, signedIn }) -> the pages (field: the product step's wrong
+// field, sprint 21, 21.4b, marked on itself). `values` re-fills what was typed
 // (never the passphrase), or, as a web sign-up's answer (sprint 21, 21.2) or an approved account session's form (21.4a), the email
 // and the approved request's company, its suggested address and name (then the passphrase takes the focus: it is asked again); `host` is the address the org's path will hang off (the
 // request's own: nothing per deployment here).
@@ -22,6 +23,7 @@ import { ORG_SLUG_MAX, suggestSlug } from "./orgnames.js";
 import { ORG_NAME_MAX, PROJECT_SLUG_MAX } from "./orgs.js";
 import { projectSlug } from "./project.js";
 import { connectCards, CONNECT_CARDS_CSS, COPY_JS } from "./connectcards.js";
+import { PRODUCT_CHOICES, PRODUCT_MAX, PRODUCT_REQUIRED, PRODUCT_NOTE, PRODUCT_FIELD_WORDS } from "./orgprofile.js";   // sprint 21, 21.4b: the product step
 // the first project as a person reads it: its name and the slug its AI names it by, never the org-prefixed key (12.6)
 const projectWords = (p) => { const slug = projectSlug(String((p && p.key) || "")); const name = String((p && p.name) || ""); return name && slug && name !== slug ? `${name} (${slug})` : name || slug; };
 
@@ -32,19 +34,75 @@ const frame = (brand) => authBrand(brand || DEFAULT_BRAND);
 const SLUG_JS = `<script>(function(){var s=(${suggestSlug.toString()}),n=document.getElementById('name'),a=document.getElementById('slug');if(!n||!a)return;` +
   `var last=s(n.value,${ORG_SLUG_MAX});n.addEventListener('input',function(){var next=s(n.value,${ORG_SLUG_MAX});if(a.value===''||a.value===last)a.value=next;last=next;});})();</script>`;
 
+// THE PRODUCT STEP (21.4b; src/orgprofile.js): "What you'll build with sharingu" under the org's own fields — the product and its one
+// line, then each choice as CHIPS in the website's look: a real checkbox (multi) or radio (one) under each chip's label, so the keyboard
+// (Tab, Space, the arrows in a radio group) and a browser with no script work; a ticked chip in ink, never the page's orange. A wrong
+// field (field: readProductStep's) is marked on itself, its words under it, the focus on it; the answers come back as sent.
+const PRODUCT_CSS = `
+  .build{margin:6px 0 0;padding:20px 0 0;border:0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:16px;min-width:0}
+  .build>legend{float:left;width:100%;padding:0;margin:0;font:800 18px/1.25 var(--sans);letter-spacing:-.01em;color:var(--text)}
+  .build>legend+*{clear:both}
+  .build-note{margin:-8px 0 0;font:400 12.5px/1.45 var(--sans);color:var(--text-muted)}
+  .chips{margin:0;padding:0;border:0;min-width:0}
+  .chips>legend{padding:0;margin:0 0 8px;font:600 13.5px/1.3 var(--sans);color:var(--text)}
+  .chips .opt{font:500 12px/1 var(--sans);color:var(--text-muted)}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{position:relative;display:inline-flex}
+  .chip input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+  .chip span{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;font:600 13px/1 var(--sans);color:var(--text);background:var(--page);
+    border:1px solid var(--line-strong);border-radius:999px;transition:background-color var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease)}
+  .chip:hover span{background:var(--hover)}
+  .chip input:checked+span{background:var(--text);border-color:var(--text);color:var(--page)}
+  .chip input:checked+span::before{content:"";width:9px;height:5px;margin:-3px 0 0;border-left:2px solid currentColor;border-bottom:2px solid currentColor;rotate:-45deg}
+  .chip input:focus-visible+span{outline:2px solid var(--field-ring);outline-offset:2px}
+  .chips[aria-invalid="true"] .chip span{border-color:var(--err)}
+  .field-err{margin:6px 0 0;font:600 12.5px/1.45 var(--sans);color:var(--err)}
+  [aria-invalid="true"]>input,input[aria-invalid="true"]{border-color:var(--err)!important}
+`;
+// chipGroup(key, values, wrong) -> one choice as a fieldset of chips (its label the legend; optional ones say so)
+function chipGroup(key, values, wrong) {
+  const c = PRODUCT_CHOICES[key];
+  const sent = [].concat(values[key] == null ? [] : values[key]).map(String);
+  const required = PRODUCT_REQUIRED.includes(key), bad = wrong === key;
+  const chips = c.values.map(([k, w]) => `<label class="chip"><input type="${c.multi ? "checkbox" : "radio"}" name="${key}" value="${esc(k)}"${sent.includes(k) ? " checked" : ""}${required && !c.multi ? " required" : ""}${bad && k === c.values[0][0] ? " autofocus" : ""} data-input-exception="auth"><span>${esc(w)}</span></label>`).join("");
+  return `<fieldset class="chips" data-chips="${key}"${bad ? ` aria-invalid="true" aria-describedby="err-${key}"` : ""}>
+          <legend>${esc(c.label)}${required ? "" : ` <span class="opt">optional${c.multi ? ", any" : ""}</span>`}</legend>
+          <div class="chip-row">${chips}</div>
+          ${bad ? `<p class="field-err" id="err-${key}" data-field-error="${key}">${esc(PRODUCT_FIELD_WORDS[key])}</p>` : ""}
+        </fieldset>`;
+}
+// productStep(values, wrong) -> the step: the two texts, then the six choices in the form's order
+function productStep(values, wrong) {
+  const text = (k, label, hint) => {
+    const bad = wrong === k;
+    return `<div class="field">
+          <label for="${k}">${esc(label)}</label>
+          <input type="text" id="${k}" name="${k}" required maxlength="${PRODUCT_MAX[k]}" value="${esc(String(values[k] == null ? "" : values[k]))}"${bad ? ` aria-invalid="true" autofocus aria-describedby="err-${k}"` : ""} data-input-exception="auth">
+          ${bad ? `<p class="field-err" id="err-${k}" data-field-error="${k}">${esc(PRODUCT_FIELD_WORDS[k])}</p>` : hint ? `<p class="hint">${esc(hint)}</p>` : ""}
+        </div>`;
+  };
+  return `<fieldset class="build" data-region="product-step">
+        <legend>What you'll build with sharingu</legend>
+        <p class="build-note">${esc(PRODUCT_NOTE)}</p>
+        ${text("product", "Product name")}
+        ${text("line", "What it is, in one line", "Like: a mobile app that books dog walkers")}
+        ${Object.keys(PRODUCT_CHOICES).map((k) => chipGroup(k, values, wrong)).join("\n        ")}
+      </fieldset>`;
+}
+
 export function renderOrgNew(opts) {
-  const { error = "", values = {}, host = "" } = opts || {};
+  const { error = "", field: wrong = "", values = {}, host = "" } = opts || {};
   const v = (k) => esc(String(values[k] == null ? "" : values[k]));
   const { wordmark } = frame(DEFAULT_BRAND);
   const body = `<form method="POST" action="/orgs" data-screen="org-new" data-region="create-org">
       <input type="hidden" name="web" value="1">
       <div class="field">
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" autocomplete="email" required${values.email ? "" : " autofocus"} value="${v("email")}" data-input-exception="auth">
+        <input type="email" id="email" name="email" autocomplete="email" required${values.email || wrong ? "" : " autofocus"} value="${v("email")}" data-input-exception="auth">
       </div>
       <div class="field">
         <label for="password">Account passphrase</label>
-        <input type="password" id="password" name="password" autocomplete="current-password" required${values.email ? " autofocus" : ""} data-input-exception="auth">
+        <input type="password" id="password" name="password" autocomplete="current-password" required${values.email && !wrong ? " autofocus" : ""} data-input-exception="auth">
       </div>
       <div class="field">
         <label for="name">Org name</label>
@@ -64,14 +122,17 @@ export function renderOrgNew(opts) {
         <label for="you">Your name <span class="opt">(optional)</span></label>
         <input type="text" id="you" name="you" autocomplete="name" maxlength="${ORG_NAME_MAX}" value="${v("you")}" data-input-exception="auth">
       </div>
+      ${productStep(values, wrong)}
       <button type="submit">Create org</button>
     </form>${SLUG_JS}`;
   return authPage({
     title: "Create an org · sharingu",
     wordmark,
     lede: "Create your org",
-    banner: error ? errorState({ what: error }) : "",
+    // a product step's field says so on itself (21.4b); any other refusal is the banner
+    banner: error && !PRODUCT_FIELD_WORDS[wrong] ? errorState({ what: error }) : "",
     body,
+    css: PRODUCT_CSS,
     intro: { eyebrow: "Your org", heading: "Make it yours.", lede: "One org for your company: its people, its projects and the AI that files into them.",
       art: `<div class="art-pose" data-art="comment">${uchanPose({ pose: "comment", size: 240 })}</div>`, phone: false },
     // a person who typed or was given an email holds an account; only a bare form offers the way in for one who has none
