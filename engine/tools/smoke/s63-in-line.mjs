@@ -69,13 +69,13 @@ smoke("in line · `operator allow --request` approves the first: the code once, 
   // the web sign-up (sprint 21, 21.2: "prefills the org at sign-up"): 200 with the org form, the company and the name in it
   const su = await http("POST", "/signup", { form: { email: S.e1, code: a.code, password: S.pass, confirm: S.pass, web: "1" }, accept: "text/html" });
   const val = (f) => (new RegExp(`id="${f}"[^>]*value="([^"]*)"`).exec(su.raw) || [])[1];
-  expect(su.status === 200 && /data-screen="org-new"/.test(su.raw) && val("email") === S.e1 && val("name") === `S63 First ${TAG}` && val("you") === FORM.name && !su.raw.includes(S.pass),
-    () => `the sign-up: ${su.status} -> ${su.locationRaw}; email ${val("email")}, name ${val("name")}, you ${val("you")}`);
+  expect(su.status === 200 && /data-screen="org-new"/.test(su.raw) && val("email") === S.e1 && val("name") === `S63 First ${TAG}` && val("you") === FORM.name && val("slug") === `s63-first-${TAG}` && !su.raw.includes(S.pass),
+    () => `the sign-up: ${su.status} -> ${su.locationRaw}; email ${val("email")}, name ${val("name")}, slug ${val("slug")} (21.P: suggested from the company), you ${val("you")}`);
   // the form as the person sends it, the slug and the passphrase theirs to type
   const made = await http("POST", "/orgs", { body: { email: val("email"), password: S.pass, name: val("name"), slug: `s63-${TAG}`, you: val("you") } });
   const org = rows(`SELECT name FROM org WHERE slug = ${q(`s63-${TAG}`)}`)[0] || {};
   expect(made.status === 200 && made.json && made.json.key && org.name === `S63 First ${TAG}`, () => `POST /orgs: ${made.status} ${brief(made.json && { ...made.json, key: made.json.key ? "<key>" : undefined })}; org ${brief(org)}`);
-  return `approved; the first's page says its place is open; the second ${S.place2} -> ${placeOf(p2)}; the web sign-up answered the org form with the company and the name, and the org was made named the company`;
+  return `approved; the first's page says its place is open; the second ${S.place2} -> ${placeOf(p2)}; the web sign-up answered the org form with the company, its suggested address and the name, and the org was made named the company`;
 });
 
 smoke("in line · the asked page (a repeat of the second's email): the beta's count and the walkthrough, nothing typed", async () => {

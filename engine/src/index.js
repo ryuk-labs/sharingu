@@ -50,7 +50,7 @@ import { renderCardPage, cardTabOf } from "./cardpage.js";
 import { readMapPlane } from "./mapplanes.js";
 import DOOR, { DOOR_TEXT } from "./doorcontract.js";
 import { handleHandoff } from "./handoff.js";
-import { getTenantConfig, resolveOwner, ownerName, orgBySlug, configOf, DEFAULT_BRAND, SESSION_TOKEN_PREFIX } from "./tenant.js";
+import { getTenantConfig, resolveOwner, ownerName, orgBySlug, configOf, DEFAULT_BRAND } from "./tenant.js";
 import { HAT_KEYS, hatsOf, hatsJson, avatarValue } from "./hats.js";
 import { renderGoals, renderGoalNode } from "./goals.js";
 import { readGoals, readGoalNode, projectNameOf } from "./goalsread.js";
@@ -68,7 +68,7 @@ import { json, text, uid, now, sha256, TX_LANES, isEvalMark, evalView, crossSite
 import { countCall, installPlanNote, planNoteOf, planShownOf, setPlanReader, suspensionOf, suspendedAnswer } from "./plans.js";   // sprint 8, 8.2: every signed-in REST write is a call the org's plan counts; 8.4: Control shows the plan; 8.5: the suspension's one check
 import { handleStorage, handleLog } from "./reports.js";
 import { runControlAction } from "./admin.js";
-import { passphraseSignIn, countSignIn, mintSession, landingOf, clientOf, NO_SEAT_HERE_WORDS, chooseOrgWords, PENDING_ONLY_WORDS, EMAIL_NOT_ASCII_WORDS, signUp, orgsOfAccount, answerSeat, SEAT_ANSWER_WORDS, PICKER_PATH, betaCount } from "./accounts.js";   // sprint 7, 7.1: one account per email, a seat per org; 7.2: sign-up
+import { passphraseSignIn, countSignIn, openSession, landingOf, clientOf, NO_SEAT_HERE_WORDS, chooseOrgWords, PENDING_ONLY_WORDS, EMAIL_NOT_ASCII_WORDS, signUp, orgsOfAccount, answerSeat, SEAT_ANSWER_WORDS, PICKER_PATH, betaCount } from "./accounts.js";   // sprint 7, 7.1: one account per email, a seat per org; 7.2: sign-up
 import { renderSignup, renderInvite, signupProblem, SIGNUP_REFUSED_WORDS, SIGNUP_FIELD_WORDS } from "./signup.js";   // sprint 7, 7.2: sign-up by allowlist
 import { inviteSignup, isInviteBody, INVITE_HEADERS } from "./invite.js";   // sprint 12, 12.3: an org's invite link (src/accounts.js THE INVITE LINK)
 import { readRequest, trapped, fileRequest, requestByToken, placeInLine, approvedProfile, newRequestToken, REQUEST_FIELDS, REQUEST_TRAP, REQUEST_PATH, REQUEST_ASKED_PATH, REQUEST_CHECK_PATH } from "./requestaccess.js";   // sprint 21, 21.1: request access
@@ -77,11 +77,11 @@ import { renderShowcase } from "./showcase.js";   // sprint 21, 21.3: `/` for a 
 import { createOrg, orgFields, orgFormProblem, ORG_FIELD_WORDS, ORG_WORDS, ORG_NAME_MAX } from "./orgs.js";   // sprint 7, 7.3: create an org
 import { renderOrgNew, renderOrgMade } from "./orgpage.js";
 import { renderOrgPicker } from "./orgpicker.js";   // sprint 7, 7.4b: the org picker at the root (GET /orgs)
-import { reservedNames, orgSlugProblem } from "./orgnames.js";
+import { reservedNames, orgSlugProblem, suggestSlug, ORG_SLUG_MAX } from "./orgnames.js";
 import { backupPage, lastBackup } from "./backup.js";
 import { readMeasures, exportOf } from "./measures.js";
 import { SECRET_ACTIONS, runSecretAction } from "./secrets.js";
-import { PROJECT_ARG, READ_PROJECT_RULE, seatsOnce, orgIsMultiProject, isPartnerReader, consentOf, mandateFloorFor, backfillReports, backupDump, decideTransmission, projectSeatsFor, projectsHeldBy, countActiveProjects, activeKeysOnce, resolveAny, resolveReader, sessionCookieToken, credentialLive, sessionPlace, csrfRefused, SESSION_COOKIE, SESSION_COOKIE_ATTRS, carriesTranscript, whoamiFor, bankArtifact, briefCountFor, liveStampOf, READ_SCOPE, switcherCurrentOf, transmissionOneFor, filingFor, artifactsListFor, mayReadArtifact } from "./core.js";
+import { PROJECT_ARG, READ_PROJECT_RULE, seatsOnce, orgIsMultiProject, isPartnerReader, consentOf, mandateFloorFor, backfillReports, backupDump, decideTransmission, projectSeatsFor, projectsHeldBy, countActiveProjects, activeKeysOnce, resolveAny, resolveReader, sessionCookieToken, credentialLive, sessionPlace, csrfRefused, SESSION_COOKIE, SESSION_COOKIE_ATTRS, sessionSetCookie, carriesTranscript, whoamiFor, bankArtifact, briefCountFor, liveStampOf, READ_SCOPE, switcherCurrentOf, transmissionOneFor, filingFor, artifactsListFor, mayReadArtifact } from "./core.js";
 import { resolveProject, projectOf, projectScopeOf, NO_PROJECT, keyInOrg, projectSlug } from "./project.js";
 import { renderDenied, placeMeterChip, LISTS_MARK } from "./ui.js";
 import { fontResponse, iconResponse } from "./fonts.js";
@@ -120,8 +120,8 @@ const CAPABILITIES = [
   { m:"GET",  p:"/request-access/:token", auth:"none", does:"your request's own page at its private link (sprint 21, 21.1 and 21.2), by its status. Open: you're in line — your name and company, your place in line (1 + the open requests that came before yours), the beta's places live from the database (N of 50 places taken; left out if it cannot be read), the request's steps (requested, in line, approved, signed up, your org), what comes next (the requests are reviewed in order; a sign-up code is emailed to your address when your place opens; with it, sign up: the org form comes filled in from this request), this page's own address to keep (Copy link) and a link to the walkthrough (the showcase's own section, /#walkthrough). Approved: your place is open, the code comes by email, a link to /signup. Declined: one sentence, the walkthrough and the website. A link that opens no request (wrong or malformed) is ONE 404 page. /request-access/asked (no token's shape) is the repeat's page: the email already asked, the first request's link shows your place, the beta's places and the walkthrough; it names nothing the request typed. /request-access/check (sprint 21, 21.P: Check my request) says the request's own link holds its place, and that a check by Google or by email is coming; it reads nothing" },
   { m:"GET",  p:"/orgs",          auth:"reader",   does:"your orgs (sprint 7, 7.4b): the browser's org picker at the platform's root. With an ACCOUNT session (signed in with your account's passphrase) whose account holds seats in several orgs: the page listing them (each org's name, its address and your role there), each a link to /<org>/home (or to the page ?to=<path> names, under that org). A one-org account and a SEAT session (signed in with a seat's own secret: that seat only) never see it: 302 straight to their org. No session: the sign-in rule (a page navigation goes to /login?next=…, a script 401 auth_required). It lists only your own account's seats; a bearer names one seat: 302 straight to its org" },
   { m:"POST", p:"/orgs/seat",     auth:"session",   does:"answer a seat that waits for your yes (sprint 7's review, A1): an org's admin who adds your email while your account already stands elsewhere (it holds your passphrase, or a seat in another org) makes a PENDING seat — it signs nothing in and counts nowhere until you accept it. Your org list (GET /orgs) shows it with Accept and Decline; each posts {seat, answer: accept|decline} here with your ACCOUNT session (signed in with your account's passphrase; a seat session answers nothing), same-origin only. accept: the seat becomes active (409 already_seated when your account already holds an active seat in that org); decline: it stays inactive. A form is sent back to /orgs; JSON {seat, answer: accepted|declined}. Any other seat, a seat no longer waiting, another account's: 404 not_yours, the same for every case; no session: the sign-in rule" },
-  { m:"GET",  p:"/orgs/new",      auth:"none",   does:"the create-an-org page (sprint 7, 7.3): your account's email and passphrase (the ACCOUNT's own, chosen at sign-up: never a key an org's admin gave you), the org's name, its address (its path name: a to z, 0 to 9 and single dashes, 2 to 40 characters, never a name the platform uses), its first project's short name (default: the address) and your name; the page belongs to the platform (the product's wordmark, no org's)" },
-  { m:"POST", p:"/orgs",          auth:"none",   does:"create an org (sprint 7, 7.3; the write new-org.sh did by SQL): {email, password (your ACCOUNT passphrase), name, slug (its address: a-z, 0-9 and single dashes, 2 to 40 characters, never a name the platform uses: every first segment of the door's routes and the platform's fixed words), project? (the first project's slug, 2 to 30, default the slug), projectName? (default the name), you? (your seat's name, default your email's first part)} -> in ONE write: the org (its name and address), your OWNER seat in it (a seat of your account) and its first project o<id>--<project>; 200 {org:{id, name, slug}, project:{key, name}, person:{id, name, email}, key, mcp, address, note} — key is your new seat's own secret (its sign-in and its API key), shown ONCE in this answer only; address is the org's own address (its pages at /<slug>/…, sprint 7, 7.4), and your AI reaches it at the one /mcp with the key as its bearer. A form gets the page with the key, never a redirect. Who may: an account holder proven by the ACCOUNT's passphrase (no seat needed; a seat's own secret never creates an org); an account creates at most ONE org (the beta's free tier). Refusals, nothing written but the proof's attempt: 422 bad_org {field: email|password|name|slug|project|you} and 409 org_name_reserved, both before anything is read; 401 invalid_account (one answer: no account, an account with no passphrase yet, a wrong one or a seat's secret; it counts in the account's lockout: 8 failures in 15 minutes, with the sign-in's, are 429 too_many_attempts); 409 org_limit (this account already created its org); 403 org_by_invite (sprint 12, 12.3: an account an org's invite link made creates no org — the waitlist; the operator's code confirms its email first); 409 org_name_taken; 429 too_many_attempts_ip (the address's flood filter, the budget POST /login and POST /signup spend); 403 cross_site_org (a cross-site form, refused before the body is read)" },
+  { m:"GET",  p:"/orgs/new",      auth:"none",   does:"the create-an-org page (sprint 7, 7.3): your account's email and passphrase (the ACCOUNT's own, chosen at sign-up: never a key an org's admin gave you), the org's name, its address (its path name: a to z, 0 to 9 and single dashes, 2 to 40 characters, never a name the platform uses; sprint 21, 21.P: suggested from the org's name as you type, still yours to edit), its first project's short name (default: the address) and your name; the page belongs to the platform (the product's wordmark, no org's)" },
+  { m:"POST", p:"/orgs",          auth:"none",   does:"create an org (sprint 7, 7.3; the write new-org.sh did by SQL): {email, password (your ACCOUNT passphrase), name, slug (its address: a-z, 0-9 and single dashes, 2 to 40 characters, never a name the platform uses: every first segment of the door's routes and the platform's fixed words), project? (the first project's slug, 2 to 30, default the slug), projectName? (default the name), you? (your seat's name, default your email's first part)} -> in ONE write: the org (its name and address), your OWNER seat in it (a seat of your account) and its first project o<id>--<project>; 200 {org:{id, name, slug}, project:{key, name}, person:{id, name, email}, key, mcp, address, note} — key is your new seat's own secret (its sign-in and its API key), shown ONCE in this answer only; address is the org's own address (its pages at /<slug>/…, sprint 7, 7.4), and your AI reaches it at the one /mcp with the key as its bearer. A form (sprint 21, 21.P) gets the done page with the key, never a redirect, and is signed in at once: the session cookie POST /login sets, an account session on the new owner seat (a script's JSON answer sets none). Who may: an account holder proven by the ACCOUNT's passphrase (no seat needed; a seat's own secret never creates an org); an account creates at most ONE org (the beta's free tier). Refusals, nothing written but the proof's attempt: 422 bad_org {field: email|password|name|slug|project|you} and 409 org_name_reserved, both before anything is read; 401 invalid_account (one answer: no account, an account with no passphrase yet, a wrong one or a seat's secret; it counts in the account's lockout: 8 failures in 15 minutes, with the sign-in's, are 429 too_many_attempts); 409 org_limit (this account already created its org); 403 org_by_invite (sprint 12, 12.3: an account an org's invite link made creates no org — the waitlist; the operator's code confirms its email first); 409 org_name_taken; 429 too_many_attempts_ip (the address's flood filter, the budget POST /login and POST /signup spend); 403 cross_site_org (a cross-site form, refused before the body is read)" },
   { m:"GET",  p:"/install",       auth:"none",   does:"day-0 installer script for a terminal" },
   { m:"GET",  p:"/missing",      auth:"none", does:"What is missing (src/checklist.js, src/holes.js): the project's checklist, ONE standard for every project counted only in the areas the project has, the meter overall and per area, then each open item in the order a project needs it, with its first missing thing and the call that fills it (fill, fillPath: its preview); an item the reader may not fill names who fills it and offers no call; the public sees the standard only; at most four D1 statements; HTML for a browser, JSON otherwise — twin of the missing tool and brain://missing" },
   { m:"GET",  p:"/goals",         auth:"reader", does:"Goals (UI-B6a, M-ADR-020): the project's goal tree, one row per goal with its % (rolled up by weight), its dimensions, what fed it (filings per area) its standing counters and its checks (checks {total, passed, failed, ungraded}: the checks whose refs name the goal, by their latest grade); What fed the top goal (points per lane) and Blocked (open decisions on goals, goals with no feed), ?period=quarter|month|all (default all, UTC) &eval=1; ONE read (at most four D1 statements), HTML for a browser, JSON otherwise {declared, project, period, tree, nodes, globalId, globalPct, aligned, unaligned, noFeed, whatFed, blocked, budget?} (F1: a goal's budget and budgetSum, its own and with the goals below, one currency or mixed), live:'unreachable' when the ledger read fails; DERIVED from landed filings, never hand-typed — twin of the goals tool and brain://goals" },
@@ -903,15 +903,10 @@ const ABOVE_ROUTES = [
       // holder's rotate-my-key or a passphrase change that lands inside that wait leaves zero rows, and zero rows is a failed
       // sign-in — the same 401 as a wrong passphrase, the attempt counted as failed. Fail-closed: an answer that does not
       // report one row mints nothing. One session per sign-in, on the account's seat at this address.
-      const token = SESSION_TOKEN_PREFIX + crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
-      const tHash = await sha256(token);
-      const expires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
-      if (ok) {
-        // sprint 6 (6.2): the session lands in the org of the seat whose secret just checked (src/data.js signInEnv, inside
-        // src/accounts.js mintSession), whatever the ambient cookie names
-        const minted = await mintSession(env, signin, { tokenHash: tHash, device: String(body.device || "unknown").slice(0, 80), at: now(), expires });
-        ok = ((minted && minted.meta && minted.meta.changes) || 0) >= 1;
-      }
+      // sprint 6 (6.2): the session lands in the org of the seat whose secret just checked (src/data.js signInEnv, inside
+      // src/accounts.js mintSession), whatever the ambient cookie names (src/accounts.js openSession: THE mint)
+      const opened = ok ? await openSession(env, signin, { device: body.device || "unknown" }) : null;
+      ok = !!opened;
       await countSignIn(env, signin, ok);   // the org the sign-in chose, on the account (sprint 7, 7.4)
       if (!ok) return isWeb
         ? new Response(renderLogin({ error: "That email and passphrase do not match.", next: body.next, brand: loginBrand }), { status: 401, headers: { "content-type": "text/html; charset=utf-8" } })
@@ -929,12 +924,12 @@ const ABOVE_ROUTES = [
         const next = await landingFor(env, url.origin, signin, body.next);
         return new Response(null, { status: 302, headers: {
           "location": next,
-          "set-cookie": `${SESSION_COOKIE}=${token}; ${SESSION_COOKIE_ATTRS}; Max-Age=${90 * 24 * 60 * 60}`,
+          "set-cookie": sessionSetCookie(opened.token),
         } });
       }
       return json({
         person: person.name, role: person.role, title: person.title,
-        token, expiresAt: expires,
+        token: opened.token, expiresAt: opened.expires,
         note: "Save this token. Send it as: Authorization: Bearer <token>. It lasts 90 days.",
       });
     },
@@ -992,13 +987,9 @@ const ABOVE_ROUTES = [
       // the review's A1: a JSON sign-up never names an org for the person — with several active seats, or only seats waiting for
       // its yes, it signs in nothing (a browser's lands on the picker, where the person picks or answers); and with one active seat
       // while another seat waits for its yes (the owner, 2026-10-09: `waits`), it signs in nothing too
-      let token = null, expires = null;
-      if (r.seat && (isWeb || !(r.ask || r.waits || r.pendingOnly))) {
-        token = SESSION_TOKEN_PREFIX + crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
-        expires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
-        const minted = await mintSession(env, r, { tokenHash: await sha256(token), device: isWeb ? "web" : String(body.device || "unknown").slice(0, 80), at: now(), expires });
-        if (((minted && minted.meta && minted.meta.changes) || 0) < 1) token = null;   // a rotate landed meanwhile: signed up, not signed in
-      }
+      // (a rotate landing meanwhile mints nothing: signed up, not signed in)
+      const opened = r.seat && (isWeb || !(r.ask || r.waits || r.pendingOnly)) ? await openSession(env, r, { device: isWeb ? "web" : body.device || "unknown" }) : null;
+      const token = opened ? opened.token : null, expires = opened ? opened.expires : null;
       const note = token ? "Signed up and signed in. Save this token: send it as Authorization: Bearer <token>. It lasts 90 days."
         : r.ask || r.waits ? `Signed up. ${chooseOrgWords(r)} (POST /login)`
         : r.pendingOnly ? `Signed up. ${PENDING_ONLY_WORDS}`
@@ -1010,11 +1001,13 @@ const ABOVE_ROUTES = [
       // person's own; a failed read fills in only the email. Never the passphrase.
       if (isWeb && !token && !r.seat) {
         const p = await approvedProfile(env, r.email).catch(() => null);
-        const values = { email: typed, ...(p ? { name: p.company.slice(0, ORG_NAME_MAX), you: p.name.slice(0, ORG_NAME_MAX) } : {}) };
+        // 21.P D19: the address suggested from the company, as the form's own script suggests it (never a reserved or a malformed one)
+        const suggested = p ? suggestSlug(p.company, ORG_SLUG_MAX) : "";
+        const values = { email: typed, ...(p ? { name: p.company.slice(0, ORG_NAME_MAX), you: p.name.slice(0, ORG_NAME_MAX), ...(orgSlugProblem(suggested, RESERVED_ORG_NAMES) ? {} : { slug: suggested }) } : {}) };
         return new Response(renderOrgNew({ host: url.host, values }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
       }
       if (isWeb) return token
-        ? new Response(null, { status: 302, headers: { location: await landingOf(env, r), "set-cookie": `${SESSION_COOKIE}=${token}; ${SESSION_COOKIE_ATTRS}; Max-Age=${90 * 24 * 60 * 60}` } })
+        ? new Response(null, { status: 302, headers: { location: await landingOf(env, r), "set-cookie": sessionSetCookie(token) } })
         : new Response(null, { status: 302, headers: { location: "/login" } });
       return json({ account: r.how, signedIn: !!token, ...(token ? { person: r.seat.name, role: r.seat.role, title: r.seat.title, token, expiresAt: expires } : {}), note });
     },
@@ -1181,7 +1174,15 @@ const ABOVE_ROUTES = [
         : json({ error: "too_many_attempts_ip", retryAfterSeconds: 60 }, 429);
       const made = await createOrg(env, url, f, { client: await clientOf(request) });   // 8.3a: the lockout's key
       if (made.error) return refuse(made);
-      if (isWeb) return new Response(renderOrgMade({ made, origin: url.origin }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+      // sprint 21, 21.P D17 (the owner's MCQ of 2026-10-14): the form's creator is signed in at once, as the new org's owner seat — the
+      // account's passphrase this request just proved, THE mint POST /login uses (src/accounts.js openSession: a fresh token, the
+      // conditional INSERT; src/core.js sessionSetCookie). The done page is this answer's body (the key shown once rides it only:
+      // never a redirect, never a URL), its one primary the org's address, now signed in. A script's JSON answer sets no cookie.
+      if (isWeb) {
+        const opened = await openSession(env, made.signin, { device: "web" });
+        return new Response(renderOrgMade({ made, origin: url.origin, signedIn: !!opened }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store",
+          ...(opened ? { "set-cookie": sessionSetCookie(opened.token) } : {}) } });
+      }
       return json({ org: made.org, project: made.project, person: made.person, key: made.key, mcp: `${url.origin}/mcp`, address: `${url.origin}/${made.org.slug}`,
         note: "Save the key now: it is shown once. It is your owner seat's own secret (its sign-in and its API key). The org's pages are at its address; your AI reaches the org at mcp with the key as its bearer." },
         200, { "cache-control": "no-store" });
@@ -1224,7 +1225,7 @@ const ABOVE_ROUTES = [
       const isOwner = reader.role === "owner";
       const includeEval = url.searchParams.get("eval") === "1";
       const [tenant, summary] = await Promise.all([getTenantConfig(env), readHomeSummary(env, reader, url.searchParams)]);
-      return servePage(env, { active: "home", changes: "home", lists: "home", content: renderHome(summary, { owner: isOwner, brand: tenant.brand, reader, eval: includeEval }),
+      return servePage(env, { active: "home", changes: "home", lists: "home", content: renderHome(summary, { owner: isOwner, brand: tenant.brand, reader, eval: includeEval, origin: url.origin }),
         owner: isOwner, reader, tenant, includeEval, cache: "private, no-store" });
     },
   },

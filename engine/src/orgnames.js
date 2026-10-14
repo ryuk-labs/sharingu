@@ -57,3 +57,12 @@ export function orgSlugProblem(slug, reserved) {
   if (reserved && reserved.has(s)) return "reserved";
   return "";
 }
+// suggestSlug(name, max) -> a path name suggested from an org's name (sprint 21, 21.P D19: the org form fills its address from the
+// company as the person types, still theirs to edit): accents dropped, lower-cased, every run of anything but a to z and 0 to 9 one
+// dash, no dash at either end, at most `max` long. SELF-CONTAINED (it names nothing outside its own body): the form's script
+// embeds it by its own source (src/orgpage.js), so the page and the server suggest the same name. The suggestion is only a value
+// in the field: orgSlugProblem still decides.
+export function suggestSlug(name, max) {
+  return String(name == null ? "" : name).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+/, "").slice(0, max).replace(/-+$/, "");
+}

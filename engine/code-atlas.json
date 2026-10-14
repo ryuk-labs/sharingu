@@ -3,398 +3,403 @@
     "accounts.js": {
       "constants": [
         {
-          "line": 213,
+          "line": 214,
           "name": "ACCEPT_SEAT_SQL",
           "role": ""
         },
         {
-          "line": 135,
+          "line": 136,
           "name": "ACCOUNT_BY_EMAIL_SQL",
           "role": "---- the statements (exported for the selftests that plan them) ----"
         },
         {
-          "line": 370,
+          "line": 383,
           "name": "ACCOUNT_GRANT_SEAT_SQL",
           "role": "No one is signed in yet: src/core.js signIn takes the org off the row it answers."
         },
         {
-          "line": 350,
+          "line": 363,
           "name": "ACCOUNT_ORGS_SQL",
           "role": "session carries none and lists nothing). At most 50 (the picker's page)."
         },
         {
-          "line": 196,
+          "line": 197,
           "name": "ACCOUNT_SEATS_SQL",
           "role": "the account's seats in every org: only after the holder proved the account's passphrase (their own seats' connected apps"
         },
         {
-          "line": 168,
+          "line": 169,
           "name": "ATTEMPT_AT_ADDRESS_SQL",
           "role": "client (NULL: none; a success names it only when the account's passphrase proved it: countSignIn)"
         },
         {
-          "line": 170,
+          "line": 171,
           "name": "ATTEMPT_SQL",
           "role": "an attempt by a signed-in seat (a passphrase change re-checks its current secret): the seat's org, and its client (the s"
         },
         {
-          "line": 124,
+          "line": 125,
           "name": "CHOOSE_ORG_WORDS",
           "role": ""
         },
         {
-          "line": 127,
+          "line": 128,
           "name": "CHOOSE_WAITING_WORDS",
           "role": "org: the ask (one active seat: CHOOSE_WAITING_WORDS; several: CHOOSE_ORG_WORDS), then where the waiting seat is answered"
         },
         {
-          "line": 215,
+          "line": 216,
           "name": "DECLINE_SEAT_SQL",
           "role": ""
         },
         {
-          "line": 119,
+          "line": 120,
           "name": "EMAIL_NOT_ASCII_WORDS",
           "role": ""
         },
         {
-          "line": 452,
+          "line": 465,
           "name": "END_ACCOUNT_SESSIONS_SQL",
           "role": "?2 the token hash kept"
         },
         {
-          "line": 163,
+          "line": 164,
           "name": "FAILS_SQL",
           "role": "bucket (the email, or a seat's `id:<person>` bucket), ?4 the client (NULL: none \u2014 mine 0, known 0), ?5 the vouch's since"
         },
         {
-          "line": 212,
+          "line": 213,
           "name": "INVITED_ELSEWHERE",
           "role": "(sprint 12, 12.3) and never a seat of another org than the one whose invite link set the account's passphrase (INVITED_E"
         },
         {
-          "line": 647,
+          "line": 660,
           "name": "INVITE_ACCOUNT_SQL",
           "role": "it still has none. Binds: ?1 the hash, ?2 the salt, ?3 the link's org, ?4 now, ?5 the account, ?6 the link's id, ?7 the "
         },
         {
-          "line": 610,
+          "line": 623,
           "name": "INVITE_DAYS",
           "role": ""
         },
         {
-          "line": 145,
+          "line": 146,
           "name": "INVITE_MARK_HOLDS",
           "role": "the session's seat (SESSION_AT_SQL, below) all carry it"
         },
         {
-          "line": 632,
+          "line": 645,
           "name": "INVITE_OPEN_SQL",
           "role": "is joined in THAT org only. Binds: ?1 the token's hash, ?2 now"
         },
         {
-          "line": 628,
+          "line": 641,
           "name": "INVITE_OTHER_SEAT",
           "role": "whether the seat's account holds another seat, active or waiting (any org): ONE text, read by the link's read and its sp"
         },
         {
-          "line": 613,
+          "line": 626,
           "name": "INVITE_PATH",
           "role": "the link's path: a platform door (POST /signup's twin page, GET /signup?via=invite); the token follows it as the fragmen"
         },
         {
-          "line": 606,
+          "line": 619,
           "name": "INVITE_SEAT_USE_SQL",
           "role": ""
         },
         {
-          "line": 641,
+          "line": 654,
           "name": "INVITE_SPEND_SQL",
           "role": "?4 the token's hash, ?5 the seat's key hash as read, ?6 its passphrase hash as read"
         },
         {
-          "line": 611,
+          "line": 624,
           "name": "INVITE_TOKEN_BYTES",
           "role": ""
         },
         {
-          "line": 614,
+          "line": 627,
           "name": "INVITE_TOKEN_RE",
           "role": ""
         },
         {
-          "line": 114,
+          "line": 115,
           "name": "KNOWN_DAYS",
           "role": "a client the account's passphrase signed in from within this many days is judged by its own failures (lockOf)"
         },
         {
-          "line": 109,
+          "line": 110,
           "name": "LOCKOUT_FAILS",
           "role": ""
         },
         {
-          "line": 112,
+          "line": 113,
           "name": "LOCKOUT_MINUTES",
           "role": ""
         },
         {
-          "line": 180,
+          "line": 181,
           "name": "LOGIN_SESSION_SQL",
           "role": "pass_hash (NULL: none)."
         },
         {
-          "line": 526,
+          "line": 539,
           "name": "NO_DIGEST",
           "role": ""
         },
         {
-          "line": 132,
+          "line": 133,
           "name": "NO_SALT",
           "role": "a hash compared when no account answers the email, so a sign-in takes the same time either way (A6; accountProof does th"
         },
         {
-          "line": 111,
+          "line": 112,
           "name": "NO_SEAT_HERE_WORDS",
           "role": "the words a right secret with no seat at the address gets (POST /login, the OAuth sign-in form): said plainly, never ano"
         },
         {
-          "line": 335,
+          "line": 348,
           "name": "ORG_SLUG_SQL",
           "role": "seat: the root"
         },
         {
-          "line": 153,
+          "line": 154,
           "name": "PENDING_OF_SQL",
           "role": "org added for its email: that passphrase proves only what the inviting org's admin could hand over (INVITED_ELSEWHERE_SQ"
         },
         {
-          "line": 123,
+          "line": 124,
           "name": "PENDING_ONLY_WORDS",
           "role": "the OAuth form)"
         },
         {
-          "line": 188,
+          "line": 189,
           "name": "PENDING_SESSION_SQL",
           "role": "?6 the account, ?7 the account's pass_hash as read"
         },
         {
-          "line": 336,
+          "line": 349,
           "name": "PICKER_PATH",
           "role": ""
         },
         {
-          "line": 146,
+          "line": 147,
           "name": "SEATS_OF_SQL",
           "role": ""
         },
         {
-          "line": 487,
+          "line": 500,
           "name": "SEAT_ANSWER_WORDS",
           "role": "the words of an answer (POST /orgs/seat's JSON note, the picker's flash after a form): done, then each refusal"
         },
         {
-          "line": 205,
+          "line": 206,
           "name": "SEAT_CONSENT_SQL",
           "role": "passphrase, or an active or pending seat in ANOTHER org. No row of that org leaves (a yes or no). No account: no row (ac"
         },
         {
-          "line": 604,
+          "line": 617,
           "name": "SEAT_NEVER_USED",
           "role": "Binds: ?1 the seat's id (the admin's org: {org})"
         },
         {
-          "line": 199,
+          "line": 200,
           "name": "SEAT_SPAN_SQL",
           "role": "ruling's test for an admin's set-password, PLATFORM \u00a72.8)"
         },
         {
-          "line": 202,
+          "line": 203,
           "name": "SEAT_TAKEN_SQL",
           "role": "nor invites it twice)"
         },
         {
-          "line": 157,
+          "line": 158,
           "name": "SEAT_TRIES",
           "role": "the seats whose OWN secret a sign-in compares, in that order (each costs one passphrase hash)"
         },
         {
-          "line": 128,
+          "line": 129,
           "name": "SEAT_WAITS_WORDS",
           "role": ""
         },
         {
-          "line": 191,
+          "line": 192,
           "name": "SEAT_WITH_ACCOUNT_SQL",
           "role": "a signed-in seat with its account's passphrase (the holder's own change re-checks either)"
         },
         {
-          "line": 378,
+          "line": 391,
           "name": "SESSION_AT_SQL",
           "role": "own seat's, as before. Here, not in core.js, because it names accounts (tools/check-scoped-data.py's account rule)."
         },
         {
-          "line": 194,
+          "line": 336,
+          "name": "SESSION_DAYS",
+          "role": "LOGIN_SESSION_SQL's EXISTS). The caller sets the cookie (src/core.js sessionSetCookie) or answers the token to a script."
+        },
+        {
+          "line": 195,
           "name": "SET_ACCOUNT_PASSPHRASE_SQL",
           "role": "the holder's new passphrase, only while the account still holds the one proven (a concurrent change wins; this one is re"
         },
         {
-          "line": 544,
+          "line": 557,
           "name": "SIGNUP_ACCOUNT_SQL",
           "role": "code; the operator's code confirms the email, so an invite link's mark ends with it (invited_org NULL: THE INVITE LINK)."
         },
         {
-          "line": 513,
+          "line": 526,
           "name": "SIGNUP_CODE_ALPHABET",
           "role": "in any case, with or without the dashes and spaces; O reads as 0, I and L as 1 (the alphabet holds none of them)."
         },
         {
-          "line": 514,
+          "line": 527,
           "name": "SIGNUP_CODE_LENGTH",
           "role": ""
         },
         {
-          "line": 540,
+          "line": 553,
           "name": "SIGNUP_END_SESSIONS_SQL",
           "role": "?2 the code's id, ?3 the nonce"
         },
         {
-          "line": 530,
+          "line": 543,
           "name": "SIGNUP_OPEN_SQL",
           "role": "email typed, never by itself, so a code the operator handed for one email opens no other"
         },
         {
-          "line": 534,
+          "line": 547,
           "name": "SIGNUP_SPEND_SQL",
           "role": "every later statement of the batch is conditional. Binds: ?1 now, ?2 the nonce, ?3 the email, ?4 the code's id, ?5 its h"
         }
       ],
       "d1Queries": [
         {
-          "line": 254,
+          "line": 255,
           "sql": "<dynamic: FAILS_SQL>"
         },
         {
-          "line": 266,
+          "line": 267,
           "sql": "<dynamic: SEATS_OF_SQL>"
         },
         {
-          "line": 287,
+          "line": 288,
           "sql": "<dynamic: ACCOUNT_BY_EMAIL_SQL>"
         },
         {
-          "line": 315,
+          "line": 316,
           "sql": "<dynamic: PENDING_OF_SQL>"
         },
         {
-          "line": 340,
+          "line": 353,
           "sql": "<dynamic: ORG_SLUG_SQL>"
         },
         {
-          "line": 355,
+          "line": 368,
           "sql": "<dynamic: ACCOUNT_ORGS_SQL>"
         },
         {
-          "line": 383,
+          "line": 396,
           "sql": "<dynamic: SESSION_AT_SQL.replace(\"{cols}\", cols)>"
         },
         {
-          "line": 391,
+          "line": 404,
           "sql": "<dynamic: ACCOUNT_GRANT_SEAT_SQL.replace(\"{cols}\", cols)>"
         },
         {
-          "line": 399,
+          "line": 412,
           "sql": "<dynamic: ATTEMPT_AT_ADDRESS_SQL>"
         },
         {
-          "line": 414,
+          "line": 427,
           "sql": "<dynamic: ACCOUNT_BY_EMAIL_SQL>"
-        },
-        {
-          "line": 426,
-          "sql": "<dynamic: SEAT_WITH_ACCOUNT_SQL>"
-        },
-        {
-          "line": 435,
-          "sql": "<dynamic: ATTEMPT_SQL>"
         },
         {
           "line": 439,
+          "sql": "<dynamic: SEAT_WITH_ACCOUNT_SQL>"
+        },
+        {
+          "line": 448,
+          "sql": "<dynamic: ATTEMPT_SQL>"
+        },
+        {
+          "line": 452,
           "sql": "<dynamic: SET_ACCOUNT_PASSPHRASE_SQL>"
         },
         {
-          "line": 456,
+          "line": 469,
           "sql": "<dynamic: END_ACCOUNT_SESSIONS_SQL>"
         },
         {
-          "line": 462,
+          "line": 475,
           "sql": "<dynamic: ACCOUNT_SEATS_SQL>"
         },
         {
-          "line": 469,
+          "line": 482,
           "sql": "<dynamic: SEAT_SPAN_SQL>"
         },
         {
-          "line": 476,
+          "line": 489,
           "sql": "<dynamic: SEAT_TAKEN_SQL>"
         },
         {
-          "line": 483,
+          "line": 496,
           "sql": "<dynamic: SEAT_CONSENT_SQL>"
         },
         {
-          "line": 501,
+          "line": 514,
           "sql": "<dynamic: word === \"accept\" ? ACCEPT_SEAT_SQL : DECLINE_SEAT_SQL>"
         },
         {
-          "line": 560,
+          "line": 573,
           "sql": "<dynamic: ACCOUNT_BY_EMAIL_SQL>"
         },
         {
-          "line": 565,
+          "line": 578,
           "sql": "<dynamic: SIGNUP_OPEN_SQL>"
         },
         {
-          "line": 571,
+          "line": 584,
           "sql": "<dynamic: SIGNUP_SPEND_SQL>"
         },
         {
-          "line": 572,
+          "line": 585,
           "sql": "<dynamic: SIGNUP_END_SESSIONS_SQL>"
         },
         {
-          "line": 573,
+          "line": 586,
           "sql": "<dynamic: SIGNUP_ACCOUNT_SQL>"
         },
         {
-          "line": 577,
+          "line": 590,
           "sql": "<dynamic: ACCOUNT_BY_EMAIL_SQL>"
         },
         {
-          "line": 609,
+          "line": 622,
           "sql": "<dynamic: INVITE_SEAT_USE_SQL>"
         },
         {
-          "line": 659,
+          "line": 672,
           "sql": "<dynamic: INVITE_OPEN_SQL>"
         },
         {
-          "line": 666,
+          "line": 679,
           "sql": "<dynamic: INVITE_SPEND_SQL>"
         },
         {
-          "line": 667,
+          "line": 680,
           "sql": "<dynamic: INVITE_ACCOUNT_SQL>"
         },
         {
-          "line": 671,
+          "line": 684,
           "sql": "<dynamic: ACCOUNT_BY_EMAIL_SQL>"
         },
         {
-          "line": 683,
+          "line": 696,
           "sql": "<dynamic: BETA_ORGS_SQL>"
         },
         {
-          "line": 683,
+          "line": 696,
           "sql": "<dynamic: BETA_CODES_SQL>"
         }
       ],
@@ -442,6 +447,7 @@
         "SEAT_WAITS_WORDS",
         "SEAT_WITH_ACCOUNT_SQL",
         "SESSION_AT_SQL",
+        "SESSION_DAYS",
         "SET_ACCOUNT_PASSPHRASE_SQL",
         "SIGNUP_ACCOUNT_SQL",
         "SIGNUP_CODE_ALPHABET",
@@ -472,6 +478,7 @@
         "normEmail",
         "normInvite",
         "normOrgArg",
+        "openSession",
         "orgsOfAccount",
         "passphraseSignIn",
         "pendingOf",
@@ -503,6 +510,12 @@
           "from": "./oauthgrants.js",
           "names": [
             "revokeOAuthGrants"
+          ]
+        },
+        {
+          "from": "./tenant.js",
+          "names": [
+            "SESSION_TOKEN_PREFIX"
           ]
         },
         {
@@ -2882,55 +2895,124 @@
       "r2Keys": [],
       "routes": []
     },
-    "controlpage.js": {
+    "connectcards.js": {
       "constants": [
         {
-          "line": 25,
-          "name": "ADMIN_HOLDS",
-          "role": "copy: off-screen (a title)"
-        },
-        {
-          "line": 208,
+          "line": 22,
           "name": "CHATGPT_ADD",
           "role": ""
         },
         {
-          "line": 210,
-          "name": "CHATGPT_STEPS",
-          "role": "copy: label (the ChatGPT row's three steps, in the order its plugins page asks them)"
-        },
-        {
-          "line": 207,
+          "line": 21,
           "name": "CLAUDE_ADD",
           "role": "copy: off-screen (an href)"
         },
         {
-          "line": 32,
+          "line": 62,
+          "name": "CLIENT_MARK_CSS",
+          "role": "a client's mark (Control \u00b7 Connect's rows wear it too): a hairline tile, the logo filling it or sitting in it, the promp"
+        },
+        {
+          "line": 70,
+          "name": "CONNECT_CARDS_CSS",
+          "role": "button (ink: the view's one orange is the page's own primary), the mono lines with Copy, and the quiet foot"
+        },
+        {
+          "line": 98,
+          "name": "COPY_JS",
+          "role": "a front page's copy (the shell's own script does it inside the app): the <code> beside the button, \"Copied\" for two seco"
+        },
+        {
+          "line": 28,
+          "name": "LOGOS",
+          "role": "the two app logos the connect page shows too (src/oauth.js): chatgpt.png fills its tile, claude.png sits in it at its ow"
+        },
+        {
+          "line": 40,
+          "name": "NO_KEY",
+          "role": ""
+        },
+        {
+          "line": 39,
+          "name": "SIGN_IN",
+          "role": "copy: label (the two halves of each card's foot: where the sign-in happens, and what it spares)"
+        },
+        {
+          "line": 41,
+          "name": "TICK",
+          "role": ""
+        }
+      ],
+      "d1Queries": [],
+      "exports": [
+        "CHATGPT_ADD",
+        "CLAUDE_ADD",
+        "CLIENT_MARK_CSS",
+        "CONNECT_CARDS_CSS",
+        "COPY_JS",
+        "claudeCodeLine",
+        "clientMark",
+        "codexLine",
+        "connectCards",
+        "connectorName",
+        "copyLine"
+      ],
+      "imports": [
+        {
+          "from": "./frontassets.js",
+          "names": [
+            "frontAssetHref"
+          ]
+        },
+        {
+          "from": "./ui.js",
+          "names": [
+            "esc"
+          ]
+        }
+      ],
+      "r2Keys": [],
+      "routes": []
+    },
+    "controlpage.js": {
+      "constants": [
+        {
+          "line": 26,
+          "name": "ADMIN_HOLDS",
+          "role": "copy: off-screen (a title)"
+        },
+        {
+          "line": 202,
+          "name": "CHATGPT_STEPS",
+          "role": "copy: label (the ChatGPT row's steps, in the order its plugins page asks them)"
+        },
+        {
+          "line": 34,
           "name": "CONTROL_REGIONS",
           "role": ""
         },
         {
-          "line": 80,
+          "line": 81,
           "name": "CT_CSS",
           "role": "the page's own layout, on the semantic tokens only (the parts come from ui.js; shell.js styles them once)"
         },
         {
-          "line": 169,
+          "line": 171,
           "name": "CT_JS",
           "role": "the page's small script: the Members filter (a read of the rows on the page), and one open menu at a time"
         },
         {
-          "line": 70,
+          "line": 72,
           "name": "DOOR",
           "role": ""
         },
         {
           "line": 199,
           "name": "FIRST_CALLS",
-          "role": "tools, each filing its own operation of a preview, sprint 19)"
+          "role": "tools, each filing its own operation of a preview, sprint 19), each row's \"Starts with\""
         },
         {
-          "line": 36,
+          "line": 38,
           "name": "PLAN_LABELS",
           "role": "copy: label (each limit's tile)"
         },
@@ -2942,8 +3024,6 @@
       ],
       "d1Queries": [],
       "exports": [
-        "CHATGPT_ADD",
-        "CLAUDE_ADD",
         "CONTROL_REGIONS",
         "FIRST_CALLS",
         "PLAN_LABELS",
@@ -3158,7 +3238,7 @@
           "role": ""
         },
         {
-          "line": 1498,
+          "line": 1500,
           "name": "BANNED_KEYS",
           "role": ""
         },
@@ -3203,7 +3283,7 @@
           "role": ""
         },
         {
-          "line": 1762,
+          "line": 1764,
           "name": "LEADER_NOTE_LINE",
           "role": "B7d S3: a non-\"all\" lane still says a plain note is lane \"leader\" \u2014 anyone may file one there (start-here's step 4)."
         },
@@ -3213,17 +3293,17 @@
           "role": "day's prefix walks idx_transmission_day_seq in order and reads ONE index row."
         },
         {
-          "line": 1851,
+          "line": 1853,
           "name": "NOT_MIND_TX",
           "role": "this module); this name stays the one every reader here imports."
         },
         {
-          "line": 1723,
+          "line": 1725,
           "name": "NO_PROJECT_YET",
           "role": "instructions and every empty state of a project-less org say: create the project, then preview and file into it"
         },
         {
-          "line": 1686,
+          "line": 1688,
           "name": "ORG_ARG_WORDS",
           "role": "ORG_ARG_WORDS \u2014 the one sentence that names the argument (src/index.js ORG_ARG: every tool's schema carries it)"
         },
@@ -3238,7 +3318,7 @@
           "role": ""
         },
         {
-          "line": 1209,
+          "line": 1211,
           "name": "PROFILE_COLS",
           "role": "hat admits them to nothing until the migration's backfill has run (less, never more)."
         },
@@ -3253,17 +3333,17 @@
           "role": "-> { project: string|null } | { error: \"project_forbidden\", note, seats?, example? }"
         },
         {
-          "line": 1713,
+          "line": 1715,
           "name": "PROJECT_RULE",
           "role": "behaves as it says: doorProject fills one seat or the active project and refuses the rest with project_required."
         },
         {
-          "line": 1383,
+          "line": 1385,
           "name": "READ_ONLY_SUFFIX",
           "role": "the route in as read-only-safe (readOnlyOk: true, below)."
         },
         {
-          "line": 1384,
+          "line": 1386,
           "name": "READ_ONLY_TOKEN_SHAPE",
           "role": ""
         },
@@ -3293,12 +3373,12 @@
           "role": "-> { backfilled, report (the first report's id), reports: [{ id, project, rows }] }"
         },
         {
-          "line": 1387,
+          "line": 1389,
           "name": "ROSTER_SQL",
           "role": ""
         },
         {
-          "line": 1502,
+          "line": 1504,
           "name": "SANCTIONED_TEXT_FIELD",
           "role": "Everything else conversational stays a 422, forever."
         },
@@ -3313,12 +3393,12 @@
           "role": ""
         },
         {
-          "line": 1279,
+          "line": 1281,
           "name": "SESSION_LIVE_SQL",
           "role": "answers the plain 404 (membership never told) rather than the sign-in page. A yes or no. Binds: ?1 the token's hash, ?2 "
         },
         {
-          "line": 1284,
+          "line": 1286,
           "name": "SESSION_PLACE_SQL",
           "role": "any org its account holds a seat in (src/accounts.js orgsOfAccount). Binds: ?1 the hash, ?2 now."
         },
@@ -3463,99 +3543,99 @@
           "sql": "SELECT key FROM projects WHERE key = ? AND active = 1 AND org = {org}"
         },
         {
-          "line": 1239,
+          "line": 1241,
           "sql": "SELECT id, name, email, role, title, capture_mode, lane, org"
         },
         {
-          "line": 1247,
+          "line": 1249,
           "sql": "SELECT p.id, p.name, p.email, p.role, p.title, p.capture_mode, p.lane, p.org"
         },
         {
-          "line": 1314,
+          "line": 1316,
           "sql": "<dynamic: SESSION_LIVE_SQL>"
         },
         {
-          "line": 1323,
+          "line": 1325,
           "sql": "<dynamic: SESSION_PLACE_SQL>"
         },
         {
-          "line": 1411,
+          "line": 1413,
           "sql": "<dynamic: rosterSql(x)>"
         },
         {
-          "line": 1458,
+          "line": 1460,
           "sql": "SELECT id, name, email, role, title, capture_mode, lane, org, key_hash, pass_has"
         },
         {
-          "line": 1522,
+          "line": 1524,
           "sql": "<dynamic: KNOWLEDGE_AT_SQL>"
         },
         {
-          "line": 1543,
+          "line": 1545,
           "sql": "SELECT MAX(created_at) AS t FROM events WHERE person_id = ?"
         },
         {
-          "line": 1554,
+          "line": 1556,
           "sql": "<dynamic: HEARTBEAT_LANDED_SQL(includeEval, evalSeats.length, fenced.length)>"
         },
         {
-          "line": 1571,
+          "line": 1573,
           "sql": "SELECT id, title, opened_at, ref FROM loops WHERE person_id = ? AND status='open"
         },
         {
-          "line": 1629,
+          "line": 1631,
           "sql": "<dynamic: LOOPS_OPEN_SQL(true)>"
         },
         {
-          "line": 1630,
+          "line": 1632,
           "sql": "SELECT COUNT(*) AS n FROM loops WHERE person_id = ? AND status = 'open'"
         },
         {
-          "line": 1650,
+          "line": 1652,
           "sql": "<dynamic: ACTIVE_PROJECT_KEYS_SQL>"
         },
         {
-          "line": 1860,
+          "line": 1862,
           "sql": "<dynamic: LOOPS_OPEN_SQL(false)>"
         },
         {
-          "line": 1861,
+          "line": 1863,
           "sql": "SELECT COUNT(*) AS n FROM loops WHERE person_id=? AND status='open' AND (ref IS "
         },
         {
-          "line": 1868,
+          "line": 1870,
           "sql": "<dynamic: OWNER_OPEN_COUNT_SQL(sc && sc.filter, includeEval)>"
         },
         {
-          "line": 1869,
+          "line": 1871,
           "sql": "SELECT COUNT(*) AS n FROM transmission t WHERE"
         },
         {
-          "line": 1907,
+          "line": 1909,
           "sql": "<dynamic: TX_ONE_SQL(false)>"
         },
         {
-          "line": 1908,
+          "line": 1910,
           "sql": "<dynamic: TX_ONE_SQL(true)>"
         },
         {
-          "line": 1943,
+          "line": 1945,
           "sql": "<dynamic: FILING_COUNTERS_SQL(withEval, !owner)>"
         },
         {
-          "line": 1968,
+          "line": 1970,
           "sql": "<dynamic: sql>"
         },
         {
-          "line": 1968,
+          "line": 1970,
           "sql": "<dynamic: sql>"
         },
         {
-          "line": 2026,
+          "line": 2028,
           "sql": "INSERT INTO artifacts (id,person_id,kind,title,r2_key,sha256,bytes,group_tag,cre"
         },
         {
-          "line": 2030,
+          "line": 2032,
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         }
       ],
@@ -3658,6 +3738,7 @@
         "sessionCookieToken",
         "sessionLive",
         "sessionPlace",
+        "sessionSetCookie",
         "stampHere",
         "stampProjectLoose",
         "stateSummaryFor",
@@ -6236,69 +6317,69 @@
     "home.js": {
       "constants": [
         {
-          "line": 79,
+          "line": 80,
           "name": "AIM_EMPTY",
           "role": "the aim's and its measure's EMPTY phrases (pristine copy, owner 2026-10-02: a phrase; What is missing holds the call)"
         },
         {
-          "line": 260,
+          "line": 261,
           "name": "CSS",
           "role": ""
         },
         {
-          "line": 272,
+          "line": 273,
           "name": "DAY_MS",
           "role": ""
         },
         {
-          "line": 50,
+          "line": 51,
           "name": "HOME_REGIONS",
           "role": ""
         },
         {
-          "line": 47,
+          "line": 48,
           "name": "KIND_CHIP",
           "role": "the needs-you row's ONE state chip by its kind (design-law stateChips, UI-B5a QB74B1B7E): a human act is owed"
         },
         {
-          "line": 48,
+          "line": 49,
           "name": "KIND_WORD",
           "role": ""
         },
         {
-          "line": 56,
+          "line": 57,
           "name": "LETTERS",
           "role": ""
         },
         {
-          "line": 80,
+          "line": 81,
           "name": "MEASURE_EMPTY",
           "role": ""
         },
         {
-          "line": 429,
+          "line": 440,
           "name": "MOVED_SHOWN",
           "role": "the goals moved: the five that moved most, the rest folded under one line"
         },
         {
-          "line": 51,
+          "line": 52,
           "name": "NEEDS_ROWS",
           "role": ""
         },
         {
-          "line": 256,
+          "line": 257,
           "name": "OFFLINE",
           "role": "data-role on a person, data-meter + data-pct + data-open on the Filled tile, data-measure on the aim's chip."
         },
         {
-          "line": 91,
+          "line": 92,
           "name": "SHIPPED_DAYS",
           "role": ""
         }
       ],
       "d1Queries": [
         {
-          "line": 109,
+          "line": 110,
           "sql": "<dynamic: sql>"
         }
       ],
@@ -7201,12 +7282,12 @@
           "role": "G2 M2: a saved file is served as an inert document (GET /artifact/:id): no script, nothing loaded from anywhere"
         },
         {
-          "line": 2069,
+          "line": 2070,
           "name": "BELOW_ROUTES_1",
           "role": ""
         },
         {
-          "line": 2321,
+          "line": 2322,
           "name": "BELOW_ROUTES_2",
           "role": ""
         },
@@ -7246,7 +7327,7 @@
           "role": ""
         },
         {
-          "line": 2545,
+          "line": 2546,
           "name": "OBSERVABLE_GETS",
           "role": "(it ends the session). Tested on the URL-normalised PATHNAME (installSelfPage), so a dot-segment path resolves first."
         },
@@ -7314,23 +7395,23 @@
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         },
         {
-          "line": 1461,
+          "line": 1462,
           "sql": "<dynamic: auditEventsSql(clauses)>"
         },
         {
-          "line": 1474,
+          "line": 1475,
           "sql": "SELECT project, id, name FROM k_nodes WHERE project = ? AND id IN (${ch.map(() ="
         },
         {
-          "line": 1965,
+          "line": 1966,
           "sql": "SELECT a.*, p.name AS by_name FROM artifacts a JOIN people p ON p.id = a.person_"
         },
         {
-          "line": 2080,
+          "line": 2081,
           "sql": "UPDATE tokens SET revoked = 1 WHERE token_hash = ? AND revoked = 0"
         },
         {
-          "line": 2698,
+          "line": 2699,
           "sql": "SELECT settings FROM org WHERE id = {org}"
         }
       ],
@@ -7454,6 +7535,7 @@
             "seatsOnce",
             "sessionCookieToken",
             "sessionPlace",
+            "sessionSetCookie",
             "switcherCurrentOf",
             "transmissionOneFor",
             "whoamiFor"
@@ -7703,8 +7785,10 @@
         {
           "from": "./orgnames.js",
           "names": [
+            "ORG_SLUG_MAX",
             "orgSlugProblem",
-            "reservedNames"
+            "reservedNames",
+            "suggestSlug"
           ]
         },
         {
@@ -7830,7 +7914,6 @@
           "from": "./tenant.js",
           "names": [
             "DEFAULT_BRAND",
-            "SESSION_TOKEN_PREFIX",
             "configOf",
             "getTenantConfig",
             "orgBySlug",
@@ -8252,15 +8335,14 @@
           "names": [
             "clientOf",
             "landingOf",
-            "mintSession",
+            "openSession",
             "redeemInvite"
           ]
         },
         {
           "from": "./core.js",
           "names": [
-            "SESSION_COOKIE",
-            "SESSION_COOKIE_ATTRS"
+            "sessionSetCookie"
           ]
         },
         {
@@ -8276,16 +8358,13 @@
         {
           "from": "./tenant.js",
           "names": [
-            "SESSION_TOKEN_PREFIX",
             "getTenantConfig"
           ]
         },
         {
           "from": "./util.js",
           "names": [
-            "json",
-            "now",
-            "sha256"
+            "json"
           ]
         }
       ],
@@ -10444,12 +10523,12 @@
           "role": "ink text, a deep-orange lip) and the quiet one beside it, and the foot"
         },
         {
-          "line": 322,
+          "line": 316,
           "name": "JOIN_WORDS",
           "role": "the sign-in's way to request access (sprint 21, 21.1; 21.P: \"Join the beta\", the one word for it on the site and in the "
         },
         {
-          "line": 325,
+          "line": 319,
           "name": "ORG_CHOICE_CSS",
           "role": "the OAuth form's org choice: one bordered list, a radio per org (its name, its address)"
         },
@@ -11802,12 +11881,17 @@
     "oauth.js": {
       "constants": [
         {
-          "line": 72,
+          "line": 75,
+          "name": "CLIENT_HOSTS",
+          "role": "each logo's own hosts: the code must go back to one of them (a loopback client, Claude Code or Codex, proves nothing: no"
+        },
+        {
+          "line": 73,
           "name": "CLIENT_LOGOS",
           "role": "(chatgpt.png is the logo on its own white square: it fills its tile; claude.png, on clear ground, sits in it at its own "
         },
         {
-          "line": 83,
+          "line": 89,
           "name": "CONNECT_CSS",
           "role": ""
         },
@@ -11834,11 +11918,11 @@
       ],
       "d1Queries": [
         {
-          "line": 235,
+          "line": 241,
           "sql": "SELECT 1 AS x FROM people WHERE key_hash = ?"
         },
         {
-          "line": 236,
+          "line": 242,
           "sql": "SELECT 1 AS x FROM tokens WHERE token_hash = ?"
         }
       ],
@@ -12047,14 +12131,26 @@
         "firstSegment",
         "normSlug",
         "orgSlugProblem",
-        "reservedNames"
+        "reservedNames",
+        "suggestSlug"
       ],
       "imports": [],
       "r2Keys": [],
       "routes": []
     },
     "orgpage.js": {
-      "constants": [],
+      "constants": [
+        {
+          "line": 111,
+          "name": "MADE_CSS",
+          "role": "across the card, the first project as a quiet fact under the lede"
+        },
+        {
+          "line": 32,
+          "name": "SLUG_JS",
+          "role": "the address follows the org's name while it is the name's suggestion (or empty); a person's own address is left alone"
+        }
+      ],
       "d1Queries": [],
       "exports": [
         "renderOrgMade",
@@ -12062,8 +12158,17 @@
       ],
       "imports": [
         {
+          "from": "./connectcards.js",
+          "names": [
+            "CONNECT_CARDS_CSS",
+            "COPY_JS",
+            "connectCards"
+          ]
+        },
+        {
           "from": "./login.js",
           "names": [
+            "JOIN_WORDS",
             "authBrand",
             "authPage"
           ]
@@ -12071,7 +12176,8 @@
         {
           "from": "./orgnames.js",
           "names": [
-            "ORG_SLUG_MAX"
+            "ORG_SLUG_MAX",
+            "suggestSlug"
           ]
         },
         {
@@ -12088,6 +12194,12 @@
           ]
         },
         {
+          "from": "./requestaccess.js",
+          "names": [
+            "REQUEST_PATH"
+          ]
+        },
+        {
           "from": "./tenant.js",
           "names": [
             "DEFAULT_BRAND"
@@ -12097,7 +12209,8 @@
           "from": "./ui.js",
           "names": [
             "errorState",
-            "esc"
+            "esc",
+            "uchanPose"
           ]
         }
       ],

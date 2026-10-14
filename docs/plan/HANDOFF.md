@@ -2,9 +2,10 @@
 
 **As of 2026-10-13: sprint 20 is LIVE (the write tools file "a preview the person has seen and agreed to"); plugin
 0.1.16 clears the Claude directory's checks; the OpenAI submission is in review. Sprint 21 (onboarding) is OPEN on
-branch `sprint-21`, sliced from the owner's MCQs (`SPRINTS.md` sprint 21): 21.0–21.2 DONE (the plain note's default,
-request access, you're in line; migrate-081 on the branch, not live); next 21.3 the showcase and the look, then 21.4
-Google sign-in (waits on the owner's OAuth client). The ship's preflight for 081: `check-org-names --slugs` on live. In parallel, the owner's Claude side (the
+branch `sprint-21`, sliced from the owner's MCQs (`SPRINTS.md` sprint 21): 21.0–21.3 DONE and 21.P's E1 (the journey
+polish, engine side; the site's polish held on its branch `journey-polish`); E2 (after the org: signed in at once, Connect
+first) building; then 21.4 (the account flow: verify once by Cloudflare Email Service under a 2,900-in-31-days cap, sign
+in with a passphrase, a reset link; the data; Google, waiting on the owner's OAuth client). migrate-081 on the branch, not live. The ship's preflight for 081: `check-org-names --slugs` on live. In parallel, the owner's Claude side (the
 connector and plugin forms, after P1–P3 in the Claude app).**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
@@ -96,6 +97,15 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   not listed there; never attach one by hand alone.
 - **Beta is green** (`BETA.md`). Active people on live: Acie, Dr Vasu, Rein, Tyag, Ryuk, Agent Ops; every test seat is
   inactive or in the suites' org.
+- **Sprint 21's outside setup (2026-10-14):** the Google OAuth client (project in the ryuklabs Google org, redirect
+  `https://agent.sharingu.xyz/auth/google/callback` and the agent.ryuklabs.io twin) lives ONLY in
+  `~/.sharingu/google-oauth.env` (mode 600, two lines; never print it; an operator command stores it in the worker's KV);
+  Cloudflare Email Routing destination addresses ryuk@ryuklabs.io (verified) and acie@ryuklabs.io (waiting for its
+  click); Email Sending onboarded for sharingu.xyz through the API (sending subdomain c2ed4c4d…, return path
+  cf-bounce.sharingu.xyz): its MX, SPF and DKIM records are live (the owner's dashboard, 2026-10-14); DMARC stays the
+  zone's older record (p=quarantine, relaxed alignment, reports to a GoDaddy mailbox), which passes our DKIM-signed mail.
+  Check records with DNS-over-HTTPS (`curl -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=…&type=TXT'`):
+  this Mini's resolver answers empty or times out at times. acie@ryuklabs.io still waits for its click.
 - **The Cloudflare token** in `~/.sharingu/env-sharingu.sh` is ACCOUNT-scoped: its token-verify endpoint calls it
   invalid (it only verifies user tokens); wrangler and the account APIs work.
 
@@ -128,6 +138,10 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   <its persist> --file migrate-0NN.sql`) before `dev-local.sh up` (a `PLATFORM.md` §3 row will automate it).
 
 **Videos and screens**
+- Screenshots of a LOCAL worker under the public name (agent.sharingu.xyz) LEAK: Playwright's request interception does
+  not catch the request a redirect leads to, and in 21.P a few read-only GETs reached live (nothing written). Map the
+  name and refuse every other host: Chromium `--host-resolver-rules=MAP agent.sharingu.xyz 127.0.0.1:<port>, MAP *
+  ~NOTFOUND`, with wrangler `--local-protocol https --upstream-protocol https`.
 - Claude can NEVER be granted computer-use control of Claude's own app (a platform rule): a Claude Desktop take is the
   owner's to record; the session cuts it.
 - A macOS screen recording is variable-frame-rate: seeking into it lands 1–5 s off, unevenly. Transcode to constant

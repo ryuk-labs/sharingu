@@ -31,7 +31,8 @@
 //        waits and where it is answered); its new passphrase at /login asks (409 choose_org, its one active org) and signs in
 //        once `org` names it; a browser's sign-up is untouched (it lands on the picker with its session)
 //   S10 · (sprint 21, 21.2: "prefills the org at sign-up") a form sign-up with no seat, for an email with APPROVED requests,
-//        answers the org form with the newest one's company as the org's name and its name as yours; an email whose request is
+//        answers the org form with the newest one's company as the org's name (and, 21.P D19, its suggested address) and its name
+//        as yours; an email whose request is
 //        only OPEN, and an email beside another's approved request, get the email alone; the JSON answer unchanged (no page)
 // And the MUTATION PROOF: each named mutant (a scratch copy of src/) must turn its case(s) red.
 // Exit 1 on any failure. A gate step.
@@ -264,9 +265,9 @@ const CASES = {
     const form = async (email, pass) => { const c = await W.allow(email); return W.call("POST", "/signup", { form: { email, code: c.code, password: pass, confirm: pass, web: "1" } }); };
     const g = await form("Grace@Fresh.test", "grace-passphrase-1"), o = await form("waits@fresh.test", "waits-passphrase-1"), n = await form("nobody@fresh.test", "nobody-passphrase-1");
     const val = (t, f) => (new RegExp(`id="${f}"[^>]*value="([^"]*)"`).exec(t) || [])[1];
-    out.push([g.status === 200 && /data-screen="org-new"/.test(g.text) && val(g.text, "email") === "Grace@Fresh.test" && val(g.text, "name") === "Hopper Labs" && val(g.text, "you") === "Grace q-new" && val(g.text, "slug") === ""
+    out.push([g.status === 200 && /data-screen="org-new"/.test(g.text) && val(g.text, "email") === "Grace@Fresh.test" && val(g.text, "name") === "Hopper Labs" && val(g.text, "you") === "Grace q-new" && val(g.text, "slug") === "hopper-labs"
       && /id="password"[^>]*autofocus/.test(g.text) && !g.text.includes("grace-passphrase-1"),
-      `S10 · an approved request: the org form holds the newest one's company (${val(g.text, "name")}) and name (${val(g.text, "you")}), the email as typed, the slug left to derive, the passphrase focused, never echoed`]);
+      `S10 · an approved request: the org form holds the newest one's company (${val(g.text, "name")}) and name (${val(g.text, "you")}), the email as typed, the address suggested from the company (${val(g.text, "slug")}, 21.P D19), the passphrase focused, never echoed`]);
     out.push([o.status === 200 && val(o.text, "name") === "" && val(o.text, "you") === "" && n.status === 200 && val(n.text, "name") === "" && !/Not Yours|Open Co/.test(o.text + n.text),
       `S10 · a request only open, and another email's approved one, fill in nothing but the email (${val(o.text, "name") === "" && val(n.text, "name") === ""})`]);
     const j = await W.allow("json@fresh.test");
@@ -283,10 +284,10 @@ const MUTANTS = [
   { name: "the sign-up takes a non-ASCII email (A5)", file: "src/signup.js",
     from: '  if (!asciiEmail(e)) return "email_ascii";', to: "", red: ["S7"] },
   { name: "a JSON sign-up picks an org for an account in several (A1)", file: "src/index.js",
-    from: "if (r.seat && (isWeb || !(r.ask || r.waits || r.pendingOnly))) {", to: "if (r.seat) {", red: ["S3", "S9"] },
+    from: "const opened = r.seat && (isWeb || !(r.ask || r.waits || r.pendingOnly)) ?", to: "const opened = r.seat ?", red: ["S3", "S9"] },
   // the owner's ruling (2026-10-09): a seat that waits makes the JSON sign-up sign in nothing
   { name: "a JSON sign-up ignores a seat that waits (the account's one active seat by default)", file: "src/index.js",
-    from: "if (r.seat && (isWeb || !(r.ask || r.waits || r.pendingOnly))) {", to: "if (r.seat && (isWeb || !(r.ask || r.pendingOnly))) {", red: ["S9"] },
+    from: "const opened = r.seat && (isWeb || !(r.ask || r.waits || r.pendingOnly)) ?", to: "const opened = r.seat && (isWeb || !(r.ask || r.pendingOnly)) ?", red: ["S9"] },
   { name: "the sign-up never reads a seat that waits", file: "src/accounts.js",
     from: "waits: !!seats.length && !!pending.length && !named, verdict:", to: "waits: false, verdict:", red: ["S9"] },
   { name: "a code found by its hash, not its email (a code opens any email)", file: "src/accounts.js",

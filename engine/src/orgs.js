@@ -105,7 +105,7 @@ export function orgFormProblem(f, reserved) {
   return null;
 }
 
-// createOrg(env, url, f, { client }) -> { org: {id, name, slug}, project: {key, name}, person: {id, name, email}, key } | { error, status }
+// createOrg(env, url, f, { client }) -> { org: {id, name, slug}, project: {key, name}, person: {id, name, email}, key, signin } | { error, status }
 // f is orgFields' answer that orgFormProblem passed; client, the caller's (src/accounts.js clientOf; "" for none: the lockout is
 // then the account's alone). The key is the owner seat's secret, returned here ONCE: never stored (its hashes only), never
 // logged; the caller shows it and forgets it.
@@ -143,6 +143,11 @@ export async function createOrg(env, url, f, { client = "" } = {}) {
       continue;
     }
     forgetOrgProjects(fe);   // an id a deleted org once held (tools/org-undo.mjs delete) keeps no isolate memo of its projects
-    return { org: { id: n, name: f.name, slug: f.slug }, project: { key, name: f.projectName }, person: { id: personId, name: f.you, email: account.email }, key: ownerKey };
+    // signin (sprint 21, 21.P D17): the creation's own answer as a sign-in's, for the web form's session (src/accounts.js openSession,
+    // the mint POST /login uses): an ACCOUNT session, proven by the account's passphrase this request checked, on the owner seat this
+    // batch made (its hashes as written, so a rotate or a passphrase change landing meanwhile mints nothing). Not enumerable: no
+    // answer that serialises `made` carries the account's hashes.
+    const made = { org: { id: n, name: f.name, slug: f.slug }, project: { key, name: f.projectName }, person: { id: personId, name: f.you, email: account.email }, key: ownerKey };
+    return Object.defineProperty(made, "signin", { value: { session: "account", account, seat: { id: personId, org: n, key_hash: kh, pass_hash: ph } } });
   }
 }

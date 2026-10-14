@@ -688,7 +688,10 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   operator's own and the reviewer accounts); a forgotten passphrase gets a reset link (the same answer whether or not the
   account exists, 30 min, single use, three a day, every session signed out after); Google skips the verification email.
   The private status link retires (one way: sign in). The team's alert per new request to acie@ryuklabs.io, cc
-  ryuk@ryuklabs.io (both verified once as Cloudflare destination addresses: free). About two emails a person. A request counts only once its
+  ryuk@ryuklabs.io (both verified once as Cloudflare destination addresses: free). About two emails a person.
+  EVERY email is sent From hello@sharingu.xyz (the owner, 2026-10-14): to a person, only verify, you're in and reset (counted);
+  to ryuk@ cc acie@, only a new application and the cap reached (free). A reply to hello@ is forwarded to acie@ryuklabs.io
+  (Cloudflare Email Routing, the owner's dashboard). DMARC stays as it is; no report feature. A request counts only once its
   email is VERIFIED, by Google or by an emailed check (Cloudflare Email Service, the owner's MCQ 2026-10-14: our Workers Paid plan,
   a `send_email` binding, from an address at sharingu.xyz; Cloudflare's page read 2026-10-14: 3,000 a month included on
   Workers Paid, then $0.35 per 1,000, a beta). THE CAP (the owner, 2026-10-14: stay inside the 3,000): the worker counts its
@@ -705,7 +708,12 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   cleared after 90 days; the site's privacy page names it all. Google: sign-up, sign-in and the connect page, matched by
   email, still behind the operator's approval; the reviewer accounts keep their passphrase (needs the owner's Google
   Cloud OAuth client).
-- [ ] **21.P · The journey, polished** (the owner, 2026-10-14: the website's join, the sign-in, the onboarding, the status
+- [ ] **21.4's order** (the main session, 2026-10-14): three builders one after another, each briefed, reviewed, smoked and
+  committed: 21.4a the account flow (verify once, the passphrase, the reset, the cap, the alerts, the emails in the
+  website's look with a plain-text twin); 21.4b the data (consent, the source, the request -> account -> org link, the
+  product step, the operator page, the 90-day clearing); 21.4c Google sign-in (the code flow with PKCE, state and nonce,
+  only an email Google says it verified, the client in the worker's KV by an operator command). Then the sprint end.
+- [x] **21.P · The journey, polished** (the owner, 2026-10-14: the website's join, the sign-in, the onboarding, the status
   check, the walkthrough and the nav clean and clear). One audit of every screen from the site's nav to the first Home,
   both worlds, 1440 and 390, then the fixes. Ruled: ONE word for the main button on the site and in the app, "Join the
   beta" (the form's own title stays "Request access"); "Check my request" sits beside Sign in (one door, two paths: the
@@ -723,6 +731,12 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   scenes rich in the site's assets (U-chan's poses, the marks, the clients' logos), not bare forms; one primary action and
   a clear "where you are, what is next" on each. No local address in anything shown: screenshots taken under the public
   host name.
+  DONE: E1 (a81db1f75: the words, one accent, the status pages, the walkthrough playing in place, the doors, the
+  connect page's logo only on the client's own host) and E2 (signed in at once after creating an org: the one session
+  mint POST /login uses, `openSession`; the done page leads with Connect your AI, the owner key folded; Home opens on
+  "Connect an AI" until the first filing; Control > Connect leads with Claude and ChatGPT; the org's address suggested
+  from its name). orgs 42/42, wire 428/428, showcase 32/32; smoke 355/355 (s65, s66). The adversarial read of the sign-in
+  change rides the sprint-end review.
 - [ ] **The sprint end.** The site's access buttons move to the worker's request page and the site's waitlist page redirects there,
   merged right after the ship (live must answer the page first), together with the site's 21.P polish (branch
   `journey-polish`, 29e6a17, verify 260/260; held by the owner, 2026-10-14).

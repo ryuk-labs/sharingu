@@ -7,8 +7,9 @@
 //        account, its creator seat and its home project), the OWNER seat joined to that account (its email, its account id, the
 //        key's hash), the first project o<id>--<slug>; the answer's key is that seat's own secret; nothing else changed
 //   O2 · the pages: GET /orgs/new (the six fields, posting to /orgs, the platform's wordmark); a form creation answers the made
-//        page with the key ONCE (no cookie, no Location, no-store); the sign-up's done page links to it; a cross-site form is
-//        403 before anything is read
+//        page with the key ONCE, folded behind "Show the owner key" under Connect your AI, no Location, no-store, and (sprint 21,
+//        21.P D17) its session: the cookie POST /login sets, an ACCOUNT session on the new owner seat, which opens the org's Home
+//        signed in; the JSON creation sets no cookie; a cross-site form is 403 before anything is read (no session)
 //   O3 · refused before anything is read (no row, no attempt): a malformed email, passphrase, name, address (eight shapes),
 //        first project or name; a RESERVED address (a route's first segment, the platform's own words) 409 org_name_reserved
 //   O4 · the account proof, ONE answer (401 invalid_account, the same body): no account; an account with no passphrase yet (a
@@ -103,8 +104,8 @@ const CASES = {
     const org = W.one("SELECT * FROM org WHERE id = ?", n) || {};
     const seats = W.q("SELECT * FROM people WHERE org = ?", n);
     const proj = W.q("SELECT key, name, org, slug, active, eval FROM projects WHERE org = ?", n);
-    out.push([r.status === 200 && n === 3 && r.json.org.slug === "ada-works" && r.json.project.key === "o3--web" && /^[0-9a-f]{40}$/.test(r.json.key || "") && r.json.mcp === `${W.w.origin}/mcp`,
-      `O1 · the creation: ${r.status}, org ${n} ${r.json && r.json.org && r.json.org.slug}, project ${r.json && r.json.project && r.json.project.key}, a 40-hex key, the MCP address`]);
+    out.push([r.status === 200 && n === 3 && r.json.org.slug === "ada-works" && r.json.project.key === "o3--web" && /^[0-9a-f]{40}$/.test(r.json.key || "") && r.json.mcp === `${W.w.origin}/mcp` && !r.cookie,
+      `O1 · the creation: ${r.status}, org ${n} ${r.json && r.json.org && r.json.org.slug}, project ${r.json && r.json.project && r.json.project.key}, a 40-hex key, the MCP address, no cookie (${!!r.cookie})`]);
     out.push([org.name === "Ada Works" && org.slug === "ada-works" && org.created_by_account === acc.id && seats.length === 1 && org.created_by === seats[0].id && org.home === "o3--web",
       `O1 · the org row: its name, its path name, founded by the account, created by its owner seat, home o3--web (${JSON.stringify({ slug: org.slug, by: org.created_by === (seats[0] || {}).id, home: org.home })})`]);
     const s = seats[0] || {};
@@ -128,16 +129,34 @@ const CASES = {
     const p = await W.call("GET", "/orgs/new", { headers: { accept: "text/html" } });
     out.push([p.status === 200 && /action="\/orgs"/.test(p.text) && ["email", "password", "name", "slug", "project", "you"].every((f) => new RegExp(`name="${f}"`).test(p.text)) && /org\.test\//.test(p.text) && p.cache === "no-store" && !/class="wm-org"/.test(p.text),
       `O2 · GET /orgs/new: ${p.status}, the six fields posting to /orgs, the address's host before the path name, the platform's wordmark (no org's)`]);
-    await W.account("ada@fresh.test", PASS);
+    const acc = await W.account("ada@fresh.test", PASS);
     const f = await W.call("POST", "/orgs", { form: { ...base(), web: "1" } });
     const key = (/data-secret="owner-key">([0-9a-f]{40})</.exec(f.text) || [])[1];
     const n = (W.one("SELECT id FROM org WHERE slug = 'ada-works'") || {}).id;
-    out.push([f.status === 200 && !!key && W.one("SELECT key_hash FROM people WHERE org = ?", n).key_hash === sha(key) && !f.cookie && !f.location && f.cache === "no-store" && /class="wm-org">Ada Works</.test(f.text) && /data-region="first-project">Ada Works \(ada-works\)</.test(f.text) && !/o3--/.test(f.text) && /\/mcp/.test(f.text),
-      `O2 · a form creation: ${f.status}, the made page with the owner key once (its hash the seat's), no cookie, no Location, no-store; the org's name in the wordmark, its project by name and slug (never o3--) and the MCP address`]);
+    const fold = (/<details class="key-fold"[^>]*>[\s\S]*?<\/details>/.exec(f.text) || [""])[0];
+    out.push([f.status === 200 && !!key && W.one("SELECT key_hash FROM people WHERE org = ?", n).key_hash === sha(key) && !f.location && f.cache === "no-store" && /class="wm-org">Ada Works</.test(f.text)
+      && /data-region="first-project">[\s\S]*?Ada Works \(ada-works\)</.test(f.text) && !/o3--/.test(f.text) && f.text.includes(`<code>${W.w.origin}/mcp</code>`)
+      && /<summary>Show the owner key<\/summary>/.test(fold) && fold.includes(key) && f.text.indexOf("Connect your AI") < f.text.indexOf(`<details class="key-fold"`) && !/bearer/i.test(f.text) && /<a class="primary" data-region="open-org" href="\/ada-works">Open your org</.test(f.text),
+      `O2 · a form creation: ${f.status}, the made page leading with Connect your AI (the MCP address), the owner key once (its hash the seat's) folded behind Show the owner key, no "bearer", Open your org; no Location, no-store; the org's name in the wordmark, its project by name and slug (never o3--)`]);
+    // D17: signed in at once — POST /login's own cookie, an ACCOUNT session (the account the passphrase proved) on the NEW owner seat
+    const tok = (/^__Host-ar_session=([^;]+); HttpOnly; Secure; SameSite=Lax; Path=\/; Max-Age=7776000$/.exec(f.cookie || "") || [])[1];
+    const row = tok ? W.one("SELECT person_id, account_id, org, revoked FROM tokens WHERE token_hash = ?", sha(tok)) || {} : {};
+    const owner = W.one("SELECT id FROM people WHERE org = ? AND role = 'owner'", n) || {};
+    const home = tok ? await W.call("GET", "/ada-works/home", { headers: { accept: "text/html", cookie: `__Host-ar_session=${tok}`, "sec-fetch-mode": "navigate", "sec-fetch-dest": "document" } }) : { status: 0, text: "" };
+    out.push([!!tok && row.person_id === owner.id && row.account_id === acc.id && row.org === n && row.revoked === 0 && home.status === 200 && /data-screen="home"/.test(home.text) && /data-region="connect-first"/.test(home.text),
+      `O2 · the form's creator is signed in: the session cookie with POST /login's attributes (${f.cookie ? f.cookie.replace(/=[^;]+/, "=<token>") : "none"}), an account session on the new owner seat (${row.person_id === owner.id}, account ${row.account_id === acc.id}, org ${row.org}); /ada-works/home ${home.status}, signed in, the Connect card first`]);
+    // an account with a seat elsewhere (Mia, a member of org 1, her account's own passphrase): ONE session, on the seat the creation made
+    await W.w.db.prepare("UPDATE accounts SET pass_hash = ?, pass_salt = ? WHERE email = 'mia@one.test'").run(await pbkdf2("mia-account-pass", SALT), SALT);
+    const mf = await W.call("POST", "/orgs", { form: { email: "mia@one.test", password: "mia-account-pass", name: "Mia Co", slug: "mia-co", web: "1" } });
+    const mt = (/^__Host-ar_session=([^;]+);/.exec(mf.cookie || "") || [])[1];
+    const mrow = mt ? W.one("SELECT person_id, account_id, org FROM tokens WHERE token_hash = ?", sha(mt)) || {} : {};
+    const mseat = W.one("SELECT p.id, p.account_id, p.org FROM people p JOIN org o ON o.id = p.org WHERE o.slug = 'mia-co'") || {};
+    out.push([mf.status === 200 && !!mt && mrow.person_id === mseat.id && mrow.account_id === mseat.account_id && mrow.org === mseat.org && W.one("SELECT COUNT(*) AS n FROM tokens WHERE account_id = ?", mseat.account_id).n === 1,
+      `O2 · an account with a seat in another org: one session, on the new org's owner seat (${mrow.person_id === mseat.id}, org ${mrow.org}), never its org-1 seat`]);
     const s0 = W.snap(), a0 = W.attempts(0) + W.attempts(1);
     const x = await W.call("POST", "/orgs", { form: { ...base({ email: "ada@fresh.test", slug: "cross-site" }), web: "1" }, headers: { "sec-fetch-site": "cross-site", origin: "https://evil.test" } });
     const xj = await W.call("POST", "/orgs", { body: base({ slug: "cross-site" }), headers: { "sec-fetch-site": "cross-site", origin: "https://evil.test" } });
-    out.push([x.status === 403 && xj.status === 403 && xj.json.error === "cross_site_org" && W.snap() === s0 && W.attempts(0) + W.attempts(1) === a0,
+    out.push([x.status === 403 && xj.status === 403 && xj.json.error === "cross_site_org" && !x.cookie && !xj.cookie && W.snap() === s0 && W.attempts(0) + W.attempts(1) === a0,
       `O2 · a cross-site form and JSON: ${x.status} / ${xj.status} ${xj.json && xj.json.error}, nothing written, not even an attempt`]);
     const bad = await W.call("POST", "/orgs", { form: { ...base({ slug: "login" }), web: "1" } });
     out.push([bad.status === 409 && /belongs to the platform/.test(bad.text) && /value="ada@fresh\.test"/.test(bad.text) && !bad.text.includes(PASS), `O2 · a refused form re-renders with what was typed but the passphrase (${bad.status})`]);
@@ -307,6 +326,11 @@ const MUTANTS = [
     from: "  if (await lockOf(env, account ? account.id : null, e, out.client)) return { ...out, verdict: \"locked\" };\n  const comparable", to: "  const comparable", red: ["O4"] },
   { name: "the creation without the same-origin guard", file: "src/index.js",
     from: "if (crossSiteLogin(request, url)) return isForm ? page(403, \"Cross-site request refused.\") : json({ error: \"cross_site_org\" }, 403);", to: "", red: ["O2"] },
+  // sprint 21, 21.P D17: the session is the form's alone, on the seat this creation made
+  { name: "the made page signs no one in", file: "src/index.js",
+    from: "...(opened ? { \"set-cookie\": sessionSetCookie(opened.token) } : {})", to: "", red: ["O2"] },
+  { name: "the form's session minted on hashes the new seat does not hold (the conditional mint must then mint nothing)", file: "src/orgs.js",
+    from: "seat: { id: personId, org: n, key_hash: kh, pass_hash: ph } }", to: "seat: { id: personId, org: n, key_hash: \"x\", pass_hash: ph } }", red: ["O2"] },
 ];
 
 let checks = 0, failed = 0;

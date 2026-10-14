@@ -122,13 +122,14 @@ const FRONT_CSS = `
 // platform's own `/` (src/orgpath.js PLATFORM_ROOT: never an org's, so the not-here page's bytes stay one for every org), then
 // the website (wide screens: the foot carries it on a phone), Check my request and Sign in. here: the page's own door, left out
 // ("login" on the sign-in, "check" on the check page)
+// (here "in": a page that has just signed its reader in, the org's done page: no Sign in, no Check my request)
 export function frontTop(wordmark, here = "") {
   return `<header class="front-top"><div class="front-bar">
     <a class="front-brand" href="${PLATFORM_ROOT}">${uchan({ size: 30 })}<span class="wordmark">${wordmark}</span></a>
     <nav class="front-nav" aria-label="sharingu">
       <a class="front-site" href="${SITE_URL}" data-region="site-link">sharingu.xyz</a>
-      ${here === "check" ? "" : `<a href="${REQUEST_CHECK_PATH}" data-region="check-link">Check my request</a>`}
-      ${here === "login" ? "" : `<a class="front-link" href="/login" data-region="sign-in-link">Sign in</a>`}
+      ${here === "check" || here === "in" ? "" : `<a href="${REQUEST_CHECK_PATH}" data-region="check-link">Check my request</a>`}
+      ${here === "login" || here === "in" ? "" : `<a class="front-link" href="/login" data-region="sign-in-link">Sign in</a>`}
     </nav>
   </div></header>`;
 }
@@ -237,12 +238,6 @@ const AUTH_CSS = `
   .affix .pre{display:flex;align-items:center;padding:0 2px 0 12px;font:500 13px/1 var(--mono);color:var(--text-muted);white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
   .affix input[type="text"]{height:40px;border:0;border-radius:0;padding:0 12px 0 0;min-width:0;flex:1;font:500 14px/1 var(--mono)}
   .affix input[type="text"]:focus{outline:none}
-  .done .facts{display:flex;flex-direction:column;gap:12px;margin:8px 0 0}
-  .done .fact{display:flex;flex-direction:column;gap:4px}
-  .done .fact-k{font:600 12.5px/1.3 var(--sans);color:var(--text-muted)}
-  .done .fact-v{font:500 13px/1.45 var(--mono);color:var(--text);overflow-wrap:anywhere}
-  .secret{display:block;padding:10px 12px;font:500 13.5px/1.4 var(--mono);color:var(--text);background:var(--page);border:1px solid var(--line-strong);
-    border-radius:6px;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
   .footnote{margin:22px 0 0;font:400 13px/1.55 var(--sans);color:var(--text-muted)}
   .footnote p{margin:0}
   .footnote p+p{margin-top:8px}

@@ -102,6 +102,7 @@
 // code (sprint 8, 8.3a: A3): a VALID code passes the lock (the operator's code is possession proof of the email); any other
 // answers the lock (its attempt counted).
 import { db, signInEnv, HOME_ORG } from "./data.js";
+import { SESSION_TOKEN_PREFIX } from "./tenant.js";
 import { uid, now, pbkdf2, sha256, hex } from "./util.js";
 import { revokeOAuthGrants } from "./oauthgrants.js";
 import { BETA_ORGS_SQL, BETA_CODES_SQL, placesOf } from "./beta.js";   // sprint 21, 21.1: the beta's places, one source with the operator's
@@ -326,6 +327,18 @@ export function mintSession(env, r, { tokenHash, device, at, expires }) {
     .bind(tokenHash, seat.id, device, at, expires, accountId, r.account.pass_hash ?? null).run() : Promise.resolve({ meta: { changes: 0 } });
   return db(signInEnv(env, seat)).prepare(LOGIN_SESSION_SQL)
     .bind(tokenHash, seat.id, device, at, expires, accountId, seat.id, seat.key_hash, seat.pass_hash ?? null, (r.account && r.account.pass_hash) ?? null).run();
+}
+// openSession(env, r, { device }) -> { token, expires } | null: THE browser session's mint, one path for every door that signs a
+// person in (POST /login, POST /signup and its invite link, and since sprint 21, 21.P D17, POST /orgs's form): a FRESH random
+// token (never one the request carried: no fixation), only its hash stored, SESSION_DAYS long, by mintSession's conditional
+// INSERT on the sign-in's own answer `r`; null when it minted nothing (a rotate or a passphrase change landed meanwhile:
+// LOGIN_SESSION_SQL's EXISTS). The caller sets the cookie (src/core.js sessionSetCookie) or answers the token to a script.
+export const SESSION_DAYS = 90;
+export async function openSession(env, r, { device = "unknown" } = {}) {
+  const token = SESSION_TOKEN_PREFIX + crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+  const expires = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const minted = await mintSession(env, r, { tokenHash: await sha256(token), device: String(device).slice(0, 80), at: now(), expires });
+  return ((minted && minted.meta && minted.meta.changes) || 0) >= 1 ? { token, expires } : null;
 }
 // landingOf(env, r) -> the address a web sign-in lands on with no `next` (sprint 7, 7.4b; PLATFORM §2 item 8: "sign-in lists the
 // person's orgs"): an ACCOUNT session whose account holds seats in several orgs, or any seat waiting for its yes (A1), lands on

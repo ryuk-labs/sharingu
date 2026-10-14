@@ -23,7 +23,7 @@ import { credEpoch, accountGrantStands, grantKindOf, GRANT_KINDS } from "./oauth
 import { verifyGoalRef, proposeGoalRef } from "./goals.js";
 import { orgUrl } from "./orgpath.js";   // sprint 7, 7.4: every URL under the org of its address
 import { requestClient } from "./client.js";   // sprint 13, 13.1: the client word the request's door set (migrate-080's transmission.client)
-import { orgsOfAccount, pendingOf, accountGrantSeat, normOrgArg, sessionAtRow } from "./accounts.js";   // sprint 7, 7.4b: an account session's own orgs (the root's picker); 7.5a: an account grant's seat
+import { orgsOfAccount, pendingOf, accountGrantSeat, normOrgArg, sessionAtRow, SESSION_DAYS } from "./accounts.js";   // sprint 7, 7.4b: an account session's own orgs (the root's picker); 7.5a: an account grant's seat
 import { tempoOf } from "./tempo.js";
 import { checkPlan, itemsTally, planShownOf } from "./plans.js";   // sprint 8, 8.2: every ledger row checks the org's plan and is counted with it; 8.4: whoami answers it
 import { readerKeys, hatsOf, roleClassOf, isOutsideLabel } from "./hats.js";
@@ -1165,6 +1165,8 @@ export async function stampProjectLoose(person, env) {
 // name also carried a tenant fact; this one carries none.
 export const SESSION_COOKIE = "__Host-ar_session";
 export const SESSION_COOKIE_ATTRS = "HttpOnly; Secure; SameSite=Lax; Path=/";
+// sessionSetCookie(token) -> the ONE Set-Cookie a sign-in answers (src/accounts.js openSession's token, SESSION_DAYS long)
+export const sessionSetCookie = (token) => `${SESSION_COOKIE}=${token}; ${SESSION_COOKIE_ATTRS}; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`;
 
 // sessionCookieToken(request) — the ONE parser for the web session cookie. Three hand-rolled
 // copies of this regex used to live in resolveReader, POST /project and the resolver below; one

@@ -10,8 +10,9 @@
 // own origin). Regions, in order: nav (Members · Projects · Connect, the audit trail, the rulings in force) · people (ONE
 // table: avatar, name, title, role, hats (the admin-set access hats solid, their own picks outlined: migrate-045), projects,
 // last filed, a quiet "⋯" menu per row with the access hats; Invite with them) · workspaces (the projects:
-// archive, activate, add) · connect (the org's MCP URL, then the Claude Code plugin, Claude Desktop and claude.ai (Add to
-// Claude), ChatGPT (Add to ChatGPT and its steps), Claude Code with a key and Codex, each with its copyable block; Versions and Grading on glass) · keys (your own key and devices) · this-org (the Admin
+// archive, activate, add) · connect (the org's MCP URL, then Claude: claude.ai and the Claude app (Add to Claude) and ChatGPT
+// (Add to ChatGPT and its steps), both open, then the Claude Code plugin, Claude Code with a key and Codex, each with its copyable
+// block; Versions and Grading on glass) · keys (your own key and devices) · this-org (the Admin
 // disclosure: the org, its worker, its deploy, and the tools only an admin runs). Every admin control is a form on POST
 // /control carrying data-door="POST /control" and data-action; it is enabled exactly when the read lets this reader act, and
 // otherwise DISABLED (its own `disabled`) with aria-describedby naming a <p> that holds the reason (F6). The Invite and
@@ -27,6 +28,7 @@ import { HATS, hatOf, ROLE_WORDS } from "./hats.js";
 import { agoOf } from "./home.js";
 import { orgPath } from "./orgpath.js";   // sprint 7, 7.4: every URL under the org of its address
 import { projectSlug } from "./project.js";   // sprint 12: a project reads as its name, else its slug, never the org-prefixed key
+import { CLAUDE_ADD, CHATGPT_ADD, connectorName, clientMark, codexLine, CLIENT_MARK_CSS } from "./connectcards.js";   // sprint 21, 21.P E22: the two apps lead, beside their logos
 import { LIMIT_ORDER, LIMIT_WORDS } from "./plans.js";   // sprint 8, 8.4: the plan and its usage (the read rides opts.plan)
 
 export const CONTROL_REGIONS = ["nav", "people", "workspaces", "connect", "keys", "this-org"];
@@ -74,7 +76,6 @@ const txt = (s) => esc(noDash(s));
 const known = (v) => v != null && Number.isFinite(Number(v));
 const shown = (v) => (known(v) ? String(Number(v)) : "?");   // UNREACHABLE: never a guessed zero
 const plural = (n, one, many) => `${shown(n)} ${Number(n) === 1 ? one : many}`;
-const slugOf = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "sharingu";
 
 // the page's own layout, on the semantic tokens only (the parts come from ui.js; shell.js styles them once)
 const CT_CSS = `<style>
@@ -152,6 +153,7 @@ const CT_CSS = `<style>
 .ct-clients{border-top:1px solid var(--line)}
 .ct-clients .p-ld-facts{grid-template-columns:minmax(0,1fr)}
 .ct-clients .u-call{margin:4px 0 0}
+${CLIENT_MARK_CSS}
 .ct-chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
 .ct-mcp{white-space:normal;overflow-wrap:normal;word-break:normal}
 .ct-url .u-call code{overflow-wrap:normal}
@@ -181,32 +183,22 @@ const form = (action, fields, body, confirmText) =>
   `<form method="POST" action="${orgPath(`/control`)}"${confirmText ? ` onsubmit="return confirm('${esc(confirmText)}')"` : ""}>${hidden("action", action)}${fields}${body}</form>`;
 
 // connectBlocks(origin, org) -> the per-client setup as lines, each opening to the VALUES a person copies (sprint 3, L3: the
-// step sentences went to Docs; what is left is the command, the URL, the config): Claude Code's command is /docs's
-// (src/docs.js connectSnippet, the same flags); Claude Desktop and claude.ai connect as a custom connector over OAuth
-// (src/oauth.js: the org's own sign-in); ChatGPT adds the MCP URL as a custom connector; Codex
-// takes the URL and the header (its own config keys are its own: never a guessed flag).
-// sprint 9, 9.2: the FIRST row is the Claude Code plugin (plugin/ at the repo root, its install id plugin.json's name @ the
-// repo's marketplace.json name): the two commands, a sign-in on connect, no key. The plugin carries its own server
-// (plugin/.mcp.json), so the row names no address (never `${origin}/mcp`; the worker never types the platform's own name);
-// the smoke (s6 C1) reads the install id from the repo's files and fails on drift. The key-based `claude mcp add` row follows
-// the app rows (sprint 12, 12.1: the plugin, Claude, ChatGPT first — the three ways in the site offers — then the key and Codex).
-// The sprint-9 review (A3/C3): every deployment shows that row, and the plugin always reaches the HOSTED platform, so the row
-// says so ("Connects to"), and the key row is labeled as the one any install connects with.
-// sprint 10, 10.1: the engine's repo is private (the proprietary ruling, 2026-10-09), so the add line names the plugin's
-// public distribution repo, ryuk-labs/sharingu-plugin (this tree's plugin/ mirrored there: make-plugin-skills.mjs --sync).
+// step sentences went to Docs; what is left is the command, the URL, the config). sprint 21, 21.P E22 (the owner's MCQ of
+// 2026-10-14): the two apps lead, OPEN — Claude (claude.ai and the Claude app: a custom connector over OAuth, src/oauth.js, the
+// org's own sign-in; Add to Claude, the install link prefilled) and ChatGPT (Add to ChatGPT, its plugins page, and its steps) —
+// each beside its own logo (src/connectcards.js clientMark, the cards the done page and the first Home show); then the Claude
+// Code plugin (sprint 9, 9.2: the plugin/ at the repo root, its install id plugin.json's name @ the repo's marketplace.json
+// name: the two commands, a sign-in on connect, no key; it carries its own server, plugin/.mcp.json, so the row names no
+// address, and it always reaches the HOSTED platform, which the row says, "Connects to"; the smoke, s6 C1, reads the install id
+// from the repo's files and fails on drift), Claude Code with a key (any install: the one row with a key, src/docs.js
+// connectSnippet's flags) and Codex (its one command, then its sign-in on sharingu's page: tools/client-drive/connect.sh runs
+// both). sprint 10, 10.1: the engine's repo is private (the proprietary ruling, 2026-10-09), so the add line names the
+// plugin's public distribution repo, ryuk-labs/sharingu-plugin (this tree's plugin/ mirrored there: make-plugin-skills.mjs --sync).
 // FIRST_CALLS — the first-run guide's calls, in order (the initialize instructions' five steps: the fifth names the three write
-// tools, each filing its own operation of a preview, sprint 19)
+// tools, each filing its own operation of a preview, sprint 19), each row's "Starts with"
 export const FIRST_CALLS = ["whoami", "missing", "formats", "preview", "file_contribution", "save_knowledge", "remove_knowledge"];
 const PLUGIN_MARKET = "ryuk-labs/sharingu-plugin", PLUGIN_ID = "sharingu@sharingu";
-// sprint 12, 12.1 (the buttons): the two app ways in, each ONE constant to swap when its store's listing is published.
-// Claude: its documented install link for a custom connector, which prefills the "Add custom connector" dialog with this
-// connector's name and URL (the person confirms there); once the directory listing is published it becomes the listing's page.
-// ChatGPT: no documented deep link exists, so the row opens ChatGPT's plugins page and lists the three steps beside it; once the
-// plugin is listed it becomes the plugin's page. Both URLs are the stores' own; the MCP URL is the request's origin, as ever.
-// copy: off-screen (an href)
-export const CLAUDE_ADD = (mcp, name) => `https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=${encodeURIComponent(name)}&connectorUrl=${encodeURIComponent(mcp)}`;
-export const CHATGPT_ADD = "https://chatgpt.com/plugins";
-// copy: label (the ChatGPT row's three steps, in the order its plugins page asks them)
+// copy: label (the ChatGPT row's steps, in the order its plugins page asks them)
 const CHATGPT_STEPS = ["Add custom MCP server", "Paste the MCP URL"];
 // addrHtml(url) -> the address escaped, breakable ONLY at its natural points (sprint 11's find: the Admin card broke it mid-word,
 // "…:893 / 0/mcp"): after the scheme's "//", before each "." and ":" of the host and before each "/" of the path. A <wbr> adds
@@ -221,20 +213,20 @@ const addrLine = (url) => callLine(url).replace(/<code>[\s\S]*?<\/code>/, () => 
 const away = (href, button, label, what) => `<a class="u-btn small" href="${esc(href)}" target="_blank" rel="noopener noreferrer" data-button="${button}" data-client="opens ${what}, in a new tab">${label}</a>`;
 function connectBlocks(origin, org) {
   const mcp = `${origin}/mcp`;
-  const name = slugOf(org);
+  const name = connectorName(org);
   // D5: the first calls are the door's first-run guide (src/mcp.js instructionsFor), in its order
-  const first = ["First calls", FIRST_CALLS.map((t) => `<code>${t}</code>`).join(" · ")];
+  const first = ["Starts with", FIRST_CALLS.map((t) => `<code>${t}</code>`).join(" · ")];
   const blocks = [
-    { key: "claude-plugin", title: "Claude Code", sub: "The plugin", facts: [["Add", callLine(`claude plugin marketplace add ${PLUGIN_MARKET}`)], ["Install", callLine(`claude plugin install ${PLUGIN_ID}`)],
-      ["From", "The plugin's public distribution repo"], ["Connects to", "The hosted platform only"], ["Sign in", "On connect, no key to paste"], first] },
-    { key: "claude-connector", title: "Claude Desktop and claude.ai", sub: "Custom connector", facts: [["Add", away(CLAUDE_ADD(mcp, name), "add-to-claude", "Add to Claude", "Claude's Add custom connector dialog, prefilled")],
+    { key: "claude-connector", mark: "claude", open: true, title: "Claude", sub: "claude.ai and the Claude app", facts: [["Add", away(CLAUDE_ADD(mcp, name), "add-to-claude", "Add to Claude", "Claude's Add custom connector dialog, prefilled")],
       ["Connector URL", callLine(mcp)], ["Sign in", `${txt(org)}: email and passphrase`], first] },
-    { key: "chatgpt", title: "ChatGPT", sub: "Custom connector", facts: [["Add", away(CHATGPT_ADD, "add-to-chatgpt", "Add to ChatGPT", "ChatGPT's plugins page")],
+    { key: "chatgpt", mark: "chatgpt", open: true, title: "ChatGPT", sub: "The ChatGPT app", facts: [["Add", away(CHATGPT_ADD, "add-to-chatgpt", "Add to ChatGPT", "ChatGPT's plugins page")],
       ["Steps", `<ol class="ct-steps">${[...CHATGPT_STEPS, `Sign in to ${noDash(org)}`].map((x) => `<li>${esc(x)}</li>`).join("")}</ol>`], ["MCP URL", callLine(mcp)], first] },
-    { key: "claude-code", title: "Claude Code", sub: "With a key · any install", facts: [["Command", callLine(`claude mcp add ${name} --transport http ${mcp} --header "Authorization: Bearer <your-key>"`)], first, ["Skills", callLine(`curl -fsSL ${origin}/install | sh`)]] },
-    { key: "codex", title: "Codex", sub: "Streamable HTTP server", facts: [["Config", callLine(`url: ${mcp}\nheader: Authorization: Bearer <your-key>`)], first] },
+    { key: "claude-plugin", mark: "terminal", title: "Claude Code", sub: "The plugin", facts: [["Add", callLine(`claude plugin marketplace add ${PLUGIN_MARKET}`)], ["Install", callLine(`claude plugin install ${PLUGIN_ID}`)],
+      ["From", "The plugin's public distribution repo"], ["Connects to", "The hosted platform only"], ["Sign in", "On connect, no key to paste"], first] },
+    { key: "claude-code", mark: "terminal", title: "Claude Code", sub: "With a key · any install", facts: [["Command", callLine(`claude mcp add ${name} --transport http ${mcp} --header "Authorization: Bearer <your-key>"`)], first, ["Skills", callLine(`curl -fsSL ${origin}/install | sh`)]] },
+    { key: "codex", mark: "terminal", title: "Codex", sub: "One command", facts: [["Command", callLine(codexLine(mcp, name))], ["Sign in", callLine(`codex mcp login ${name}`)], first] },
   ];
-  return lines(blocks.map((b, i) => line({ attrs: `data-client-block="${b.key}"`, title: b.title, sub: esc(b.sub), open: i === 0,
+  return lines(blocks.map((b) => line({ attrs: `data-client-block="${b.key}"`, lead: clientMark(b.mark, 28), title: b.title, sub: esc(b.sub), open: !!b.open,
     rowAttrs: `data-button="connect-client" data-client="opens ${esc(b.title)}'s setup"`, detail: lineDetail({ facts: b.facts }) })));
 }
 

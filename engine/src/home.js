@@ -42,6 +42,7 @@ import { hatsOf } from "./hats.js";
 import { whatChangedFor } from "./impact.js";
 import { followUpsFor } from "./pickup.js";
 import { orgPath } from "./orgpath.js";   // sprint 7, 7.4: every URL under the org of its address
+import { connectCards, CONNECT_CARDS_CSS } from "./connectcards.js";   // sprint 21, 21.P E21: the first Home opens on Connect
 
 // the needs-you row's ONE state chip by its kind (design-law stateChips, UI-B5a QB74B1B7E): a human act is owed
 const KIND_CHIP = { decide: "DECIDE", approve: "APPROVE", grant: "GRANT" };
@@ -308,7 +309,8 @@ function needsLine(r, o) {
     detail: lineDetail({ facts, actions: notYet }) });
 }
 
-// renderHome(summary, { owner, brand, reader, eval, nowMs }) -> the Home content (the route wraps it in shell()). Pure.
+// renderHome(summary, { owner, brand, reader, eval, nowMs, origin }) -> the Home content (the route wraps it in shell()). Pure.
+// origin: the request's own (the Connect card's MCP address).
 export function renderHome(s, opts = {}) {
   const o = { ...opts, eval: !!(opts.eval || (s && s.eval)), projectKey: (s && s.project && s.project.key) || null, nowMs: opts.nowMs || Date.now() };
   const sum = s || {};
@@ -347,6 +349,15 @@ export function renderHome(s, opts = {}) {
       tile({ label: "Goals moved", value: gmRows.length, count: true, key: "goals-moved", href: orgPath("/goals"), sub: gmRows.length ? "this month" : "" }),
       fillTile,
     ], { region: "metrics", label: "How it is going" });
+
+  // ---- Connect an AI (sprint 21, 21.P E21; "your AI" is never on a tab: smoke L4, the owner's MCQ of 2026-10-14): a project nothing has been contributed to yet, from
+  // any AI (the all-time tally the glance already reads: no statement of its own), opens on ONE card above the empty ones: the
+  // three ways in and the MCP address (src/connectcards.js, the cards the done page shows) and Control · Connect for the rest.
+  // The first contribution takes it away.
+  const firstRun = !down && ct.total != null && num(ct.total) === 0;
+  const connect = firstRun ? card({ label: "Connect an AI", region: "connect-first", attrs: 'data-reveal="1"',
+    action: `<a class="u-link" href="${orgPath("/control#ct-connect")}" data-button="all-clients" data-door="GET /control">Control · Connect</a>`,
+    body: connectCards(o.origin, sum.org || brand.org) }) : "";
 
   // ---- Needs you ----
   const rowsIn = Array.isArray(ny.rows) ? ny.rows : [];
@@ -423,7 +434,7 @@ export function renderHome(s, opts = {}) {
   const changedFirst = hats.length && ["engineering", "partner", "quality"].includes(hats[0]);
   const main = changedFirst ? stack(changed, needs) : stack(needs, changed);
   const banner = down ? unreachableState({ what: "Part of Home could not be read from the ledger, so the counts may be short." }) : "";
-  return CSS + `<section class="hm" data-screen="home">${banner}${head}${stack(metrics, cols(main, stack(aimCard, moved, people, follow)))}</section>` + OFFLINE;
+  return CSS + (connect ? `<style>${CONNECT_CARDS_CSS}</style>` : "") + `<section class="hm" data-screen="home">${banner}${head}${stack(connect, metrics, cols(main, stack(aimCard, moved, people, follow)))}</section>` + OFFLINE;
 }
 // the goals moved: the five that moved most, the rest folded under one line
 const MOVED_SHOWN = 5;

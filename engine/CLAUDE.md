@@ -23,7 +23,12 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   and answers no other org's seat until the operator's code confirms the email. `src/orgs.js` · `src/orgpage.js` · `src/orgnames.js` — creating an
   org (POST /orgs): an account holder, proven by the ACCOUNT's passphrase, makes the org, its owner seat and its first
   project in one batch, one org per account; an org's address (its path name) is never a name the platform uses, the
-  reserved list DERIVED from the route registry (`tools/check-org-names.mjs`, a gate step).
+  reserved list DERIVED from the route registry (`tools/check-org-names.mjs`, a gate step). Sprint 21 (21.P): the web form signs
+  its creator in as the new owner seat (`src/accounts.js openSession`, the ONE session mint POST /login, POST /signup and the
+  invite link use; `src/core.js sessionSetCookie`), its address suggested from the org's name (`src/orgnames.js suggestSlug`), and
+  its done page leads with Connect your AI (`src/connectcards.js`: the MCP address, Claude, ChatGPT, Claude Code and Codex, the
+  owner key folded behind "Show the owner key"); the same cards open the first Home until anything is filed, and Control ·
+  Connect leads with Claude and ChatGPT.
 - `src/orgpath.js` — THE address (sprint 7, 7.4): each org at `/<org slug>/…` for every page, the platform's own doors at the
   root (`PLATFORM_PATHS`). `src/index.js` routeRequest resolves the path's first segment ONCE (`installAddress`): under an org's
   address only that org's people sign in (a bearer of its org, a browser session as its seat there), and anything else is the

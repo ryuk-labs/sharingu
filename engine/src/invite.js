@@ -2,7 +2,7 @@
 // the sign-up door when the request carries `via: "invite"` or an `invite` field. The router (src/index.js POST /signup) has
 // already refused a cross-site form and spent the address's flood-filter budget (LOGIN_LIMIT, the one POST /login and POST
 // /signup share) before it hands the body here. No statement here: the redemption is src/accounts.js redeemInvite, the session
-// src/accounts.js mintSession (the same conditional mint as POST /login).
+// src/accounts.js openSession (the one mint POST /login uses).
 //   inviteSignup({ request, env, url, body, isWeb }) -> the Response:
 //     422 bad_invite {field: invite|passphrase|confirm} — before anything is read
 //     401 invalid_invite — the ONE refusal (no such open link, used, expired, replaced, its seat removed or reissued): nothing written
@@ -10,10 +10,10 @@
 //     200 / 302 — the account's passphrase set, the ACCOUNT session minted on the invited seat; a browser lands in the org
 //     (/<its slug>), a JSON caller gets {account: "invited", signedIn, org, person, role, title, token, expiresAt, note}
 // The token is never logged and never put in a URL: it arrived in the body, and only the form a wrong field re-renders holds it.
-import { json, sha256, now } from "./util.js";
-import { SESSION_COOKIE, SESSION_COOKIE_ATTRS } from "./core.js";
-import { getTenantConfig, SESSION_TOKEN_PREFIX } from "./tenant.js";
-import { redeemInvite, mintSession, landingOf, clientOf } from "./accounts.js";
+import { json } from "./util.js";
+import { sessionSetCookie } from "./core.js";
+import { getTenantConfig } from "./tenant.js";
+import { redeemInvite, openSession, landingOf, clientOf } from "./accounts.js";
 import { renderInvite, inviteProblem, INVITE_FIELD_WORDS, INVITE_REFUSED_WORDS, INVITE_STANDS_WORDS } from "./signup.js";
 
 // every answer of the invite door, and the invite page itself (src/index.js GET /signup?via=invite), is never cached and sends no
@@ -35,15 +35,10 @@ export async function inviteSignup({ request, env, url, body, isWeb }) {
   if (r.verdict !== "ok") return isWeb ? page(401, INVITE_REFUSED_WORDS) : json({ error: "invalid_invite", note: INVITE_REFUSED_WORDS }, 401, NO_STORE);
   // the passphrase is the account's now: its ACCOUNT session on the invited seat (a rotate landing meanwhile mints nothing:
   // LOGIN_SESSION_SQL's EXISTS — then signed up, not signed in)
-  let token = null, expires = null;
-  if (r.seat) {
-    token = SESSION_TOKEN_PREFIX + crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
-    expires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
-    const minted = await mintSession(env, r, { tokenHash: await sha256(token), device: isWeb ? "web" : String(body.device || "unknown").slice(0, 80), at: now(), expires });
-    if (((minted && minted.meta && minted.meta.changes) || 0) < 1) token = null;
-  }
+  const opened = r.seat ? await openSession(env, r, { device: isWeb ? "web" : body.device || "unknown" }) : null;
+  const token = opened ? opened.token : null, expires = opened ? opened.expires : null;
   if (isWeb) return token
-    ? new Response(null, { status: 302, headers: { location: await landingOf(env, r), "set-cookie": `${SESSION_COOKIE}=${token}; ${SESSION_COOKIE_ATTRS}; Max-Age=${90 * 24 * 60 * 60}`, ...NO_STORE } })
+    ? new Response(null, { status: 302, headers: { location: await landingOf(env, r), "set-cookie": sessionSetCookie(token), ...NO_STORE } })
     : new Response(null, { status: 302, headers: { location: "/login", ...NO_STORE } });
   return json({ account: "invited", signedIn: !!token, org: r.seat ? String(r.seat.org_slug || "") : null,
     ...(token ? { person: r.seat.name, role: r.seat.role, title: r.seat.title, token, expiresAt: expires } : {}),

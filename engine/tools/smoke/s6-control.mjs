@@ -64,29 +64,33 @@ smoke("C1: Invite through POST /control seats a partner and a member on the proj
   expect(page.status === 200 && /data-button="provision-person-key"/.test(page.text) && [p.id, m.id].every((id) => page.text.includes(`data-person="${id}"`)) && /data-region="connect"/.test(page.text),
     `GET /control: ${page.status}`);
   s.partner = { id: p.id, key: pa.key }; s.hat = { id: m.id, key: hm.key }; s.onlyB = { id: b.id, key: ob.key }; s.loner = { id: who(j, "loner@smoke.local").id, key: lo.key };
-  // Connect offers the plugin first (9.2): the row's values are the repo's own, never retyped; the add line names the plugin's
-  // public distribution repo exactly (10.1: the engine's repo is private, and its name is a prefix of the dist repo's)
+  // Connect offers the plugin after the two apps (9.2; 21.P E22): the row's values are the repo's own, never retyped; the add line
+  // names the plugin's public distribution repo exactly (10.1: the engine's repo is private, and its name is a prefix of the dist repo's)
   const rd = (...p) => JSON.parse(readFileSync(join(...p), "utf8"));
   const installId = `${rd(PLUGIN_DIR, ".claude-plugin", "plugin.json").name}@${rd(REPO, ".claude-plugin", "marketplace.json").name}`;
   const conn = page.text.slice(page.text.indexOf('data-region="connect"'));
   const blocks = [...conn.matchAll(/data-client-block="([a-z-]+)"/g)].map((x) => x[1]);
   const row = (k) => { const at = conn.indexOf(`data-client-block="${k}"`), nx = conn.slice(at + 1).search(/data-client-block="/); return at < 0 ? "" : conn.slice(at, nx < 0 ? undefined : at + 1 + nx); };
   const plug = row("claude-plugin");
-  expect(blocks[0] === "claude-plugin" && blocks.includes("claude-code") && plug.includes(`<code>claude plugin marketplace add ${DIST_REPO}</code>`) && plug.includes(`claude plugin install ${installId}`)
+  expect(blocks.includes("claude-plugin") && blocks.includes("claude-code") && plug.includes(`<code>claude plugin marketplace add ${DIST_REPO}</code>`) && plug.includes(`claude plugin install ${installId}`)
     && !plug.includes("/mcp") && !/Authorization|your-key|--header/.test(plug) && /claude mcp add \S+ --transport http/.test(conn)
     && /Connects to[\s\S]*The hosted platform only/.test(plug) && /With a key · any install/.test(conn.slice(conn.indexOf('data-client-block="claude-code"'))),
-    () => `Connect: blocks [${blocks.join(", ")}] (want claude-plugin first, claude-code after); plugin row ${brief(plug.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 280))} (want both commands, add ${DIST_REPO}, ${installId}, no address, no key, \"Connects to: The hosted platform only\"; the key row \"With a key · any install\")`);
+    () => `Connect: blocks [${blocks.join(", ")}] (want claude-plugin and claude-code); plugin row ${brief(plug.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 280))} (want both commands, add ${DIST_REPO}, ${installId}, no address, no key, \"Connects to: The hosted platform only\"; the key row \"With a key · any install\")`);
   // 12.1: the app ways in, pinned exactly (the name is the key row's own: one connector name on every row of this org)
   const name = (/claude mcp add (\S+) --transport http/.exec(conn) || [])[1] || "";
   const org = ((/<dt>Sign in<\/dt><dd>([^<]*): email and passphrase<\/dd>/.exec(row("claude-connector")) || [])[1]) || "";
   const claudeAdd = `https://claude.ai/customize/connectors?modal=add-custom-connector&amp;connectorName=${encodeURIComponent(name)}&amp;connectorUrl=${encodeURIComponent(`${BASE}/mcp`)}`;
   const away = (href, button, label) => new RegExp(`<a class="u-btn small" href="${href.replace(/[.?*+^$()[\]{}|\\]/g, "\\$&")}" target="_blank" rel="noopener noreferrer" data-button="${button}" data-client="[^"]+">${label}</a>`);
   const steps = `<dt>Steps</dt><dd><ol class="ct-steps"><li>Add custom MCP server</li><li>Paste the MCP URL</li><li>Sign in to ${org}</li></ol></dd>`;
-  expect(JSON.stringify(blocks) === JSON.stringify(["claude-plugin", "claude-connector", "chatgpt", "claude-code", "codex"]) && name && org
+  // 21.P E22: Claude and ChatGPT lead, open, each beside its logo (the worker's own file); the plugin, the key and Codex after, closed
+  const opened = (k) => new RegExp(`data-client-block="${k}"><details class="p-x" open>`).test(conn);
+  expect(JSON.stringify(blocks) === JSON.stringify(["claude-connector", "chatgpt", "claude-plugin", "claude-code", "codex"]) && opened("claude-connector") && opened("chatgpt")
+    && !["claude-plugin", "claude-code", "codex"].some(opened) && /data-mark="claude"[^>]*><img src="\/assets\/clients\/claude\.png\?v=/.test(row("claude-connector")) && /data-mark="chatgpt"[^>]*><img src="\/assets\/clients\/chatgpt\.png\?v=/.test(row("chatgpt"))
+    && !/First calls/.test(conn) && name && org
     && away(claudeAdd, "add-to-claude", "Add to Claude").test(row("claude-connector")) && row("claude-connector").includes(`<code>${BASE}/mcp</code>`)
     && away("https://chatgpt.com/plugins", "add-to-chatgpt", "Add to ChatGPT").test(row("chatgpt")) && row("chatgpt").includes(steps) && row("chatgpt").includes(`<code>${BASE}/mcp</code>`),
-    () => `Connect's app rows: blocks [${blocks.join(", ")}] (want claude-plugin, claude-connector, chatgpt, claude-code, codex); Claude ${brief(row("claude-connector").replace(/<svg[\s\S]*?<\/svg>/g, "").slice(0, 600))} (want Add to Claude -> ${claudeAdd}); ChatGPT ${brief(row("chatgpt").replace(/<svg[\s\S]*?<\/svg>/g, "").slice(0, 700))} (want Add to ChatGPT -> https://chatgpt.com/plugins and ${steps})`);
-  return `partner (seat smoke, hat and access hat partner), member (seats smoke, smoke-b, no access hat), only-b and a seatless partner; each secret once, in its own answer; Connect's first row the plugin (add ${DIST_REPO}, ${installId}, no address, no key, the hosted platform only), claude mcp add after the app rows (any install); Add to Claude (the prefilled install link, ${name}), Add to ChatGPT (its plugins page) and its three steps`;
+    () => `Connect's app rows: blocks [${blocks.join(", ")}] (want claude-connector, chatgpt open with their logos, then claude-plugin, claude-code, codex; no "First calls"); Claude ${brief(row("claude-connector").replace(/<svg[\s\S]*?<\/svg>/g, "").slice(0, 600))} (want Add to Claude -> ${claudeAdd}); ChatGPT ${brief(row("chatgpt").replace(/<svg[\s\S]*?<\/svg>/g, "").slice(0, 700))} (want Add to ChatGPT -> https://chatgpt.com/plugins and ${steps})`);
+  return `partner (seat smoke, hat and access hat partner), member (seats smoke, smoke-b, no access hat), only-b and a seatless partner; each secret once, in its own answer; Connect leads with Claude and ChatGPT, open, beside their logos; the plugin row (add ${DIST_REPO}, ${installId}, no address, no key, the hosted platform only), claude mcp add after (any install); Add to Claude (the prefilled install link, ${name}), Add to ChatGPT (its plugins page) and its three steps`;
 });
 
 smoke("C2: POST /profile saves your own hats; the read-only credential, a key in the URL and a hat outside the seven are refused", async () => {
