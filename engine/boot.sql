@@ -105,7 +105,9 @@
 -- (idx_access_requests_abandoned, idx_access_requests_declined, idx_access_requests_email, idx_access_requests_line,
 -- idx_access_requests_people, idx_access_requests_unverified, idx_access_requests_verified, idx_access_requests_verify,
 -- idx_account_resets_account, idx_account_sessions_account) in the export's name order; its re-made slug triggers (org_slug_on_insert, org_slug_on_update: 'request-access' among the reserved
--- names) in place at the END of this file.
+-- names) in place at the END of this file. (21.4c, Google sign-in) migrate-081.sql's accounts column (google_sub: the Google account's
+-- subject, linked on its first Google sign-in) in the accounts table below and its index (idx_accounts_google_sub) in the export's
+-- name order.
 
 -- migrate-081: a person's request for a beta place (unverified until its email is; then one verified request per email, in line
 -- by its verification)
@@ -162,7 +164,9 @@ CREATE TABLE IF NOT EXISTS account_sessions (
   device     TEXT,
   created_at TEXT NOT NULL,
   expires_at TEXT NOT NULL,
-  revoked    INTEGER NOT NULL DEFAULT 0
+  revoked    INTEGER NOT NULL DEFAULT 0,
+  proven_how TEXT,
+  proven_at  TEXT
 );
 
 -- migrate-070: one account per email (the holder's own passphrase, none until they set one); a people row is its seat in one org
@@ -173,7 +177,8 @@ CREATE TABLE IF NOT EXISTS accounts (
   pass_salt  TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  invited_org INTEGER
+  invited_org INTEGER,
+  google_sub  TEXT
 );
 
 CREATE TABLE IF NOT EXISTS approval_audit (
@@ -900,6 +905,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_access_requests_verify ON access_requests(
 CREATE INDEX IF NOT EXISTS idx_account_resets_account ON account_resets(account_id);
 
 CREATE INDEX IF NOT EXISTS idx_account_sessions_account ON account_sessions(account_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_google_sub ON accounts(google_sub) WHERE google_sub IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_approval_audit_decided_by ON approval_audit(decided_by);
 

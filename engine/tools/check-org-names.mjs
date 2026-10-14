@@ -67,7 +67,7 @@ export async function check(srcDir, { slugs = [] } = {}) {
   // 2 · the worker derives its set from the registry and the creation checks it
   const idx = readFileSync(join(srcDir, "index.js"), "utf8");
   if (!/const RESERVED_ORG_NAMES = reservedNames\(CAPABILITIES\);/.test(idx)) misses.push("src/index.js: RESERVED_ORG_NAMES is not reservedNames(CAPABILITIES) (the worker's set must be the registry's own)");
-  if (!/orgFormProblem\(f, RESERVED_ORG_NAMES\)/.test(idx)) misses.push("src/index.js: POST /orgs does not check a new address against RESERVED_ORG_NAMES");
+  if (!/orgFormProblem\(f, RESERVED_ORG_NAMES[,)]/.test(idx)) misses.push("src/index.js: POST /orgs does not check a new address against RESERVED_ORG_NAMES");
   // 3 · the floor, the case, no derived-slug shape
   for (const w of FLOOR) if (!reserved.has(w)) misses.push(`src/orgnames.js: "${w}" is not reserved (the brief's floor: ${FLOOR.join(", ")})`);
   for (const w of reserved) {

@@ -19,6 +19,7 @@ import { esc, errorState, uchanPose } from "./ui.js";
 import { DEFAULT_BRAND } from "./tenant.js";
 import { authPage, authBrand, JOIN_WORDS } from "./login.js";
 import { REQUEST_PATH } from "./requestaccess.js";
+import { googleLink, GOOGLE_CSS } from "./googlepage.js";   // sprint 21, 21.4c: the step-up's Continue with Google
 import { ORG_SLUG_MAX, suggestSlug } from "./orgnames.js";
 import { ORG_NAME_MAX, PROJECT_SLUG_MAX } from "./orgs.js";
 import { projectSlug } from "./project.js";
@@ -90,20 +91,26 @@ function productStep(values, wrong) {
       </fieldset>`;
 }
 
+// google (sprint 21, 21.4c, the owner's ruling: THE STEP-UP, src/accounts.js accountStepUp): "fresh" — this browser's account session
+// was proven by Google less than 10 minutes ago, so the org is created without a passphrase (the email is the session's, shown
+// locked); "stale" — proven by Google longer ago: the passphrase field, and Continue with Google again beside it (back to this form);
+// "" — the passphrase, as before
 export function renderOrgNew(opts) {
-  const { error = "", field: wrong = "", values = {}, host = "" } = opts || {};
+  const { error = "", field: wrong = "", values = {}, host = "", google = "" } = opts || {};
   const v = (k) => esc(String(values[k] == null ? "" : values[k]));
   const { wordmark } = frame(DEFAULT_BRAND);
   const body = `<form method="POST" action="/orgs" data-screen="org-new" data-region="create-org">
       <input type="hidden" name="web" value="1">
       <div class="field">
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" autocomplete="email" required${values.email || wrong ? "" : " autofocus"} value="${v("email")}" data-input-exception="auth">
+        <input type="email" id="email" name="email" autocomplete="email" required${values.email || wrong ? "" : " autofocus"}${google === "fresh" ? " readonly" : ""} value="${v("email")}" data-input-exception="auth">
       </div>
-      <div class="field">
+      ${google === "fresh" ? `<p class="hint" data-region="google-step-up">Signed in with Google just now: no passphrase needed.</p>` : `<div class="field">
         <label for="password">Account passphrase</label>
-        <input type="password" id="password" name="password" autocomplete="current-password" required${values.email && !wrong ? " autofocus" : ""} data-input-exception="auth">
-      </div>
+        <input type="password" id="password" name="password" autocomplete="current-password"${google === "stale" ? ' aria-describedby="hint-password"' : " required"}${values.email && !wrong ? " autofocus" : ""} data-input-exception="auth">
+        ${google === "stale" ? `<p class="hint" id="hint-password">Or confirm it is you with Google again: your Google sign-in is more than 10 minutes old.</p>
+        <div data-region="google-step-up">${googleLink("signin", [["next", "/orgs/new"]])}</div>` : ""}
+      </div>`}
       <div class="field">
         <label for="name">Org name</label>
         <input type="text" id="name" name="name" required maxlength="${ORG_NAME_MAX}" autocomplete="organization" value="${v("name")}" data-input-exception="auth">
@@ -132,7 +139,7 @@ export function renderOrgNew(opts) {
     // a product step's field says so on itself (21.4b); any other refusal is the banner
     banner: error && !PRODUCT_FIELD_WORDS[wrong] ? errorState({ what: error }) : "",
     body,
-    css: PRODUCT_CSS,
+    css: PRODUCT_CSS + (google === "stale" ? GOOGLE_CSS : ""),
     intro: { eyebrow: "Your org", heading: "Make it yours.", lede: "One org for your company: its people, its projects and the AI that files into them.",
       art: `<div class="art-pose" data-art="comment">${uchanPose({ pose: "comment", size: 240 })}</div>`, phone: false },
     // a person who typed or was given an email holds an account; only a bare form offers the way in for one who has none

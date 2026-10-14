@@ -69,6 +69,18 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   org 1's admins alone; anyone else signed in the one not-here 404): the funnel (one aggregate over the newest 1,000 requests), one
   keyset page of people with their profile, consent, source, path and product answers, Approve and Decline (same-origin; the
   request statements `tools/operator.mjs` shares).
+- `src/google.js` · `src/googlepage.js` — GOOGLE SIGN-IN (sprint 21, 21.4c): OpenID Connect's code flow with PKCE (S256), a single-use
+  state and a nonce held in OAUTH_KV under the state's hash, the state bound to the browser by a `__Host-g_state` cookie; the id_token
+  verified here (RS256 against Google's JWKS, cached in KV by its Cache-Control; iss, aud, exp/iat, the nonce, `email_verified`
+  true). The client is the deployment's, in OAUTH_KV, written only by `tools/operator.mjs set-google-client --file <mode-600 file>`
+  (the worker reads no env secret); none stored, or an origin outside the two registered ones: no button, every door refused.
+  `src/accounts.js` GOOGLE SIGN-IN matches by email (signed in as the account's passphrase would; its Google `sub` linked on first
+  use, `accounts.google_sub`, and a different one refused), a join through Google filed ALREADY VERIFIED (googleJoin; the form's email
+  is the join ticket's, `__Host-g_join`), creating the org takes the passphrase OR a Google sign-in under 10 minutes old (THE STEP-UP: `accountStepUp`, account_sessions'
+  `proven_how`/`proven_at`; the web form only), the connect page's authorization completed as that account (`src/oauth.js connectByGoogle`;
+  a connect starts only from that page's same-origin POST). `/auth/google/start` and `/auth/google/callback` (src/index.js). Locally
+  the config's GOOGLE_LOCAL_IDP (only `tools/lib-r-local.sh` writes it) points the endpoints at `tools/fake-google.mjs`
+  (`tools/google-selftest.mjs`, smoke s69); production's wrangler.jsonc never names it.
 - `src/email.js` · `src/mails.js` — THE SEND (sprint 21, 21.4a): every email the worker or the operator sends goes through
   `sendMail`, From hello@sharingu.xyz, under THE CAP (fewer than 2,900 counted in any 31 days: `mail_days`, one conditional upsert a
   send) and three a day per address (`mail_addresses`, a digest; a refused address never spends the cap); at the cap nothing is sent,
@@ -187,7 +199,8 @@ no org yet — and refuses past them unless `--beyond-cap`; list and list-orgs s
 enforce it; sprint 21: `requests` lists the open (verified) requests for a place in line order, and `allow --request <id>`
 approves one — the same cap, then one guarded write and ONE "You're in" email through src/email.js sendMail (counted in the cap;
 --live by Cloudflare's REST send, --local into the local capture; `--origin` the links' start), no code; an approved request with no
-org holds a place; `decline --request <id>` declines an open one in one guarded write, no code) and `tools/org-undo.mjs` (one org's export, restore,
+org holds a place; `decline --request <id>` declines an open one in one guarded write, no code; 21.4c: `set-google-client --file <path>` /
+`clear-google-client`, the platform's one Google OAuth client in the deployment's KV, read from a mode-600 file and never printed) and `tools/org-undo.mjs` (one org's export, restore,
 verify, delete). Credentials: `set -a; . ~/.sharingu/env-sharingu.sh; set +a` (a bare
 `wrangler` hangs on a login prompt).
 

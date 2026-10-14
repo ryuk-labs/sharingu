@@ -1,7 +1,8 @@
 // src/requestpage.js — the request-access form (sprint 21, slices 21.1 and 21.4a; src/requestaccess.js reads and writes): GET
 // /request-access, the profile and a passphrase twice (the account it prepares: src/accounts.js THE ACCOUNT FLOW), the optional
 // fields folded under one disclosure, (21.4b) the consent's four boxes and the page that sent the person (?from=, a hidden field), a
-// field no person sees as the honeypot. Also the request's parts the account pages share
+// field no person sees as the honeypot; (21.4c) Continue with Google above it when a client is stored, and the form Google fills in
+// (the email Google verified shown locked, the name prefilled, the passphrase optional). Also the request's parts the account pages share
 // (src/accountpage.js): the beta's count in words (betaWords) and the request's track. The front door's scenes (src/login.js
 // authPage: both worlds, the one accent, the website's marks and U-chan's poses, src/ui.js), never a second skin. No statement
 // here: the route reads and hands each page its numbers.
@@ -11,6 +12,7 @@ import { DEFAULT_BRAND } from "./tenant.js";
 import { authPage, authBrand, JOIN_WORDS } from "./login.js";
 import { TEAM_SIZES, REQUEST_MAX, REQUEST_TRAP, REQUEST_PATH, CONSENT_BOXES, TERMS_URL, PRIVACY_URL, sourceOf } from "./requestaccess.js";
 import { ACCOUNT_MIN_PASSPHRASE } from "./secrets.js";
+import { googleLink, googleOr, GOOGLE_CSS } from "./googlepage.js";   // sprint 21, 21.4c
 
 export const REQUEST_FIELD_WORDS = {
   name: `Type your name (at most ${REQUEST_MAX.name} characters).`,
@@ -69,12 +71,20 @@ const REQUEST_CSS = `
   .get-list b{display:block;font:700 14.5px/1.3 var(--sans);color:var(--text)}
   .get-list span span{display:block;font:400 13.5px/1.45 var(--sans);color:var(--text-muted)}
   .get .u-pose{position:absolute;right:18px;top:-58px;width:84px;height:100px}
+  input.locked{color:var(--text-muted);background:var(--well)}
+  .google-first{margin:0 0 4px}
   @media (max-width:900px){.get .u-pose{top:-40px;width:67px;height:80px}}
 `;
 // field(name, label, opts) -> one labelled input, its value kept when the form comes back; a wrong one is marked on itself
 // (aria-invalid, its words beside it, the focus on it: `autofocus`, so it holds without a script)
-function field(name, label, { type = "text", required = false, value = "", auto = "", hint = "", error = "" } = {}) {
+// locked (21.4c): the value Google verified, shown and never sent (the door reads it from the Google ticket, never the form)
+function field(name, label, { type = "text", required = false, value = "", auto = "", hint = "", error = "", locked = false } = {}) {
   const described = [hint ? `hint-${name}` : "", error ? `err-${name}` : ""].filter(Boolean).join(" ");
+  if (locked) return `<div class="field">
+        <label for="${name}">${esc(label)}</label>
+        <input type="${type}" id="${name}" value="${esc(value)}" readonly aria-readonly="true" class="locked" aria-describedby="hint-${name}" data-google-locked data-input-exception="auth">
+        <p class="hint" id="hint-${name}">${esc(hint)}</p>
+      </div>`;
   return `<div class="field">
         <label for="${name}">${esc(label)}${required ? "" : ` <span class="opt">optional</span>`}</label>
         <input type="${type}" id="${name}" name="${name}"${required ? " required" : ""}${type === "password" ? ` minlength="${ACCOUNT_MIN_PASSPHRASE}"` : ` maxlength="${REQUEST_MAX[name]}"`}${auto ? ` autocomplete="${auto}"` : ""} value="${esc(value)}"${error ? ' aria-invalid="true" autofocus' : ""}${described ? ` aria-describedby="${described}"` : ""} data-input-exception="auth">
@@ -115,21 +125,25 @@ const betaPanel = () => `<div class="get" data-art="beta">
       <ul class="get-list">${BETA_GETS.map(([m, k, v]) => `<li>${brandMark(m, 36)}<span><b>${esc(k)}</b><span>${esc(v)}</span></span></li>`).join("")}</ul>
     </div>`;
 
-// renderRequestAccess({ error, field, brand, values }) -> the form (values: what the person sent, kept when a field was wrong — never
-// the passphrase; field: the wrong one, readRequest's or joinProblem's, marked on itself — error then names it there, never only at
-// the top)
+// renderRequestAccess({ error, field, brand, values, offer, google }) -> the form (values: what the person sent, kept when a field was
+// wrong — never the passphrase; field: the wrong one, readRequest's or joinProblem's, marked on itself — error then names it there,
+// never only at the top). (21.4c) offer: Continue with Google above the form (a client stored for this origin); google: { email, name }
+// — the identity Google verified (its join ticket): the email locked, the name prefilled, the passphrase optional, no button
 export function renderRequestAccess(opts) {
-  const { error = "", field: wrong = "", brand = DEFAULT_BRAND, values = {} } = opts || {};
+  const { error = "", field: wrong = "", brand = DEFAULT_BRAND, values = {}, offer = false, google = null } = opts || {};
   const v = (k) => (values && typeof values[k] === "string" ? values[k] : "");
   const at = Object.prototype.hasOwnProperty.call(REQUEST_FIELD_WORDS, wrong) ? wrong : "";
   const err = (k) => (at === k ? error || REQUEST_FIELD_WORDS[k] : "");
   const f = (name, label, o = {}) => field(name, label, { ...o, value: v(name), error: err(name) });
   const sizes = Object.entries(TEAM_SIZES).map(([k, w]) => `<option value="${esc(k)}"${v("team_size") === k ? " selected" : ""}>${esc(w)}</option>`).join("");
   const open = OPTIONAL_FIELDS.some((k) => v(k).trim() !== "" || at === k);
-  const body = `<form method="POST" action="${REQUEST_PATH}" data-screen="request-access" data-region="request-access">
-      <input type="hidden" name="web" value="1">
-      ${f("name", "Your name", { required: true, auto: "name" })}
-      ${f("email", "Work email", { type: "email", required: true, auto: "email" })}
+  const pass = google ? { required: false, hint: "Optional: Google signs you in; a passphrase also signs you in without it." }
+    : { required: true, hint: `At least ${ACCOUNT_MIN_PASSPHRASE} characters: you sign in with it.` };
+  const button = offer && !google ? `<div class="google-first">${googleLink("join", [["from", sourceOf(v("from"))]])}</div>\n    ${googleOr}\n    ` : "";
+  const body = `${button}<form method="POST" action="${REQUEST_PATH}" data-screen="request-access" data-region="request-access"${google ? " data-google-join" : ""}>
+      <input type="hidden" name="web" value="1">${google ? `\n      <input type="hidden" name="google" value="1">` : ""}
+      ${field("name", "Your name", { required: true, auto: "name", value: v("name") || (google && google.name) || "", error: err("name") })}
+      ${google ? field("email", "Work email", { type: "email", value: google.email, locked: true, hint: "Verified by Google" }) : f("email", "Work email", { type: "email", required: true, auto: "email" })}
       ${f("company", "Company", { required: true, auto: "organization" })}
       ${f("role", "Your role", { required: true, auto: "organization-title" })}
       <div class="field">
@@ -137,8 +151,8 @@ export function renderRequestAccess(opts) {
         <select id="team_size" name="team_size" required${at === "team_size" ? ' aria-invalid="true" autofocus aria-describedby="err-team_size"' : ""}><option value="">Choose one</option>${sizes}</select>
         ${at === "team_size" ? `<p class="field-err" id="err-team_size" data-field-error="team_size">${esc(err("team_size"))}</p>` : ""}
       </div>
-      ${field("password", "Choose a passphrase", { type: "password", required: true, auto: "new-password", hint: `At least ${ACCOUNT_MIN_PASSPHRASE} characters: you sign in with it.`, error: err("password") })}
-      ${field("confirm", "Passphrase again", { type: "password", required: true, auto: "new-password", error: err("confirm") })}
+      ${field("password", "Choose a passphrase", { type: "password", required: pass.required, auto: "new-password", hint: pass.hint, error: err("password") })}
+      ${field("confirm", "Passphrase again", { type: "password", required: pass.required, auto: "new-password", error: err("confirm") })}
       <details class="more" data-region="request-more"${open ? " open" : ""}>
         <summary>More about you (optional)</summary>
         <div class="more-fields">
@@ -162,7 +176,7 @@ export function renderRequestAccess(opts) {
     banner: error && !at ? errorState({ what: error }) : "",
     body,
     footnote: `Already have an account? <a href="/login">Sign in</a>`,
-    css: REQUEST_CSS,
+    css: REQUEST_CSS + (offer && !google ? GOOGLE_CSS : ""),
     intro: { eyebrow: "The private beta", heading: `${JOIN_WORDS}.`, lede: "Fifty teams, reviewed in the order they verify their email.", art: betaPanel() },
   });
 }

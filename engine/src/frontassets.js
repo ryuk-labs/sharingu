@@ -1,6 +1,7 @@
 // src/frontassets.js — the front door's pictures, self-hosted (sprint 21, 21.P): the walkthrough's five posters and the two client
 // logos the connect page shows, the website's own files (engine/assets/walkthrough, engine/assets/clients), and (21.4a) U-chan's mark
-// the emails show (engine/assets/brand/uchan-mark.png, src/mails.js), bundled as base64 by
+// the emails show (engine/assets/brand/uchan-mark.png, src/mails.js) and (21.4c) Google's G mark beside Continue with Google
+// (engine/assets/clients/google.png, src/googlepage.js), bundled as base64 by
 // tools/make-front-assets.mjs into src/frontassetdata.js. GET /assets/<dir>/<file> serves them from the worker itself (src/index.js,
 // before the address, any auth or any D1 read), the way src/fonts.js serves the faces: nothing hotlinked, nothing third-party. A
 // picture's URL carries FRONT_ASSET_VERSION, so the response is cached a year as immutable; a changed picture is a new URL.

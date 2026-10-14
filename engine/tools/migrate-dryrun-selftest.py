@@ -351,6 +351,7 @@ SEVENTY_FIVE = "migrate-075.sql"
 SEVENTY_SEVEN = "migrate-077.sql"
 SEVENTY_NINE = "migrate-079.sql"   # sprint 12, 12.3: it opens with ALTER TABLE accounts ADD COLUMN invited_org
 EIGHTY = "migrate-080.sql"   # sprint 13, 13.1: its one statement, ALTER TABLE transmission ADD COLUMN client
+EIGHTY_ONE = "migrate-081.sql"   # sprint 21, 21.4c: it opens with ALTER TABLE accounts ADD COLUMN google_sub
 
 
 def apply_chain_skipping(con, start="", stop="~"):
@@ -481,7 +482,7 @@ def t_sprint6_067_068_apply_then_replay_from_067():
     triggers3 = sorted(r[0] for r in con.execute("SELECT name FROM sqlite_master WHERE type='trigger'"))
     assert all(f"{t}_org_required" in triggers3 for t in ("people", "tokens", "events", "loops", "transmission")), f"068's triggers missing: {triggers3}"
     mid = {t: con.execute(q).fetchall() for t, q in DERIVED.items()}
-    assert apply_chain_skipping(con, start=SIX) == [SIX, SEVENTY, SEVENTY_TWO, SEVENTY_THREE, SEVENTY_FOUR, SEVENTY_FIVE, SEVENTY_SEVEN, SEVENTY_NINE, EIGHTY], "the replay of 067 (and 070, 072, 073, 074, 075, 077, 079, 080) was not skipped at its first column"
+    assert apply_chain_skipping(con, start=SIX) == [SIX, SEVENTY, SEVENTY_TWO, SEVENTY_THREE, SEVENTY_FOUR, SEVENTY_FIVE, SEVENTY_SEVEN, SEVENTY_NINE, EIGHTY, EIGHTY_ONE], "the replay of 067 (and 070, 072, 073, 074, 075, 077, 079, 080, 081) was not skipped at its first column"
     assert sorted(r[0] for r in con.execute("SELECT name FROM sqlite_master WHERE type='trigger'")) == triggers3, "the --from 067 replay changed the trigger set"
     assert {t: con.execute(q).fetchall() for t, q in DERIVED.items()} == mid, "the --from 067 replay changed a derived table"
     nulls = [t for t in ("people", "tokens", "events", "loops", "transmission", "approval_audit", "artifacts", "invites", "login_attempts")
@@ -518,7 +519,7 @@ def t_sprint6_two_orgs_069_apply_then_replay():
     idx = {r[0]: r[1] for r in con.execute("SELECT name, sql FROM sqlite_master WHERE type='index' AND tbl_name='transmission'")}
     assert "idx_transmission_clientref_once" in idx and "UNIQUE" in idx["idx_transmission_clientref_once"] and "idx_transmission_clientref" not in idx, f"069's indexes: {sorted(idx)}"
     assert not con.execute("SELECT 1 FROM sqlite_master WHERE name = 'transmission_refs_meta'").fetchone(), "069 left transmission_refs_meta"
-    assert apply_chain_skipping(con, start=SIX) == [SIX, SEVENTY, SEVENTY_TWO, SEVENTY_THREE, SEVENTY_FOUR, SEVENTY_FIVE, SEVENTY_SEVEN, SEVENTY_NINE, EIGHTY], "the --from 067 replay over two orgs did not skip 067, 070, 072, 073, 074, 075, 077, 079 and 080 alone"
+    assert apply_chain_skipping(con, start=SIX) == [SIX, SEVENTY, SEVENTY_TWO, SEVENTY_THREE, SEVENTY_FOUR, SEVENTY_FIVE, SEVENTY_SEVEN, SEVENTY_NINE, EIGHTY, EIGHTY_ONE], "the --from 067 replay over two orgs did not skip 067, 070, 072, 073, 074, 075, 077, 079, 080 and 081 alone"
     assert counts() == before and org2() == b2, f"069 or the replay moved a row: {before} -> {counts()}, org 2 {b2} -> {org2()}"
     plans = con.execute("SELECT id, plan FROM org ORDER BY id").fetchall()
     assert (2, "free") in plans and all((p == "team") == (i == 1) for i, p in plans) and con.execute("SELECT COUNT(*) FROM plan_limits").fetchone()[0] == 2, \

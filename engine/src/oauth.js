@@ -7,15 +7,17 @@
 // bundled into the one worker artifact like everything else, so pulling esc() from
 // ui.js changes nothing about how/when the OAuth surface is served.
 import { db } from "./data.js";
-import OAuthProvider from "@cloudflare/workers-oauth-provider";
+import OAuthProvider, { getOAuthApi } from "@cloudflare/workers-oauth-provider";
 import { errorState, esc, uchan } from "./ui.js";
 import { sha256 } from "./util.js";
-import { renderLogin, authPage, authBrand } from "./login.js";
+import { renderLogin, authPage, authBrand, orgChoiceHtml, ORG_CHOICE_CSS } from "./login.js";
 import { getTenantConfig } from "./tenant.js";
 import { passphraseSignIn, countSignIn, clientOf, NO_SEAT_HERE_WORDS, PENDING_ONLY_WORDS } from "./accounts.js";   // sprint 7, 7.1: the same sign-in as POST /login
 import { OAUTH_OPTIONS, credEpoch, accountCred, grantKindOf } from "./oauthgrants.js";
 import { grantClientOf, familyOfName } from "./client.js";   // sprint 13, 13.1: which AI filed it
 import { frontAssetHref } from "./frontassets.js";   // sprint 21, 21.P: a known client's own logo on the connect page
+import { googleOffer } from "./google.js";   // sprint 21, 21.4c: Continue with Google on the connect page
+import { googleForm, GOOGLE_CSS } from "./googlepage.js";
 
 const OAUTH_PATHS = ["/oauth/authorize", "/oauth/token", "/oauth/register"];
 
@@ -27,10 +29,13 @@ const OAUTH_PATHS = ["/oauth/authorize", "/oauth/token", "/oauth/register"];
 // family word (src/client.js familyOfName: claude, claude-code, chatgpt, codex), never the raw name, so each call stamps which AI
 // filed a row without reading the client store. A name we do not know adds nothing (the call's clientInfo, else other). The
 // name is the client's own say at registration: a label, never proof, and nothing decides a right on it.
+// (sprint 21, 21.4c) Google's sign-in proves the account's holder as its passphrase does, so it makes the same ACCOUNT grant,
+// stamped with the account's passphrase — and for an account that holds none (it signs in by Google alone: accountCred has nothing
+// to stamp), a SEAT grant on the chosen seat, never wider.
 export async function grantPropsOf(signin, scope, clientName = null) {
   const seat = signin.seat;
   const client = grantClientOf(clientName);
-  if (signin.session === "account" && signin.account && signin.account.id) {
+  if (signin.session === "account" && signin.account && signin.account.id && signin.account.pass_hash) {
     return { personId: seat.id, accountId: String(signin.account.id), org: Number(seat.org), scope, cred: await accountCred(signin.account), ...client };
   }
   return { personId: seat.id, scope, cred: await credEpoch(seat), ...client };
@@ -100,22 +105,71 @@ const CONNECT_CSS = `
 
 // choose (sprint 7's review, A1): { email, orgs } — the account's passphrase proved an account in several orgs and the form named
 // none: the form comes back with the email filled in and the orgs to choose from (the grant records the one chosen)
+// req.origin (sprint 21, 21.4c): the request's origin — with a Google client stored for it (src/google.js googleOffer), the form
+// carries Continue with Google under it (a same-origin POST to /auth/google/start: the authorize request rides it, as the
+// passphrase form's oauth_req does)
+// connectFoot(c) -> the footnote: where the code goes (the redirect's host, the whole address on hover) and what it asks for
+const connectFoot = (c) => `<p data-region="oauth-request">It sends you back to <b data-redirect-host title="${esc(c.full)}">${esc(c.host || "an unknown address")}</b>, and asks to <span data-scopes>${esc(c.scopes.length ? c.scopes.join(" and ") : "read what your role may read")}</span>.</p><p>${esc(SCOPE_NOTE)}</p>`;
+const oauthReqOf = (authRequest) => btoa(JSON.stringify(authRequest));
 async function signInForm(env, req, err, choose = null) {
   const { brand } = await getTenantConfig(env);
   const c = consentParts(req);
   // the client's name is what it calls itself, never vouched for; where the code goes is the address's host (the whole address
   // on hover); what it asks for is its scopes
-  const what = c.scopes.length ? c.scopes.join(" and ") : "read what your role may read";
   const top = connectHead(c.name, c.host);
+  const google = !choose && req.origin && (await googleOffer(env, req.origin)) ? googleForm([["intent", "connect"], ["oauth_req", oauthReqOf(req.authRequest)]]) : "";
   return htmlRes(renderLogin({
     error: err || "", brand, action: "", email: choose ? choose.email : "", orgChoice: choose ? choose.orgs : null,
     lede: choose ? "Your account holds seats in several orgs: choose the one this connection acts in, and sign in once more"
       : top.lede,
-    sub: choose ? "" : top.sub, headHtml: top.head, css: CONNECT_CSS,
-    hidden: [{ name: "oauth_req", value: btoa(JSON.stringify(req.authRequest)) }],
+    sub: choose ? "" : top.sub, headHtml: top.head, css: CONNECT_CSS, googleHtml: google,
+    hidden: [{ name: "oauth_req", value: oauthReqOf(req.authRequest) }],
     submit: "Sign in and connect",
-    footnoteHtml: `<p data-region="oauth-request">It sends you back to <b data-redirect-host title="${esc(c.full)}">${esc(c.host || "an unknown address")}</b>, and asks to <span data-scopes>${esc(what)}</span>.</p><p>${esc(SCOPE_NOTE)}</p>`,
+    footnoteHtml: connectFoot(c),
   }), err ? 401 : 200);
+}
+// googleChoice(env, req, orgs) -> the connect page's org choice after Google proved an account in several orgs (or one with a seat
+// waiting for its yes): the orgs as radios, then Continue with Google once more with the one chosen (the passphrase's twin, A1:
+// never the oldest seat by default). Shown only to the person Google just proved.
+async function googleChoice(env, req, orgs) {
+  const { brand } = await getTenantConfig(env);
+  const c = consentParts(req);
+  const top = connectHead(c.name, c.host);
+  return htmlRes(authPage({ ...authBrand(brand), here: "login", head: top.head,
+    lede: "Your account holds seats in several orgs: choose the one this connection acts in, then continue with Google once more",
+    body: googleForm([["intent", "connect"], ["oauth_req", oauthReqOf(req.authRequest)]], orgChoiceHtml(orgs)),
+    footnote: connectFoot(c), css: CONNECT_CSS + ORG_CHOICE_CSS + GOOGLE_CSS }), 200);
+}
+// oauthApi(env) -> the provider's helpers outside its own request (the Google callback is the worker's route, not the provider's):
+// the options buildEntry constructs it from (src/oauthgrants.js OAUTH_OPTIONS), as revokeOAuthGrants reads the store
+export const oauthApi = (env) => getOAuthApi({ ...OAUTH_OPTIONS, apiRoute: "/mcp", apiHandler: NOOP, defaultHandler: NOOP }, env);
+const NOOP = { fetch: () => new Response("Not found", { status: 404 }) };
+// connectRequest(env, raw) -> { authRequest, clientName } | null: the connect page's authorize request as its form carried it, checked
+// as the passphrase form's is (an allowed redirect) and its client registered — before Google is asked anything (the provider's
+// completeAuthorization checks the redirect against the client's registration once more, at the end)
+export async function connectRequest(env, raw) {
+  let authRequest; try { authRequest = JSON.parse(atob(String(raw || ""))); } catch { return null; }
+  if (!authRequest || typeof authRequest !== "object" || !redirectAllowed(authRequest.redirectUri) || typeof authRequest.clientId !== "string") return null;
+  const client = await oauthApi(env).lookupClient(authRequest.clientId).catch(() => null);
+  return client ? { authRequest, clientName: client.clientName } : null;
+}
+// connectByGoogle(env, { authRequest, clientName, signin, origin }) -> the connect page's answer once Google proved the account
+// (src/accounts.js googleSignIn): the same rules as the passphrase's POST below — no seat, only seats waiting for a yes, several
+// orgs (the choice, googleChoice) — then the authorization completed as that account (grantPropsOf) and the client sent its code
+export async function connectByGoogle(env, { authRequest, clientName, signin, origin = "" }) {
+  const req = { authRequest, clientName, origin };
+  if (signin.verdict === "no_seat_here") return signInForm(env, req, NO_SEAT_HERE_WORDS);
+  if (signin.verdict === "ok" && signin.pendingOnly) { await countSignIn(env, signin, true); return signInForm(env, req, PENDING_ONLY_WORDS); }
+  if (signin.verdict === "ok" && (signin.ask || signin.waits || signin.pickMissed)) { await countSignIn(env, signin, true); return googleChoice(env, req, signin.orgs || []); }
+  const person = signin.verdict === "ok" ? signin.seat : null;
+  await countSignIn(env, signin, !!person);
+  if (!person) return signInForm(env, req, "That Google account did not sign in.");
+  const grant = await grantPropsOf(signin, authRequest.scope, clientName);
+  let done;
+  try { done = await oauthApi(env).completeAuthorization({ request: authRequest, userId: person.id, scope: authRequest.scope,
+    metadata: { name: person.name, connectedAt: new Date().toISOString(), grant: grantKindOf(grant) }, props: grant }); }
+  catch { return errorPage(env, REDIRECT_REFUSED, 400); }   // the redirect is not one the client registered: no code goes anywhere
+  return Response.redirect(done.redirectTo, 302);
 }
 
 async function errorPage(env, msg, status) {
@@ -141,7 +195,7 @@ export const oauthDefaultHandler = {
         return errorPage(env, "That connection request is not valid.", 400);
       }
       if (!redirectAllowed(authRequest.redirectUri)) return errorPage(env, REDIRECT_REFUSED, 400);
-      return signInForm(env, { authRequest, clientName: client?.clientName }, null);
+      return signInForm(env, { authRequest, clientName: client?.clientName, origin: url.origin }, null);
     }
 
     if (request.method === "POST") {
@@ -160,19 +214,19 @@ export const oauthDefaultHandler = {
       // the review's A1: the org a connection acts in is the person's own choice — an account in several orgs is asked (the form
       // comes back with its orgs; `org` names the one chosen), never given its oldest seat
       const signin = await passphraseSignIn(env, url, { email: form.get("email"), password: form.get("password"), pick: String(form.get("org") || ""), client: await clientOf(request) });   // 8.3a: the lockout's key
-      if (signin.verdict === "locked") return signInForm(env, { authRequest, clientName }, "Too many attempts. Try again in 15 minutes.");
-      if (signin.verdict === "no_seat_here") return signInForm(env, { authRequest, clientName }, NO_SEAT_HERE_WORDS);
-      if (signin.verdict === "ok" && signin.pendingOnly) { await countSignIn(env, signin, true); return signInForm(env, { authRequest, clientName }, PENDING_ONLY_WORDS); }
+      if (signin.verdict === "locked") return signInForm(env, { authRequest, clientName, origin: url.origin }, "Too many attempts. Try again in 15 minutes.");
+      if (signin.verdict === "no_seat_here") return signInForm(env, { authRequest, clientName, origin: url.origin }, NO_SEAT_HERE_WORDS);
+      if (signin.verdict === "ok" && signin.pendingOnly) { await countSignIn(env, signin, true); return signInForm(env, { authRequest, clientName, origin: url.origin }, PENDING_ONLY_WORDS); }
       // the owner's ruling (2026-10-09, with the squat residual's close): a seat WAITING for the holder's yes makes this
       // form ask too — the connection never defaults into the one active seat while another waits (signin.waits, as the
       // JSON sign-in's 409 choose_org; naming the org still connects)
       if (signin.verdict === "ok" && (signin.ask || signin.pickMissed || signin.waits)) {
         await countSignIn(env, signin, true);   // the passphrase was right: nothing is granted until the person names the org
-        return signInForm(env, { authRequest, clientName }, "", { email: signin.email, orgs: signin.orgs || [] });
+        return signInForm(env, { authRequest, clientName, origin: url.origin }, "", { email: signin.email, orgs: signin.orgs || [] });
       }
       const person = signin.verdict === "ok" ? signin.seat : null;
       await countSignIn(env, signin, !!person);   // the org the address serves, on the account (sprint 7: the org in the address, 7.4)
-      if (!person) return signInForm(env, { authRequest, clientName }, "That email and passphrase do not match.");
+      if (!person) return signInForm(env, { authRequest, clientName, origin: url.origin }, "That email and passphrase do not match.");
 
       // props travel encrypted inside the access token and land on every API request.
       // The id — the person is re-read from D1 each time, so a role change takes effect at once —

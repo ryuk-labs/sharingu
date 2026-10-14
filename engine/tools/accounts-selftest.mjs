@@ -792,7 +792,8 @@ const PRE070 = (() => {
   // migrate-081 (sprint 21, 21.4a) came after: its account tables and their indexes out too
   cut(/-- migrate-081: a forgotten passphrase's single-use link[^\n]*\nCREATE TABLE IF NOT EXISTS account_resets \([\s\S]*?\n\);\n/, "migrate-081's account_resets");
   cut(/-- migrate-081: an account's browser session[^\n]*\nCREATE TABLE IF NOT EXISTS account_sessions \([\s\S]*?\n\);\n/, "migrate-081's account_sessions");
-  for (const ix of ["idx_account_resets_account", "idx_account_sessions_account"]) cut(new RegExp(`CREATE (?:UNIQUE )?INDEX IF NOT EXISTS ${ix} [^;]*;\\n`), ix);
+  // (21.4c) and the accounts' Google subject's index (the column goes with the accounts table above)
+  for (const ix of ["idx_account_resets_account", "idx_account_sessions_account", "idx_accounts_google_sub"]) cut(new RegExp(`CREATE (?:UNIQUE )?INDEX IF NOT EXISTS ${ix} [^;]*;\\n`), ix);
   // and (21.4b) access_requests' account link (the person's path: the account the verification made)
   cut(/\n  account_id      TEXT,\n  account_at      TEXT,/, "migrate-081's access_requests.account_id and account_at");
   cut(/-- migrate-070\.sql \(sprint 7, 7\.1\)[\s\S]*$/, "migrate-070's triggers");

@@ -110,6 +110,17 @@
 //   clear-openai-challenge
 //                       removes it: the route answers its ordinary 404 again. Nothing stored: refused (exit 1).
 //                       Live KV reads may lag a write by up to a minute (Cloudflare's KV), so the portal's check waits that long.
+// SPRINT 21, 21.4c — the platform's Google OAuth client (src/google.js): ONE per deployment, never an org's, under one key of the same
+// KV namespace (src/google.js GOOGLE_CLIENT_KEY). The worker reads no env secret: this is the only writer.
+//   set-google-client --file <path>
+//                       reads the file's two lines GOOGLE_CLIENT_ID=… and GOOGLE_CLIENT_SECRET=… (an `export ` and quotes are allowed)
+//                       — only from a file no one but its owner may read (mode 600: refused otherwise, nothing read) — checks both
+//                       (src/google.js clientProblem: a Google client id, a secret of printable characters) and stores them. It prints
+//                       "stored" and the client id's last characters, NEVER the secret (nor the id whole, nor any value in a refusal).
+//                       A client stored before is replaced. Every page then shows Continue with Google on the registered origins
+//                       (live KV: within a minute).
+//   clear-google-client
+//                       removes it: no Google button anywhere, every Google door refused. Nothing stored: refused (exit 1).
 // THE SHIP'S OWN PLAN (8.5's must-close, 8.2f's find): `suite` — SUITE_PLAN below, big honest numbers sized to the suites (the
 // cross-org suite's throwaway orgs and the walk), its own row: tools/attack-xorg.mjs writes it before it restores its throwaway
 // orgs and puts them on it, and removes it with them unless an org still rides it (the suites' org on live, raised ONCE by this
@@ -126,7 +137,7 @@
 // deployment's credentials file, sourced first (nothing here prints either).
 // Exit: 0 done · 1 refused · 2 usage.
 import { randomBytes, randomUUID } from "node:crypto";
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -138,6 +149,7 @@ import { readConfig, liveD1 } from "./org-undo.mjs";
 import { sendMail, captureMailer } from "../src/email.js";   // sprint 21, 21.4a: THE send, under the worker's own cap
 import { inMail } from "../src/mails.js";
 import { OPENAI_CHALLENGE_KEY, challengeTokenProblem } from "../src/wellknown.js";
+import { GOOGLE_CLIENT_KEY, clientProblem } from "../src/google.js";   // sprint 21, 21.4c: the platform's Google client
 
 const ENGINE = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const DEFAULT_DAYS = 7, MAX_DAYS = 30;
@@ -474,6 +486,36 @@ export async function clearChallenge(KV) {
   return { before: String(before) };
 }
 
+// ---- 21.4c · the platform's Google OAuth client (KV: the deployment's OAUTH_KV, one key) ----
+// readClientFile(path) -> { client: { client_id, client_secret } } | { refused }: the file's two lines, from a file only its owner may
+// read; a refusal names the file and the rule, never a value
+export function readClientFile(path) {
+  let st; try { st = statSync(path); } catch { return { refused: `${path}: no such file` }; }
+  if (!st.isFile()) return { refused: `${path}: not a file` };
+  if (st.mode & 0o077) return { refused: `${path} may be read by others (mode ${(st.mode & 0o777).toString(8)}): chmod 600 it first` };
+  const vals = {};
+  for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
+    const m = /^\s*(?:export\s+)?(GOOGLE_CLIENT_ID|GOOGLE_CLIENT_SECRET)\s*=\s*(.*?)\s*$/.exec(line);
+    if (m) vals[m[1]] = m[2].replace(/^(["'])(.*)\1$/, "$2");
+  }
+  const client = { client_id: vals.GOOGLE_CLIENT_ID || "", client_secret: vals.GOOGLE_CLIENT_SECRET || "" };
+  const bad = clientProblem(client);
+  return bad ? { refused: `${path}: ${bad}` } : { client };
+}
+// clientTail(id) -> the client id's last characters, as this tool prints it (never the id whole)
+export const clientTail = (id) => `…${String(id).replace(/\.apps\.googleusercontent\.com$/, "").slice(-6)}`;
+// setGoogleClient(KV, client) -> { replaced }; clearGoogleClient(KV) -> {} | { refused }
+export async function setGoogleClient(KV, client) {
+  const before = await KV.get(GOOGLE_CLIENT_KEY);
+  await KV.put(GOOGLE_CLIENT_KEY, JSON.stringify({ client_id: client.client_id, client_secret: client.client_secret }));
+  return { replaced: before != null };
+}
+export async function clearGoogleClient(KV) {
+  if ((await KV.get(GOOGLE_CLIENT_KEY)) == null) return { refused: "no Google client is stored: nothing to clear" };
+  await KV.delete(GOOGLE_CLIENT_KEY);
+  return {};
+}
+
 // ---- the run records (8.5: every org write, BEFORE it acts) ----
 // openRecord(dir, cmd, fields) -> { path, done(fields) }: the record written before the write, completed after it
 export function openRecord(dir, cmd, fields) {
@@ -568,15 +610,16 @@ export function orgLine(o) {
 }
 
 // ---- the CLI ----
-export const USAGE = "usage: node tools/operator.mjs <allow|list|revoke|remove-account|requests|decline|list-orgs|set-plan|raise|suspend|unsuspend|set-openai-challenge|clear-openai-challenge> (--local <persist dir> --config <wrangler config> | --live --config <wrangler config> --confirm-live <D1 database name>) " +
+export const USAGE = "usage: node tools/operator.mjs <allow|list|revoke|remove-account|requests|decline|list-orgs|set-plan|raise|suspend|unsuspend|set-openai-challenge|clear-openai-challenge|set-google-client|clear-google-client> (--local <persist dir> --config <wrangler config> | --live --config <wrangler config> --confirm-live <D1 database name>) " +
   "allow --email <e> [--days N] [--reset] [--beyond-cap] · allow --request <id> [--beyond-cap] [--origin <url>] · list [--email <e>] [--json] · revoke --email <e> · remove-account --email <e> · requests · decline --request <id> · list-orgs [--json] · " +
   "set-plan --org <id|suites> --plan <name> · raise --org <id|suites> --plan <name> [--people N] [--projects N] [--items-month N] [--calls-day N] [--burst-minute N] [--storage-bytes N] · " +
-  "suspend --org <id> [--really] · unsuspend --org <id> · set-openai-challenge --token <t> · clear-openai-challenge";
+  "suspend --org <id> [--really] · unsuspend --org <id> · set-openai-challenge --token <t> · clear-openai-challenge · set-google-client --file <path> · clear-google-client";
 const EMAIL_COMMANDS = ["allow", "list", "revoke", "remove-account"];
 const ORG_COMMANDS = ["set-plan", "raise", "suspend", "unsuspend"];
-// 11.3: the platform's own writes, on the deployment's KV (never an org's row)
+// 11.3: the platform's own writes, on the deployment's KV (never an org's row); 21.4c: its Google client too
 const CHALLENGE_COMMANDS = ["set-openai-challenge", "clear-openai-challenge"];
-const COMMANDS = [...EMAIL_COMMANDS, "requests", "decline", "list-orgs", ...ORG_COMMANDS, ...CHALLENGE_COMMANDS];
+const GOOGLE_COMMANDS = ["set-google-client", "clear-google-client"];
+const COMMANDS = [...EMAIL_COMMANDS, "requests", "decline", "list-orgs", ...ORG_COMMANDS, ...CHALLENGE_COMMANDS, ...GOOGLE_COMMANDS];
 export const RECORD_DIR = join(ENGINE, ".runs", "operator");
 // run(argv, { open, say, err, recordDir }) -> exit code. open(cfg, { local, live, kv }) -> a backend { DB, database, close }, or
 // with kv (the challenge commands) { KV, database, close } (the selftest passes its own); say prints to this terminal (the code
@@ -599,6 +642,7 @@ export async function run(argv, { open, say = (s) => console.log(s), err = (s) =
   if (ORG_COMMANDS.includes(cmd) && !suitesOrg && (!Number.isSafeInteger(org) || org < 1)) { err(USAGE); return 2; }
   if ((cmd === "set-plan" || cmd === "raise") && !flag("--plan")) { err(USAGE); return 2; }
   if (cmd === "set-openai-challenge" && !argv.includes("--token")) { err(USAGE); return 2; }
+  if (cmd === "set-google-client" && !flag("--file")) { err(USAGE); return 2; }
   const limits = {};
   if (cmd === "raise") {
     for (const [f, col] of Object.entries(LIMIT_FLAGS)) {
@@ -624,6 +668,24 @@ export async function run(argv, { open, say = (s) => console.log(s), err = (s) =
     return 1;
   }
   if (EMAIL_COMMANDS.includes(cmd) && cmd !== "list" && !byRequest && emailProblem(flag("--email"))) { err(`refused: ${JSON.stringify(flag("--email"))}: ${emailProblem(flag("--email"))}`); return 1; }
+  if (GOOGLE_COMMANDS.includes(cmd)) {
+    // the file read and the client checked, then the namespace, before anything is opened; the secret is printed nowhere
+    const file = cmd === "set-google-client" ? readClientFile(flag("--file")) : null;
+    if (file && file.refused) { err(`refused (nothing written): ${file.refused}`); return 1; }
+    if (!(cfg.kv_namespaces || []).some((b) => b.binding === "OAUTH_KV")) { err(`${cfgPath}: no OAUTH_KV namespace (the deployment's KV, where the client lies)`); return 2; }
+    const kb = await (open || defaultOpen)(cfg, { local, live, kv: true });
+    try {
+      if (file) {
+        const r = await setGoogleClient(kb.KV, file.client);
+        say(`✓ stored: the Google client ${clientTail(file.client.client_id)} on ${kb.database}${r.replaced ? " (replacing the one before)" : ""}${live ? " (live KV: within a minute)" : ""}`);
+        return 0;
+      }
+      const r = await clearGoogleClient(kb.KV);
+      if (r.refused) { err(`refused (nothing written): ${r.refused}`); return 1; }
+      say(`✓ the Google client cleared from ${kb.database}: no Continue with Google anywhere`);
+      return 0;
+    } finally { await kb.close(); }
+  }
   if (CHALLENGE_COMMANDS.includes(cmd)) {
     // the token's form, then the namespace, before anything is opened
     const token = flag("--token");

@@ -3,9 +3,9 @@
 **As of 2026-10-13: sprint 20 is LIVE (the write tools file "a preview the person has seen and agreed to"); plugin
 0.1.16 clears the Claude directory's checks; the OpenAI submission is in review. Sprint 21 (onboarding) is OPEN on
 branch `sprint-21`, sliced from the owner's MCQs (`SPRINTS.md` sprint 21): 21.0–21.3 DONE and 21.P's E1 (the journey
-polish, engine side; the site's polish held on its branch `journey-polish`); E2 (after the org: signed in at once, Connect
-first) building; then 21.4 (the account flow: verify once by Cloudflare Email Service under a 2,900-in-31-days cap, sign
-in with a passphrase, a reset link; the data; Google, waiting on the owner's OAuth client). migrate-081 on the branch, not live. The ship's preflight for 081: `check-org-names --slugs` on live. In parallel, the owner's Claude side (the
+polish, engine side; the site's polish held on its branch `journey-polish`); E2 DONE; 21.4a (the account flow) and 21.4b
+(the data) DONE; 21.4c (Google sign-in) building; then the sprint end (`SPRINTS.md`: the fix list, the gate, the suites,
+ONE review with an adversarial read of every auth change, one PR, the ship with the owner's OK, then the site). migrate-081 on the branch, not live. The ship's preflight for 081: `check-org-names --slugs` on live. In parallel, the owner's Claude side (the
 connector and plugin forms, after P1–P3 in the Claude app).**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
@@ -142,6 +142,10 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   not catch the request a redirect leads to, and in 21.P a few read-only GETs reached live (nothing written). Map the
   name and refuse every other host: Chromium `--host-resolver-rules=MAP agent.sharingu.xyz 127.0.0.1:<port>, MAP *
   ~NOTFOUND`, with wrangler `--local-protocol https --upstream-protocol https`.
+  AND Playwright's `ctx.request` / `page.request` resolve with node's own DNS, not the browser's rules: in 21.4c four
+  `POST /oauth/register` reached live and left client records in OAUTH_KV (deleted 2026-10-14 with the owner's OK, after a
+  read-only check that no grant named them). Send every request from inside the page (`page.evaluate(fetch)`), never the
+  request context, when the public name is mapped.
 - Claude can NEVER be granted computer-use control of Claude's own app (a platform rule): a Claude Desktop take is the
   owner's to record; the session cuts it.
 - A macOS screen recording is variable-frame-rate: seeking into it lands 1–5 s off, unevenly. Transcode to constant

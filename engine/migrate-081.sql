@@ -1,9 +1,9 @@
 -- migrate-081.sql — request access, the account flow and the data (sprint 21, slices 21.1, 21.4a and 21.4b; docs/plan/SPRINTS.md 21.1,
 -- 21.4; the owner's MCQs of 2026-10-13 and 2026-10-14: request access is a worker page writing D1, with a profile and a passphrase;
 -- ONE verification email; sign in with the passphrase; a reset link; every email under one cap; the data collection "approved as
--- shown"). UNSHIPPED until sprint 21's ship: edited in place.
--- EXPAND ONLY (PLATFORM §5): six tables and their indexes added, and migrate-072's two slug triggers re-created with one more
--- reserved name; nothing renamed, no column or table dropped; the old code names none of it.
+-- shown"; 21.4c, Google sign-in). UNSHIPPED until sprint 21's ship: edited in place.
+-- EXPAND ONLY (PLATFORM §5): six tables and their indexes added, one column on accounts and its index, and migrate-072's two slug
+-- triggers re-created with one more reserved name; nothing renamed, no column or table dropped; the old code names none of it.
 --   1 · access_requests: ONE person's request for a place in the beta (a PLATFORM row: no org, as signup_codes). The profile as the
 --       person typed it, normalised at the door (src/requestaccess.js readRequest): name, email (lower-cased and trimmed, as
 --       accounts.email), company, role and team_size required; website, linkedin, x and github (each an http(s) address the door
@@ -49,7 +49,9 @@
 --       before their org): the same cookie as an org session (__Host-ar_session), its token's hash only, its own table, so NO
 --       reader of tokens (an org's address, /mcp, a bearer, the OAuth form) can ever find it — it reaches only the root's account
 --       pages (src/index.js /account, /orgs/new's prefill) and sign-out (src/accounts.js accountSessionOf). Revoked by sign-out
---       and by a reset; idx_account_sessions_account ends every one of an account at once.
+--       and by a reset; idx_account_sessions_account ends every one of an account at once. (21.4c) proven_how and proven_at: how
+--       the session's mint proved its account (passphrase, verify, google) and when — a session Google proved less than 10 minutes
+--       ago is the step-up that creates the org without a passphrase (src/accounts.js accountStepUp).
 --   6 · account_resets: a forgotten passphrase's single-use link (POST /account/forgot): its token's hash, its account, 30 minutes
 --       (expires_at), its spend (used_at); idx_account_resets_account ends an account's other open links with the one used.
 --   7 · mail_days: THE CAP (the owner, 2026-10-14: stay inside Cloudflare Email Service's 3,000 a month): the worker's and the
@@ -64,17 +66,30 @@
 --       ais and places (JSON arrays of the form's values), first_want and people (one value each, or none). Written ONLY in the batch
 --       that creates the org (src/orgs.js createOrg, {org} the founding id); read by its founder's org nowhere yet and by the
 --       operator page (src/operatorread.js: org 1's admins). The values are src/orgprofile.js PRODUCT_CHOICES' keys.
+--   10 · accounts.google_sub (21.4c, Google sign-in: src/accounts.js GOOGLE SIGN-IN): the Google account's subject (the id_token's
+--       `sub`) linked on the account's first Google sign-in, or made with it by a join through Google; NULL: none. Unique
+--       (idx_accounts_google_sub, the linked ones only): one Google account signs in one account, and once linked a different
+--       Google account is refused for it. A linked subject is the holder standing, as a passphrase is (a seat another org adds for
+--       the email waits for its yes; an invite link sets nothing on the account).
 -- WHO WRITES IT: the worker's public doors (POST /request-access, /account/verify, /account/resend, /account/forgot,
 -- /account/reset: src/requestaccess.js, src/accounts.js, src/email.js), POST /orgs (the org's profile and its request's link), the
 -- operator page's Approve and Decline (org 1's admins: src/operatorread.js), the cron's clearing (src/cron.js) and the operator's
 -- allow --request and decline --request (tools/operator.mjs: the approval and its one "You're in" email, through the same cap).
--- WRITE COST on live: nothing (six empty tables and their indexes; the triggers fire only on an org insert or an update to a NULL slug).
+-- WRITE COST on live: nothing (six empty tables and their indexes; the column NULL on every account and its partial index empty; the
+-- triggers fire only on an org insert or an update to a NULL slug).
 -- ORDER: BEFORE the code (the new code writes these tables; the old code names none of them).
 -- WRANGLER'S SPLITTER (engine/CLAUDE.md scars): the triggers as migrate-072 wrote them (no quoted two dashes, no "END)").
--- Re-runnable: IF NOT EXISTS, and each trigger dropped IF EXISTS before it is made again — a replay changes nothing.
+-- A replay is refused at its FIRST statement, 10's one ALTER (SQLite has no ADD COLUMN IF NOT EXISTS: "duplicate column name", the
+-- already-applied shape the dry run's chain skips, tools/lib-migrate-chain.sh, as it skips 079 and 080), before anything else runs;
+-- every other statement is IF NOT EXISTS, and each trigger dropped IF EXISTS before it is made again.
 -- THE UNDO: the code's rollback alone (the old code reads nothing of it); the tables can stay, or be dropped (a Time Travel bookmark
 -- first) once no request, session or count is wanted; the triggers' longer list harms no old code (one more name an operator's
 -- org 1 or suites' org never takes plain).
+
+-- 10 · an account's Google subject (21.4c), unique among the linked ones: the one ALTER, FIRST (a replay is refused right here)
+ALTER TABLE accounts ADD COLUMN google_sub TEXT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_google_sub ON accounts(google_sub) WHERE google_sub IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS access_requests (
   id             TEXT PRIMARY KEY,
@@ -136,7 +151,9 @@ CREATE TABLE IF NOT EXISTS account_sessions (
   device     TEXT,
   created_at TEXT NOT NULL,
   expires_at TEXT NOT NULL,
-  revoked    INTEGER NOT NULL DEFAULT 0
+  revoked    INTEGER NOT NULL DEFAULT 0,
+  proven_how TEXT,
+  proven_at  TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_account_sessions_account ON account_sessions(account_id);

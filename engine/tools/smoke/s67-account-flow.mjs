@@ -142,7 +142,8 @@ smoke("account flow · THE CAP: at 2,900 in the window a join answers the same, 
     const alerts = (await mails({ to: "ryuk@ryuklabs.io" })).filter((m) => /paused/i.test(m.subject));
     expect(shape(a) === shape(ref) && shape(b) === shape(ref) && rows(`SELECT 1 FROM access_requests WHERE email IN (${q(c1)}, ${q(c2)})`).length === 0 && toThem.length === 0,
       () => `at the cap: ${shape(a)} vs ${shape(ref)}; ${toThem.length} emails to them`);
-    expect(sent.status === 200 && /data-screen="account-paused"/.test(sent.raw) && /Google/.test(sent.raw) && alerts.length === 1 && alerts[0].cc === "acie@ryuklabs.io",
+    // (21.4c) no Google client is stored on the smoke's worker yet (s69 stores one): no button, "try again in a few days"
+    expect(sent.status === 200 && /data-screen="account-paused"/.test(sent.raw) && /Try again in a few days/.test(sent.raw) && !/data-region="google"/.test(sent.raw) && alerts.length === 1 && alerts[0].cc === "acie@ryuklabs.io",
       () => `the paused page ${sent.status}; ${alerts.length} alerts`);
     return `two joins at the cap: the same 303, nothing filed or sent; paused said; ${alerts.length} alert to the team`;
   } finally {

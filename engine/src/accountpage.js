@@ -1,18 +1,21 @@
 // src/accountpage.js — the account flow's pages (sprint 21, slice 21.4a; the owner's MCQ of 2026-10-14; src/accounts.js THE ACCOUNT
 // FLOW), each a scene of the front door (src/login.js authPage: both worlds, the one accent, U-chan's poses), never a second skin.
 // No statement here: the routes (src/index.js /account/…) read and hand each page what it shows.
-//   renderSent({ brand, paused, email })      check your inbox: POST /request-access's and a resend's ONE answer, whatever the email
-//                                             (new, already asked, an account's, the honeypot's) — or, at the cap, email checks are
-//                                             paused (Google is offered by its words: 21.4c builds it); the resend beside it
+//   renderSent({ brand, paused, email, google })  check your inbox: POST /request-access's and a resend's ONE answer, whatever the
+//                                             email (new, already asked, an account's, the honeypot's) — or, at the cap, email checks
+//                                             are paused (21.4c: Continue with Google beside it when a client is stored); the resend
 //   renderVerify({ brand, token, email, error })  the verification link's page: the passphrase the join chose, then Verify (POST)
 //   renderLinkDead({ brand, kind })           a link that is expired, used or none (kind verify: the resend; reset: a new link)
 //   renderResend({ brand, error, email })     the resend's own form (the sign-in's "Didn't get the email? Resend")
 //   renderForgot({ brand, error })            forgot your passphrase: the email
-//   renderForgotSent({ brand, paused })       its ONE answer, whether or not an account holds the email
+//   renderForgotSent({ brand, paused, google })  its ONE answer, whether or not an account holds the email (paused: Google too)
 //   renderReset({ brand, token, error })      a reset link's page: the new passphrase twice
 //   renderAccountStatus({ brand, request, place, count, standing })  the signed-in account's own page (an ACCOUNT session):
 //                                             in line (its place, the beta's count, the track), its place open (Create your org),
 //                                             closed, or its org made (sign in to it)
+//   renderNoAccount({ brand, email })         (21.4c) Google proved an email no account holds: Join the beta with it (the form
+//                                             comes filled in, the email locked)
+//   renderGoogleRefused({ brand, why })       (21.4c) Google's sign-in did not complete: ONE plain page, nothing signed in
 import { esc, errorState, uchanPose } from "./ui.js";
 import { DEFAULT_BRAND } from "./tenant.js";
 import { authPage, SITE_URL, JOIN_WORDS } from "./login.js";
@@ -21,11 +24,15 @@ import { REQUEST_PATH, VERIFY_PATH, RESEND_PATH, FORGOT_PATH, RESET_PATH } from 
 import { WALKTHROUGH_PATH } from "./walkthrough.js";
 import { VERIFY_HOURS, RESET_MINUTES } from "./mails.js";
 import { ACCOUNT_MIN_PASSPHRASE } from "./secrets.js";
+import { googleLink, GOOGLE_CSS } from "./googlepage.js";   // sprint 21, 21.4c
 
 const walkLink = (cls = "quiet") => `<a class="${cls}" href="${WALKTHROUGH_PATH}" data-walkthrough>See the walkthrough</a>`;
 const art = (pose) => `<div class="art-pose" data-art="${esc(pose)}">${uchanPose({ pose, size: 240 })}</div>`;
-// the words a page says at the cap (THE CAP, src/email.js): no email went out; Google is the other way in (21.4c)
-export const PAUSED_WORDS = "We send a set number of emails each month, and that number is reached for now: no email went out. Signing in with Google is coming as the other way in; until then, try again in a few days.";
+// the words a page says at the cap (THE CAP, src/email.js): no email went out; Google is the other way in (21.4c), when it is offered
+export const PAUSED_WORDS = "We send a set number of emails each month, and that number is reached for now: no email went out.";
+const pausedWords = (google) => `${PAUSED_WORDS} ${google ? "Continue with Google instead: Google has checked your email already." : "Try again in a few days."}`;
+// the Google button under a solo page's actions (paused: the other way in)
+const googleWrap = (intent) => `<div class="google-wrap">${googleLink(intent)}</div>`;
 // the resend's small form (an email, one quiet button): on the sent page and a dead verification link's
 const resendForm = (email = "", primary = false) => `<form method="POST" action="${RESEND_PATH}" class="resend" data-region="resend">
       <input type="hidden" name="web" value="1">
@@ -44,13 +51,14 @@ const ACCOUNT_CSS = `
 `;
 
 export function renderSent(opts) {
-  const { brand = DEFAULT_BRAND, paused = false, email = "" } = opts || {};
+  const { brand = DEFAULT_BRAND, paused = false, email = "", google = false } = opts || {};
   if (paused) {
     const body = `<div class="done" data-screen="account-paused" data-region="account-paused">
-      <p class="done-why">${esc(PAUSED_WORDS)}</p>
+      <p class="done-why">${esc(pausedWords(google))}</p>
       <div class="acts">${walkLink("primary")}<a class="quiet" href="${SITE_URL}">Visit sharingu.xyz</a></div>
+      ${google ? googleWrap("join") : ""}
     </div>`;
-    return authPage({ ...brandOf(brand, "Email checks paused"), lede: "Email checks are paused.", solo: { pose: "inspect", eyebrow: "Your request" }, body, css: ACCOUNT_CSS });
+    return authPage({ ...brandOf(brand, "Email checks paused"), lede: "Email checks are paused.", solo: { pose: "inspect", eyebrow: "Your request" }, body, css: ACCOUNT_CSS + (google ? GOOGLE_CSS : "") });
   }
   const body = `<div class="done" data-screen="account-sent" data-region="account-sent">
       <p class="done-why">We sent an email to the address you gave. Open its link within ${VERIFY_HOURS} hours and type your passphrase: your request then takes its place in line.</p>
@@ -121,13 +129,50 @@ export function renderForgot(opts) {
 }
 
 export function renderForgotSent(opts) {
-  const { brand = DEFAULT_BRAND, paused = false } = opts || {};
+  const { brand = DEFAULT_BRAND, paused = false, google = false } = opts || {};
+  const offer = paused && google;
   const body = `<div class="done" data-screen="${paused ? "account-paused" : "account-forgot-sent"}" data-region="forgot-sent">
-      <p class="done-why">${paused ? esc(PAUSED_WORDS) : `If an account holds that email, a link to choose a new passphrase is on its way. It works once, for ${RESET_MINUTES} minutes.`}</p>
+      <p class="done-why">${paused ? esc(pausedWords(google)) : `If an account holds that email, a link to choose a new passphrase is on its way. It works once, for ${RESET_MINUTES} minutes.`}</p>
       <div class="acts"><a class="primary" href="/login">Back to sign in</a></div>
+      ${offer ? googleWrap("signin") : ""}
     </div>`;
   return authPage({ ...brandOf(brand, paused ? "Email checks paused" : "Check your inbox"), lede: paused ? "Email checks are paused." : "Check your inbox.",
-    solo: { pose: paused ? "inspect" : "verify", eyebrow: "Reset your passphrase" }, body, css: ACCOUNT_CSS });
+    solo: { pose: paused ? "inspect" : "verify", eyebrow: "Reset your passphrase" }, body, css: ACCOUNT_CSS + (offer ? GOOGLE_CSS : "") });
+}
+
+// renderNoAccount — Google proved an email no account holds (21.4c, the sign-in or the connect page): the way in is the join, its
+// form filled in from Google (the email locked: src/requestpage.js); Join the beta is the page's one primary
+export function renderNoAccount(opts) {
+  const { brand = DEFAULT_BRAND, email = "" } = opts || {};
+  const body = `<div class="done" data-screen="google-no-account" data-region="google-no-account">
+      <p class="done-why">No sharingu account holds <b data-google-email>${esc(email)}</b>. Join the beta with it: Google has checked the email, so no email comes to verify it.</p>
+      <div class="acts"><a class="primary" href="${REQUEST_PATH}" data-region="request-access-link">${JOIN_WORDS}</a><a class="quiet" href="/login">Back to sign in</a></div>
+    </div>`;
+  return authPage({ ...brandOf(brand, "No account yet"), lede: "No account yet.", solo: { pose: "comment", eyebrow: "Continue with Google" }, body, css: ACCOUNT_CSS });
+}
+// GOOGLE_REFUSED_WORDS — why Google's sign-in did not complete, one sentence each (src/index.js /auth/google/…: the reason's key);
+// any other reason is "failed"
+export const GOOGLE_REFUSED_WORDS = {
+  off: "Google sign-in is not available on this address.",
+  cancelled: "The Google sign-in was cancelled.",
+  expired: "That Google sign-in expired or was used already. Start again from the sign-in page.",
+  failed: "Google could not confirm who you are. Start again from the sign-in page.",
+  unverified: "Google has not verified that account's email, so it cannot sign in here.",
+  email_form: "That Google account's email is not one plain address, so sharingu cannot take it.",
+  other_sub: "That sharingu account signs in with a different Google account. Use that one, or your passphrase.",
+  linked_elsewhere: "That Google account signs in to another sharingu account, under its earlier email.",
+  connect: "That connection request expired. Start again from the app you were connecting.",
+  exists: "An account holds that email already: sign in with Google or with its passphrase.",
+};
+// the join form's words when its Google identity is gone (used, past JOIN_MINUTES, another browser): the plain form again
+export const GOOGLE_JOIN_GONE = "Your Google sign-in for this form expired. Continue with Google again, or join with your email and a passphrase.";
+export function renderGoogleRefused(opts) {
+  const { brand = DEFAULT_BRAND, why = "failed" } = opts || {};
+  const body = `<div class="done" data-screen="google-refused" data-region="google-refused" data-why="${esc(GOOGLE_REFUSED_WORDS[why] ? why : "failed")}">
+      <p class="done-why">${esc(GOOGLE_REFUSED_WORDS[why] || GOOGLE_REFUSED_WORDS.failed)} Nothing was signed in.</p>
+      <div class="acts"><a class="primary" href="/login">Back to sign in</a></div>
+    </div>`;
+  return authPage({ ...brandOf(brand, "Google sign-in stopped"), lede: "Google sign-in did not complete.", solo: { pose: "inspect", eyebrow: "Continue with Google" }, body, css: ACCOUNT_CSS });
 }
 
 export function renderReset(opts) {

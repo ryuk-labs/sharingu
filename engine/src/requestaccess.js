@@ -88,9 +88,9 @@ export const TEAM_SIZES = { "1": "Just me", "2-10": "2 to 10", "11-50": "11 to 5
 export const REQUEST_MAX = { name: 100, company: 100, role: 80, email: 254, website: 200, linkedin: 200, x: 200, github: 200, ai_tools: 200, use_case: 280 };
 // the honeypot: a field no person sees (src/requestpage.js hides it); a request that fills it is answered as any other and dropped
 export const REQUEST_TRAP = "trap";
-// the fields a form or a JSON body sends (web: the form's marker)
+// the fields a form or a JSON body sends (web: the form's marker; google: the form Google filled in, sprint 21, 21.4c)
 export const REQUEST_FIELDS = ["name", "email", "company", "role", "team_size", "website", "linkedin", "x", "github", "ai_tools", "use_case", "password", "confirm",
-  ...CONSENT_BOXES.map(([k]) => k), "from", REQUEST_TRAP, "web"];
+  ...CONSENT_BOXES.map(([k]) => k), "from", REQUEST_TRAP, "web", "google"];
 
 // fold(v) -> the text with every run of spaces and control characters one space, trimmed
 const fold = (v) => String(v == null ? "" : v).replace(/[\s\u0000-\u001f\u007f]+/g, " ").trim();

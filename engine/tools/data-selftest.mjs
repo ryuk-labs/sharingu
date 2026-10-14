@@ -381,7 +381,7 @@ const MUTANTS = [
   { name: "the verification names no account", file: "src/accounts.js",
     from: "    db(env).prepare(VERIFY_LINK_SQL).bind(out.email, at, row.id),\n", to: "", red: ["D4"] },
   { name: "the web form's product step not required", file: "src/index.js",
-    from: "const step = readProductStep(raw, { required: isWeb });", to: "const step = readProductStep(raw, { required: false });", red: ["D6"] },
+    from: "const product = readProductStep(raw, { required: isWeb });", to: "const product = readProductStep(raw, { required: false });", red: ["D6"] },
   { name: "the product profile never written", file: "src/orgs.js",
     from: "        ...(profile ? [db(fe).prepare(FOUND_PROFILE_SQL)", to: "        ...(false ? [db(fe).prepare(FOUND_PROFILE_SQL)", red: ["D6"] },
   { name: "the operator page open to any org's admin", file: "src/operatorread.js",

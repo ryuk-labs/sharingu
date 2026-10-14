@@ -1449,6 +1449,14 @@
    "meaning": "POST /account/verify with a live link but a passphrase that is not the one the join chose (sprint 21, 21.4a): the mailbox alone does not verify a request, so a stranger's join for an address cannot be completed by its owner's click. The attempt counts in the email's lockout; the request stays unverified.",
    "nextAction": "Type the passphrase chosen when asking to join (8 failures in 15 minutes are 429 too_many_attempts)."
   },
+  "google_join_expired": {
+   "meaning": "POST /request-access with google=1 (sprint 21, 21.4c: the form Google filled in) when this browser holds no live Google identity for it: the join ticket was used, is past its 30 minutes, or was made in another browser. HTTP 410; nothing written.",
+   "nextAction": "Continue with Google again (GET /auth/google/start?intent=join), or join with your email and a passphrase (POST /request-access without google)."
+  },
+  "account_exists": {
+   "meaning": "POST /request-access with google=1 (sprint 21, 21.4c) for an email an account holds by now (or a Google account another account is linked to): nothing was filed. HTTP 409.",
+   "nextAction": "Sign in instead: Continue with Google (GET /auth/google/start?intent=signin) or POST /login with the account's passphrase."
+  },
   "bad_email": {
    "meaning": "POST /account/resend or POST /account/forgot whose email is not one plain ASCII address (sprint 21, 21.4a). Checked before anything is read: it says nothing about which emails hold an account.",
    "nextAction": "Send {email} as one plain address."

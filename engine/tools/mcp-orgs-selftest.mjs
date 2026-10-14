@@ -452,7 +452,7 @@ const MUTANTS = [
   { name: "an account grant acts in another org by default when its own lost the seat (A1)", file: "src/mcp.js",
     from: 'if ((asked == null || asked === "") && !(person && person.grantOrgGone)) return null;', to: 'if (asked == null || asked === "") return null;', red: ["C16"] },
   { name: "a seat's secret makes an ACCOUNT grant (a seat grant switches orgs)", file: "src/oauth.js",
-    from: 'if (signin.session === "account" && signin.account && signin.account.id) {', to: "if (signin.account && signin.account.id) {", red: ["C1", "C5"] },
+    from: 'if (signin.session === "account" && signin.account && signin.account.id && signin.account.pass_hash) {', to: "if (signin.account && signin.account.id) {", red: ["C1", "C5"] },
   { name: "the call's org unchecked", file: "src/mcp.js",
     from: "    const refused = await orgArgRefused(isObj(a) ? a.orgSlug : undefined, person, env);\n    if (refused) return refused;\n", to: "", red: ["C4", "C5", "C6"] },
   { name: "an account grant outlives its passphrase", file: "src/core.js",

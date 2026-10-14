@@ -90,7 +90,10 @@ rl_pick_port() {
 # 127.0.0.1 origin for every same-origin check), and points "main" at an ABSOLUTE path to src/index.js — the generated config lives outside
 # the repo (the org's state dir), so a relative "main" would resolve against the wrong directory; and (sprint 21, 21.4a) writes the one
 # var MAIL_CAPTURE = "kv": a local worker's emails land in its own OAUTH_KV (src/email.js THE LOCAL CAPTURE; tools/mail-capture.mjs
-# reads them), so nothing it runs can reach an email service.
+# reads them), so nothing it runs can reach an email service; and (sprint 21, 21.4c) the var GOOGLE_LOCAL_IDP = the local fake
+# Google's loopback address (127.0.0.1:$R_LOCAL_IDP_PORT, default 8949: tools/fake-google.mjs, which the smoke and the screenshots
+# run there), so a local worker's Google sign-in reaches only that fake (src/google.js endpointsOf), never Google, even
+# with a client stored; production's wrangler.jsonc never names the var (tools/google-selftest.mjs).
 # Idempotent and side-effect-free beyond writing that one file; safe to call on every `up`.
 #
 # R_LOCAL_CONFIG_SRC (optional — the local-first suites, Q9CF32D8F): generate from THAT config instead of the
@@ -105,17 +108,20 @@ rl_gen_config() {
   cfg="$org_dir/wrangler.local.jsonc"
   d1_id="$(rl_det_uuid "r-local:$slug:d1")"
   kv_id="$(rl_det_uuid "r-local:$slug:kv")"
-  python3 - "$tmpl" "$slug" "$d1_id" "$kv_id" "$engine/src/index.js" "$cfg" <<'PY'
+  python3 - "$tmpl" "$slug" "$d1_id" "$kv_id" "$engine/src/index.js" "$cfg" "${R_LOCAL_IDP_PORT:-8949}" <<'PY'
 import sys, re, json
-tmpl, slug, d1, kv, main_abs, out = sys.argv[1:7]
+tmpl, slug, d1, kv, main_abs, out, idp = sys.argv[1:8]
 t = open(tmpl).read()
 t = t.replace("<ORG>", slug).replace("<D1_ID>", d1).replace("<KV_ID>", kv)
 t = re.sub(r',?\s*"triggers":\s*\{[^}]*\}', '', t, count=1)
 t = re.sub(r'\n[ \t]*"routes":\s*\[[^\]]*\],?', '', t, count=1)
 t = re.sub(r'"main":\s*"[^"]*"', '"main": ' + json.dumps(main_abs), t, count=1)
 # THE LOCAL CAPTURE (sprint 21, 21.4a; src/email.js THE MAILER): every local worker writes its emails into its own OAUTH_KV, never out
-if re.search(r'"vars"\s*:\s*\{', t): t = re.sub(r'"vars"\s*:\s*\{', '"vars": { "MAIL_CAPTURE": "kv",', t, count=1)
-else: t = re.sub(r'("main":\s*"[^"]*",)', r'\1\n  "vars": { "MAIL_CAPTURE": "kv" },', t, count=1)
+# THE LOCAL IdP (sprint 21, 21.4c; src/google.js endpointsOf): Google's endpoints on this machine's fake, never Google's own
+# (its loopback host and port, no scheme: the configs' readers strip "//" as a comment)
+local_vars = '"MAIL_CAPTURE": "kv", "GOOGLE_LOCAL_IDP": ' + json.dumps("127.0.0.1:" + str(int(idp)))
+if re.search(r'"vars"\s*:\s*\{', t): t = re.sub(r'"vars"\s*:\s*\{', lambda m: '"vars": { ' + local_vars + ',', t, count=1)
+else: t = re.sub(r'("main":\s*"[^"]*",)', lambda m: m.group(1) + '\n  "vars": { ' + local_vars + ' },', t, count=1)
 t = re.sub(r'"database_id":\s*"[^"]*"', '"database_id": ' + json.dumps(d1), t, count=1)
 t = re.sub(r'("binding":\s*"OAUTH_KV",\s*"id":\s*)"[^"]*"', lambda m: m.group(1) + json.dumps(kv), t, count=1)
 open(out, "w").write(t)

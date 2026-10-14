@@ -49,7 +49,8 @@
 //   R14 · the refusals, nothing written: a cross-site POST to each door 403; the flood filter 429; a bad email 422; under an org's
 //        address /request-access and /account are the one not-here 404; the next join deletes an expired unverified request
 //   R15 · THE CAP at the door: with 2,900 counted in the window a join answers the same 303, files nothing, sends nothing to the
-//        person; /account/sent says email checks are paused; the team's cap alert is captured ONCE however many refusals
+//        person; /account/sent says email checks are paused (no Google client stored: no button; tools/google-selftest.mjs G7 offers
+//        it); the team's cap alert is captured ONCE however many refusals
 // And the MUTATION PROOF: each named mutant (a scratch copy of src/) must turn its case(s) red, by an assertion, never a crash.
 // Exit 1 on any failure. A gate step.
 import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync } from "node:fs";
@@ -457,8 +458,9 @@ const CASES = {
     return [
       [W.shape(a) === W.shape(ref) && W.shape(b) === W.shape(ref) && W.rows().length === 0 && !ms.some((m) => m.to !== "ryuk@ryuklabs.io"),
         `R15 · at the cap a join answers the same 303, files nothing and sends the person nothing (${a.status}, ${W.rows().length} rows)`],
-      [sent.status === 200 && /data-screen="account-paused"/.test(sent.text) && /Email checks are paused/.test(sent.text) && /Google/.test(sent.text) && /data-screen="account-paused"/.test(f.text),
-        `R15 · /account/sent and the forgot answer say email checks are paused, Google offered by its words (${sent.status})`],
+      [sent.status === 200 && /data-screen="account-paused"/.test(sent.text) && /Email checks are paused/.test(sent.text) && /Try again in a few days/.test(sent.text)
+        && !/data-region="google"/.test(sent.text) && /data-screen="account-paused"/.test(f.text),
+        `R15 · /account/sent and the forgot answer say email checks are paused; no Google client stored: no button, try again later (${sent.status})`],
       [ms.length === 1 && ms[0].to === "ryuk@ryuklabs.io" && ms[0].cc === "acie@ryuklabs.io" && /paused/i.test(ms[0].subject) && Number(W.one("SELECT n FROM mail_days WHERE day = ?", windowStartOf(new Date().toISOString())).n) === MAIL_CAP,
         `R15 · the team's cap alert captured ONCE for three refusals (${ms.length}); the count unmoved`],
     ];

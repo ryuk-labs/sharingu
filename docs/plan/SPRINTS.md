@@ -679,7 +679,7 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   under reduced motion); a session still goes to its org, a script still gets 401. Every page before a session stands on
   ONE frame in the website's look (`<body data-shell="front">`, Paper and Ink). The arch client regenerated (its
   selftest had gone red at 21.1). showcase 23/23, wire 428/428, arch 111/111; smoke 345/345 (s64).
-- [ ] **21.4 · Trusted requests, the data, Google sign-in** (the owner's MCQs, 2026-10-14). THE ACCOUNT FLOW (the owner's MCQ,
+- [x] **21.4 · Trusted requests, the data, Google sign-in** (the owner's MCQs, 2026-10-14). THE ACCOUNT FLOW (the owner's MCQ,
   2026-10-14, the standard): Join the beta takes the profile AND a passphrase; ONE verification email (a random single-use
   link, only its hash kept, 24 h, resent at most three a day); an unverified request holds no place and expires after 24 h;
   signing in before verifying is refused with "check your inbox" and a resend; a verified, pending account signs in and
@@ -720,7 +720,15 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   org's own batch), the operator page at `/<org 1>/operator` (org 1's owners only, the one 404 for anyone else; the
   funnel in one statement; Approve under the cap, Decline), the cron's 90-day clearing (the profile emptied; status, dates,
   team size, source and the consent record kept).
-- [ ] **21.4's order** (the main session, 2026-10-14): three builders one after another, each briefed, reviewed, smoked and
+- [x] **21.4c · Google sign-in** — committed with its proof (google 77/77, every node selftest green, smoke 371/371, s69):
+  the OpenID Connect code flow (state, nonce and PKCE in KV for 10 minutes, the state's cookie against login CSRF; the
+  id_token RS256 against Google's cached keys, iss, aud and azp, exp, the nonce, `email_verified`); matched by email, the
+  Google subject linked on first use and pinned; a new person's join with the email locked, filed verified; the connect
+  page; the client in OAUTH_KV by `operator set-google-client` (never env); a fake IdP locally (`GOOGLE_LOCAL_IDP`,
+  loopback only, never in wrangler.jsonc). Creating the org takes the passphrase OR a Google sign-in under 10 minutes old
+  (the owner, 2026-10-14; `account_sessions.proven_how/proven_at`). At the ship: `node tools/operator.mjs
+  set-google-client --file ~/.sharingu/google-oauth.env --live --config wrangler.jsonc --confirm-live ryuklabs-agent-r`.
+- [x] **21.4's order** (the main session, 2026-10-14): three builders one after another, each briefed, reviewed, smoked and
   committed: 21.4a the account flow (verify once, the passphrase, the reset, the cap, the alerts, the emails in the
   website's look with a plain-text twin); 21.4b the data (consent, the source, the request -> account -> org link, the
   product step, the operator page, the 90-day clearing); 21.4c Google sign-in (the code flow with PKCE, state and nonce,

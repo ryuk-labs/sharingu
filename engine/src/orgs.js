@@ -6,7 +6,8 @@
 // founder's request names the org (the person's path).
 //
 // WHO MAY CREATE (the no-widening argument, said once here):
-//   · an ACCOUNT holder, proven by the ACCOUNT's own passphrase (src/accounts.js accountProof: the one a person chose at
+//   · an ACCOUNT holder, proven by the ACCOUNT's own passphrase (or, from the web form, by a Google sign-in less than 10 minutes old:
+//     src/accounts.js THE STEP-UP, sprint 21, 21.4c) (src/accounts.js accountProof: the one a person chose at
 //     sign-up with the operator's code, at the join and verified by email (sprint 21, 21.4a), or proved on /profile), whose email
 //     the operator approved (a used code or an approved request: src/accounts.js mayFound). No seat is needed (a person freshly signed up holds none) and
 //     none is used: a SEAT's secret (the key an org's admin minted or set) never creates an org — what an org's admin knows
@@ -92,6 +93,8 @@ export const ORG_WORDS = {
   org_waiting: "Your request waits for its place: you can create your org once it is approved (we email you). Your status: /account.",
   org_limit: "Your account has already created its org. During the beta an account creates one org, and may be a member of any number.",
   too_many_attempts: "Too many attempts. Wait 15 minutes and try again.",
+  // (sprint 21, 21.4c) the step-up's refusal: the form's Google sign-in is older than STEP_UP_MINUTES
+  step_up_stale: "Your Google sign-in is more than 10 minutes old: continue with Google again, or type your passphrase.",
 };
 
 // orgFields(raw) -> the fields as the door reads them: { email, password, name, slug, project, projectName, you }
@@ -105,12 +108,13 @@ export function orgFields(raw = {}) {
   return { email, password: String(raw.password == null ? "" : raw.password), name, slug, project,
     projectName: s(raw.projectName, ORG_NAME_MAX) || name.slice(0, ORG_NAME_MAX), you: s(raw.you, ORG_NAME_MAX + 1) || email.split("@")[0].slice(0, ORG_NAME_MAX) };
 }
-// orgFormProblem(f, reserved) -> null, or { error, field?, status }: checked BEFORE anything is read (it says nothing about
-// accounts, nor about which names orgs hold; a reserved name is the platform's own, public list)
-export function orgFormProblem(f, reserved) {
+// orgFormProblem(f, reserved, { stepUp }) -> null, or { error, field?, status }: checked BEFORE anything is read (it says nothing about
+// accounts, nor about which names orgs hold; a reserved name is the platform's own, public list). stepUp (sprint 21, 21.4c): a fresh
+// Google sign-in proves the account (src/accounts.js accountStepUp), so no passphrase is asked
+export function orgFormProblem(f, reserved, { stepUp = false } = {}) {
   const bad = (field) => ({ error: "bad_org", field, status: 422 });
   if (!f.email || !EMAIL_RE.test(f.email)) return bad("email");
-  if (!f.password || f.password.length > 1024) return bad("password");
+  if (!stepUp && (!f.password || f.password.length > 1024)) return bad("password");
   if (!f.name || f.name.length > ORG_NAME_MAX) return bad("name");
   const sp = orgSlugProblem(f.slug, reserved);
   if (sp === "slug") return bad("slug");
@@ -126,8 +130,10 @@ export function orgFormProblem(f, reserved) {
 // the org, so an org and its profile land together or not at all; null: none, a script's JSON or the operator's tools). The key is
 // the owner seat's secret, returned here ONCE: never stored (its hashes only), never logged; the caller shows it and forgets it.
 // The batch also names the new org on the email's verified request (FOUND_REQUEST_SQL: the person's path, request -> account -> org).
-export async function createOrg(env, url, f, { client = "", profile = null } = {}) {
-  const proof = await accountProof(env, url, { email: f.email, password: f.password, client });
+// proof (sprint 21, 21.4c, the owner's ruling: the step-up): a FRESH Google sign-in's answer (src/accounts.js accountStepUp, its
+// verdict ok, invited or waiting), in place of the passphrase's — the same rules follow it
+export async function createOrg(env, url, f, { client = "", profile = null, proof: given = null } = {}) {
+  const proof = given || await accountProof(env, url, { email: f.email, password: f.password, client });
   if (proof.verdict === "locked") return { error: "too_many_attempts", status: 429 };
   // sprint 12, 12.3: an account whose passphrase an org's invite link set (src/accounts.js THE INVITE LINK) creates no org — the
   // beta's orgs stay on the waitlist, and the operator's code alone makes an account that creates one

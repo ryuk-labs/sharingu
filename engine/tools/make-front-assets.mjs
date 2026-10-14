@@ -1,7 +1,8 @@
 // tools/make-front-assets.mjs — writes src/frontassetdata.js from engine/assets/walkthrough/*.jpg, engine/assets/clients/*.png and
 // engine/assets/brand/*.png (sprint 21, 21.P: the front door's pictures, the way tools/make-fonts.mjs bundles the faces; 21.4a: U-chan's
 // mark as a PNG, brand/uchan-mark.png — src/ui.js uchan's own vector rendered at twice its 30px email size — the one image an email
-// carries, src/mails.js).
+// carries, src/mails.js; 21.4c: Google's own G mark, clients/google.png — Google's published sign-in-button vector rendered at 48px
+// — beside "Continue with Google", src/googlepage.js).
 //
 //   node tools/make-front-assets.mjs          # regenerate src/frontassetdata.js
 //   node tools/make-front-assets.mjs --check  # exit 1 when src/frontassetdata.js is not what the files on disk make

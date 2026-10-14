@@ -33,6 +33,7 @@ import { REQUEST_PATH, FORGOT_PATH, RESEND_PATH } from "./requestaccess.js";
 import { DEFAULT_BRAND } from "./tenant.js";
 import { PLATFORM_ROOT } from "./orgpath.js";
 import { BRAND_FONTS_LINK, WORLDS_CSS, BASE_CSS, STATE_CSS, THEME_BOOT, PRODUCT_NAME, FAVICON_LINK } from "./shell.js";
+import { googleOr, GOOGLE_CSS } from "./googlepage.js";   // sprint 21, 21.4c: Continue with Google, under the page's own form
 
 // The product's name on the front door. The sign-in page names the PRODUCT (sharingu) with the org as
 // secondary text; it never reads brand.engine or brand.loginTitle (UI-B1b: the live manifest's loginTitle
@@ -253,17 +254,16 @@ const AUTH_CSS = `
 export function renderLogin(opts) {
   const {
     error = "", next = "", brand = DEFAULT_BRAND, action = "/login",
-    lede, footnote, footnoteHtml, hidden, submit = "Sign in", email = "", orgChoice = null, headHtml = "", sub = "", css = "",
+    lede, footnote, footnoteHtml, hidden, submit = "Sign in", email = "", orgChoice = null, headHtml = "", sub = "", css = "", googleHtml = "",
   } = opts || {};
+  // googleHtml (sprint 21, 21.4c: src/googlepage.js, trusted markup): the Continue with Google button, under the form after a quiet
+  // "or" — only when src/google.js googleOffer says a client is stored for this origin (the sign-in's caller and the connect page)
   // headHtml, sub, css (the connect page, src/oauth.js connectHead): its two marks above the heading, the one line under it (text,
   // escaped here) and its own few rules
   // orgChoice (sprint 7's review, A1: the OAuth form never picks an org for an account in several): [{ slug, name }] — the
   // account's orgs, each a radio named `org`, one required; shown only after the account's passphrase proved the account (src/
   // oauth.js), with the email filled back in (never the passphrase)
-  const choice = Array.isArray(orgChoice) && orgChoice.length ? `<fieldset class="org-choice" data-region="org-choice">
-        <legend>Connect in which org?</legend>
-        <div class="org-list">${orgChoice.map((o) => `<label class="org-opt"><input type="radio" name="org" value="${esc(o.slug)}" required><span><b>${esc(o.name)}</b> <code>/${esc(o.slug)}</code></span></label>`).join("")}</div>
-      </fieldset>` : "";
+  const choice = orgChoiceHtml(orgChoice);
 
   // a refused sign-in is the ERROR pattern (ui.js): the only red, always with its icon
   const errorBanner = error ? errorState({ what: error }) : "";
@@ -289,7 +289,7 @@ export function renderLogin(opts) {
       </div>
       ${choice}
       <button type="submit">${esc(submit)}</button>
-    </form>`;
+    </form>${googleHtml ? `\n    ${googleOr}\n    ${googleHtml}` : ""}`;
 
   const { title, wordmark } = authBrand(brand);
   return authPage({
@@ -311,8 +311,16 @@ export function renderLogin(opts) {
     footnote: footnoteHtml !== undefined ? footnoteHtml
       : footnote !== undefined ? esc(footnote) : action === "/login" ? joinLink() : "",
     sub: esc(sub),
-    css: (choice ? ORG_CHOICE_CSS : "") + css,
+    css: (choice ? ORG_CHOICE_CSS : "") + (googleHtml ? GOOGLE_CSS : "") + css,
   });
+}
+// orgChoiceHtml(orgs) -> the OAuth form's org choice ([{ slug, name }]: a radio named `org` each, one required), "" for none; the
+// connect page's Google choice (src/oauth.js) carries the same
+export function orgChoiceHtml(orgs) {
+  return Array.isArray(orgs) && orgs.length ? `<fieldset class="org-choice" data-region="org-choice">
+        <legend>Connect in which org?</legend>
+        <div class="org-list">${orgs.map((o) => `<label class="org-opt"><input type="radio" name="org" value="${esc(o.slug)}" required><span><b>${esc(o.name)}</b> <code>/${esc(o.slug)}</code></span></label>`).join("")}</div>
+      </fieldset>` : "";
 }
 // the sign-in's way to request access (sprint 21, 21.1; 21.P: "Join the beta", the one word for it on the site and in the app), and
 // (21.4a) the account's two other ways: a forgotten passphrase, a verification email that did not arrive
@@ -320,7 +328,7 @@ export const JOIN_WORDS = "Join the beta";
 const joinLink = () => `<p>No account yet? <a href="${REQUEST_PATH}" data-region="request-access-link">${JOIN_WORDS}</a></p>` +
   `<p><a href="${FORGOT_PATH}" data-region="forgot-link">Forgot your passphrase?</a> · <a href="${RESEND_PATH}" data-region="resend-link">Didn't get the email? Resend</a></p>`;
 // the OAuth form's org choice: one bordered list, a radio per org (its name, its address)
-const ORG_CHOICE_CSS = `
+export const ORG_CHOICE_CSS = `
   .org-choice{margin:0;padding:0;border:0;min-width:0}
   .org-choice legend{padding:0 0 6px;font:600 12.5px/1.3 var(--sans);color:var(--text-muted)}
   .org-list{border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--page)}
