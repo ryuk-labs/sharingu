@@ -1,13 +1,13 @@
 # HANDOFF — where sharingu stands (rewritten at every stop; git holds the history)
 
 **As of 2026-10-13: sprint 20 is LIVE (the write tools file "a preview the person has seen and agreed to"); plugin
-0.1.16 clears the Claude directory's checks; the OpenAI submission is in review. Sprint 21 (onboarding) is OPEN on
-branch `sprint-21`, sliced from the owner's MCQs (`SPRINTS.md` sprint 21): 21.0–21.3 DONE and 21.P's E1 (the journey
-polish, engine side; the site's polish held on its branch `journey-polish`); E2 DONE; 21.4a (the account flow) and 21.4b
-(the data) DONE; 21.4c (Google sign-in) DONE; the sprint end IN PROGRESS (`SPRINTS.md`: the review — with its adversarial read
-of every auth change — read the sprint and its fixes land on the branch; then the gate, the suites, one PR, the ship with the
-owner's OK, then the site). migrate-081 on the branch, not live. The ship's preflight for 081: `check-org-names --slugs` on live. In parallel, the owner's Claude side (the
-connector and plugin forms, after P1–P3 in the Claude app).**
+0.1.16 clears the Claude directory's checks; the OpenAI submission is in review. Sprint 21 (onboarding) is BUILT AND PROVEN on branch `sprint-21` (14 commits, not pushed; smoke 371/371, the gate green,
+evals 42/42, sims 10/10, tabs-verify 40/40, the one review's findings fixed; `sh tools/ship-plan.sh ryuklabs --no-import`
+complete: migrate-081 BEFORE the code, no live org holds `request-access`). NEXT: the owner's OK, then the ship in the
+plan's order (push, ONE PR, merge; the dry run; migrate-081; the name and grant checks; `ship.sh`; store the Google
+client: `node tools/operator.mjs set-google-client --file ~/.sharingu/google-oauth.env --live --config wrangler.jsonc
+--confirm-live ryuklabs-agent-r`; the walk and verify-live; the first real emails, to ryuk@ only; then the site's
+`journey-polish` with the buttons to `/request-access`). Live is still sprint 20.**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
 and must not trust its own memory over this file. Read, in order: `README.md` (the model, how we work) → this file →
