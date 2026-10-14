@@ -13,14 +13,15 @@
 // POST, after the passphrase is set, does. inviteProblem({ invite, password, confirm }) -> "" or the field that is wrong (invite ·
 // passphrase · confirm), checked before anything is read; renderInvite({ error, brand, invite }) -> the page (invite: the token the
 // person already sent, kept in the form when a field was wrong, never on a refusal).
-import { esc, errorState } from "./ui.js";
+import { esc, errorState, uchanPose } from "./ui.js";
 import { DEFAULT_BRAND } from "./tenant.js";
 import { authPage, authBrand } from "./login.js";
 import { passphraseProblem, ACCOUNT_MIN_PASSPHRASE } from "./secrets.js";
 import { asciiEmail, normInvite, INVITE_TOKEN_RE } from "./accounts.js";
 
 // the one refusal (an email not allowed; a wrong, used, expired or revoked code): the same words for every case
-export const SIGNUP_REFUSED_WORDS = "That email and code do not open a sign-up. Check both with the person who gave you the code.";
+// (21.P D20: the code comes from sharingu, by email, when a place opens; never "from the person who invited you")
+export const SIGNUP_REFUSED_WORDS = "That email and code do not open a sign-up. Check both against the email that brought your code.";
 // the field problems, in the words the page shows (nothing here depends on the allowlist)
 export const SIGNUP_FIELD_WORDS = {
   email: "Type the email the code was given for.",
@@ -78,7 +79,9 @@ export function renderSignup(opts) {
     lede: "Sign up",
     banner: error ? errorState({ what: error }) : "",
     body,
-    footnote: `The email and code come from the person who invited you. Already signed up? <a href="/login">Sign in</a>`,
+    footnote: `Already signed up? <a href="/login">Sign in</a>`,
+    intro: { eyebrow: "Your place is open", heading: "Welcome to the beta.", lede: "Your sign-up code comes from sharingu, by email, when your place opens.",
+      art: `<div class="art-pose" data-art="verify">${uchanPose({ pose: "verify", size: 240 })}</div>`, phone: false },
   });
 }
 
@@ -131,6 +134,8 @@ export function renderInvite(opts) {
     banner: error ? errorState({ what: error }) : "",
     body,
     css: ".field[hidden]{display:none}",
-    footnote: `An admin of the org that invited you made this link; it works once. Already have an account? <a href="/login">Sign in</a>`,
+    footnote: `Already have an account? <a href="/login">Sign in</a>`,
+    intro: { eyebrow: "An invite", heading: "Join your team.", lede: "An admin of the org that invited you made this link; it works once.",
+      art: `<div class="art-pose" data-art="pair">${uchanPose({ pose: "pair", size: 240 })}</div>`, phone: false },
   });
 }

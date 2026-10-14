@@ -32,6 +32,8 @@ export const REQUEST_TOKEN_BYTES = 24;
 export const REQUEST_TOKEN_RE = /^[0-9a-f]{48}$/;
 // the repeat's page: a fixed path no token can be (a token is 48 hex characters), naming nothing the request typed
 export const REQUEST_ASKED_PATH = "/request-access/asked";
+// the check page (sprint 21, 21.P: "Check my request" in the front door's top bar): a fixed path no token can be, reading nothing
+export const REQUEST_CHECK_PATH = "/request-access/check";
 // requestTokenHash(token) -> the hash access_requests keeps (the token itself is kept nowhere)
 export const requestTokenHash = (token) => sha256(`sharingu-request:v1:${String(token == null ? "" : token)}`);
 export const newRequestToken = () => hex(REQUEST_TOKEN_BYTES);

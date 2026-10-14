@@ -53,6 +53,10 @@
 //        passphrase without --reset. Usage (exit 2, nothing opened): --request with --email, --request with no id. A request
 //        decided between the read and the write: refused, nothing written (RED then GREEN: the guard removed mints a code for a
 //        request already declined)
+//   O28 · decline --request <id> (sprint 21, 21.P): the open request declined in one guarded write (no code, no approval stamped),
+//        the ones after it move up; declined already, approved, no such id, a malformed id refused, nothing written; no request,
+//        an email or no id a usage error (2, nothing opened); a request approved between the read and the write stays approved
+//        (RED then GREEN: the status guard removed declines it)
 // Exit 1 on any failure. A gate step.
 import { DatabaseSync } from "node:sqlite";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -740,6 +744,33 @@ try {
       const rdb = line(world());
       await raced(RED, rdb);
       ok(rowsOf(rdb).length === 1 && reqOf(rdb, "r-0").status === "declined", `O27 · RED: with the mint's guard removed a code is minted for a declined request (${rowsOf(rdb).length} row)`);
+    }
+    // O28 · decline --request (sprint 21, 21.P): an open request declined in one guarded write; nothing else touched
+    {
+      const db = line(world());
+      const codesBefore = rowsOf(db).length;
+      const c = await cliRec(db, recDir)("decline", "--request", "r-a", "--local", "DIR", "--config", "CFG");
+      const row = db.prepare("SELECT status, updated_at, approved_at FROM access_requests WHERE id = 'r-a'").get();
+      ok(c.rc === 0 && /^✓ request r-a declined on test:db: Name r-a, Company r-a <a@ask\.test> \(was place 2 in line\)/.test(c.said[0] || "") && row.status === "declined" && row.approved_at === null
+        && row.updated_at > "2026-10-13T10:00:00.000Z" && rowsOf(db).length === codesBefore && !c.said.some((x) => /code: /.test(x)),
+        `O28 · decline --request: the request declined, said once, no code minted, no approval stamped (${c.rc} ${row.status})`);
+      ok(placeOf(db, "r-b") === 2 && placeOf(db, "r-c") === 3, "O28 · the requests after it move up a place");
+      const before = allText(db);
+      const r = { again: await cliRec(db, recDir)("decline", "--request", "r-a", "--local", "DIR", "--config", "CFG"), done: await cliRec(db, recDir)("decline", "--request", "r-done", "--local", "DIR", "--config", "CFG"),
+        none: await cliRec(db, recDir)("decline", "--request", "r-nobody", "--local", "DIR", "--config", "CFG"), odd: await cliRec(db, recDir)("decline", "--request", "r'; DROP", "--local", "DIR", "--config", "CFG") };
+      ok(Object.values(r).every((x) => x.rc === 1 && /^refused \(nothing written\)/.test(x.errs[0] || "")) && allText(db) === before
+        && /is declined, not open/.test(r.again.errs[0]) && /is approved, not open/.test(r.done.errs[0]) && /no request r-nobody/.test(r.none.errs[0]) && /not a request's id/.test(r.odd.errs[0]),
+        `O28 · declined already, approved, no such id, a malformed id: each refused, nothing written (${Object.values(r).map((x) => x.rc).join("/")})`);
+      const u = [await cliRec(db, recDir)("decline", "--local", "DIR", "--config", "CFG"), await cliRec(db, recDir)("decline", "--request", "r-b", "--email", "b@ask.test", "--local", "DIR", "--config", "CFG"), await cliRec(db, recDir)("decline", "--request", "--local", "DIR", "--config", "CFG")];
+      ok(u.every((x) => x.rc === 2 && x.opened === 0), `O28 · decline with no request, with an email, or with no id: usage errors that open nothing (${u.map((x) => x.rc).join("/")})`);
+      // a request decided between the read and the write (approved meanwhile): the guarded write changes nothing
+      const rdb = line(world()), DB = d1(rdb);
+      const raced = await OP.declineRequest({ prepare: (q) => { if (/^UPDATE access_requests SET status = 'declined'/.test(q)) rdb.prepare("UPDATE access_requests SET status = 'approved', approved_at = 'x' WHERE id = 'r-0'").run(); return DB.prepare(q); } }, "r-0");
+      ok(raced.refused && /decided since it was read/.test(raced.refused) && reqOf(rdb, "r-0").status === "approved", `O28 · a request approved between the read and the write: refused, it stays approved (${(raced.refused || "").slice(0, 60)})`);
+      const RED = await mutantOp([["\"UPDATE access_requests SET status = 'declined', updated_at = ?2 WHERE id = ?1 AND status = 'open'\";", "\"UPDATE access_requests SET status = 'declined', updated_at = ?2 WHERE id = ?1\";"]]);
+      const mdb = line(world()), MDB = d1(mdb);
+      await RED.declineRequest({ prepare: (q) => { if (/^UPDATE access_requests SET status = 'declined'/.test(q)) mdb.prepare("UPDATE access_requests SET status = 'approved', approved_at = 'x' WHERE id = 'r-0'").run(); return MDB.prepare(q); } }, "r-0");
+      ok(reqOf(mdb, "r-0").status === "declined", `O28 · RED: with the status guard removed an approved request is declined (${reqOf(mdb, "r-0").status})`);
     }
   }
 } finally {

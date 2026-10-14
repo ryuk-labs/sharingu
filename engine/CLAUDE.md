@@ -44,17 +44,24 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   a 303 to its private link `/request-access/<token>` (only its hash kept); the first request stands: a repeat changes nothing and
   goes to `/request-access/asked`; the honeypot gets a link that opens nothing; nothing reads accounts. The private link is the
   request's own page by its status (21.2): open, "you're in line" — its place (`placeInLine`: one range count on the line index,
-  ties by id), the beta's count live from D1, what comes next, the walkthrough; approved, its place open; declined, one sentence. A web sign-up with no seat answers the org form, filled
+  ties by id), the beta's count live from D1, what comes next, the walkthrough; approved, its place open; declined, one sentence and a way on (21.P: each a scene in the website's look — the place in line the hero
+  number, the request's steps as a track, the page's address with Copy link; `/request-access/check`, Check my request, reads
+  nothing). A web sign-up with no seat answers the org form, filled
   in from the email's newest approved request (`approvedProfile`: only for the email the code proved).
   `src/beta.js` — the beta's 50 places, the ONE source of the cap and its two counts (`tools/operator.mjs` imports it; the worker
   reads it by `src/accounts.js betaCount`; a count that cannot be read is left out of a page, never guessed).
-- `src/showcase.js` · `src/walkthrough.js` · `src/login.js` (`frontHead`, `frontTop`, `authPage`) — the front door (sprint 21, 21.3): `/` at
-  the root, for a browser navigation that signs no one in, is the showcase (the hero line, Request access, the beta's places
-  taken, the walkthrough's five videos and the channel as plain new-tab links to YouTube from `src/walkthrough.js`, the ONE list
-  the request's pages link to as `/#walkthrough`; a first-visit splash under 1.5 s, skippable, never under reduced motion); a
-  session still goes to its org or the picker, a script still gets 401. Every page drawn before a session (sign-in, sign-up and
-  its invite, creating an org, request access and its pages, the OAuth connect page, the org picker, not-here) stands on ONE
-  frame in the website's look, `<body data-shell="front">` (`tools/showcase-selftest.mjs`).
+- `src/showcase.js` · `src/walkthrough.js` · `src/login.js` (`frontHead`, `frontTop`, `frontFoot`, `authPage`) — the front door (sprint 21,
+  21.3; 21.P): `/` at the root, for a browser navigation that signs no one in, is the showcase (the hero line, Join the beta, the
+  beta's places taken, the walkthrough's five videos from `src/walkthrough.js` — the website's titles and order — each playing in
+  place behind its poster, youtube-nocookie on a press, a youtu.be link without a script; the ONE list the request's pages link to
+  as `/#walkthrough`; a first-visit splash under 1.5 s, skippable, never under reduced motion); a session still goes to its org or
+  the picker, a script still gets 401. Every page drawn before a session (sign-in, sign-up and its invite, creating an org, request
+  access and its pages, the OAuth connect page, the org picker, not-here) stands on ONE frame in the website's look, `<body
+  data-shell="front">`: the top bar (the website, Check my request, Sign in), the quiet foot, one orange primary a view, the card,
+  the scene or the solo page (`authPage`), U-chan's poses and the brand's marks from `src/ui.js` (`uchanPose`, `brandMark`, the
+  website's own vectors) (`tools/showcase-selftest.mjs`). `src/frontassets.js` serves the posters and the connect page's client
+  logos at `/assets/:path` (the website's files under `assets/walkthrough`, `assets/clients`; `tools/make-front-assets.mjs` bundles them
+  into `src/frontassetdata.js`, `--check` for drift).
 - `src/data.js` — THE scoped data layer (sprint 6): every statement runs on `db(env)`; `{org}`/`{orgbucket}` tokens
   take the signed-in reader's org (a validated integer, from the sign-in only — never a parameter); no token and no
   sign-in is refused loudly (org unknown), never org 1. `tools/check-scoped-data.py` (a gate step) fails any statement outside it.
@@ -149,7 +156,8 @@ token in the deployment's KV, answered at `/.well-known/openai-apps-challenge` b
 beta's 50 places — `BETA_ORG_CAP` (`src/beta.js` since sprint 21), the owner's one number: the outside orgs that stand plus the allowed emails with an open code and
 no org yet — and refuses past them unless `--beyond-cap`; list and list-orgs say the count at their head; the worker does not
 enforce it; sprint 21: `requests` lists the open requests for a place in line order, and `allow --request <id>` approves one —
-the same allow as `--email` its email, the request marked approved in the same batch) and `tools/org-undo.mjs` (one org's export, restore,
+the same allow as `--email` its email, the request marked approved in the same batch; `decline --request <id>` declines an open
+one in one guarded write, no code) and `tools/org-undo.mjs` (one org's export, restore,
 verify, delete). Credentials: `set -a; . ~/.sharingu/env-sharingu.sh; set +a` (a bare
 `wrangler` hangs on a login prompt).
 

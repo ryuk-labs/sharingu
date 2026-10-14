@@ -1398,7 +1398,7 @@
   },
   "invalid_signup": {
    "meaning": "POST /signup (sprint 7, 7.2): the email and code do not open a sign-up. ONE answer for every case: the email was never allowed by the operator, or the code is wrong, already used, expired, revoked, or was given for another email. Nothing was written but the attempt, which counts in the account's lockout with the sign-in's failures.",
-   "nextAction": "Check the email and the code with the person who gave them to you; a lost, used or expired code is replaced only by the operator, by hand.",
+   "nextAction": "Check the email and the code against the email that brought the code (sharingu sends it when a place opens); a lost, used or expired code is replaced only by the operator.",
    "class": "not-authenticated"
   },
   "bad_signup": {

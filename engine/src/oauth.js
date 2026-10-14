@@ -8,13 +8,14 @@
 // ui.js changes nothing about how/when the OAuth surface is served.
 import { db } from "./data.js";
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
-import { errorState, esc } from "./ui.js";
+import { errorState, esc, uchan } from "./ui.js";
 import { sha256 } from "./util.js";
 import { renderLogin, authPage, authBrand } from "./login.js";
 import { getTenantConfig } from "./tenant.js";
 import { passphraseSignIn, countSignIn, clientOf, NO_SEAT_HERE_WORDS, PENDING_ONLY_WORDS } from "./accounts.js";   // sprint 7, 7.1: the same sign-in as POST /login
 import { OAUTH_OPTIONS, credEpoch, accountCred, grantKindOf } from "./oauthgrants.js";
-import { grantClientOf } from "./client.js";   // sprint 13, 13.1: which AI filed it
+import { grantClientOf, familyOfName } from "./client.js";   // sprint 13, 13.1: which AI filed it
+import { frontAssetHref } from "./frontassets.js";   // sprint 21, 21.P: a known client's own logo on the connect page
 
 const OAUTH_PATHS = ["/oauth/authorize", "/oauth/token", "/oauth/register"];
 
@@ -63,6 +64,40 @@ export function consentParts(req) {
   return { name, host, full, scopes };
 }
 
+// THE CONNECT PAGE'S HEAD (sprint 21, 21.P F23: calm and clear, still honest that the name is the client's own claim): a known
+// client's logo beside U-chan ONLY when the code goes back to that client's own web host (the redirect's host, which the browser
+// enforces; a name alone is anyone's to claim, so a client calling itself "Claude" with any other redirect gets a plain tile with
+// its initial and its name in quotes, as its own words); then the heading and the one line saying whose words the name is.
+// connectHead(name, host) -> { head, lede, sub }
+// (chatgpt.png is the logo on its own white square: it fills its tile; claude.png, on clear ground, sits in it at its own 32px)
+const CLIENT_LOGOS = { claude: "clients/claude.png", chatgpt: "clients/chatgpt.png" };
+// each logo's own hosts: the code must go back to one of them (a loopback client, Claude Code or Codex, proves nothing: no logo)
+const CLIENT_HOSTS = { claude: ["claude.ai", "claude.com"], chatgpt: ["chatgpt.com", "chat.openai.com"] };
+export function connectHead(name, host = "") {
+  const fam = familyOfName(name);
+  const h = String(host || "").toLowerCase().replace(/:\d+$/, "");
+  const known = !!CLIENT_LOGOS[fam] && (CLIENT_HOSTS[fam] || []).includes(h);
+  const logo = known ? CLIENT_LOGOS[fam] : "";
+  const tile = logo ? `<span class="pair-tile pair-client" data-client-logo="${esc(logo)}"><img src="${frontAssetHref(logo)}" width="32" height="32" alt=""${/chatgpt/.test(logo) ? " data-fill" : ""}></span>`
+    : `<span class="pair-tile pair-plain" aria-hidden="true">${esc((name || "?").slice(0, 1).toUpperCase())}</span>`;
+  return {
+    head: `<div class="pair" aria-hidden="true">${tile}<span class="pair-link"></span><span class="pair-tile pair-ours">${uchan({ size: 34 })}</span></div>`,
+    lede: !name ? "Connect an app to sharingu" : known ? `Connect ${name} to sharingu` : `Connect “${name}” to sharingu`,
+    sub: !name || known ? "" : `The app calls itself “${name}”: that name is its own claim.`,   // a known one: the footnote names its host
+  };
+}
+const CONNECT_CSS = `
+  .pair{display:flex;align-items:center;gap:0;margin:0 0 20px}
+  .pair-tile{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border:1px solid var(--line);border-radius:14px;flex:none}
+  .pair-client{background:var(--surface);overflow:hidden}
+  .pair-client img[data-fill]{width:100%;height:100%;object-fit:cover}
+  .pair-plain{background:var(--well);font:700 22px/1 var(--sans);color:var(--text)}
+  .pair-ours{background:var(--accent-tint)}
+  .pair-ours .u-uchan{width:31px;height:34px}
+  .pair-link{width:36px;height:0;border-top:2px dashed var(--line-strong)}
+  .lede-sub{margin:-14px 0 22px;font:400 13.5px/1.5 var(--sans);color:var(--text-muted)}
+`;
+
 // choose (sprint 7's review, A1): { email, orgs } — the account's passphrase proved an account in several orgs and the form named
 // none: the form comes back with the email filled in and the orgs to choose from (the grant records the one chosen)
 async function signInForm(env, req, err, choose = null) {
@@ -71,10 +106,12 @@ async function signInForm(env, req, err, choose = null) {
   // the client's name is what it calls itself, never vouched for; where the code goes is the address's host (the whole address
   // on hover); what it asks for is its scopes
   const what = c.scopes.length ? c.scopes.join(" and ") : "read what your role may read";
+  const top = connectHead(c.name, c.host);
   return htmlRes(renderLogin({
     error: err || "", brand, action: "", email: choose ? choose.email : "", orgChoice: choose ? choose.orgs : null,
     lede: choose ? "Your account holds seats in several orgs: choose the one this connection acts in, and sign in once more"
-      : c.name ? `A client calling itself “${c.name}” asks to connect as you` : "A client asks to connect as you",
+      : top.lede,
+    sub: choose ? "" : top.sub, headHtml: top.head, css: CONNECT_CSS,
     hidden: [{ name: "oauth_req", value: btoa(JSON.stringify(req.authRequest)) }],
     submit: "Sign in and connect",
     footnoteHtml: `<p data-region="oauth-request">It sends you back to <b data-redirect-host title="${esc(c.full)}">${esc(c.host || "an unknown address")}</b>, and asks to <span data-scopes>${esc(what)}</span>.</p><p>${esc(SCOPE_NOTE)}</p>`,

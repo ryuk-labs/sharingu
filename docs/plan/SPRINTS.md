@@ -679,9 +679,22 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   under reduced motion); a session still goes to its org, a script still gets 401. Every page before a session stands on
   ONE frame in the website's look (`<body data-shell="front">`, Paper and Ink). The arch client regenerated (its
   selftest had gone red at 21.1). showcase 23/23, wire 428/428, arch 111/111; smoke 345/345 (s64).
-- [ ] **21.4 · Trusted requests, the data, Google sign-in** (the owner's MCQs, 2026-10-14). A request counts only once its
+- [ ] **21.4 · Trusted requests, the data, Google sign-in** (the owner's MCQs, 2026-10-14). THE ACCOUNT FLOW (the owner's MCQ,
+  2026-10-14, the standard): Join the beta takes the profile AND a passphrase; ONE verification email (a random single-use
+  link, only its hash kept, 24 h, resent at most three a day); an unverified request holds no place and expires after 24 h;
+  signing in before verifying is refused with "check your inbox" and a resend; a verified, pending account signs in and
+  sees its status (a session with no seat: a schema change inside unshipped migrate-081); approval sends ONE "you're in"
+  email and the person signs in to the prefilled org form (no hand-carried code; the operator's code stays for the
+  operator's own and the reviewer accounts); a forgotten passphrase gets a reset link (the same answer whether or not the
+  account exists, 30 min, single use, three a day, every session signed out after); Google skips the verification email.
+  The private status link retires (one way: sign in). The team's alert per new request to acie@ryuklabs.io, cc
+  ryuk@ryuklabs.io (both verified once as Cloudflare destination addresses: free). About two emails a person. A request counts only once its
   email is VERIFIED, by Google or by an emailed check (Cloudflare Email Service, the owner's MCQ 2026-10-14: our Workers Paid plan,
-  a `send_email` binding, from an address at sharingu.xyz; a beta, its price re-read on Cloudflare's page first);
+  a `send_email` binding, from an address at sharingu.xyz; Cloudflare's page read 2026-10-14: 3,000 a month included on
+  Workers Paid, then $0.35 per 1,000, a beta). THE CAP (the owner, 2026-10-14: stay inside the 3,000): the worker counts its
+  sends per day in D1 and sends only while the last 31 days hold fewer than 2,900, so any billing cycle stays under 3,000;
+  at the cap it sends nothing, the page offers Google, and the owner is told once; three verification emails per address
+  a day and the flood filter, so no one burns the quota; the owner's own alerts (free, uncounted) one per request;
   the status page reached again by either. The data, approved as shown: two required consent boxes (the terms and
   privacy; keeping the profile to review the request) and two optional (updates, a feedback call), each with its version
   and time; the source (`?from=`, never a cookie); the request linked to its account (signed up at) and its org (created
@@ -697,8 +710,22 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   both worlds, 1440 and 390, then the fixes. Ruled: ONE word for the main button on the site and in the app, "Join the
   beta" (the form's own title stays "Request access"); "Check my request" sits beside Sign in (one door, two paths: the
   private link now, Google or an emailed link after 21.4).
+  The audit (2026-10-14, 25 findings, `engine/.runs/polish-audit/`): ALL five bundles ruled (the owner's MCQ): the words
+  (one button word, the beta's 50 said one way, sign-up's code from the operator, a calm OAuth heading), one accent per
+  view, the status pages (the place prominent, the link copied, a shorter form, `operator decline`), after the org
+  (signed in at once: the account passphrase is proven by the create, an adversarial read before it ships; the done
+  page leads with Connect your AI, the owner key folded behind "Show the owner key"; the first Home opens on Connect;
+  Connect leads with Claude and ChatGPT; the org's address suggested from the company), the walkthrough and the doors
+  (the same five titles and order as the site, playing in place; Sign in, Check my request and the way back to the
+  site on every front page). Out: YouTube's auto-captions (the owner, YouTube Studio), the site's buttons (after the
+  ship), a lost status link (21.4).
+  And (the owner, 2026-10-14): every page in the website's own branding, quality and structure, never drifting: composed
+  scenes rich in the site's assets (U-chan's poses, the marks, the clients' logos), not bare forms; one primary action and
+  a clear "where you are, what is next" on each. No local address in anything shown: screenshots taken under the public
+  host name.
 - [ ] **The sprint end.** The site's access buttons move to the worker's request page and the site's waitlist page redirects there,
-  merged right after the ship (live must answer the page first).
+  merged right after the ship (live must answer the page first), together with the site's 21.P polish (branch
+  `journey-polish`, 29e6a17, verify 260/260; held by the owner, 2026-10-14).
 
 ## Sprint 19 · The write door split (branch `sprint-19`, opened 2026-10-13; the owner's MCQs of the day) — SHIPPED 2026-10-13
 

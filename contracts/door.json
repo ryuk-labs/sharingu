@@ -748,6 +748,13 @@
   },
   {
    "method": "GET",
+   "path": "/assets/:path",
+   "auth": "none",
+   "does": "the front door's pictures, self-hosted (sprint 21, 21.P; src/frontassets.js): the walkthrough's five posters (walkthrough/<n>-<name>.jpg, image/jpeg) and the connect page's two client logos (clients/claude.png, clients/chatgpt.png, image/png), the website's own files; cached a year as immutable (the page's URL carries ?v=<their hash>); answered before any auth or D1 read; any other path is 404",
+   "refusals": []
+  },
+  {
+   "method": "GET",
    "path": "/audit",
    "auth": "reader",
    "does": "Activity — the shared contribution trail (who did what, when), read under the one project rule like every reader (?project= a project you hold; else your active or first seat; seated nowhere, the org-level rows only); the owner gets the org-wide rollup (owner ruling 2026-09-03, overturns S-040 owner-only); sprint 12 (12.5): ?all=1 — and the owner's rollup in an org of several active projects — is Activity across every project the reader may read (the owner: every active project; anyone else: their seats; a Partner its seated projects alone): every contribution newest first with who filed it (their role and hats), its project, lane and state (landed · with the owner · decided · needs more) and (sprint 13, 13.1) which AI filed it, as the tool names itself (nothing for a row filed before), ?in=<project>&who=<a filer's id>&lane=&state=&since= narrowing it, ?before= its next page; the read is src/activity.js activityAcross (three statements: the readable projects, each project's share of 1,000 newest rows (src/activity.js ACTIVITY_ROWS_MAX), the shown rows by primary key), the twin of changes {org: true, list: true}",
@@ -1366,7 +1373,7 @@
    "method": "GET",
    "path": "/request-access",
    "auth": "none",
-   "does": "the request-access page (sprint 21, 21.1): the profile's form, required and optional apart; a link to sign in",
+   "does": "the request-access page (sprint 21, 21.1): the profile's form, the optional fields folded under one disclosure (open when one holds a value or is wrong), beside what the beta holds; a wrong field marked on itself; a link to sign in",
    "refusals": []
   },
   {
@@ -1380,7 +1387,7 @@
    "method": "GET",
    "path": "/request-access/:token",
    "auth": "none",
-   "does": "your request's own page at its private link (sprint 21, 21.1 and 21.2), by its status. Open: you're in line — your name and company, your place in line (1 + the open requests that came before yours), the beta's places live from the database (N of 50 places taken; left out if it cannot be read), what comes next (the requests are reviewed in order; a sign-up code is emailed to your address when your place opens; with it, sign up: the org form comes filled in from this request) and a link to the walkthrough (the showcase's own section, /#walkthrough). Approved: your place is open, the code comes by email, a link to /signup. Declined: one sentence. A link that opens no request (wrong or malformed) is ONE 404 page. /request-access/asked (no token's shape) is the repeat's page: the email already asked, the first request's link shows your place, the beta's places and the walkthrough; it names nothing the request typed",
+   "does": "your request's own page at its private link (sprint 21, 21.1 and 21.2), by its status. Open: you're in line — your name and company, your place in line (1 + the open requests that came before yours), the beta's places live from the database (N of 50 places taken; left out if it cannot be read), the request's steps (requested, in line, approved, signed up, your org), what comes next (the requests are reviewed in order; a sign-up code is emailed to your address when your place opens; with it, sign up: the org form comes filled in from this request), this page's own address to keep (Copy link) and a link to the walkthrough (the showcase's own section, /#walkthrough). Approved: your place is open, the code comes by email, a link to /signup. Declined: one sentence, the walkthrough and the website. A link that opens no request (wrong or malformed) is ONE 404 page. /request-access/asked (no token's shape) is the repeat's page: the email already asked, the first request's link shows your place, the beta's places and the walkthrough; it names nothing the request typed. /request-access/check (sprint 21, 21.P: Check my request) says the request's own link holds its place, and that a check by Google or by email is coming; it reads nothing",
    "refusals": []
   },
   {
@@ -1520,7 +1527,7 @@
  ],
  "counts": {
   "tools": 37,
-  "rest": 93,
+  "rest": 94,
   "errors": 149
  },
  "evalMark": {
@@ -3260,6 +3267,13 @@
     "fails": [
      "not-authenticated"
     ]
+   },
+   {
+    "method": "GET",
+    "path": "/assets/:path",
+    "kind": "read",
+    "who": "anyone",
+    "fails": []
    },
    {
     "method": "GET",
@@ -8083,7 +8097,7 @@
   },
   "invalid_signup": {
    "meaning": "POST /signup (sprint 7, 7.2): the email and code do not open a sign-up. ONE answer for every case: the email was never allowed by the operator, or the code is wrong, already used, expired, revoked, or was given for another email. Nothing was written but the attempt, which counts in the account's lockout with the sign-in's failures.",
-   "nextAction": "Check the email and the code with the person who gave them to you; a lost, used or expired code is replaced only by the operator, by hand.",
+   "nextAction": "Check the email and the code against the email that brought the code (sharingu sends it when a place opens); a lost, used or expired code is replaced only by the operator.",
    "class": "not-authenticated",
    "files": [
     "index.js"

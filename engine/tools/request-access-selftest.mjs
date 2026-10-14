@@ -32,6 +32,9 @@
 //        places taken"), what comes next and the walkthrough; approved, its place open, the way to /signup, no place and no
 //        count; declined, one sentence, no count, no company; the asked page, the count and the walkthrough; a count that cannot
 //        be read is left out of both (the page still 200), never a guess. betaWords' pure rules
+//   R13 · (21.P) the form's six optional fields under one disclosure, closed when empty, open when one holds a value or is the
+//        wrong one; a wrong field marked on itself (aria-invalid, its words beside it, autofocus), no banner; the open page's track
+//        and its own address kept with Copy link (the one primary); the declined page's way on; the check page reads nothing
 // And the MUTATION PROOF: each named mutant (a scratch copy of src/) must turn its case(s) red, by an assertion, never a crash.
 // Exit 1 on any failure. A gate step.
 import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync } from "node:fs";
@@ -128,7 +131,7 @@ const CASES = {
       [["name", "email", "company", "role", "team_size"].every(required) && !["website", "linkedin", "x", "github", "ai_tools", "use_case", "trap"].some(required) && (g.text.match(/class="opt">optional</g) || []).length === 6,
         "R4 · the five required fields are required, the six optional ones say so"],
       [/<div class="trap" aria-hidden="true">[\s\S]*?name="trap" tabindex="-1"/.test(g.text) && /\.trap\{position:absolute;left:-10000px/.test(g.text), "R4 · the honeypot sits out of sight, out of the tab order"],
-      [login.status === 200 && /<a href="\/request-access"[^>]*>Request access<\/a>/.test(login.text), "R4 · GET /login carries the one way to request access"],
+      [login.status === 200 && /<a href="\/request-access"[^>]*>Join the beta<\/a>/.test(login.text), "R4 · GET /login carries the one way to request access, in the one button word (Join the beta)"],
     ];
   },
   async R5() {
@@ -158,7 +161,7 @@ const CASES = {
     const twice = W.q("SELECT company FROM access_requests WHERE email = 'twice@one.test'");
     return [
       [a.status === 303 && W.tokenOf(a) && b.status === 303 && b.location === "/request-access/asked" && !b.text, `R6 · a repeat is a 303 to the asked page (${b.status} -> ${b.location})`],
-      [asked.status === 200 && asked.text.includes("This email has already asked for a place. The link from your first request shows your place.") && /href="\/login"/.test(asked.text)
+      [asked.status === 200 && /data-screen="request-asked"/.test(asked.text) && /href="\/login"/.test(asked.text)
         && !/Difference Engines|Analytical Engines|Ada|CTO/.test(asked.text), `R6 · the asked page says so and names nothing typed (${asked.status})`],
       [JSON.stringify(W.rows().filter((r) => r.email === "ada@analytical.test")) === before, "R6 · the repeat changed nothing: one row, the first profile, its link and its times as they were"],
       [first.status === 200 && /Analytical Engines/.test(first.text) && !/Difference Engines/.test(first.text), `R6 · the first link still opens the first request (${first.status})`],
@@ -302,6 +305,48 @@ const CASES = {
         && betaWords({ taken: 51, cap: 50 }) === "All 50 places taken" && betaWords(null) === "" && betaWords({}) === "" && betaWords({ taken: -1, cap: 50 }) === "", "R12 · betaWords: N of the cap, all taken at or past it, nothing for no count"],
     ];
   },
+  async R13() {
+    // sprint 21, 21.P: the shorter form and a wrong field marked on itself; the request's page keeps its address; the check page
+    const W = await world();
+    const empty = await W.call("GET", "/request-access", { headers: { accept: "text/html" } });
+    const more = (h) => (/<details class="more"[^>]*>/.exec(h) || [""])[0];
+    const badX = await W.ask({ ...FULL, email: "x@one.test", x: "ada.lovelace" });
+    const badName = await W.ask({ name: " ", email: "n@one.test", company: "Analytical Engines", role: "Founder", team_size: "2-10" });
+    const kept = await W.ask({ ...FULL, email: "k@one.test", role: "", x: "" });
+    const fieldOf = (h, f) => (new RegExp(`<input[^>]*id="${f}"[^>]*>`).exec(h) || [""])[0];
+    const a = await W.ask({ ...FULL, email: "keep@one.test" });
+    const t = W.tokenOf(a);
+    const open = await W.call("GET", `/request-access/${t}`, { headers: { accept: "text/html" } });
+    W.w.db.prepare("UPDATE access_requests SET status = 'declined' WHERE email = 'keep@one.test'").run();
+    const declined = await W.call("GET", `/request-access/${t}`, { headers: { accept: "text/html" } });
+    // the check page reads nothing: no statement prepared while it is answered
+    const real = W.w.env.DB;
+    let reads = 0;
+    W.w.env.DB = { ...real, prepare: (q) => { reads++; return real.prepare(q); }, batch: (b) => real.batch(b) };
+    const check = await W.call("GET", "/request-access/check", { headers: { accept: "text/html" } });
+    W.w.env.DB = real;
+    const xField = fieldOf(badX.text, "x");
+    return [
+      [empty.status === 200 && more(empty.text) && !/\bopen\b/.test(more(empty.text)) && /<summary>More about you \(optional\)<\/summary>/.test(empty.text)
+        && ["website", "linkedin", "x", "github", "ai_tools", "use_case"].every((f) => new RegExp(`<details class="more"[\\s\\S]*id="${f}"[\\s\\S]*</details>`).test(empty.text)),
+        "R13 · the six optional fields fold under one closed disclosure, More about you (optional)"],
+      [badX.status === 422 && / open>/.test(more(badX.text)) && /aria-invalid="true"/.test(xField) && /\bautofocus\b/.test(xField) && /aria-describedby="err-x"/.test(xField)
+        && /<p class="field-err" id="err-x" data-field-error="x">Type your X handle/.test(badX.text) && (badX.text.match(/<[^>]*\saria-invalid="true"/g) || []).length === 1 && !/class="state[^"]*err/.test(badX.text),
+        `R13 · a wrong optional field: the disclosure open, the field marked (aria-invalid, its words beside it, the focus on it), no banner (${badX.status})`],
+      [badName.status === 422 && !/ open>/.test(more(badName.text)) && /aria-invalid="true"/.test(fieldOf(badName.text, "name")) && /data-field-error="name"/.test(badName.text),
+        `R13 · a wrong required field is marked on itself, the disclosure stays closed with nothing in it (${badName.status})`],
+      [kept.status === 422 && / open>/.test(more(kept.text)) && /data-field-error="role"/.test(kept.text), "R13 · an optional field holding a value keeps the disclosure open when the form comes back"],
+      [open.status === 200 && /data-track="in-line"/.test(open.text) && /<li data-step="requested" data-done>/.test(open.text) && /<li data-step="in-line" aria-current="step">/.test(open.text)
+        && open.text.includes(`id="keep-url" readonly value="http://localhost/request-access/${t}"`.replace("http://localhost", W.w.origin)) && /<button type="button" class="primary" data-copy-link hidden>Copy link<\/button>/.test(open.text)
+        && (open.text.match(/class="primary"/g) || []).length === 1 && /<a class="quiet" href="\/#walkthrough" data-walkthrough>/.test(open.text),
+        `R13 · the open page: the track at in line, its own address kept with Copy link (the one primary, shown by its script), the walkthrough quiet (${open.status})`],
+      [declined.status === 200 && /data-screen="request-declined"/.test(declined.text) && /<a class="primary" href="\/#walkthrough"/.test(declined.text) && /href="https:\/\/www\.sharingu\.xyz\/"[^>]*>Visit sharingu\.xyz</.test(declined.text),
+        `R13 · the declined page gives a way on: the walkthrough, the website (${declined.status})`],
+      [check.status === 200 && /data-screen="request-check"/.test(check.text) && reads === 0 && !/<form\b/.test(check.text) && /<a class="primary" href="\/request-access"[^>]*>Join the beta</.test(check.text)
+        && !/data-region="check-link"/.test(check.text) && /Google or by email is coming/.test(check.text),
+        `R13 · the check page: 200, no form, nothing read (${reads} statements), Join the beta, no Check my request on itself (${check.status})`],
+    ];
+  },
 };
 
 // ---- the mutants: each must turn its case(s) red ----
@@ -321,13 +366,15 @@ const MUTANTS = [
   { name: "the request door without the same-origin guard", file: "src/index.js",
     from: "if (crossSiteLogin(request, url)) return isForm ? page(403, \"Cross-site request refused.\") : json({ error: \"cross_site_request_access\" }, 403);", to: "", red: ["R9"] },
   { name: "the sign-in without its request-access link", file: "src/login.js",
-    from: ": action === \"/login\" ? REQUEST_ACCESS_LINK : \"\",", to: ": \"\",", red: ["R4"] },
+    from: ": action === \"/login\" ? joinLink() : \"\",", to: ": \"\",", red: ["R4"] },
   { name: "the place without its tie (two at one instant share a place)", file: "src/requestaccess.js",
     from: "AND created_at = ?1 AND id < ?2) AS place", to: "AND created_at = ?1 AND ?2 IS NULL) AS place", red: ["R11"] },
   { name: "the count past the cap said as it is", file: "src/requestpage.js",
-    from: "return taken >= cap ? `All ${cap} ${what} taken` : `${taken} of ${cap} ${what} taken`;", to: "return `${taken} of ${cap} ${what} taken`;", red: ["R12"] },
+    from: "return taken >= cap ? `All ${cap} places taken` : `${taken} of ${cap} places taken`;", to: "return `${taken} of ${cap} places taken`;", red: ["R12"] },
   { name: "the count's failure not caught (the page answers 500)", file: "src/index.js",
     from: "[placeInLine(env, r), betaCount(env).catch(() => null)]", to: "[placeInLine(env, r), betaCount(env)]", red: ["R12"] },
+  { name: "the disclosure closed over a wrong optional field", file: "src/requestpage.js",
+    from: "const open = OPTIONAL_FIELDS.some((k) => v(k).trim() !== \"\" || at === k);", to: "const open = false;", red: ["R13"] },
   { name: "the beta's codes counted expired too", file: "src/beta.js",
     from: "AND s.expires_at > ?1 ", to: "AND ?1 IS NOT NULL ", red: ["R10"] },
 ];

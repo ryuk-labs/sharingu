@@ -1,11 +1,11 @@
 // tools/showcase-selftest.mjs — sprint 21, slice 21.3 (src/showcase.js, src/walkthrough.js, src/login.js frontHead, frontTop, authPage; the
 // `/` gate in src/index.js): the showcase and the front door's one shell, through the REAL worker (src/index.js over node:sqlite
 // built from boot.sql, tools/fixtures/sqlite-worker.mjs) and the splash's own script run in a sandbox.
-//   F1 · GET / at the root, a browser with no session: 200 HTML on the front shell, the hero line and its lede, Request access
-//        (-> /request-access) and the walkthrough beside it (#walkthrough, a section of the page), the five videos and the
+//   F1 · GET / at the root, a browser with no session: 200 HTML on the front shell, the hero line and its lede, ONE orange Join the
+//        beta (-> /request-access) and the walkthrough beside it (#walkthrough, a section of the page), the five videos and the
 //        channel as src/walkthrough.js lists them (each target=_blank rel=noopener), the beta's places as betaCount answers them
-//        ("N of 50 beta places taken"; past the cap "All 50 beta places taken"); nothing third-party loads (no iframe, no
-//        external src, stylesheet or script); a count that cannot be read is left out, the page still 200
+//        ("N of 50 places taken"; past the cap "All 50 places taken"); nothing third-party loads (no iframe, no external src,
+//        stylesheet or script); a count that cannot be read is left out, the page still 200
 //   F2 · the other callers of `/` as before: a script with no credential 401 auth_required, a dead bearer 401 (never the page), a
 //        live bearer 302 to its org's Home, a browser session at the root 302 to its org, a signed-out browser under an org's
 //        address 302 to the sign-in carrying next
@@ -16,12 +16,21 @@
 //        website's own uchan-nod keyframes. Both ways: a script without its reduced-motion test, or without its re-read of the
 //        flag, goes red
 //   F4 · ONE front shell: the sign-in, the connect page, the sign-up and its invite, creating an org and its done page, request
-//        access and its pages, the org picker, the not-here page and the showcase each stand on <body data-shell="front"> with
-//        the top bar's wordmark home to `/`; each card page holds ONE card; the request's pages send the walkthrough to the
-//        showcase's section (/#walkthrough), and no source names the website's docs list any more; GET /login, /signup,
-//        /signup?via=invite, /orgs/new and /request-access answer 200 on the shell
+//        access and its pages (the check page, approved and declined among them), the org picker, the not-here page and the
+//        showcase each stand on <body data-shell="front"> with the top bar's wordmark home to `/`; each page one card, or a
+//        state's page with U-chan's pose and none; one orange primary a view (exactly one on each of the front door's own); the
+//        doors on every page (21.P F24: the website, Check my request and Sign in in the top bar, none on its own page; the foot);
+//        the request's pages send the walkthrough to the showcase's section (/#walkthrough), and no source names the website's
+//        docs list any more; GET /login, /signup, /signup?via=invite, /orgs/new, /request-access and /request-access/check
+//        answer 200 on the shell
+//   F5 · (21.P B9/B10) the walkthrough in place: the five videos the website's own (its docs.html, when its checkout is on this
+//        machine: the same ids, titles, durations, order); each a facade without a script (our poster from /assets/, its badge,
+//        title and duration, a plain youtu.be link), no row printing youtu.be; the worker serves the posters and the logos
+//        itself (immutable, nosniff; any other path and any under an org's address 404); the player's script in a sandbox: each
+//        link a real <button>, nothing made before a press, a press the youtube-nocookie player in place, autoplaying, focused
 // Exit 1 on any failure.
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { homedir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import vm from "node:vm";
@@ -68,14 +77,14 @@ const linkOf = (html, url) => (new RegExp(`<a [^>]*href="${url.replace(/[.?*+^$(
   const channel = linkOf(h, WALKTHROUGH_CHANNEL.url);
   ok(page.status === 200 && /^text\/html/.test(page.type) && /<body data-shell="front">/.test(h) && /data-screen="showcase"/.test(h) && h.includes(SHOWCASE_LINE.replace(/'/g, "&#39;")) && h.includes(SHOWCASE_LEDE),
     `F1 · GET / signed out: 200 HTML on the front shell, the hero line and its lede (${page.status} ${page.type})`);
-  ok(/<a class="access" href="\/request-access"[^>]*>Request access<\/a>/.test(h) && /<a class="see" href="#walkthrough">See the walkthrough<\/a>/.test(h) && /<section [^>]*id="walkthrough"/.test(h)
-    && /<a class="front-link" href="\/login"[^>]*>Sign in<\/a>/.test(h) && (h.match(/class="access"/g) || []).length === 1,
-    "F1 · ONE orange Request access (-> /request-access), the walkthrough beside it (#walkthrough, on this page), Sign in top-right (-> /login)");
+  ok(/<a class="access" href="\/request-access"[^>]*>Join the beta<\/a>/.test(h) && /<a class="see" href="#walkthrough">See the walkthrough<\/a>/.test(h) && /<section [^>]*id="walkthrough"/.test(h)
+    && /<a class="front-link" href="\/login"[^>]*>Sign in<\/a>/.test(h) && (h.match(/class="access"|class="primary"/g) || []).length === 1,
+    "F1 · ONE orange Join the beta (-> /request-access), the walkthrough beside it (#walkthrough, on this page), Sign in top-right (-> /login)");
   ok(WALKTHROUGH.length === 5 && videos.every((a) => a && /target="_blank"/.test(a) && /rel="noopener"/.test(a)) && WALKTHROUGH.every((v) => /^https:\/\/youtu\.be\/[A-Za-z0-9_-]{11}$/.test(v.url))
     && channel && /target="_blank"/.test(channel) && /rel="noopener"/.test(channel) && WALKTHROUGH_CHANNEL.url === "https://www.youtube.com/@SharinguAIApp"
     && WALKTHROUGH.every((v) => h.includes(`>${v.title}<`)),
     `F1 · the five videos and the channel, as src/walkthrough.js lists them, each a new tab with rel=noopener (${videos.filter(Boolean).length}/5, channel ${!!channel})`);
-  ok(c.taken === 4 && h.includes(`data-beta-count>4 of 50 beta places taken<`), `F1 · the beta's places as betaCount answers them (${c.taken} of ${c.cap})`);
+  ok(c.taken === 4 && h.includes(`data-beta-count>4 of 50 places taken<`), `F1 · the beta's places as betaCount answers them, said as every page says them (${c.taken} of ${c.cap})`);
   ok(thirdParty(h).length === 0 && !/<script\b[^>]*\bsrc=/.test(h), `F1 · nothing third-party loads: no iframe, no external src, stylesheet or script (${thirdParty(h).join(" ") || "none"})`);
   const real = W.w.env.DB;
   W.w.env.DB = { ...real, prepare: (q) => real.prepare(q), batch: async () => { throw new Error("D1 down for the count"); } };
@@ -83,8 +92,55 @@ const linkOf = (html, url) => (new RegExp(`<a [^>]*href="${url.replace(/[.?*+^$(
   W.w.env.DB = real;
   for (let id = 6; id <= 60; id++) W.w.db.prepare("INSERT INTO org (id, name, created_at, updated_at, plan) VALUES (?, ?, ?, ?, 'free')").run(id, `Org ${id}`, T0, T0);
   const full = await W.call("GET", "/", { nav: true });
-  ok(down.status === 200 && !/data-beta-count|places taken/.test(down.text) && down.text.includes(SHOWCASE_LINE.replace(/'/g, "&#39;")) && full.text.includes("data-beta-count>All 50 beta places taken<"),
-    `F1 · a count that cannot be read is left out, the page still 200 (${down.status}); past the cap "All 50 beta places taken"`);
+  ok(down.status === 200 && !/data-beta-count|places taken/.test(down.text) && down.text.includes(SHOWCASE_LINE.replace(/'/g, "&#39;")) && full.text.includes("data-beta-count>All 50 places taken<"),
+    `F1 · a count that cannot be read is left out, the page still 200 (${down.status}); past the cap "All 50 places taken"`);
+}
+
+// ---- F5: the walkthrough in place (21.P B9/B10) ----
+{
+  const W = await world();
+  const h = (await W.call("GET", "/", { nav: true })).text;
+  // the website's own list, when its checkout is on this machine: the same ids, titles, durations and order
+  const SITE = join(homedir(), "batcave_vm", "sharingu_website", "docs.html");
+  const site = existsSync(SITE) ? [...readFileSync(SITE, "utf8").matchAll(/data-youtube="([\w-]{11})"[\s\S]*?<strong class="walk-title">([^<]+)<\/strong><time class="walk-time mono" datetime="([^"]+)">([^<]+)</g)].map((m) => [m[1], m[2], m[3], m[4]]) : null;
+  const ours = WALKTHROUGH.map((v) => [v.id, v.title, v.duration, v.time]);
+  ok(!site || JSON.stringify(site) === JSON.stringify(ours), site ? `F5 · the five videos are the website's (docs.html#walkthrough): the same ids, titles, durations, order (${site.map((x) => x[1]).join(" · ")})` : "F5 · (no website checkout on this machine: its list not compared)");
+  const facades = [...h.matchAll(/<a class="walk-play" href="(https:\/\/youtu\.be\/[\w-]{11})"[^>]*data-youtube="([\w-]{11})"[^>]*>([\s\S]*?)<\/a>/g)];
+  ok(facades.length === 5 && facades.every((m, i) => m[2] === WALKTHROUGH[i].id && m[1] === WALKTHROUGH[i].url && new RegExp(`<img src="/assets/${WALKTHROUGH[i].poster.replace(/[.]/g, "\\.")}\\?v=[0-9a-f]{10}"`).test(m[3])
+    && m[3].includes(`>${WALKTHROUGH[i].title}<`) && m[3].includes(`datetime="${WALKTHROUGH[i].duration}">${WALKTHROUGH[i].time}<`) && m[3].includes(WALKTHROUGH[i].badge)),
+    `F5 · each video a facade without a script: our poster, its badge, title and duration, a plain youtu.be link (${facades.length}/5)`);
+  ok(!/>youtu\.be</.test(h) && !h.includes("walk-host"), "F5 · no row prints youtu.be");
+  const posters = await Promise.all(WALKTHROUGH.map((v) => W.w.fetch(new Request(W.w.origin + `/assets/${v.poster}?v=1`))));
+  const logo = await W.w.fetch(new Request(W.w.origin + "/assets/clients/claude.png"));
+  const none = await W.w.fetch(new Request(W.w.origin + "/assets/walkthrough/nope.jpg")), under = await W.call("GET", `/${W.slug}/assets/${WALKTHROUGH[0].poster}`);
+  ok(posters.every((r) => r.status === 200 && r.headers.get("content-type") === "image/jpeg" && /immutable/.test(r.headers.get("cache-control")) && r.headers.get("x-content-type-options") === "nosniff")
+    && logo.status === 200 && logo.headers.get("content-type") === "image/png" && none.status === 404 && under.status === 404,
+    `F5 · the worker serves the posters and the logos itself (image/jpeg, image/png, a year immutable, nosniff); any other path 404, and none under an org's address (${posters.map((r) => r.status).join("/")} · ${logo.status} · ${none.status} · ${under.status})`);
+  // the player's script in a sandbox: each link becomes a <button>; a press puts the youtube-nocookie player in its place, focused;
+  // nothing is made before the press
+  const js = (/<script>(\(function\(\)\{var q=document\.querySelectorAll\('#walkthrough a\.walk-play\[data-youtube\]'\)[\s\S]*?)<\/script>/.exec(h) || [])[1] || "";
+  const made = [];
+  const el = (tag, attrs = {}) => {
+    const e = { tagName: tag, attrs: { ...attrs }, kids: [], listeners: {}, parentNode: null, className: attrs.class || "", focused: false,
+      getAttribute: (k) => e.attrs[k] ?? null, setAttribute: (k, v) => { e.attrs[k] = String(v); },
+      querySelector: (sel) => ({ ".walk-badge": { textContent: " B " }, ".walk-title": { textContent: "T" }, ".walk-time": { textContent: "1:00" } })[sel] || null,
+      appendChild: (k) => { if (k.from) k.from.kids = k.from.kids.filter((x) => x !== k); k.from = e; e.kids.push(k); }, get firstChild() { return e.kids[0] || null; },
+      replaceChild: (n, o) => { n.parentNode = e; o.parentNode = null; e.slot = n; }, addEventListener: (t, f) => { e.listeners[t] = f; }, focus: () => { e.focused = true; } };
+    return e;
+  };
+  const frame = el("div");
+  const links = WALKTHROUGH.map((v) => { const a = el("a", { "data-youtube": v.id, "data-video": "1", class: "walk-play" }); a.kids = [{ from: a }]; a.parentNode = frame; return a; });
+  let thrown = "";
+  try { vm.runInNewContext(js, { document: { querySelectorAll: () => links, createElement: (t) => { const e = el(t); made.push(e); return e; } } }); } catch (e) { thrown = String(e.message); }
+  const buttons = made.filter((e) => e.tagName === "button");
+  const before = made.filter((e) => e.tagName === "iframe").length;
+  frame.slot = null; buttons[0]?.parentNode && (frame.slot = buttons[0]);
+  buttons[0]?.listeners.click?.();
+  const iframe = made.find((e) => e.tagName === "iframe");
+  ok(js && !thrown && buttons.length === 5 && buttons.every((b) => b.type === "button" && /^Play B, T \(1:00\)$/.test(b.attrs["aria-label"])) && before === 0,
+    `F5 · with the script each poster is a real <button> (${buttons.length}), labelled Play <badge>, <title> (<time>); no player made before a press (${before})${thrown ? ` threw ${thrown}` : ""}`);
+  ok(iframe && iframe.src === `https://www.youtube-nocookie.com/embed/${WALKTHROUGH[0].id}?autoplay=1&rel=0` && iframe.focused && iframe.allowFullscreen === true && iframe.referrerPolicy === "strict-origin-when-cross-origin" && frame.slot === iframe,
+    `F5 · a press swaps the button for the youtube-nocookie player in place, autoplaying, focused (${iframe ? iframe.src : "none"})`);
 }
 
 // ---- F2 ----
@@ -165,28 +221,55 @@ for (const [name, mut, red] of MUTANTS) {
   const { renderLogin, renderNotHere } = await mod("login.js");
   const { renderSignup, renderInvite } = await mod("signup.js");
   const { renderOrgNew, renderOrgMade } = await mod("orgpage.js");
-  const { renderRequestAccess, renderRequestReceived, renderRequestAsked, renderRequestMissing } = await mod("requestpage.js");
+  const { renderRequestAccess, renderRequestReceived, renderRequestAsked, renderRequestMissing, renderRequestCheck } = await mod("requestpage.js");
   const { renderOrgPicker } = await mod("orgpicker.js");
   const cards = {
     login: renderLogin({}),
     connect: renderLogin({ action: "", lede: "A client asks to connect as you", hidden: [{ name: "oauth_req", value: "e30=" }], submit: "Sign in and connect", footnoteHtml: "<p>It sends you back.</p>" }),
     signup: renderSignup({}), invite: renderInvite({}), orgNew: renderOrgNew({ host: "agent.example.test" }),
     orgMade: renderOrgMade({ origin: "https://agent.example.test", made: { org: { name: "Acme", slug: "acme" }, project: { key: "o3--acme", name: "Acme" }, key: "k" } }),
-    requestAccess: renderRequestAccess({}), inLine: renderRequestReceived({ request: { name: "Ada", company: "A", status: "open" }, place: 1, count: { taken: 3, cap: 50 } }),
-    asked: renderRequestAsked({ count: { taken: 3, cap: 50 } }), missing: renderRequestMissing({}), picker: renderOrgPicker({ orgs: [{ slug: "acme", name: "Acme", role: "owner" }] }), notHere: renderNotHere(),
+    requestAccess: renderRequestAccess({}), inLine: renderRequestReceived({ request: { name: "Ada", company: "A", status: "open" }, place: 1, count: { taken: 3, cap: 50 }, url: "https://agent.example.test/request-access/x" }),
+    asked: renderRequestAsked({ count: { taken: 3, cap: 50 } }), missing: renderRequestMissing({}), check: renderRequestCheck({}),
+    approved: renderRequestReceived({ request: { name: "Ada", company: "A", status: "approved" } }), declined: renderRequestReceived({ request: { status: "declined" } }), picker: renderOrgPicker({ orgs: [{ slug: "acme", name: "Acme", role: "owner" }] }), notHere: renderNotHere(),
   };
   const off = Object.entries({ ...cards, showcase: page }).filter(([, h]) => !(/<body data-shell="front">/.test(h) && /<header class="front-top">[\s\S]*?<a class="front-brand" href="\/">[\s\S]*?class="wordmark"><span class="wm-product">sharingu<\/span>/.test(h))).map(([k]) => k);
   ok(off.length === 0, `F4 · ${Object.keys(cards).length + 1} front pages on the one shell, the wordmark home to / (off it: ${off.join(", ") || "none"})`);
-  const notOne = Object.entries(cards).filter(([, h]) => (h.match(/<div class="card /g) || []).length !== 1).map(([k]) => k);
-  ok(notOne.length === 0, `F4 · each card page holds ONE card (not one: ${notOne.join(", ") || "none"})`);
+  // the three compositions (21.P): a state's page (solo: U-chan's pose, no card) or one card, never two
+  const solo = ["asked", "missing", "notHere", "check", "approved", "declined"];
+  const badCards = Object.entries(cards).filter(([k, h]) => (h.match(/<div class="card /g) || []).length !== (solo.includes(k) ? 0 : 1) || (solo.includes(k) && !/<svg class="u-uchan u-pose /.test(h))).map(([k]) => k);
+  ok(badCards.length === 0, `F4 · each page one card, or a state's page with U-chan's pose and none (off: ${badCards.join(", ") || "none"})`);
+  // ONE accent a view: at most one orange primary on any front page, exactly one on each of the front door's own
+  const PRIMARY = /class="primary"|class="access"|<button type="submit"|class="done-action"/g;
+  const nPrimary = (h) => (h.match(PRIMARY) || []).length;
+  const mine = ["login", "connect", "signup", "invite", "requestAccess", "inLine", "asked", "missing", "notHere", "check", "approved", "declined"];
+  const accents = Object.entries({ ...cards, showcase: page }).filter(([k, h]) => nPrimary(h) > 1 || (mine.includes(k) && nPrimary(h) !== 1)).map(([k, h]) => `${k} ${nPrimary(h)}`);
+  ok(accents.length === 0 && /form button\[type="submit"\],\.done-action\{[^}]*background:var\(--accent\)/.test(cards.login), `F4 · one orange primary a view (off: ${accents.join(", ") || "none"}); the forms' submit is the orange one`);
+  // the doors (21.P F24): every front page's top bar has the website, Check my request and Sign in, the page's own left out
+  const doors = Object.entries({ ...cards, showcase: page }).filter(([k, h]) => {
+    const bar = (/<header class="front-top">[\s\S]*?<\/header>/.exec(h) || [""])[0];
+    const site = /<a class="front-site" href="https:\/\/www\.sharingu\.xyz\/"/.test(bar), check = /href="\/request-access\/check"[^>]*>Check my request</.test(bar), sign = /href="\/login"[^>]*>Sign in</.test(bar);
+    return !(site && check === (k !== "check") && sign === !["login", "connect"].includes(k) && /<footer class="front-foot">/.test(h));
+  }).map(([k]) => k);
+  ok(doors.length === 0, `F4 · the doors on every front page: the website, Check my request and Sign in in the top bar (none on its own page), the foot (off: ${doors.join(", ") || "none"})`);
   const walk = `href="${WALKTHROUGH_PATH}"`;
   const docsList = readdirSync(join(ENGINE, "src")).filter((f) => f.endsWith(".js") && readFileSync(join(ENGINE, "src", f), "utf8").includes("sharingu.xyz/docs.html#walkthrough"));
   ok(WALKTHROUGH_PATH === "/#walkthrough" && cards.inLine.includes(walk) && cards.asked.includes(walk) && docsList.length === 0,
     `F4 · the request's pages send the walkthrough to the showcase's section (${WALKTHROUGH_PATH}); no source names the website's docs list (${docsList.join(", ") || "none"})`);
   const W = await world();
-  const got = await Promise.all(["/login", "/signup", "/signup?via=invite", "/orgs/new", "/request-access"].map(async (p) => [p, await W.call("GET", p, { nav: true })]));
+  const got = await Promise.all(["/login", "/signup", "/signup?via=invite", "/orgs/new", "/request-access", "/request-access/check"].map(async (p) => [p, await W.call("GET", p, { nav: true })]));
   const bad = got.filter(([, r]) => r.status !== 200 || !/<body data-shell="front">/.test(r.text)).map(([p, r]) => `${p} ${r.status}`);
-  ok(bad.length === 0, `F4 · GET /login, /signup, /signup?via=invite, /orgs/new and /request-access: 200 on the shell (${bad.join(", ") || "all"})`);
+  ok(bad.length === 0, `F4 · GET /login, /signup, /signup?via=invite, /orgs/new, /request-access and /request-access/check: 200 on the shell (${bad.join(", ") || "all"})`);
+}
+
+// F6 · the connect page's head (21.P): a known client's logo only when the code goes back to that client's own host; a name
+// alone is anyone's claim, so another host gets a plain tile and the name in quotes as the app's own words
+{
+  const { connectHead } = await import(pathToFileURL(join(ENGINE, "src", "oauth.js")).href);
+  const real = connectHead("Claude", "claude.ai"), fake = connectHead("Claude", "attacker.example"), gpt = connectHead("ChatGPT", "chatgpt.com:443"), cli = connectHead("Claude Code", "127.0.0.1:33418");
+  ok(/data-client-logo="clients\/claude.png"/.test(real.head) && real.lede === "Connect Claude to sharingu" && real.sub === ""
+    && !/data-client-logo/.test(fake.head) && fake.lede === "Connect “Claude” to sharingu" && /calls itself “Claude”: that name is its own claim/.test(fake.sub)
+    && /clients\/chatgpt.png/.test(gpt.head) && !/data-client-logo/.test(cli.head),
+    `F6 · the client's logo only on its own host (claude.ai yes, attacker.example no, chatgpt.com yes, a loopback no) -> ${fake.lede} | ${fake.sub}`);
 }
 
 console.log(`${failed ? "✗" : "✓"} showcase selftest: ${passed} of ${passed + failed} checks passed`);

@@ -36,6 +36,11 @@
 //                       so a request decided between the read and the write leaves everything as it was. Refused, nothing
 //                       written: an id that is no request, or a request that is not open (approved or declined already).
 //                       The operator hands the code to the request's email (the page says it comes by email).
+//   decline --request <id>
+//                       (sprint 21, 21.P) declines an OPEN request: its status declined, updated_at now; its private page then says
+//                       the request is closed (no reason, no count) with the walkthrough and the website. One guarded write (WHERE
+//                       status = 'open'): a request decided between the read and the write changes nothing. Refused, nothing
+//                       written: an id that is no request, or a request that is not open. No code, no account, no email touched.
 //   requests            (sprint 21, 21.2) the beta's places at its head (as list), then the OPEN requests in line order (the
 //                       order the worker's page counts a place by): place, id, company, role, team size, when it was asked,
 //                       the person's name and email. The operator's own terminal: never a code (none is kept).
@@ -105,8 +110,8 @@
 // live shared database, every org's); --local and --live together, or neither; an email that is not one; an email that is not
 // plain ASCII (the sprint-7 review, A5: SQLite's lower() folds ASCII only, so the triggers and this tool would key two accounts
 // for one non-ASCII email — the beta's floor, as add-person and sign-up refuse it); --days outside 1-30; allow for an account
-// that holds a passphrase without --reset; allow with the beta's 50 places taken without --beyond-cap; allow --request of no open
-// request; revoke with nothing open; remove-account of no account, of an account holding an active seat, or of one that founded an
+// that holds a passphrase without --reset; allow with the beta's 50 places taken without --beyond-cap; allow --request (or decline
+// --request) of no open request; revoke with nothing open; remove-account of no account, of an account holding an active seat, or of one that founded an
 // org still standing.
 // --live is WRITTEN, NOT YET RUN (the org-undo discipline): it needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID from the
 // deployment's credentials file, sourced first (nothing here prints either).
@@ -189,9 +194,19 @@ export async function openRequest(DB, id) {
   if (!REQUEST_ID_RE.test(rid)) return { refused: `${JSON.stringify(rid.slice(0, 80))} is not a request's id (the requests command lists them)` };
   const r = await DB.prepare(REQUEST_ROW_SQL).bind(rid).first();
   if (!r) return { refused: `no request ${rid} on this database (the requests command lists the open ones)` };
-  if (r.status !== "open") return { refused: `request ${rid} is ${r.status}${r.approved_at ? ` (since ${r.approved_at})` : ""}, not open: only an open request is approved` };
+  if (r.status !== "open") return { refused: `request ${rid} is ${r.status}${r.approved_at ? ` (since ${r.approved_at})` : ""}, not open: only an open request is decided` };
   const p = await DB.prepare(REQUEST_PLACE_SQL).bind(String(r.created_at), String(r.id)).first();
   return { request: { id: String(r.id), email: String(r.email), name: String(r.name), company: String(r.company), place: Number((p && p.place) || 0) } };
+}
+// 21.P · the decline (?1 the request, ?2 when): guarded by its status, so only an open request is declined
+export const DECLINE_REQUEST_SQL = "UPDATE access_requests SET status = 'declined', updated_at = ?2 WHERE id = ?1 AND status = 'open'";
+// declineRequest(DB, id, { at }) -> { request } | { refused }: the open request read first (openRequest), then the one guarded write
+export async function declineRequest(DB, id, { at = new Date().toISOString() } = {}) {
+  const q = await openRequest(DB, id);
+  if (q.refused) return q;
+  const res = await DB.prepare(DECLINE_REQUEST_SQL).bind(q.request.id, at).run();
+  if (((res && res.meta && res.meta.changes) || 0) !== 1) return { refused: `request ${q.request.id} was not declined (it was decided since it was read): nothing changed` };
+  return { request: q.request, at };
 }
 // listRequests(DB) -> [{ place, id, email, name, company, role, team_size, created_at }]: the open ones, the first in line first
 export async function listRequests(DB) {
@@ -503,15 +518,15 @@ export function orgLine(o) {
 }
 
 // ---- the CLI ----
-export const USAGE = "usage: node tools/operator.mjs <allow|list|revoke|remove-account|requests|list-orgs|set-plan|raise|suspend|unsuspend|set-openai-challenge|clear-openai-challenge> (--local <persist dir> --config <wrangler config> | --live --config <wrangler config> --confirm-live <D1 database name>) " +
-  "allow (--email <e> | --request <id>) [--days N] [--reset] [--beyond-cap] · list [--email <e>] [--json] · revoke --email <e> · remove-account --email <e> · requests · list-orgs [--json] · " +
+export const USAGE = "usage: node tools/operator.mjs <allow|list|revoke|remove-account|requests|decline|list-orgs|set-plan|raise|suspend|unsuspend|set-openai-challenge|clear-openai-challenge> (--local <persist dir> --config <wrangler config> | --live --config <wrangler config> --confirm-live <D1 database name>) " +
+  "allow (--email <e> | --request <id>) [--days N] [--reset] [--beyond-cap] · list [--email <e>] [--json] · revoke --email <e> · remove-account --email <e> · requests · decline --request <id> · list-orgs [--json] · " +
   "set-plan --org <id|suites> --plan <name> · raise --org <id|suites> --plan <name> [--people N] [--projects N] [--items-month N] [--calls-day N] [--burst-minute N] [--storage-bytes N] · " +
   "suspend --org <id> [--really] · unsuspend --org <id> · set-openai-challenge --token <t> · clear-openai-challenge";
 const EMAIL_COMMANDS = ["allow", "list", "revoke", "remove-account"];
 const ORG_COMMANDS = ["set-plan", "raise", "suspend", "unsuspend"];
 // 11.3: the platform's own writes, on the deployment's KV (never an org's row)
 const CHALLENGE_COMMANDS = ["set-openai-challenge", "clear-openai-challenge"];
-const COMMANDS = [...EMAIL_COMMANDS, "requests", "list-orgs", ...ORG_COMMANDS, ...CHALLENGE_COMMANDS];
+const COMMANDS = [...EMAIL_COMMANDS, "requests", "decline", "list-orgs", ...ORG_COMMANDS, ...CHALLENGE_COMMANDS];
 export const RECORD_DIR = join(ENGINE, ".runs", "operator");
 // run(argv, { open, say, err, recordDir }) -> exit code. open(cfg, { local, live, kv }) -> a backend { DB, database, close }, or
 // with kv (the challenge commands) { KV, database, close } (the selftest passes its own); say prints to this terminal (the code
@@ -524,6 +539,8 @@ export async function run(argv, { open, say = (s) => console.log(s), err = (s) =
   // allow names its email, or (21.2) the open request whose email it is: one of the two, never both
   const byRequest = cmd === "allow" && argv.includes("--request");
   if (byRequest && (argv.includes("--email") || !flag("--request"))) { err(USAGE); return 2; }
+  // 21.P: decline names its open request, never an email
+  if (cmd === "decline" && (argv.includes("--email") || !flag("--request"))) { err(USAGE); return 2; }
   if (EMAIL_COMMANDS.includes(cmd) && cmd !== "list" && !byRequest && !flag("--email")) { err(USAGE); return 2; }
   // 8.5: the org commands name their org (a whole number) and, but for (un)suspend, a plan; raise's numbers are whole numbers
   // --org suites: the suites' org (settings.suites, never org 1: tools/lib-mint-seat.sh's rule), found on the database opened
@@ -591,6 +608,12 @@ export async function run(argv, { open, say = (s) => console.log(s), err = (s) =
         : `  the beta's places: ${p.leftAfter} of ${p.cap} left${p.need ? " after this one" : " (this email already made an org: its code takes no new place)"} (${plural(p.orgs, "org")}, ${plural(p.codes, "open code")} before it)`);
       say(`  code: ${r.code}`);
       say("  Hand the email and this code to the person yourself. It is shown this once and kept nowhere (the database holds its hash); it opens one sign-up, at /signup, for this email only.");
+      return 0;
+    }
+    if (cmd === "decline") {
+      const r = await declineRequest(be.DB, flag("--request"));
+      if (r.refused) { err(`refused (nothing written): ${r.refused}`); return 1; }
+      say(`✓ request ${r.request.id} declined on ${be.database}: ${r.request.name}, ${r.request.company} <${r.request.email}> (was place ${r.request.place} in line); its page says the request is closed`);
       return 0;
     }
     if (cmd === "requests") {

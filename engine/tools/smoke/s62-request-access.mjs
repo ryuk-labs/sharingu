@@ -4,11 +4,11 @@
 //   · GET /request-access: 200, the form (the required five, the optional six, the honeypot); GET /login carries its one link
 //   · a full profile by form: 303 to /request-access/<48 hex>, which is 200 naming the company; one open row, its email lower-cased
 //   · a repeat for the same email (another case, another company): the first request stands — a 303 to /request-access/asked,
-//     200 with its sentence and without the second company; still one row with the first profile; the first link still 200
+//     200 as the asked page, without the second company; still one row with the first profile; the first link still 200
 //     naming the first company
 //   · an existing account's email: the same answer's shape
 //   · the honeypot filled: the same answer's shape, no row
-//   · a bad email: 422, the form again naming the field, nothing written; a wrong token: the 404
+//   · a bad email: 422, the form again with the field marked on itself, nothing written; a wrong token: the 404
 import { randomBytes } from "node:crypto";
 import { smoke, expect, brief, http as http0, d1rows as rows } from "./lib.mjs";
 
@@ -37,7 +37,7 @@ smoke("request access · GET /request-access is the form (the required five, the
   expect(r.status === 200 && /action="\/request-access"/.test(r.raw) && !missing.length && (r.raw.match(/class="opt">optional</g) || []).length === 6 && /<div class="trap" aria-hidden="true">/.test(r.raw),
     () => `GET /request-access: ${r.status}, missing ${missing.join(",")}`);
   const l = await http("GET", "/login", { accept: "text/html" });
-  expect(l.status === 200 && /<a href="\/request-access"[^>]*>Request access<\/a>/.test(l.raw), () => `GET /login: ${l.status}, no Request access link`);
+  expect(l.status === 200 && /<a href="\/request-access"[^>]*>Join the beta<\/a>/.test(l.raw), () => `GET /login: ${l.status}, no Join the beta link`);
   return `the form with ${fields.length} fields; /login links to it`;
 });
 
@@ -54,18 +54,18 @@ smoke("request access · a full profile: 303 to its private link, which names th
   return `303 -> /request-access/<token>; the page names the company; one open row`;
 });
 
-smoke("request access · a repeat for the same email: the first request stands — a 303 to the asked page (the sentence, not the second company), one row with the first profile, the first link still naming the first company", async () => {
+smoke("request access · a repeat for the same email: the first request stands — a 303 to the asked page (the asked page, not the second company), one row with the first profile, the first link still naming the first company", async () => {
   expect(S.first, "the full request case did not run");
   const r = await ask({ email: S.email.toUpperCase(), company: `S62 Difference ${TAG}` });
   const asked = await http("GET", r.locationRaw || "/request-access/asked", { accept: "text/html" });
   const got = reqRows(S.email);
   const first = await http("GET", `/request-access/${S.token}`, { accept: "text/html" });
   expect(r.status === 303 && r.locationRaw === "/request-access/asked" && asked.status === 200
-    && asked.raw.includes("This email has already asked for a place. The link from your first request shows your place.") && !asked.raw.includes(`S62 Difference ${TAG}`),
+    && /data-screen="request-asked"/.test(asked.raw) && !asked.raw.includes(`S62 Difference ${TAG}`),
     () => `the repeat: ${r.status} -> ${r.locationRaw}; the asked page ${asked.status}`);
   expect(got.length === 1 && got[0].id === S.row.id && got[0].created_at === S.row.created_at && got[0].company === `S62 Engines ${TAG}`, () => `rows ${brief(got)}`);
   expect(first.status === 200 && first.raw.includes(`S62 Engines ${TAG}`) && !first.raw.includes(`S62 Difference ${TAG}`), () => `the first link: ${first.status}`);
-  return `303 -> /request-access/asked (200, the sentence, no second company); one row, the first profile; the first link 200`;
+  return `303 -> /request-access/asked (200, the asked page, no second company); one row, the first profile; the first link 200`;
 });
 
 smoke("request access · an existing account's email: the same answer as a new email", async () => {
@@ -85,10 +85,10 @@ smoke("request access · the honeypot filled: the same answer, no row", async ()
   return `the same 303, nothing written`;
 });
 
-smoke("request access · a bad email is 422 naming the field, nothing written; a wrong token is the 404", async () => {
+smoke("request access · a bad email is 422, the field marked on itself, nothing written; a wrong token is the 404", async () => {
   const e = `s62bad${TAG}`;
   const r = await ask({ email: e });
-  expect(r.status === 422 && /work email/.test(r.raw) && /data-screen="request-access"/.test(r.raw) && rows(`SELECT 1 FROM access_requests WHERE email = ${q(e)}`).length === 0,
+  expect(r.status === 422 && /work email/.test(r.raw) && /data-screen="request-access"/.test(r.raw) && /<input[^>]*id="email"[^>]*aria-invalid="true"[^>]*autofocus/.test(r.raw) && /data-field-error="email"/.test(r.raw) && rows(`SELECT 1 FROM access_requests WHERE email = ${q(e)}`).length === 0,
     () => `a bad email: ${r.status} ${r.raw.slice(0, 160)}`);
   const j = await http("POST", "/request-access", { body: { ...FULL, web: undefined, email: e } });   // a script: no form marker
   expect(j.status === 422 && j.json && j.json.error === "bad_request_access" && j.json.field === "email", () => `JSON: ${j.status} ${brief(j.json)}`);

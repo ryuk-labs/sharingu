@@ -81,7 +81,7 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   changed later on github.com, org People). The plugin's dist repo moved to `ryuk-labs/sharingu-plugin` (a transfer:
   the old path redirects). `engine/.runs/` is machine-local (gitignored): the ship
   logs, the video recorder (`engine/.runs/b12-videos/`: `record.mjs`, `compose-take.sh`, `sweep-take.sh`, `join.sh`).
-- **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at 6fbd4d5: the install line naming
+- **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at a3b43ec (2026-10-14: the walkthrough plays from YouTube in place behind our own posters, the MP4s gone, Walkthrough in every nav; played on live): the install line naming
   ryuk-labs/sharingu-plugin, the walkthrough section `docs.html#walkthrough` (five videos: video 5 first, the ChatGPT test cases beside the live app, 4:34 at 1920×1080, the OpenAI submission's demo), the tools page at sprint 19's
   contract (37 tools). Its tools page matches the engine's contract (`npm run check:mcp-tools`).
 - **The plugin:** this tree 0.1.12 (`claude plugin validate --strict ./plugin` passes); the public dist repo 0.1.16 (in sync; a team member on a plugin older than 0.1.15 updates: it still names `file`).

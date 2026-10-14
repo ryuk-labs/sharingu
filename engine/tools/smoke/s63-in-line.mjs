@@ -10,8 +10,11 @@
 //     form holding the request's company and name, and POST /orgs with them makes the org, named the company
 //   · the asked page (a repeat of the second's email): the count and the walkthrough, nothing the request typed
 //   · `allow --request` of the approved one, and of an id that is no request: refused (exit 1), no code, the request as it was
+//   · (21.P) the open page's track lit at in line and its own address kept with Copy link; `operator decline --request` of the
+//     second: its page says the request is closed (the walkthrough, the website), no place, no count; a second decision of it, or
+//     a decline of the approved one, refused
 import { randomBytes } from "node:crypto";
-import { smoke, expect, brief, http as http0, d1rows as rows, operator as op, betaLine as line } from "./lib.mjs";
+import { smoke, expect, brief, http as http0, d1rows as rows, operator as op, betaLine as line, BASE } from "./lib.mjs";
 
 const TAG = randomBytes(3).toString("hex");
 const q = (v) => `'${String(v).replace(/'/g, "''")}'`;
@@ -47,6 +50,9 @@ smoke("in line · two requests in order: the second's place is the first's + 1, 
     () => `the places: pages ${placeOf(p1)}, ${placeOf(p2)}; the operator's ${l.places[S.id1]}, ${l.places[S.id2]}`);
   for (const p of [p1, p2]) expect(p.status === 200 && /data-screen="request-in-line"/.test(p.raw) && countOf(p) === words(l) && p.raw.includes(WALK) && /data-region="request-next"/.test(p.raw),
     () => `a page: ${p.status}, count "${countOf(p)}" vs the operator's "${words(l)}"`);
+  // 21.P: the track lit at in line, and the page's own address kept with Copy link (the request's origin and path)
+  expect(/<li data-step="in-line" aria-current="step">/.test(p1.raw) && p1.raw.includes(`id="keep-url" readonly value="${BASE}/request-access/${S.t1}"`) && /data-copy-link hidden>Copy link</.test(p1.raw),
+    () => `the track or the kept address: ${(/<ol class="track"[\s\S]*?<\/ol>/.exec(p1.raw) || [""])[0].slice(0, 200)} ${(/id="keep-url"[^>]*>/.exec(p1.raw) || ["no keep-url"])[0]}`);
   S.place2 = placeOf(p2);
   return `places ${placeOf(p1)} and ${placeOf(p2)}, as the operator lists them; "${words(l)}" on both pages; what comes next and the walkthrough`;
 });
@@ -91,4 +97,18 @@ smoke("in line · `allow --request` of the approved request, and of an id that i
     && JSON.stringify(rows(`SELECT status, approved_at, updated_at FROM access_requests WHERE id = ${q(S.id1)}`)) === JSON.stringify(before)
     && rows(`SELECT COUNT(*) AS n FROM signup_codes WHERE email = ${q(S.e1)}`)[0].n === codes, () => `the refusals: ${again.rc} ${again.out.slice(0, 160)} | ${none.rc} ${none.out.slice(0, 160)}`);
   return `the approved one and a stranger id: exit 1, no code, the request as it was`;
+});
+
+smoke("in line · `operator decline --request` closes the second: its page says so with a way on (the walkthrough, the website); the declined one and the approved one refused a second decision", async () => {
+  expect(S.id1 && S.id2 && S.t2, "the two requests case did not run");
+  const d = await op("decline", "--request", S.id2);
+  const row = rows(`SELECT status, approved_at FROM access_requests WHERE id = ${q(S.id2)}`)[0] || {};
+  const p = await page(S.t2);
+  expect(d.rc === 0 && /request \S+ declined/.test(d.out) && !/code: /.test(d.out) && row.status === "declined" && !row.approved_at, () => `decline: rc ${d.rc} ${d.out.slice(0, 200)}; row ${brief(row)}`);
+  expect(p.status === 200 && /data-screen="request-declined"/.test(p.raw) && /<a class="primary" href="\/#walkthrough"/.test(p.raw) && /href="https:\/\/www\.sharingu\.xyz\/"/.test(p.raw)
+    && !/data-request-place|data-beta-count/.test(p.raw) && !p.raw.includes(`S63 Second ${TAG}`), () => `the declined page: ${p.status}`);
+  const again = await op("decline", "--request", S.id2), approved = await op("decline", "--request", S.id1);
+  expect(again.rc === 1 && /not open/.test(again.out) && approved.rc === 1 && /not open/.test(approved.out) && rows(`SELECT status FROM access_requests WHERE id = ${q(S.id1)}`)[0].status === "approved",
+    () => `the refusals: ${again.rc} ${again.out.slice(0, 160)} | ${approved.rc} ${approved.out.slice(0, 160)}`);
+  return "declined; its page says the request is closed, the walkthrough and the website its way on; a second decision refused (exit 1)";
 });

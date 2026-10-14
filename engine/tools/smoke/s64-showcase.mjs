@@ -1,8 +1,9 @@
 // tools/smoke/s64-showcase.mjs — sprint 21, slice 21.3 (src/showcase.js, src/walkthrough.js, src/login.js frontHead, frontTop, authPage; the
 // `/` gate in src/index.js), on the real local worker at the platform's root. Self-contained: it signs org 1's owner in with its
 // own key (as s41 does) and registers its own OAuth client (as s43 does).
-//   · signed out, a browser at `/`: 200 HTML on the front shell, the hero line, Request access -> /request-access, the walkthrough
-//     on the same page, the five videos and the channel (each https://youtu.be/… or the channel, target=_blank, rel noopener),
+//   · signed out, a browser at `/`: 200 HTML on the front shell, the hero line, Join the beta -> /request-access, the walkthrough
+//     on the same page, the five videos and the channel (each https://youtu.be/… or the channel, target=_blank, rel noopener, the
+//     page as it is without a script; s65 proves the posters and the player in place),
 //     the beta's places equal to the count at the head of `operator requests`; no iframe, nothing third-party loads
 //   · the other callers of `/` unchanged: a signed-in browser is sent to its org (302), a script with no session 401
 //   · the splash: hidden in the markup until its script shows it, the first-visit flag in this browser's storage, off under
@@ -26,17 +27,17 @@ const SHELL = /<body data-shell="front">/;
 const linkTo = (html, url) => (new RegExp(`<a [^>]*href="${url.replace(/[.?*+^$()[\]{}|\\]/g, "\\$&")}"[^>]*>`).exec(html) || [])[0] || "";
 const S = {};
 
-smoke("showcase · signed out, a browser at /: the hero line, Request access, the walkthrough's five videos and the channel (new tabs, noopener), the beta's places as the operator counts them; nothing third-party", async () => {
+smoke("showcase · signed out, a browser at /: the hero line, Join the beta, the walkthrough's five videos and the channel (new tabs, noopener, without a script), the beta's places as the operator counts them; nothing third-party", async () => {
   const r = await http("GET", "/", NAV);
   const h = r.raw;
   expect(r.status === 200 && SHELL.test(h) && /data-screen="showcase"/.test(h) && h.includes(esc(SHOWCASE_LINE)), () => `GET /: ${r.status} ${r.locationRaw || h.slice(0, 200)}`);
-  expect(/<a class="access" href="\/request-access"[^>]*>Request access<\/a>/.test(h) && /href="#walkthrough"/.test(h) && /<section [^>]*id="walkthrough"/.test(h),
-    "Request access -> /request-access and the walkthrough's section on the page");
+  expect(/<a class="access" href="\/request-access"[^>]*>Join the beta<\/a>/.test(h) && /href="#walkthrough"/.test(h) && /<section [^>]*id="walkthrough"/.test(h),
+    "Join the beta -> /request-access and the walkthrough's section on the page");
   const links = [...WALKTHROUGH.map((v) => v.url), WALKTHROUGH_CHANNEL.url].map((u) => [u, linkTo(h, u)]);
   const bad = links.filter(([u, a]) => !a || !/target="_blank"/.test(a) || !/rel="noopener"/.test(a) || !/^https:\/\/(youtu\.be\/[A-Za-z0-9_-]{11}|www\.youtube\.com\/@SharinguAIApp)$/.test(u));
   expect(WALKTHROUGH.length === 5 && !bad.length, () => `the walkthrough's links: ${bad.map(([u, a]) => `${u} ${a || "absent"}`).join("; ")}`);
   const l = await betaLine();
-  const want = l.taken >= l.cap ? `All ${l.cap} beta places taken` : `${l.taken} of ${l.cap} beta places taken`;
+  const want = l.taken >= l.cap ? `All ${l.cap} places taken` : `${l.taken} of ${l.cap} places taken`;
   const got = (/data-beta-count>([^<]+)</.exec(h) || [])[1] || "";
   expect(got === want, () => `the count: the page "${got}", the operator's "${want}"`);
   const third = [...h.matchAll(/<iframe\b|\bsrc="(?:https?:)?\/\/[^"]*"|<link\b[^>]*\bhref="(?:https?:)?\/\/[^"]*"/gi)].map((m) => m[0]);
