@@ -24,6 +24,10 @@ import { AsyncLocalStorage } from "node:async_hooks";
 // provider and its discovery documents, the health check and the static files. Under an org's address each answers 404
 // (src/index.js routeRequest), the same for every org.
 export const PLATFORM_PATHS = new Set(["login", "logout", "signup", "request-access", "orgs", "install", "mcp", "oauth", ".well-known", "health", "fonts", "favicon.svg"]);
+// PLATFORM_ROOT — the platform's own front page (sprint 21, 21.3: the showcase, src/showcase.js), never an org's home: the front
+// door's pages (src/login.js frontTop, the walkthrough's section, src/walkthrough.js) link it as it is, because they belong to
+// no org; an org's own pages reach their org's root through orgPath("/").
+export const PLATFORM_ROOT = "/";
 
 const ALS = new AsyncLocalStorage();
 // inRequest(fn) -> fn's answer, run inside a fresh request context (its base "" until setOrgBase)

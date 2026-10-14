@@ -8,6 +8,7 @@ import { esc, errorState } from "./ui.js";
 import { DEFAULT_BRAND } from "./tenant.js";
 import { authPage, authBrand } from "./login.js";
 import { TEAM_SIZES, REQUEST_MAX, REQUEST_TRAP, REQUEST_PATH } from "./requestaccess.js";
+import { WALKTHROUGH_PATH } from "./walkthrough.js";
 
 export const REQUEST_FIELD_WORDS = {
   name: `Type your name (at most ${REQUEST_MAX.name} characters).`,
@@ -30,7 +31,7 @@ function brandOf(brand, words) {
 }
 // the form's own few rules on the front door's tokens: the team size's select as the inputs are, the honeypot out of sight
 const REQUEST_CSS = `
-  select{width:100%;height:42px;padding:0 10px;font:400 14.5px/1 var(--sans);color:var(--text);background:var(--page);border:1px solid var(--line-strong);border-radius:8px}
+  select{width:100%;height:42px;padding:0 10px;font:400 14.5px/1 var(--sans);color:var(--text);background:var(--page);border:1px solid var(--line-strong);border-radius:6px}
   select:focus{outline:2px solid var(--field-ring);outline-offset:1px;border-color:transparent}
   .part{margin:6px 0 0;font:700 13px/1.3 var(--sans);color:var(--text)}
   .trap{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
@@ -79,19 +80,18 @@ export function renderRequestAccess(opts) {
   });
 }
 
-// the walkthrough while a person waits: the site's docs page, its one fixed section (sprint 18: the videos live there)
-export const WALKTHROUGH_URL = "https://www.sharingu.xyz/docs.html#walkthrough";
-// betaWords(count) -> the beta's places in words, from src/accounts.js betaCount's answer (read from D1 by the route), or "" when
-// there is none (the read failed: the page leaves the count out, never a guess). Past the cap (the operator may allow beyond it)
-// it says every place is taken, never "51 of 50".
-export function betaWords(count) {
+// betaWords(count, what) -> the beta's places in words, from src/accounts.js betaCount's answer (read from D1 by the route), or ""
+// when there is none (the read failed: the page leaves the count out, never a guess). Past the cap (the operator may allow beyond
+// it) it says every place is taken, never "51 of 50". what: the places' name ("beta places" on the showcase, src/showcase.js).
+export function betaWords(count, what = "places") {
   const taken = Number(count && count.taken), cap = Number(count && count.cap);
   if (!count || !Number.isSafeInteger(taken) || !Number.isSafeInteger(cap) || taken < 0 || cap < 1) return "";
-  return taken >= cap ? `All ${cap} places taken` : `${taken} of ${cap} places taken`;
+  return taken >= cap ? `All ${cap} ${what} taken` : `${taken} of ${cap} ${what} taken`;
 }
 // the count as one fact, or nothing
 const betaFact = (count) => { const w = betaWords(count); return w ? `<div class="fact"><span class="fact-k">The beta</span><span class="fact-v" data-beta-count>${esc(w)}</span></div>` : ""; };
-const walkLink = `<a class="done-action" href="${WALKTHROUGH_URL}" data-walkthrough>See the walkthrough</a>`;
+// the walkthrough while a person waits: the showcase's own section, the ONE list (src/walkthrough.js)
+const walkLink = `<a class="done-action" href="${WALKTHROUGH_PATH}" data-walkthrough>See the walkthrough</a>`;
 // the in-line page's few rules on the front door's tokens: what comes next, a short numbered list
 const LINE_CSS = `
   .next{margin:0;padding:0 0 0 18px;display:flex;flex-direction:column;gap:6px;font:400 13.5px/1.5 var(--sans);color:var(--text)}

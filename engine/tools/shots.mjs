@@ -84,7 +84,13 @@ const FOLD_CLEAN = "try{Object.keys(localStorage).forEach(function(k){if(k.index
 // the create-an-org form filled and sent (the shots of 7.3): every value as a JS string literal
 const ORG_FILL = (email, pass, name, slug) => `(function(){var f=document.querySelector('form[action="/orgs"]');if(!f)return;f.email.value=${JSON.stringify(email)};f.password.value=${JSON.stringify(pass)};f.name.value=${JSON.stringify(name)};f.slug.value=${JSON.stringify(slug)};f.submit();})()`;
 const NEWORG = String(process.env.SHOTS_NEWORG || "").split(",").map((x) => x.trim().split(/\s+/)).filter((x) => x.length === 2 && x[0] && x[1]);
+// the showcase's splash flag (src/showcase.js SPLASH_KEY): set, a returning visitor's page; cleared, the first visit's splash
+const SPLASH_SEEN = "try{localStorage.setItem('sharingu-splash','1')}catch(e){}";
+const SPLASH_FIRST = "try{localStorage.removeItem('sharingu-splash')}catch(e){}";
 const ALL = [
+  // sprint 21, 21.3: the showcase at `/` (signed out): the page, and the first visit's splash caught mid-way (its timeline slowed)
+  ["showcase", "/", false, { before: SPLASH_SEEN }],
+  ["showcase-splash", "/", false, { before: SPLASH_FIRST, rate: 0.2, settle: 60 }],
   ["login", "/login", false],
   // sprint 7, 7.4b: an org's own sign-in (--brand-org <slug>: the page a signed-out visit to /<slug>/… is sent to, in that org's
   // brand), the one not-here page (a platform door asked for under an org's address), the org picker (GET /orgs: an ACCOUNT

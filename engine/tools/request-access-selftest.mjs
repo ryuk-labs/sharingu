@@ -265,7 +265,8 @@ const CASES = {
     ];
   },
   async R12() {
-    const { betaWords, WALKTHROUGH_URL } = await mod("requestpage.js");
+    const { betaWords } = await mod("requestpage.js");
+    const { WALKTHROUGH_PATH } = await mod("walkthrough.js");
     const { betaCount } = await mod("accounts.js");
     const W = await world();
     const db = W.w.db;
@@ -277,7 +278,7 @@ const CASES = {
     const open = await get(`/request-access/${W.tokenOf(a)}`), declined = await get(`/request-access/${W.tokenOf(d)}`), approved = await get(`/request-access/${W.tokenOf(p)}`), asked = await get("/request-access/asked");
     const c = await betaCount({ DB: d1(db) });
     const words = `${c.taken} of ${c.cap} places taken`;
-    const walk = `href="${WALKTHROUGH_URL}"`;
+    const walk = `href="${WALKTHROUGH_PATH}"`;
     // the count's two statements fail (the batch), the request's own reads do not: the count is left out
     const real = W.w.env.DB;
     W.w.env.DB = { prepare: (q) => real.prepare(q), batch: async () => { throw new Error("D1 down for the count"); } };
@@ -324,7 +325,7 @@ const MUTANTS = [
   { name: "the place without its tie (two at one instant share a place)", file: "src/requestaccess.js",
     from: "AND created_at = ?1 AND id < ?2) AS place", to: "AND created_at = ?1 AND ?2 IS NULL) AS place", red: ["R11"] },
   { name: "the count past the cap said as it is", file: "src/requestpage.js",
-    from: "return taken >= cap ? `All ${cap} places taken` : `${taken} of ${cap} places taken`;", to: "return `${taken} of ${cap} places taken`;", red: ["R12"] },
+    from: "return taken >= cap ? `All ${cap} ${what} taken` : `${taken} of ${cap} ${what} taken`;", to: "return `${taken} of ${cap} ${what} taken`;", red: ["R12"] },
   { name: "the count's failure not caught (the page answers 500)", file: "src/index.js",
     from: "[placeInLine(env, r), betaCount(env).catch(() => null)]", to: "[placeInLine(env, r), betaCount(env)]", red: ["R12"] },
   { name: "the beta's codes counted expired too", file: "src/beta.js",

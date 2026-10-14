@@ -7144,146 +7144,146 @@
     "index.js": {
       "constants": [
         {
-          "line": 656,
+          "line": 657,
           "name": "ABOVE_ROUTES",
           "role": ""
         },
         {
-          "line": 510,
+          "line": 511,
           "name": "ARTIFACT_CSP",
           "role": "G2 M2: a saved file is served as an inert document (GET /artifact/:id): no script, nothing loaded from anywhere"
         },
         {
-          "line": 2060,
+          "line": 2061,
           "name": "BELOW_ROUTES_1",
           "role": ""
         },
         {
-          "line": 2312,
+          "line": 2313,
           "name": "BELOW_ROUTES_2",
           "role": ""
         },
         {
-          "line": 106,
+          "line": 107,
           "name": "CAPABILITIES",
           "role": "STALENESS GUARD: evals parse this file for routes and assert every one is declared below."
         },
         {
-          "line": 100,
+          "line": 101,
           "name": "CONSENT_GRADES",
           "role": "NULL/absent = 'off'. Enforcement is STRIP + honest note, never a block \u2014 R never blocks."
         },
         {
-          "line": 508,
+          "line": 509,
           "name": "EXTRACT_STATUS",
           "role": "the HTTP status of an extract refusal (src/extract.js): a missing item reads 404 exactly as a hidden one"
         },
         {
-          "line": 347,
+          "line": 348,
           "name": "FLASH_CODES",
           "role": "code, a filing error, or that it filed. Only the codes the screens know are read; anything else reads as nothing."
         },
         {
-          "line": 652,
+          "line": 653,
           "name": "HEALTH_SQL",
           "role": "/health's one row (sprint 6, 6.3: the platform's, read off the schema; it names nothing of any org)"
         },
         {
-          "line": 520,
+          "line": 521,
           "name": "MCP_TOOLS",
           "role": "what it needs and what it answers, in at most three sentences. No tenant fact rides a description (check-brand.py guards"
         },
         {
-          "line": 225,
+          "line": 226,
           "name": "NOT_HERE",
           "role": ""
         },
         {
-          "line": 2536,
+          "line": 2537,
           "name": "OBSERVABLE_GETS",
           "role": "(it ends the session). Tested on the URL-normalised PATHNAME (installSelfPage), so a dot-segment path resolves first."
         },
         {
-          "line": 642,
+          "line": 643,
           "name": "ORG_ARG",
           "role": "plane and the attack suite's argument sets all see it."
         },
         {
-          "line": 374,
+          "line": 375,
           "name": "PLAN_WARNING_HEADER",
           "role": ""
         },
         {
-          "line": 361,
+          "line": 362,
           "name": "REQ_FROM",
           "role": ""
         },
         {
-          "line": 205,
+          "line": 206,
           "name": "RESERVED_ORG_NAMES",
           "role": "it exists. tools/check-org-names.mjs (a gate step) proves every route the tables below answer is in it."
         },
         {
-          "line": 97,
+          "line": 98,
           "name": "VERSION",
           "role": ""
         }
       ],
       "d1Queries": [
         {
-          "line": 320,
+          "line": 321,
           "sql": "${sql} WHERE project = ?1 AND ${ids.length > 1 ?"
         },
         {
-          "line": 667,
+          "line": 668,
           "sql": "<dynamic: HEALTH_SQL>"
         },
         {
-          "line": 698,
+          "line": 699,
           "sql": "UPDATE tokens SET revoked = 1 WHERE token_hash = ?"
         },
         {
-          "line": 731,
+          "line": 732,
           "sql": "SELECT key FROM projects WHERE key = ? AND active = 1 AND org = {org}"
         },
         {
-          "line": 745,
+          "line": 746,
           "sql": "UPDATE tokens SET project = ? WHERE token_hash = ? AND revoked = 0"
         },
         {
-          "line": 801,
+          "line": 802,
           "sql": "UPDATE people SET hats = ?, avatar = ? WHERE id = ?"
         },
         {
-          "line": 804,
+          "line": 805,
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         },
         {
-          "line": 827,
+          "line": 828,
           "sql": "UPDATE people SET trace_consent = ? WHERE id = ?"
         },
         {
-          "line": 832,
+          "line": 833,
           "sql": "INSERT INTO events (id, session_id, person_id, kind, payload_json, created_at, o"
         },
         {
-          "line": 1452,
+          "line": 1453,
           "sql": "<dynamic: auditEventsSql(clauses)>"
         },
         {
-          "line": 1465,
+          "line": 1466,
           "sql": "SELECT project, id, name FROM k_nodes WHERE project = ? AND id IN (${ch.map(() ="
         },
         {
-          "line": 1956,
+          "line": 1957,
           "sql": "SELECT a.*, p.name AS by_name FROM artifacts a JOIN people p ON p.id = a.person_"
         },
         {
-          "line": 2071,
+          "line": 2072,
           "sql": "UPDATE tokens SET revoked = 1 WHERE token_hash = ? AND revoked = 0"
         },
         {
-          "line": 2686,
+          "line": 2687,
           "sql": "SELECT settings FROM org WHERE id = {org}"
         }
       ],
@@ -10382,17 +10382,27 @@
     "login.js": {
       "constants": [
         {
-          "line": 192,
+          "line": 131,
+          "name": "AUTH_CSS",
+          "role": ""
+        },
+        {
+          "line": 81,
+          "name": "FRONT_CSS",
+          "role": "the links that read as words (ink, a quiet underline: the orange stays the view's one accent)"
+        },
+        {
+          "line": 230,
           "name": "ORG_CHOICE_CSS",
           "role": "the OAuth form's org choice: one bordered list, a radio per org (its name, its address)"
         },
         {
-          "line": 39,
+          "line": 40,
           "name": "PRODUCT",
           "role": "manifest-less org's fallback org IS the product name, so it is not repeated as its own secondary line."
         },
         {
-          "line": 190,
+          "line": 228,
           "name": "REQUEST_ACCESS_LINK",
           "role": "the sign-in's way to request access (sprint 21, 21.1), constant markup"
         }
@@ -10401,10 +10411,18 @@
       "exports": [
         "authBrand",
         "authPage",
+        "frontHead",
+        "frontTop",
         "renderLogin",
         "renderNotHere"
       ],
       "imports": [
+        {
+          "from": "./orgpath.js",
+          "names": [
+            "PLATFORM_ROOT"
+          ]
+        },
         {
           "from": "./shell.js",
           "names": [
@@ -10428,7 +10446,7 @@
           "names": [
             "errorState",
             "esc",
-            "logo"
+            "uchan"
           ]
         }
       ],
@@ -12004,17 +12022,17 @@
     "orgpath.js": {
       "constants": [
         {
-          "line": 28,
+          "line": 32,
           "name": "ALS",
           "role": ""
         },
         {
-          "line": 61,
+          "line": 65,
           "name": "ORG_LANDING",
           "role": "ORG_LANDING \u2014 the page a person lands on in an org they pick: its Home"
         },
         {
-          "line": 79,
+          "line": 83,
           "name": "ORG_PATH_CLIENT",
           "role": "live picture) carries it too, so a client is whole on its own (the selftests run one alone)"
         },
@@ -12022,6 +12040,11 @@
           "line": 26,
           "name": "PLATFORM_PATHS",
           "role": "(src/index.js routeRequest), the same for every org."
+        },
+        {
+          "line": 30,
+          "name": "PLATFORM_ROOT",
+          "role": "no org; an org's own pages reach their org's root through orgPath(\"/\")."
         }
       ],
       "d1Queries": [],
@@ -12029,6 +12052,7 @@
         "ORG_LANDING",
         "ORG_PATH_CLIENT",
         "PLATFORM_PATHS",
+        "PLATFORM_ROOT",
         "inOrgPath",
         "inRequest",
         "isPlatformPath",
@@ -14499,25 +14523,19 @@
           "role": "the in-line page's few rules on the front door's tokens: what comes next, a short numbered list"
         },
         {
-          "line": 32,
+          "line": 33,
           "name": "REQUEST_CSS",
           "role": "the form's own few rules on the front door's tokens: the team size's select as the inputs are, the honeypot out of sight"
         },
         {
-          "line": 12,
+          "line": 13,
           "name": "REQUEST_FIELD_WORDS",
           "role": ""
-        },
-        {
-          "line": 83,
-          "name": "WALKTHROUGH_URL",
-          "role": "the walkthrough while a person waits: the site's docs page, its one fixed section (sprint 18: the videos live there)"
         }
       ],
       "d1Queries": [],
       "exports": [
         "REQUEST_FIELD_WORDS",
-        "WALKTHROUGH_URL",
         "betaWords",
         "renderRequestAccess",
         "renderRequestAsked",
@@ -14552,6 +14570,12 @@
           "names": [
             "errorState",
             "esc"
+          ]
+        },
+        {
+          "from": "./walkthrough.js",
+          "names": [
+            "WALKTHROUGH_PATH"
           ]
         }
       ],
@@ -15103,6 +15127,98 @@
             "esc",
             "logo",
             "stateChip"
+          ]
+        }
+      ],
+      "r2Keys": [],
+      "routes": []
+    },
+    "showcase.js": {
+      "constants": [
+        {
+          "line": 32,
+          "name": "SHOWCASE_CSS",
+          "role": ""
+        },
+        {
+          "line": 26,
+          "name": "SHOWCASE_LEDE",
+          "role": ""
+        },
+        {
+          "line": 25,
+          "name": "SHOWCASE_LINE",
+          "role": ""
+        },
+        {
+          "line": 29,
+          "name": "SPLASH_IN",
+          "role": "the splash's one timeline (ms): U-chan in, the nod, the fade; the script removes the overlay at its end (under 1.5 s)"
+        },
+        {
+          "line": 73,
+          "name": "SPLASH_JS",
+          "role": "a first visit whose flag this browser keeps, never under reduced motion; any key, pointer or touch removes it, else its "
+        },
+        {
+          "line": 27,
+          "name": "SPLASH_KEY",
+          "role": ""
+        },
+        {
+          "line": 30,
+          "name": "SPLASH_MS",
+          "role": ""
+        }
+      ],
+      "d1Queries": [],
+      "exports": [
+        "SHOWCASE_LEDE",
+        "SHOWCASE_LINE",
+        "SPLASH_KEY",
+        "SPLASH_MS",
+        "renderShowcase"
+      ],
+      "imports": [
+        {
+          "from": "./login.js",
+          "names": [
+            "authBrand",
+            "frontHead",
+            "frontTop"
+          ]
+        },
+        {
+          "from": "./requestaccess.js",
+          "names": [
+            "REQUEST_PATH"
+          ]
+        },
+        {
+          "from": "./requestpage.js",
+          "names": [
+            "betaWords"
+          ]
+        },
+        {
+          "from": "./tenant.js",
+          "names": [
+            "DEFAULT_BRAND"
+          ]
+        },
+        {
+          "from": "./ui.js",
+          "names": [
+            "PRODUCT_NAME",
+            "esc",
+            "uchan"
+          ]
+        },
+        {
+          "from": "./walkthrough.js",
+          "names": [
+            "WALKTHROUGH",
+            "WALKTHROUGH_CHANNEL"
           ]
         }
       ],
@@ -16541,6 +16657,41 @@
           "from": "./util.js",
           "names": [
             "isD1Quota"
+          ]
+        }
+      ],
+      "r2Keys": [],
+      "routes": []
+    },
+    "walkthrough.js": {
+      "constants": [
+        {
+          "line": 8,
+          "name": "WALKTHROUGH",
+          "role": ""
+        },
+        {
+          "line": 15,
+          "name": "WALKTHROUGH_CHANNEL",
+          "role": ""
+        },
+        {
+          "line": 17,
+          "name": "WALKTHROUGH_PATH",
+          "role": "where a page sends a person for the walkthrough: the showcase's own section, at the platform's root (never an org's)"
+        }
+      ],
+      "d1Queries": [],
+      "exports": [
+        "WALKTHROUGH",
+        "WALKTHROUGH_CHANNEL",
+        "WALKTHROUGH_PATH"
+      ],
+      "imports": [
+        {
+          "from": "./orgpath.js",
+          "names": [
+            "PLATFORM_ROOT"
           ]
         }
       ],

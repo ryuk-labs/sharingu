@@ -672,10 +672,33 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   once) and approves the request in the same batch. A web sign-up with no seat answers the org form filled in from the
   email's approved request (company, name; read only after the code is proven, on migrate-081's email index), so
   `/signup?done=1` and its page are gone. operator 91/91, request-access 60/60, signup 51/51; smoke 341/341 (s63).
-- [ ] **21.3 · The showcase and the look.** `/` for an unsigned visitor (the splash: under 1.5 s, first visit only,
-  skippable, off under reduced motion); `/login`, `/signup`, `/orgs/new` and the connect page in the website's look.
-- [ ] **21.4 · Google sign-in** (waits on the owner's OAuth client). Sign-up, sign-in and the connect page; matched by
-  email; an email without an approved request goes to request access; the reviewer accounts keep their passphrase.
+- [x] **21.3 · The showcase and the look.** `/` for a browser that signs no one in is the showcase (`src/showcase.js`:
+  the site's hero line, U-chan, Request access, the beta's places taken, the walkthrough's five videos and the channel as
+  new-tab YouTube links from `src/walkthrough.js`, the one list the request pages link to as `/#walkthrough`); the splash
+  the website's `uchan-nod` (1.2 s, first visit only, hidden until its script shows it, skipped by any key or tap, never
+  under reduced motion); a session still goes to its org, a script still gets 401. Every page before a session stands on
+  ONE frame in the website's look (`<body data-shell="front">`, Paper and Ink). The arch client regenerated (its
+  selftest had gone red at 21.1). showcase 23/23, wire 428/428, arch 111/111; smoke 345/345 (s64).
+- [ ] **21.4 · Trusted requests, the data, Google sign-in** (the owner's MCQs, 2026-10-14). A request counts only once its
+  email is VERIFIED, by Google or by an emailed check (Cloudflare Email Service, the owner's MCQ 2026-10-14: our Workers Paid plan,
+  a `send_email` binding, from an address at sharingu.xyz; a beta, its price re-read on Cloudflare's page first);
+  the status page reached again by either. The data, approved as shown: two required consent boxes (the terms and
+  privacy; keeping the profile to review the request) and two optional (updates, a feedback call), each with its version
+  and time; the source (`?from=`, never a cookie); the request linked to its account (signed up at) and its org (created
+  at); a product step on the org form (the product and one line, its stage, what it is, the AI it connects, where the
+  work lives, what it wants first, the people joining in the first month); an operator page for org 1's admins (the
+  funnel, the line, each profile, Approve showing the code once); an email to the owner per new request (company, role, team
+  size, source: no name or email; Cloudflare's send to a verified address, free; the owner's MCQ 2026-10-14, not Telegram); a declined or abandoned profile
+  cleared after 90 days; the site's privacy page names it all. Google: sign-up, sign-in and the connect page, matched by
+  email, still behind the operator's approval; the reviewer accounts keep their passphrase (needs the owner's Google
+  Cloud OAuth client).
+- [ ] **21.P · The journey, polished** (the owner, 2026-10-14: the website's join, the sign-in, the onboarding, the status
+  check, the walkthrough and the nav clean and clear). One audit of every screen from the site's nav to the first Home,
+  both worlds, 1440 and 390, then the fixes. Ruled: ONE word for the main button on the site and in the app, "Join the
+  beta" (the form's own title stays "Request access"); "Check my request" sits beside Sign in (one door, two paths: the
+  private link now, Google or an emailed link after 21.4).
+- [ ] **The sprint end.** The site's access buttons move to the worker's request page and the site's waitlist page redirects there,
+  merged right after the ship (live must answer the page first).
 
 ## Sprint 19 · The write door split (branch `sprint-19`, opened 2026-10-13; the owner's MCQs of the day) — SHIPPED 2026-10-13
 

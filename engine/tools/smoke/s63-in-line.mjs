@@ -10,16 +10,12 @@
 //     form holding the request's company and name, and POST /orgs with them makes the org, named the company
 //   · the asked page (a repeat of the second's email): the count and the walkthrough, nothing the request typed
 //   · `allow --request` of the approved one, and of an id that is no request: refused (exit 1), no code, the request as it was
-import { execFile } from "node:child_process";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
-import { smoke, expect, brief, http as http0, d1rows as rows } from "./lib.mjs";
+import { smoke, expect, brief, http as http0, d1rows as rows, operator as op, betaLine as line } from "./lib.mjs";
 
-const ENGINE = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const TAG = randomBytes(3).toString("hex");
 const q = (v) => `'${String(v).replace(/'/g, "''")}'`;
-const WALK = 'href="https://www.sharingu.xyz/docs.html#walkthrough"';
+const WALK = 'href="/#walkthrough"';   // the showcase's own section (sprint 21, 21.3: src/walkthrough.js, the one list)
 // a request refused by the address's flood filter (LOGIN_LIMIT: shared with /login and /signup) is sent again ONCE after its
 // window: that refusal proves nothing about the door behind it
 const http = async (method, path, o) => {
@@ -27,23 +23,6 @@ const http = async (method, path, o) => {
   if (r.status === 429 && /too_many_attempts_ip|Too many attempts/.test(r.text)) { await new Promise((ok) => setTimeout(ok, 61000)); r = await http0(method, path, o); }
   return r;
 };
-// op(...args) -> { rc, out, code }: the operator's CLI on the smoke's own local state; `code` the one it printed, taken out of `out`
-async function op(...args) {
-  const { SMOKE_D1_PERSIST: persist, SMOKE_D1_CFG: cfg } = process.env;
-  expect(persist && cfg, "SMOKE_D1_PERSIST and SMOKE_D1_CFG (tools/smoke.sh sets both)");
-  const { rc, out } = await new Promise((done) => execFile("node", [join(ENGINE, "tools", "operator.mjs"), ...args, "--local", persist, "--config", cfg], { encoding: "utf8", maxBuffer: 1 << 24 },
-    (e, stdout, stderr) => done({ rc: e ? (typeof e.code === "number" ? e.code : 1) : 0, out: `${stdout || ""}${stderr || ""}` })));
-  const code = (out.match(/^ {2}code: (\S+)$/m) || [])[1] || null;
-  return { rc, code, out: code ? out.split(code).join("<code>") : out };
-}
-// line() -> { taken, cap, places: { id: place } }: what `operator requests` says (its head line, then one line per open request)
-async function line() {
-  const r = await op("requests");
-  expect(r.rc === 0, () => `operator requests: rc ${r.rc} ${r.out.slice(0, 300)}`);
-  const head = /the beta's places: (\d+) of (\d+) taken/.exec(r.out) || [];
-  const places = Object.fromEntries([...r.out.matchAll(/^ {2}(\d+) {2}(\S+) {2}/gm)].map((m) => [m[2], Number(m[1])]));
-  return { taken: Number(head[1]), cap: Number(head[2]), places };
-}
 const FORM = { web: "1", name: "S63 Grace", role: "Founder", team_size: "11-50" };
 const ask = (email, company) => http("POST", "/request-access", { form: { ...FORM, email, company }, accept: "text/html" });
 const tokenOf = (r) => (/^\/request-access\/([0-9a-f]{48})$/.exec(r.locationRaw) || [])[1] || null;

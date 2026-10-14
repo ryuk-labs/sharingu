@@ -48,6 +48,13 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   in from the email's newest approved request (`approvedProfile`: only for the email the code proved).
   `src/beta.js` — the beta's 50 places, the ONE source of the cap and its two counts (`tools/operator.mjs` imports it; the worker
   reads it by `src/accounts.js betaCount`; a count that cannot be read is left out of a page, never guessed).
+- `src/showcase.js` · `src/walkthrough.js` · `src/login.js` (`frontHead`, `frontTop`, `authPage`) — the front door (sprint 21, 21.3): `/` at
+  the root, for a browser navigation that signs no one in, is the showcase (the hero line, Request access, the beta's places
+  taken, the walkthrough's five videos and the channel as plain new-tab links to YouTube from `src/walkthrough.js`, the ONE list
+  the request's pages link to as `/#walkthrough`; a first-visit splash under 1.5 s, skippable, never under reduced motion); a
+  session still goes to its org or the picker, a script still gets 401. Every page drawn before a session (sign-in, sign-up and
+  its invite, creating an org, request access and its pages, the OAuth connect page, the org picker, not-here) stands on ONE
+  frame in the website's look, `<body data-shell="front">` (`tools/showcase-selftest.mjs`).
 - `src/data.js` — THE scoped data layer (sprint 6): every statement runs on `db(env)`; `{org}`/`{orgbucket}` tokens
   take the signed-in reader's org (a validated integer, from the sign-in only — never a parameter); no token and no
   sign-in is refused loudly (org unknown), never org 1. `tools/check-scoped-data.py` (a gate step) fails any statement outside it.

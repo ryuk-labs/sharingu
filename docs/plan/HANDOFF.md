@@ -2,8 +2,9 @@
 
 **As of 2026-10-13: sprint 20 is LIVE (the write tools file "a preview the person has seen and agreed to"); plugin
 0.1.16 clears the Claude directory's checks; the OpenAI submission is in review. Sprint 21 (onboarding) is OPEN on
-branch `sprint-21`, sliced from the owner's MCQs (`SPRINTS.md` sprint 21: 21.0 the plain note's default, then request
-access, you're in line, the showcase and the look, Google sign-in last). In parallel, the owner's Claude side (the
+branch `sprint-21`, sliced from the owner's MCQs (`SPRINTS.md` sprint 21): 21.0–21.2 DONE (the plain note's default,
+request access, you're in line; migrate-081 on the branch, not live); next 21.3 the showcase and the look, then 21.4
+Google sign-in (waits on the owner's OAuth client). The ship's preflight for 081: `check-org-names --slugs` on live. In parallel, the owner's Claude side (the
 connector and plugin forms, after P1–P3 in the Claude app).**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
@@ -59,8 +60,7 @@ Activity row of P1's filing reads "from Claude" (if it reads "another client", s
 (c) for ChatGPT: store the portal's domain token (`node tools/operator.mjs set-openai-challenge --token <it> --live
 --config wrangler.jsonc --confirm-live ryuklabs-agent-r`), record the ChatGPT demo video and put its URL in
 `listing/codex-listing.json` as `demoRecordingURL`, then regenerate (`node tools/make-plugin-skills.mjs`) and build the
-ZIP (`--openai-zip <out.zip>`); (d) upload the four videos as unlisted YouTube links (`listing/videos/`, also copied to
-`~/Desktop/sharingu-videos/`); (e) submit from `listing/SUBMISSION.md`: the Claude connector, the Claude plugin, the
+ZIP (`--openai-zip <out.zip>`); (d) DONE 2026-10-14: the five videos on YouTube (the links and the channel in `listing/SUBMISSION.md`, The videos); (e) submit from `listing/SUBMISSION.md`: the Claude connector, the Claude plugin, the
 ChatGPT plugin. The stores' pages were re-read on 2026-10-12; re-read them again on the day (sources at the foot of
 `MARKETPLACE.md`).
 

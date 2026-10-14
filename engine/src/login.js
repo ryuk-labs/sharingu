@@ -1,6 +1,6 @@
-// Agent R — the ONE sign-in page (ADR-093 brand seam → M-ADR-024 "one front door").
-// Standalone, fully self-contained HTML (NOT wrapped by shell.js) — this is the front
-// door: it renders before any session exists, so it carries its own styling inline.
+// Agent R — the ONE sign-in page (ADR-093 brand seam → M-ADR-024 "one front door") and the front door's shell (frontHead,
+// authPage: sprint 21, 21.3). Standalone HTML (NOT wrapped by shell.js): it renders before any session exists, so it carries
+// its own styling inline, on the shell's own tokens.
 //
 // Two doors render a sign-in (this one · the OAuth consent form in src/oauth.js); both go
 // through renderLogin()/authPage() here, so a person meets ONE sign-in, wherever they
@@ -12,7 +12,7 @@
 //              can redirect back to the originally-requested page
 //   brand    — { org } from the tenant seam (DEFAULT_BRAND fallback); the product name is sharingu (authBrand)
 //   action   — the form's POST target (default "/login"; "" = this URL, for OAuth)
-//   lede     — the one-line prompt under the wordmark
+//   lede     — the card's one-line heading
 //   footnote — the small print under the form (TEXT — escaped; footnoteHtml for trusted markup); none given on the platform's
 //              own sign-in (action "/login"): the one link to request access
 //   hidden   — extra [{ name, value }] hidden fields (default: web=1, the org login marker)
@@ -28,8 +28,9 @@
 // page (no shell() chrome), not the module graph: wrangler bundles the whole worker as
 // one artifact, so importing from ui.js/tenant.js adds no request.
 
-import { esc, errorState, logo } from "./ui.js";
+import { esc, errorState, uchan } from "./ui.js";
 import { DEFAULT_BRAND } from "./tenant.js";
+import { PLATFORM_ROOT } from "./orgpath.js";
 import { BRAND_FONTS_LINK, WORLDS_CSS, BASE_CSS, STATE_CSS, THEME_BOOT, PRODUCT_NAME, FAVICON_LINK } from "./shell.js";
 
 // The product's name on the front door. The sign-in page names the PRODUCT (sharingu) with the org as
@@ -46,90 +47,127 @@ export function authBrand(brand) {
   };
 }
 
-// authPage({ title, wordmark, lede, banner, body, footnote }) — the sign-in-class page frame: one card,
-// used by the login form and the OAuth consent form. `body` is trusted markup from a renderer here.
-// Brand v2 in both worlds: the SAME palette, the same Paper / Ink tokens (following the system, and the choice a
-// person made in the app, remembered in this browser), the same faces and state patterns as shell() (imported from
-// shell.js, one copy: no second skin). U-chan greets (ui.js logo, the one mark). It stays a standalone page because no
-// session exists yet. The orange sign-in button is the page's ONE accent: a field being typed in shows a neutral ring
-// (--field-ring), the top light is peach on Paper and none on Ink (--wash: an orange wash on the dark ground banded).
-// css: a page's own few rules on the same tokens (the org picker's list, src/orgpicker.js), trusted constant text
-export function authPage(opts) {
-  const { title = "", wordmark = "", lede = "", banner = "", body = "", footnote = "", css = "" } = opts || {};
-  return `<!doctype html>
-<html lang="en">
-<head>
+// THE FRONT DOOR'S SHELL (sprint 21, 21.3: the website's look, the owner's MCQ of 2026-10-14): every page drawn before a session
+// exists — the sign-in, the sign-up and its invite, creating an org and its done page, request access and its pages, the OAuth
+// connect page, the org picker, the not-here page — and the showcase at `/` (src/showcase.js) stand on ONE frame: the paper
+// page (Paper and Ink from the shell's own tokens, following the system and the choice remembered in this browser; shell.js,
+// one copy: no second skin), the lowercase Fredoka wordmark top-left beside U-chan (ui.js uchan, the brand's own vector), Manrope
+// for reading. The faces and the state patterns are the shell's. <body data-shell="front"> is the frame's one marker (the smoke
+// and the selftests find a front page by it).
+// frontHead({ title, description, css }) -> the document's <head>: the faces, both worlds, the frame's rules and the page's own
+// (trusted constant css). Each front page writes its own doctype and <body data-shell="front"> around it (authPage below,
+// src/showcase.js), so a render function's own text says it is a whole document (tools/import/read-code.mjs reads it so).
+export function frontHead(opts) {
+  const { title = "", description = "", css = "" } = opts || {};
+  return `<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>${esc(title)}</title>
-${THEME_BOOT}
+${description ? `<meta name="description" content="${esc(description)}">\n` : ""}${THEME_BOOT}
 ${FAVICON_LINK}
 ${BRAND_FONTS_LINK}
 <style>
 ${WORLDS_CSS}
 ${BASE_CSS}
-  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 16px;
-    background:radial-gradient(1200px 600px at 50% -10%,var(--wash),transparent 70%),var(--page)}
-  a{color:var(--accent-text)}
-  .auth{width:100%;max-width:392px}
-  .auth-mark{display:flex;justify-content:center;margin:0 0 14px}
-  .auth-mark .u-uchan{width:54px;height:60px}
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:30px 28px 28px;box-shadow:var(--shadow-card)}
-  .wordmark{margin:0 0 4px;text-align:center}
-  .wordmark .wm-product{display:block;font:600 34px/1.05 var(--display);letter-spacing:-.02em;color:var(--text)}
-  .wordmark .wm-org{display:block;margin-top:8px;font:500 13px/1.3 var(--sans);color:var(--text-muted)}
-  .lede{font:700 17px/1.3 var(--sans);letter-spacing:-.01em;color:var(--text);text-align:center;margin:18px 0 22px}
+${FRONT_CSS}
+${STATE_CSS}
+${css}
+</style>
+</head>`;
+}
+// the frame's own rules: the page's column, the top bar (a hairline under it, as the website's header), the wordmark lockup and
+// the links that read as words (ink, a quiet underline: the orange stays the view's one accent)
+const FRONT_CSS = `
+  body{min-height:100vh;display:flex;flex-direction:column}
+  .front-top{border-bottom:1px solid var(--line)}
+  .front-bar{width:min(1120px,calc(100% - 32px));margin:0 auto;height:68px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .front-brand{display:inline-flex;align-items:center;gap:8px;min-width:0;color:var(--text);border-radius:6px}
+  .front-brand .u-uchan{flex:none;width:27px;height:30px}
+  .wordmark{display:inline-flex;align-items:center;gap:10px;min-width:0}
+  .wordmark .wm-product{font:600 26px/1 var(--display);letter-spacing:-.04em;color:var(--text)}
+  .wordmark .wm-org{padding-left:10px;border-left:1px solid var(--line-strong);font:600 13px/1.2 var(--sans);color:var(--text-muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .front-link{display:inline-flex;align-items:center;height:38px;padding:0 14px;font:600 13.5px/1 var(--sans);color:var(--text);
+    border:1px solid var(--line-strong);border-radius:10px;transition:background-color var(--dur-fast) var(--ease)}
+  .front-link:hover{background:var(--hover)}
+  .u-words a:not([class]),.footnote a{font-weight:600;color:var(--text);text-decoration:underline;text-decoration-color:var(--line-strong);
+    text-underline-offset:3px;transition:text-decoration-color var(--dur-fast) var(--ease)}
+  .u-words a:not([class]):hover,.footnote a:hover{text-decoration-color:var(--text)}
+`;
+// frontTop(wordmark, right) -> the top bar: the wordmark (authBrand's: the product, the org as secondary text) home to the
+// platform's own `/` (src/orgpath.js PLATFORM_ROOT: never an org's, so the not-here page's bytes stay one for every org), and
+// on the right one link or nothing
+export function frontTop(wordmark, right = "") {
+  return `<header class="front-top"><div class="front-bar">
+    <a class="front-brand" href="${PLATFORM_ROOT}">${uchan({ size: 30 })}<span class="wordmark">${wordmark}</span></a>
+    ${right}
+  </div></header>`;
+}
+
+// authPage({ title, wordmark, lede, banner, body, footnote, css }) -> a front-door page with ONE card: a surface with a hairline
+// edge, its heading (the lede) and the form or the facts. `body` is trusted markup from a renderer here; css: a page's own few
+// rules on the same tokens (the org picker's list, src/orgpicker.js), trusted constant text. The primary button is ink on
+// paper (the text colour on the ground, so in Ink it is the light one); a field being typed in shows a neutral ring
+// (--field-ring), every other control the shell's focus ring. The brand's radii: 6 a field, 10 a button or a list, 14 the card.
+export function authPage(opts) {
+  const { title = "", wordmark = "", lede = "", banner = "", body = "", footnote = "", css = "" } = opts || {};
+  return `<!doctype html>
+<html lang="en">
+${frontHead({ title, css: AUTH_CSS + css })}
+<body data-shell="front">
+${frontTop(wordmark)}
+  <main class="auth">
+    <div class="card u-words">
+      ${lede ? `<h1 class="lede">${lede}</h1>` : ""}
+      ${banner}
+      ${body}
+      ${footnote ? `<div class="footnote">${footnote}</div>` : ""}
+    </div>
+  </main>
+</body>
+</html>`;
+}
+const AUTH_CSS = `
+  .auth{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 16px 72px}
+  .card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:32px 28px 28px}
+  .lede{margin:0 0 22px;font:800 24px/1.2 var(--sans);letter-spacing:-.02em;color:var(--text)}
   form{display:flex;flex-direction:column;gap:14px;margin:0}
   .field{display:flex;flex-direction:column;gap:6px}
   label{font:600 12.5px/1.3 var(--sans);color:var(--text-muted)}
   input[type="email"],input[type="password"],input[type="text"]{width:100%;height:42px;padding:0 12px;font:400 14.5px/1 var(--sans);color:var(--text);
-    background:var(--page);border:1px solid var(--line-strong);border-radius:8px;transition:border-color var(--dur-fast) var(--ease)}
+    background:var(--page);border:1px solid var(--line-strong);border-radius:6px;transition:border-color var(--dur-fast) var(--ease)}
   input[type="email"]:focus,input[type="password"]:focus,input[type="text"]:focus{outline:2px solid var(--field-ring);outline-offset:1px;border-color:transparent}
   input.code{font:500 14px/1 var(--mono);letter-spacing:.06em}
   input.code::placeholder{color:var(--text-faint);letter-spacing:.06em}
-  button,.done-action{height:42px;margin-top:6px;font:700 14.5px/1 var(--sans);color:var(--on-accent);background:var(--accent);border:0;border-radius:8px;cursor:pointer;
-    transition:filter var(--dur-fast) var(--ease)}
-  button:hover,.done-action:hover{filter:brightness(1.04)}
-  button:focus-visible,.done-action:focus-visible{outline:2px solid var(--text);outline-offset:2px}
-  .done{display:flex;flex-direction:column;gap:10px;text-align:center}
+  button,.done-action{display:flex;align-items:center;justify-content:center;height:44px;margin-top:6px;padding:0 18px;font:700 14.5px/1 var(--sans);
+    color:var(--page);background:var(--text);border:1px solid var(--text);border-radius:10px;cursor:pointer;text-decoration:none;
+    transition:background-color var(--dur-fast) var(--ease)}
+  button:hover,.done-action:hover{background:color-mix(in srgb,var(--text) 84%,var(--page))}
+  button:focus-visible,.done-action:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .done{display:flex;flex-direction:column;gap:10px}
   .done-what{margin:0;font:600 15px/1.45 var(--sans);color:var(--text)}
   .done-why{margin:0;font:400 14px/1.55 var(--sans);color:var(--text-muted)}
-  .done-action{display:flex;align-items:center;justify-content:center;margin-top:12px;text-decoration:none}
+  .done-action{margin-top:12px}
   .opt{font-weight:400;color:var(--text-faint)}
   .hint{margin:0;font:400 12px/1.45 var(--sans);color:var(--text-faint)}
-  .affix{display:flex;align-items:stretch;height:42px;border:1px solid var(--line-strong);border-radius:8px;background:var(--page);overflow:hidden}
+  .affix{display:flex;align-items:stretch;height:42px;border:1px solid var(--line-strong);border-radius:6px;background:var(--page);overflow:hidden}
   .affix:focus-within{outline:2px solid var(--field-ring);outline-offset:1px;border-color:transparent}
   .affix .pre{display:flex;align-items:center;padding:0 2px 0 12px;font:500 13px/1 var(--mono);color:var(--text-muted);white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
   .affix input[type="text"]{height:40px;border:0;border-radius:0;padding:0 12px 0 0;min-width:0;flex:1;font:500 14px/1 var(--mono)}
   .affix input[type="text"]:focus{outline:none}
-  .done .facts{display:flex;flex-direction:column;gap:12px;margin:8px 0 0;text-align:left}
+  .done .facts{display:flex;flex-direction:column;gap:12px;margin:8px 0 0}
   .done .fact{display:flex;flex-direction:column;gap:4px}
   .done .fact-k{font:600 12.5px/1.3 var(--sans);color:var(--text-muted)}
   .done .fact-v{font:500 13px/1.45 var(--mono);color:var(--text);overflow-wrap:anywhere}
   .secret{display:block;padding:10px 12px;font:500 13.5px/1.4 var(--mono);color:var(--text);background:var(--page);border:1px solid var(--line-strong);
-    border-radius:8px;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
-  .footnote{font-size:12.5px;color:var(--text-faint);text-align:center;margin:22px 0 0;line-height:1.55}
+    border-radius:6px;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
+  .footnote{margin:22px 0 0;font:400 13px/1.55 var(--sans);color:var(--text-muted)}
+  .footnote p{margin:0}
+  .footnote p+p{margin-top:8px}
   .card .state{margin:0 0 18px}
-${STATE_CSS}
-  @media (max-width:420px){.card{padding:24px 20px 22px}}
-${css}
-</style>
-</head>
-<body>
-  <div class="auth">
-    <div class="auth-mark">${logo({ size: 60, wordmark: false })}</div>
-    <div class="card">
-      ${wordmark ? `<p class="wordmark">${wordmark}</p>` : ""}
-      ${lede ? `<p class="lede">${lede}</p>` : ""}
-      ${banner}
-      ${body}
-      ${footnote ? `<p class="footnote">${footnote}</p>` : ""}
-    </div>
-  </div>
-</body>
-</html>`;
-}
+  @media (max-width:480px){.auth{padding:24px 16px 48px}.card{padding:24px 20px 22px}.wordmark .wm-org{max-width:40vw}}
+`;
 
 export function renderLogin(opts) {
   const {

@@ -158,7 +158,7 @@ try {
     "the org row's brand: the sign-in from its own address (next=/<org>/home) says that org's name beside the product, and no Agent R though its titles carry it");
   ok(acme.loginHtml.includes("<title>Sign in · sharingu</title>") && !acme.loginHtml.includes("Acme") && !acme.loginHtml.includes("Agent R"),
     "the root's sign-in (next=/home: no org's address) wears the platform's own brand, never org 1's name");
-  ok(none.loginHtml.includes("<title>Sign in · sharingu</title>") && none.loginHtml.includes('class="wordmark"><span class="wm-product">sharingu</span></p>')
+  ok(none.loginHtml.includes("<title>Sign in · sharingu</title>") && none.loginHtml.includes('class="wordmark"><span class="wm-product">sharingu</span>') && !none.loginHtml.includes('class="wm-org"')
     && !none.loginHtml.includes("Agent R"),
     "no org row: /login wears the neutral product fallback (sharingu, the product name not repeated as an org), no Agent R");
   ok(!/\bSIRU\b|\bsiru\b/i.test(none.loginHtml + readFileSync(none.homeFile, "utf8")),

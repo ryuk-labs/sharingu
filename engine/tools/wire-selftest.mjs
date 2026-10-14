@@ -157,6 +157,7 @@ import { readVersionsView, renderVersions, VERSIONS_REGIONS, TIMELINE_EMPTY, DIF
 import { versionsFixture, RULED_QID as V_RULED_QID } from "./fixtures/versions.mjs";
 import { tempoChip } from "../src/tempo.js";
 import { renderLogin, authPage, authBrand } from "../src/login.js";
+import { renderShowcase } from "../src/showcase.js";
 import { renderSignup, SIGNUP_REFUSED_WORDS } from "../src/signup.js";
 import { renderOrgNew, renderOrgMade } from "../src/orgpage.js";
 import { renderRequestAccess, renderRequestReceived, renderRequestAsked, renderRequestMissing, REQUEST_FIELD_WORDS } from "../src/requestpage.js";
@@ -762,6 +763,8 @@ const STANDALONE = {
   orgNewPrefilled: [renderOrgNew({ host: "agent.example.test", values: { email: "a@b.test", name: "Analytical", you: "Ada" } }), ""],
   orgNewRefused: [renderOrgNew({ host: "agent.example.test", error: ORG_WORDS.org_name_taken, values: { email: "a@b.test", name: "Acme", slug: "acme" } }), ""],
   orgMade: [renderOrgMade({ origin: "https://agent.example.test", made: { org: { id: 3, name: "Acme", slug: "acme" }, project: { key: "o3--acme", name: "Acme" }, key: "0123456789abcdef0123456789abcdef01234567" } }), "Acme"],
+  // sprint 21, 21.3: the showcase at `/` stands on the same front shell (the platform's own wordmark alone)
+  showcase: [renderShowcase({ count: { taken: 7, cap: 50 } }), ""],
   report: [renderReportShell("Backfilled Reports", "<h1>Backfilled</h1>"), null],
 };
 for (const [kind, [html, org]] of Object.entries(STANDALONE)) {
@@ -781,7 +784,7 @@ ok(/name="email"/.test(STANDALONE.login[0]) && /name="password"/.test(STANDALONE
 // (e) both ways for (a) to (d): each injected defect goes red on its own check
 const srcMut = (file, from, to) => { const src = SOURCES[file] || ""; return src.includes(from) ? { ...SOURCES, [file]: src.replace(from, to) } : null; };
 const B1B = [
-  ["type", "Geist in login.js", () => srcAudit(srcMut("login.js", ".auth{width:100%;max-width:392px}", ".auth{width:100%;max-width:392px;font-family:'Geist'}") || {})],
+  ["type", "Geist in login.js", () => srcAudit(srcMut("login.js", ".auth{flex:1;display:flex;", ".auth{flex:1;font-family:'Geist';display:flex;") || {})],
   ["colour", "stamp purple #6B4FA8 in rt.js", () => srcAudit(srcMut("rt.js", "--stamp:var(--bv-verified-ink)", "--stamp:#6B4FA8") || {})],
   ["colour", "stamp purple #6B4FA8 in profile.js", () => srcAudit(srcMut("profile.js", "background:var(--ok-tint);color:var(--ok);font:500 13px/1.3 var(--sans)}", "background:#6B4FA8;color:var(--ok);font:500 13px/1.3 var(--sans)}") || {})],
   ["colour", "a black rgba shadow in home.js", () => srcAudit(srcMut("home.js", ".hm{display:block}", ".hm{display:block;box-shadow:0 20px 60px rgba(0,0,0,.35)}") || {})],
@@ -803,7 +806,7 @@ const B1B = [
   ["type", "a Google font back on the sign-in", () => standaloneAudit(STANDALONE.login[0].replace("</head>", '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope"></head>'), "login")],
   ["input", "a sign-in input without its auth declaration", () => standaloneAudit(STANDALONE.login[0].replace(' data-input-exception="auth"', ""), "login")],
   ["emdash", "an em dash on the report", () => standaloneAudit(STANDALONE.report[0].replace("<h1>Backfilled</h1>", "<h1>Backfilled — today</h1>"), "report")],
-  ["front-door", "the live defect: an 'Org · Agent R' wordmark", () => frontDoorAudit(STANDALONE.login[0].replace(/<p class="wordmark">[\s\S]*?<\/p>/, '<p class="wordmark">Northwind &middot; Agent R</p>'), "login", "Northwind")],
+  ["front-door", "the live defect: an 'Org · Agent R' wordmark", () => frontDoorAudit(STANDALONE.login[0].replace(/<span class="wordmark">[\s\S]*?<\/span><\/a>/, '<span class="wordmark">Northwind &middot; Agent R</span></a>'), "login", "Northwind")],
   ["front-door", "the live defect: a loginTitle with Agent R", () => frontDoorAudit(STANDALONE.login[0].replace(/<title>[^<]*<\/title>/, "<title>Sign in · Northwind · Agent R</title>"), "login", "Northwind")],
   ["front-door", "the fallback repeating sharingu as the org", () => frontDoorAudit(STANDALONE.loginFallback[0].replace('<span class="wm-product">sharingu</span>', '<span class="wm-product">sharingu</span> <span class="wm-org">sharingu</span>'), "loginFallback", "")],
 ];
