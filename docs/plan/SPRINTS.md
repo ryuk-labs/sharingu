@@ -777,6 +777,10 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   costs the same hashes whoever holds the email; the per-address limit by mailbox; a Google-only person seated elsewhere steps up
   by an org session; org_profile in the scoped-data gate; idx_signup_used; migrate-081's partial-run recovery; a cleared request's
   own words on /account; the sign-up code's words; the threat notes (engine/CLAUDE.md).
+- [x] **The sprint end's proofs** (2026-10-14): smoke 371/371, `sh gate.sh` GREEN, every node selftest green, evals 42/42
+  (auth-coverage knows the operator page answers the one 404, a hidden door), sims 10/10, tabs-verify 40/40; the ONE
+  independent review (no blocker; 5 should-fix and 12 nits, all fixed in 8639f6daa). The ship's preflight: live's slugs
+  against `request-access` (the one new reserved name; `account`, `auth`, `assets`, `operator` reserved since sprint 7).
 - [ ] **The sprint end.** The site's access buttons move to the worker's request page and the site's waitlist page redirects there,
   merged right after the ship (live must answer the page first), together with the site's 21.P polish (branch
   `journey-polish`, 29e6a17, verify 260/260; held by the owner, 2026-10-14).
