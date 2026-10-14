@@ -2,7 +2,7 @@
 -- 21.4; the owner's MCQs of 2026-10-13 and 2026-10-14: request access is a worker page writing D1, with a profile and a passphrase;
 -- ONE verification email; sign in with the passphrase; a reset link; every email under one cap; the data collection "approved as
 -- shown"; 21.4c, Google sign-in). UNSHIPPED until sprint 21's ship: edited in place.
--- EXPAND ONLY (PLATFORM §5): six tables and their indexes added, one column on accounts and its index, and migrate-072's two slug
+-- EXPAND ONLY (PLATFORM §5): six tables and their indexes added, one column on accounts and its index, one index on signup_codes, and migrate-072's two slug
 -- triggers re-created with one more reserved name; nothing renamed, no column or table dropped; the old code names none of it.
 --   1 · access_requests: ONE person's request for a place in the beta (a PLATFORM row: no org, as signup_codes). The profile as the
 --       person typed it, normalised at the door (src/requestaccess.js readRequest): name, email (lower-cased and trimmed, as
@@ -66,6 +66,9 @@
 --       ais and places (JSON arrays of the form's values), first_want and people (one value each, or none). Written ONLY in the batch
 --       that creates the org (src/orgs.js createOrg, {org} the founding id); read by its founder's org nowhere yet and by the
 --       operator page (src/operatorread.js: org 1's admins). The values are src/orgprofile.js PRODUCT_CHOICES' keys.
+--   9b · idx_signup_used (the sprint end's review): an email's USED operator codes, so the two reads that ask whether the operator's
+--       code signed an email up (src/accounts.js MAY_FOUND_SQL: may it found an org; ACCOUNT_STANDING_SQL: where it stands) are one
+--       SEARCH, never a scan of signup_codes (idx_signup_open holds only the open ones).
 --   10 · accounts.google_sub (21.4c, Google sign-in: src/accounts.js GOOGLE SIGN-IN): the Google account's subject (the id_token's
 --       `sub`) linked on the account's first Google sign-in, or made with it by a join through Google; NULL: none. Unique
 --       (idx_accounts_google_sub, the linked ones only): one Google account signs in one account, and once linked a different
@@ -75,13 +78,20 @@
 -- /account/reset: src/requestaccess.js, src/accounts.js, src/email.js), POST /orgs (the org's profile and its request's link), the
 -- operator page's Approve and Decline (org 1's admins: src/operatorread.js), the cron's clearing (src/cron.js) and the operator's
 -- allow --request and decline --request (tools/operator.mjs: the approval and its one "You're in" email, through the same cap).
--- WRITE COST on live: nothing (six empty tables and their indexes; the column NULL on every account and its partial index empty; the
+-- WRITE COST on live: next to nothing (six empty tables and their indexes; the column NULL on every account and its partial index empty;
+-- idx_signup_used built over signup_codes' used rows, a few dozen; the
 -- triggers fire only on an org insert or an update to a NULL slug).
 -- ORDER: BEFORE the code (the new code writes these tables; the old code names none of them).
 -- WRANGLER'S SPLITTER (engine/CLAUDE.md scars): the triggers as migrate-072 wrote them (no quoted two dashes, no "END)").
 -- A replay is refused at its FIRST statement, 10's one ALTER (SQLite has no ADD COLUMN IF NOT EXISTS: "duplicate column name", the
 -- already-applied shape the dry run's chain skips, tools/lib-migrate-chain.sh, as it skips 079 and 080), before anything else runs;
 -- every other statement is IF NOT EXISTS, and each trigger dropped IF EXISTS before it is made again.
+-- IF IT STOPS PARTWAY (the sprint end's review): this file counts on NO run being one transaction — a failure midway may keep every
+-- statement that ran before it (wrangler d1 execute's import and a --local run alike), and nothing here relies on a rollback. The
+-- first statement either failed (then nothing after it ran: run the whole file again) or landed (PRAGMA table_info(accounts) names
+-- google_sub): then run the rest — every statement after the ALTER, each IF NOT EXISTS or DROP IF EXISTS, so the ones that landed
+-- change nothing — e.g. `sed '/^ALTER TABLE accounts ADD COLUMN google_sub TEXT;$/d' migrate-081.sql` into a file applied as this
+-- one is (a Time Travel bookmark first).
 -- THE UNDO: the code's rollback alone (the old code reads nothing of it); the tables can stay, or be dropped (a Time Travel bookmark
 -- first) once no request, session or count is wanted; the triggers' longer list harms no old code (one more name an operator's
 -- org 1 or suites' org never takes plain).
@@ -90,6 +100,9 @@
 ALTER TABLE accounts ADD COLUMN google_sub TEXT;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_google_sub ON accounts(google_sub) WHERE google_sub IS NOT NULL;
+
+-- 9b · an email's used codes
+CREATE INDEX IF NOT EXISTS idx_signup_used ON signup_codes(email) WHERE used_at IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS access_requests (
   id             TEXT PRIMARY KEY,

@@ -4,8 +4,9 @@
 0.1.16 clears the Claude directory's checks; the OpenAI submission is in review. Sprint 21 (onboarding) is OPEN on
 branch `sprint-21`, sliced from the owner's MCQs (`SPRINTS.md` sprint 21): 21.0–21.3 DONE and 21.P's E1 (the journey
 polish, engine side; the site's polish held on its branch `journey-polish`); E2 DONE; 21.4a (the account flow) and 21.4b
-(the data) DONE; 21.4c (Google sign-in) building; then the sprint end (`SPRINTS.md`: the fix list, the gate, the suites,
-ONE review with an adversarial read of every auth change, one PR, the ship with the owner's OK, then the site). migrate-081 on the branch, not live. The ship's preflight for 081: `check-org-names --slugs` on live. In parallel, the owner's Claude side (the
+(the data) DONE; 21.4c (Google sign-in) DONE; the sprint end IN PROGRESS (`SPRINTS.md`: the review — with its adversarial read
+of every auth change — read the sprint and its fixes land on the branch; then the gate, the suites, one PR, the ship with the
+owner's OK, then the site). migrate-081 on the branch, not live. The ship's preflight for 081: `check-org-names --slugs` on live. In parallel, the owner's Claude side (the
 connector and plugin forms, after P1–P3 in the Claude app).**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,

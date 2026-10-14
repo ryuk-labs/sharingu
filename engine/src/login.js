@@ -123,7 +123,8 @@ const FRONT_CSS = `
 // platform's own `/` (src/orgpath.js PLATFORM_ROOT: never an org's, so the not-here page's bytes stay one for every org), then
 // the website (wide screens: the foot carries it on a phone) and Sign in — the ONE door (sprint 21, 21.4a: a request is checked by
 // signing in). here: "login" on the sign-in (no Sign in on itself); "in", a page that has just signed its reader in (the org's done
-// page: no Sign in); "account", a page an account session reads (src/accountpage.js: Sign out in its place)
+// page: no Sign in); "account", a page a signed-in browser reads (src/accountpage.js, an account session's; the org form, an account
+// or an org session's: Sign out in its place)
 export function frontTop(wordmark, here = "") {
   const door = here === "account" ? `<a class="front-link" href="/logout" data-region="sign-out-link">Sign out</a>`
     : here === "login" || here === "in" ? "" : `<a class="front-link" href="/login" data-region="sign-in-link">Sign in</a>`;

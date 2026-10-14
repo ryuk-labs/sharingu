@@ -5,12 +5,14 @@
 // src/index.js /auth/google/…; the account side (the match by email, the subject linked, the join already verified) is
 // src/accounts.js GOOGLE SIGN-IN; the button is src/googlepage.js.
 //
-// THE CLIENT (the deployment's, never an org's): {client_id, client_secret} under ONE key of the grant store's KV (OAUTH_KV:
+// THE CLIENT (the deployment's, never an org's): {client_id, client_secret, origins} under ONE key of the grant store's KV (OAUTH_KV:
 // GOOGLE_CLIENT_KEY), written by the operator (tools/operator.mjs set-google-client --file <the mode-600 file>; clear-google-client)
 // — the src/wellknown.js precedent: the worker reads no env secret. None stored: no button anywhere and every Google door refused.
 // The worker reads it from KV with KV's own edge cache (CLIENT_CACHE_S: a clear takes hold within that minute).
-// THE ORIGINS: the redirect URI is the request's origin + CALLBACK_PATH only on the two origins registered with Google
-// (REGISTERED_ORIGINS); on any other origin (a workers.dev name, a preview) there is no button and no flow.
+// THE ORIGINS ride the client (the worker names no deployment's domain): the operator derives them from the config's custom domains
+// (its routes), the addresses registered with Google beside the client. The redirect URI is the request's origin + CALLBACK_PATH only
+// on one of them; on any other origin (a workers.dev name, a preview) there is no button and no flow; a client stored without origins
+// is no client (clientProblem). An http origin on a loopback host (a local worker's) redirects only with the local IdP.
 // THE STATE, the nonce and the PKCE verifier (STATE_MINUTES) live SERVER-SIDE, in KV under the state's sha256 (never the state
 // itself), and the browser holds only the state, in a __Host- cookie (STATE_COOKIE: HttpOnly, Secure, SameSite=Lax — a top-level
 // GET from Google carries it, a cross-site subrequest does not). Why both: the KV record keeps the verifier and the nonce off the
@@ -29,10 +31,12 @@
 // THE LOCAL IdP (tests only): endpointsOf(env) is Google's constants, or — ONLY when the config's var GOOGLE_LOCAL_IDP names a
 // loopback host and port (tools/lib-r-local.sh writes it into every local config; production's wrangler.jsonc never sets it, and
 // tools/google-selftest.mjs proves both) — that origin's /authorize, /token and /jwks, its issuer the origin itself
-// (tools/fake-google.mjs, the fake the smoke and the selftest run). Then a loopback origin may redirect too (the local worker's own).
+// (tools/fake-google.mjs, the fake the smoke and the selftest run). Then a loopback origin the client names may redirect too.
 // THE JOIN TICKET (JOIN_MINUTES): a Google identity with no account yet waits for its join form under a random ticket, in KV by
 // the ticket's sha256, the ticket in a __Host- cookie (JOIN_COOKIE) — the form shows the email locked; its POST takes the email
-// from the ticket, never from the form.
+// from the ticket, never from the form. THE LINK TICKET (LINK_MINUTES): a Google identity for an account whose email Google does not
+// answer for (identityOf's authoritative false) waits, with the flow's record, for that account's passphrase (POST LINK_PATH:
+// src/accounts.js googleLinkByPassphrase), in its own __Host- cookie (LINK_COOKIE).
 import { sha256, hex } from "./util.js";
 import { normEmail, asciiEmail } from "./accounts.js";
 
@@ -43,12 +47,16 @@ export const GOOGLE_CLIENT_KEY = "platform:google-client";
 export const GOOGLE_JWKS_KEY = "platform:google-jwks";
 const STATE_PREFIX = "google-state:";
 const JOIN_PREFIX = "google-join:";
+const LINK_PREFIX = "google-link:";
 export const STATE_MINUTES = 10;
 export const JOIN_MINUTES = 30;
+export const LINK_MINUTES = 10;
 export const CLIENT_CACHE_S = 60;
 export const SKEW_S = 60;
 export const STATE_COOKIE = "__Host-g_state";
 export const JOIN_COOKIE = "__Host-g_join";
+export const LINK_COOKIE = "__Host-g_link";
+export const LINK_PATH = "/auth/google/link";
 // Google's own endpoints (its discovery document, accounts.google.com/.well-known/openid-configuration)
 export const GOOGLE = {
   authorize: "https://accounts.google.com/o/oauth2/v2/auth",
@@ -56,25 +64,39 @@ export const GOOGLE = {
   jwks: "https://www.googleapis.com/oauth2/v3/certs",
   issuers: ["https://accounts.google.com", "accounts.google.com"],
 };
-export const REGISTERED_ORIGINS = ["https://agent.sharingu.xyz", "https://agent.ryuklabs.io"];
 export const GOOGLE_INTENTS = ["join", "signin", "connect"];
 export const SCOPE = "openid email profile";
 // a stored client: Google's client id form, and a secret of printable ASCII
 export const CLIENT_ID_RE = /^[0-9A-Za-z][0-9A-Za-z._-]{5,180}\.apps\.googleusercontent\.com$/;
 const SECRET_RE = /^[\x21-\x7e]{8,200}$/;
 
-// clientProblem(c) -> "" (a client the worker may use) or why not (never the values themselves)
-export function clientProblem(c) {
+export const MAX_ORIGINS = 8;
+const loopback = (host) => host === "127.0.0.1" || host === "localhost";
+// originProblem(o) -> "" for an origin a client may name (https; http on a loopback host: a local worker's), else why not
+export function originProblem(o) {
+  let u; try { u = new URL(String(o)); } catch { return `${JSON.stringify(String(o)).slice(0, 80)} is not an address`; }
+  if (u.origin !== String(o)) return `${JSON.stringify(String(o)).slice(0, 80)} is not an origin (a scheme and a host, no path)`;
+  return u.protocol === "https:" || (u.protocol === "http:" && loopback(u.hostname)) ? "" : `${u.origin} is not https`;
+}
+// credentialProblem(c) -> "" for a Google client id and secret, or why not (never the values themselves)
+export function credentialProblem(c) {
   if (!c || typeof c !== "object") return "no client";
   if (typeof c.client_id !== "string" || !CLIENT_ID_RE.test(c.client_id)) return "the client id is not a Google OAuth client id (<digits>-<id>.apps.googleusercontent.com)";
   if (typeof c.client_secret !== "string" || !SECRET_RE.test(c.client_secret)) return "the client secret is not 8 to 200 printable characters";
   return "";
 }
-// googleClient(env) -> { client_id, client_secret } | null (none stored, or what is stored is no client)
+// clientProblem(c) -> "" (a client the worker may use: the credentials and its origins) or why not (never the secret)
+export function clientProblem(c) {
+  const bad = credentialProblem(c);
+  if (bad) return bad;
+  if (!Array.isArray(c.origins) || !c.origins.length || c.origins.length > MAX_ORIGINS) return `the client names no origins (1 to ${MAX_ORIGINS}: the deployment's own addresses)`;
+  return c.origins.map(originProblem).find(Boolean) || "";
+}
+// googleClient(env) -> { client_id, client_secret, origins } | null (none stored, or what is stored is no client)
 export async function googleClient(env) {
   if (!env || !env.OAUTH_KV) return null;
   const c = await env.OAUTH_KV.get(GOOGLE_CLIENT_KEY, { type: "json", cacheTtl: CLIENT_CACHE_S }).catch(() => null);
-  return c && !clientProblem(c) ? { client_id: c.client_id, client_secret: c.client_secret } : null;
+  return c && !clientProblem(c) ? { client_id: c.client_id, client_secret: c.client_secret, origins: c.origins.map(String) } : null;
 }
 // localIdp(env) -> the local IdP's origin, http on a loopback host and port (the var holds "127.0.0.1:<port>" or "localhost:<port>"
 // and nothing else), or "" — production never names one
@@ -88,16 +110,18 @@ export function endpointsOf(env) {
   const base = localIdp(env);
   return base ? { authorize: `${base}/authorize`, token: `${base}/token`, jwks: `${base}/jwks`, issuers: [base] } : GOOGLE;
 }
-// redirectUriFor(env, origin) -> the callback on a registered origin (with the local IdP, a loopback origin too), "" for any other
-export function redirectUriFor(env, origin) {
+// redirectUriFor(env, client, origin) -> the callback on one of the client's origins (a loopback one only with the local IdP), "" for
+// any other
+export function redirectUriFor(env, client, origin) {
   let u; try { u = new URL(String(origin)); } catch { return ""; }
-  if (u.origin !== String(origin)) return "";
-  const loop = !!localIdp(env) && (u.hostname === "127.0.0.1" || u.hostname === "localhost");
-  return REGISTERED_ORIGINS.includes(u.origin) || loop ? u.origin + CALLBACK_PATH : "";
+  if (u.origin !== String(origin) || !client || !Array.isArray(client.origins)) return "";
+  if (loopback(u.hostname) && !localIdp(env)) return "";
+  return client.origins.includes(u.origin) ? u.origin + CALLBACK_PATH : "";
 }
 // googleOffer(env, origin) -> true when a page may show the button: a client stored, on an origin that may redirect
 export async function googleOffer(env, origin) {
-  return !!redirectUriFor(env, origin) && !!(await googleClient(env));
+  const client = await googleClient(env);
+  return !!client && !!redirectUriFor(env, client, origin);
 }
 
 // ---- base64url and PKCE ----
@@ -211,13 +235,20 @@ export async function verifyIdToken(token, { keys = [], clientId, nonce, issuers
   if (claims.email_verified !== true || typeof claims.email !== "string" || !claims.email) return { ok: false, why: "email_unverified" };
   return { ok: true, claims };
 }
-// identityOf(claims) -> { sub, email (the account's spelling), name (folded, 100 at most) }, or null for an email the platform does
-// not take (not one plain ASCII address)
+// GOOGLE'S OWN MAILBOXES: the domains whose every address Google runs (a consumer Google account's own address)
+export const GOOGLE_MAIL_DOMAINS = ["gmail.com", "googlemail.com"];
+// identityOf(claims) -> { sub, email (the account's spelling), name (folded, 100 at most), authoritative }, or null for an email the
+// platform does not take (not one plain ASCII address). authoritative: Google runs the mailbox — a gmail.com or googlemail.com
+// address, or a Workspace domain the token names as its hosted domain (claims.hd, the email's own domain) — so its verified email is
+// the mailbox's proof; for any other address (an outside email a Google account was made on) it is not (src/accounts.js WHO GOOGLE
+// ANSWERS FOR)
 export function identityOf(claims) {
   const email = normEmail(claims && claims.email);
   if (!email || email.length > 254 || !asciiEmail(email) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
   const name = String((claims && typeof claims.name === "string" && claims.name) || "").replace(/[\s\u0000-\u001f\u007f]+/g, " ").trim().slice(0, 100);
-  return { sub: String(claims.sub), email, name };
+  const domain = email.slice(email.lastIndexOf("@") + 1);
+  const authoritative = GOOGLE_MAIL_DOMAINS.includes(domain) || (typeof claims.hd === "string" && claims.hd.toLowerCase() === domain);
+  return { sub: String(claims.sub), email, name, authoritative };
 }
 // verifiedIdentity(env, client, idToken, nonce) -> { identity } | { why }: the keys (cached, then refetched once on an unknown kid),
 // the token verified, the identity read
@@ -231,20 +262,30 @@ export async function verifiedIdentity(env, client, idToken, nonce) {
   return identity ? { identity } : { why: "email_form" };
 }
 
-// ---- THE JOIN TICKET (a Google identity with no account, waiting for its form) ----
-// putJoin(env, { sub, email, name, source }) -> the ticket (its hash the KV key, JOIN_MINUTES)
-export async function putJoin(env, who) {
-  const ticket = hex(32);
-  const rec = { sub: String(who.sub), email: String(who.email), name: String(who.name || ""), source: String(who.source || ""), exp: Date.now() + JOIN_MINUTES * 60 * 1000 };
-  await env.OAUTH_KV.put(JOIN_PREFIX + (await sha256(ticket)), JSON.stringify(rec), { expirationTtl: JOIN_MINUTES * 60 });
+// ---- THE TICKETS (a Google identity waiting in this browser): the JOIN ticket (no account yet: its form) and the LINK ticket (an
+// account whose email Google does not answer for: its passphrase links it first, LINK_MINUTES) — each in KV by the ticket's sha256,
+// the ticket in its own __Host- cookie ----
+const TICKETS = { join: { prefix: JOIN_PREFIX, minutes: JOIN_MINUTES }, link: { prefix: LINK_PREFIX, minutes: LINK_MINUTES } };
+// putTicket(env, kind, rec) -> the ticket (rec: the identity { sub, email, name } and the kind's own: a join's source, a link's flow)
+async function putTicket(env, kind, rec) {
+  const ticket = hex(32), t = TICKETS[kind];
+  await env.OAUTH_KV.put(t.prefix + (await sha256(ticket)), JSON.stringify({ ...rec, exp: Date.now() + t.minutes * 60 * 1000 }), { expirationTtl: t.minutes * 60 });
   return ticket;
 }
-// joinOf(env, ticket) -> the identity waiting, or null
-export async function joinOf(env, ticket) {
+async function ticketOf(env, kind, ticket) {
   if (!/^[0-9a-f]{64}$/.test(String(ticket || "")) || !env || !env.OAUTH_KV) return null;
-  const rec = await env.OAUTH_KV.get(JOIN_PREFIX + (await sha256(String(ticket))), { type: "json" }).catch(() => null);
+  const rec = await env.OAUTH_KV.get(TICKETS[kind].prefix + (await sha256(String(ticket))), { type: "json" }).catch(() => null);
   return rec && Number(rec.exp) > Date.now() && typeof rec.sub === "string" && typeof rec.email === "string" ? rec : null;
 }
-export async function dropJoin(env, ticket) {
-  if (/^[0-9a-f]{64}$/.test(String(ticket || ""))) await env.OAUTH_KV.delete(JOIN_PREFIX + (await sha256(String(ticket)))).catch(() => {});
+async function dropTicket(env, kind, ticket) {
+  if (/^[0-9a-f]{64}$/.test(String(ticket || ""))) await env.OAUTH_KV.delete(TICKETS[kind].prefix + (await sha256(String(ticket)))).catch(() => {});
 }
+// putJoin(env, { sub, email, name, source }) -> the join ticket; joinOf(env, ticket) -> the identity waiting, or null; dropJoin
+export const putJoin = (env, who) => putTicket(env, "join", { sub: String(who.sub), email: String(who.email), name: String(who.name || ""), source: String(who.source || "") });
+export const joinOf = (env, ticket) => ticketOf(env, "join", ticket);
+export const dropJoin = (env, ticket) => dropTicket(env, "join", ticket);
+// putLink(env, { sub, email }, rec) -> the link ticket (rec: the flow's record — its intent, next, pick, the connect request — finished
+// once the passphrase links the account); linkOf(env, ticket) -> { sub, email, rec }, or null; dropLink
+export const putLink = (env, who, rec) => putTicket(env, "link", { sub: String(who.sub), email: String(who.email), rec: { intent: rec.intent, next: rec.next || "", pick: rec.pick || "", oauth: rec.oauth || null } });
+export const linkOf = (env, ticket) => ticketOf(env, "link", ticket);
+export const dropLink = (env, ticket) => dropTicket(env, "link", ticket);

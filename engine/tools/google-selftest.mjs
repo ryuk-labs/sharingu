@@ -7,14 +7,16 @@
 //        none, HS256 (keyed by the public modulus), a kid the keys lack (why "kid"), email_verified false or missing, a wrong
 //        nonce, no sub; identityOf takes the account's spelling and refuses a non-ASCII email
 //   G2 · PKCE: RFC 7636's own vector (appendix B); a fresh verifier is 43 URL-safe characters
-//   G3 · THE ORIGINS AND THE ENDPOINTS: only the two registered origins redirect (a workers.dev name, a preview, a loopback without
-//        the local IdP never); Google's own endpoints unless GOOGLE_LOCAL_IDP is a loopback host:port (a URL, another host, a path:
+//   G3 · THE ORIGINS AND THE ENDPOINTS: only the origins stored WITH the client redirect (a workers.dev name, a preview, a loopback
+//        without the local IdP never; a client stored without origins, or with an http one off loopback, is no client; the worker's
+//        source names no deployment's domain); Google's own endpoints unless GOOGLE_LOCAL_IDP is a loopback host:port (a URL, another host, a path:
 //        Google's); PRODUCTION IGNORES IT: wrangler.jsonc and the tenant template name no GOOGLE_LOCAL_IDP, and only
 //        tools/lib-r-local.sh writes it
 //   G4 · THE STATE: one record per start (its nonce and verifier with it, the state's hash its key, never the state); taken once
 //        (a second take is null), expired is null; sameState; the authorization request carries S256, the scope and select_account
 //   G5 · THE CLIENT IN KV: clientProblem; the operator's set-google-client reads a mode-600 file only (644 refused, nothing read),
-//        prints "stored" and the id's last characters, never the secret; clear, then a second clear refused
+//        stores the config's custom domains as the client's origins (a config with none takes --origin; none at all, or both,
+//        refused), prints "stored" and the id's last characters, never the secret; clear, then a second clear refused
 //   G6 · NO CLIENT STORED: no button on /login, /request-access or the paused page, and every Google door one plain 404 page
 //   G7 · STORED: the button on /login (its next carried), /request-access (its source), the paused page and the connect page; none
 //        on an origin Google does not know
@@ -40,13 +42,28 @@
 //        by SQL): the passphrase field and Continue with Google back to the form, the POST refused 401 with the offer, nothing made —
 //        Google again lands on the form and creates it; a passphrase account unchanged (its field required, an empty one 422, its
 //        passphrase creates the org); a JSON POST /orgs with that fresh session and no passphrase still 422
+//        AND (the sprint end's review) a Google-only person SEATED in another org (an org session, not an account session): its fresh
+//        Google sign-in is the step-up too (the proof recorded beside the org session), its form creates its org; the org form's top
+//        bar says Sign out to an account session and to an org session, Sign in to no session
+//   G17 · WHO GOOGLE ANSWERS FOR: identityOf's authoritative (gmail.com, googlemail.com, a hosted domain the token names as the
+//        email's own; never another hd, never none); an account whose email Google does not run: the callback's link page (its
+//        passphrase asked, the email locked, nothing linked, no session), a wrong passphrase the page again (401, still unlinked,
+//        counted), the right one links and signs in — its earlier sessions ended (THE FIRST LINK IS A RESET); a new person on such an
+//        email: "No account yet" for the emailed join (no ticket, never the Google form); a cross-site link POST refused
+//   G18 · THE FIRST LINK IS A RESET (the invite squat): an org's admin redeems an invite for a stranger's email (the passphrase the
+//        link set: accounts.invited_org) and signs in with it; the email's owner signs in by Google: the squatter's session revoked,
+//        that passphrase and its mark gone (it signs in nowhere now), the seat WAITING for the owner's yes (the picker, never the org
+//        entered), the account's open reset link spent; then a reset by email unlinks the Google subject
+//   G19 · AN ADD-PERSON SHELL is no one's: its email joins the beta as anyone's (the verification email, never "already"; its
+//        passphrase then the account's); a seatless shell joins through Google (the form Google filled in, the shell's own account
+//        linked: no 409)
 // And the MUTATION PROOF: each named mutant (a scratch copy of src/) must turn its case(s) red, by an assertion, never a crash.
 // Exit 1 on any failure.
 import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync, chmodSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
-import { createHash } from "node:crypto";
+import { createHash, pbkdf2Sync } from "node:crypto";
 
 const ENGINE = dirname(dirname(fileURLToPath(import.meta.url)));
 const { sqliteWorker, kv } = await import(pathToFileURL(join(ENGINE, "tools", "fixtures", "sqlite-worker.mjs")).href);
@@ -56,6 +73,7 @@ let MUT = {};
 const mod = (f) => import(pathToFileURL(join(MUT.src || join(ENGINE, "src"), f)).href);
 const O = "https://agent.sharingu.xyz";
 const CLIENT = { client_id: "123456789012-fake0client.apps.googleusercontent.com", client_secret: "GOCSPX-fake-secret-for-tests" };
+const STORED = { ...CLIENT, origins: [O, "https://agent.example.test"] };   // as the operator stores it: with the deployment's origins
 const fake = await startFakeGoogle({ clientId: CLIENT.client_id, clientSecret: CLIENT.client_secret });
 const JWKS = (await (await fetch(fake.origin + "/jwks")).json()).keys;
 const PASS = "a-long-passphrase-1";
@@ -67,7 +85,7 @@ async function world({ client = true } = {}) {
   w.env.MAIL_CAPTURE = "kv";
   w.env.GOOGLE_LOCAL_IDP = fake.address;
   const { GOOGLE_CLIENT_KEY } = await mod("google.js");
-  if (client) await w.env.OAUTH_KV.put(GOOGLE_CLIENT_KEY, JSON.stringify(CLIENT));
+  if (client) await w.env.OAUTH_KV.put(GOOGLE_CLIENT_KEY, JSON.stringify(STORED));
   const one = (sql, ...a) => w.db.prepare(sql).get(...a);
   const q = (sql, ...a) => w.db.prepare(sql).all(...a);
   // a browser: a cookie jar (Set-Cookie applied, Max-Age=0 removing), same-origin form posts, page navigations
@@ -93,7 +111,8 @@ async function world({ client = true } = {}) {
   // google(b, intent, identity, { query, form }) -> { start, back, cb }: the start (a link, or the connect page's form), the fake's
   // answer (the redirect back), then the callback in the same browser
   const google = async (b, intent, identity, { query = {}, form = null } = {}) => {
-    fake.next(identity);
+    // a Workspace's token names its hosted domain: by default the email's own (Google runs the mailbox); hd: null for none
+    fake.next({ ...(identity.email && !("hd" in identity) ? { hd: String(identity.email).split("@")[1].toLowerCase() } : {}), ...identity });
     const start = form ? await b.call("POST", "/auth/google/start", { form: { intent, ...form } }) : await b.call("GET", `/auth/google/start?${new URLSearchParams({ intent, ...query })}`, { nav: true });
     if (!start.location.startsWith(fake.origin + "/authorize?")) return { start, back: "", cb: null };
     const a = await fetch(start.location, { redirect: "manual" });
@@ -115,6 +134,9 @@ async function world({ client = true } = {}) {
   return { w, one, q, browser, google, mails, verifiedByEmail, slug };
 }
 const who = (n, extra = {}) => ({ sub: `sub-${n}`, email: `${n}@gee.test`, email_verified: true, name: `Person ${n}`, ...extra });
+const sha = (x) => createHash("sha256").update(x).digest("hex");
+const SALT = "00112233445566778899aabbccddeeff";
+const pbkdf = (pw) => pbkdf2Sync(pw, Buffer.from(SALT, "hex"), 100000, 32, "sha256").toString("hex");
 
 const CASES = {
   async G1() {
@@ -153,17 +175,25 @@ const CASES = {
     ];
   },
   async G3() {
-    const { redirectUriFor, endpointsOf, GOOGLE } = await mod("google.js");
+    const { redirectUriFor, endpointsOf, clientProblem, googleClient, GOOGLE, GOOGLE_CLIENT_KEY } = await mod("google.js");
     const local = { GOOGLE_LOCAL_IDP: "127.0.0.1:8949" };
     const wrangler = readFileSync(join(ENGINE, "wrangler.jsonc"), "utf8"), tmpl = readFileSync(join(ENGINE, "wrangler.tenant.template.jsonc"), "utf8");
     const lib = readFileSync(join(ENGINE, "tools", "lib-r-local.sh"), "utf8");
+    const src = readFileSync(join(MUT.src || join(ENGINE, "src"), "google.js"), "utf8");
+    const withLoop = { ...STORED, origins: [...STORED.origins, "http://127.0.0.1:8890"] };
+    const stored = async (c) => { const env = { OAUTH_KV: kv() }; await env.OAUTH_KV.put(GOOGLE_CLIENT_KEY, JSON.stringify(c)); return googleClient(env); };
     return [
-      [redirectUriFor({}, "https://agent.sharingu.xyz") === "https://agent.sharingu.xyz/auth/google/callback" && redirectUriFor({}, "https://agent.ryuklabs.io") === "https://agent.ryuklabs.io/auth/google/callback",
-        "G3 · the two registered origins redirect to their own callback"],
-      [["https://ryuklabs-agent-r.ryuk.workers.dev", "https://abc123-ryuklabs-agent-r.ryuk.workers.dev", "http://agent.sharingu.xyz", "https://agent.sharingu.xyz.evil.test", "http://127.0.0.1:8890", "https://agent.sharingu.xyz/x"].every((o) => redirectUriFor({}, o) === ""),
-        "G3 · any other origin (a workers.dev name, a preview, http, a lookalike, a loopback without the local IdP, a path) has no redirect"],
-      [redirectUriFor(local, "http://127.0.0.1:8890") === "http://127.0.0.1:8890/auth/google/callback" && redirectUriFor(local, "https://x.workers.dev") === "",
-        "G3 · with the local IdP, a loopback origin redirects too (the local worker's own), and still no other"],
+      [redirectUriFor({}, STORED, O) === O + "/auth/google/callback" && redirectUriFor({}, STORED, "https://agent.example.test") === "https://agent.example.test/auth/google/callback",
+        "G3 · each origin stored with the client redirects to its own callback"],
+      [["https://ryuklabs-agent-r.ryuk.workers.dev", "https://abc123-ryuklabs-agent-r.ryuk.workers.dev", "http://agent.sharingu.xyz", "https://agent.sharingu.xyz.evil.test", "http://127.0.0.1:8890", "https://agent.sharingu.xyz/x", "https://agent.ryuklabs.io"].every((o) => redirectUriFor({}, withLoop, o) === "")
+        && redirectUriFor({}, null, O) === "" && redirectUriFor({}, CLIENT, O) === "",
+        "G3 · any other origin (a workers.dev name, a preview, http, a lookalike, a loopback without the local IdP, a path, an origin not stored) has no redirect; nor does no client, or one without origins"],
+      [redirectUriFor(local, withLoop, "http://127.0.0.1:8890") === "http://127.0.0.1:8890/auth/google/callback" && redirectUriFor(local, STORED, "http://127.0.0.1:8890") === "" && redirectUriFor(local, withLoop, "https://x.workers.dev") === "",
+        "G3 · with the local IdP, a loopback origin the client names redirects too (the local worker's own), and still no other"],
+      [clientProblem(STORED) === "" && !!clientProblem(CLIENT) && !!clientProblem({ ...CLIENT, origins: [] }) && !!clientProblem({ ...CLIENT, origins: ["http://agent.example.test"] }) && !!clientProblem({ ...CLIENT, origins: [O + "/x"] })
+        && (await stored(CLIENT)) === null && (await stored(STORED)).origins.join() === STORED.origins.join(),
+        "G3 · a client stored without origins (or with an http origin off loopback, or a path) is no client: no Google"],
+      [!/agent\.sharingu\.xyz|agent\.ryuklabs\.io|REGISTERED_ORIGINS/.test(src), "G3 · src/google.js names no deployment's domain (the origins are the stored client's)"],
       [endpointsOf({}) === GOOGLE && endpointsOf(local).token === "http://127.0.0.1:8949/token" && endpointsOf(local).issuers[0] === "http://127.0.0.1:8949"
         && ["http://127.0.0.1:8949", "evil.test:80", "127.0.0.1:8949/x", "127.0.0.2:8949", "localhost", "127.0.0.1:0", " 127.0.0.1:8949"].every((x) => endpointsOf({ GOOGLE_LOCAL_IDP: x }) === GOOGLE),
         "G3 · Google's own endpoints unless GOOGLE_LOCAL_IDP is exactly a loopback host:port (a URL, another host, a path, a stray space: Google's)"],
@@ -204,21 +234,32 @@ const CASES = {
     const dir = mkdtempSync(join(tmpdir(), "google-selftest-"));
     try {
       const cfg = join(dir, "wrangler.jsonc"), file = join(dir, "google-oauth.env"), loose = join(dir, "loose.env");
-      writeFileSync(cfg, JSON.stringify({ name: "x", d1_databases: [{ binding: "DB", database_name: "x-db", database_id: "0" }], kv_namespaces: [{ binding: "OAUTH_KV", id: "k" }] }));
+      const base = { name: "x", d1_databases: [{ binding: "DB", database_name: "x-db", database_id: "0" }], kv_namespaces: [{ binding: "OAUTH_KV", id: "k" }] };
+      writeFileSync(cfg, JSON.stringify({ ...base, routes: [{ pattern: "agent.example.test", custom_domain: true }, { pattern: "other.example.test/*", zone_name: "example.test" }, { pattern: "two.example.test", custom_domain: true }] }));
+      const bare = join(dir, "bare.jsonc");
+      writeFileSync(bare, JSON.stringify(base));
       writeFileSync(file, `GOOGLE_CLIENT_ID=${CLIENT.client_id}\nexport GOOGLE_CLIENT_SECRET="${CLIENT.client_secret}"\n`); chmodSync(file, 0o600);
       writeFileSync(loose, readFileSync(file)); chmodSync(loose, 0o644);
       const K = kv(), out = [];
-      const op = (...a) => run([...a, "--local", dir, "--config", cfg], { open: async () => ({ KV: K, database: "test:KV", close: async () => {} }), say: (x) => out.push(x), err: (x) => out.push(x) });
+      const opOn = (c, ...a) => run([...a, "--local", dir, "--config", c], { open: async () => ({ KV: K, database: "test:KV", close: async () => {} }), say: (x) => out.push(x), err: (x) => out.push(x) });
+      const op = (...a) => opOn(cfg, ...a);
       const rLoose = await op("set-google-client", "--file", loose), afterLoose = await K.get(GOOGLE_CLIENT_KEY);
+      const rBoth = await op("set-google-client", "--file", file, "--origin", "http://127.0.0.1:8787"), rNone = await opOn(bare, "set-google-client", "--file", file), afterNone = await K.get(GOOGLE_CLIENT_KEY);
+      const rBareHttp = await opOn(bare, "set-google-client", "--file", file, "--origin", "http://agent.example.test"), afterHttp = await K.get(GOOGLE_CLIENT_KEY);
+      const rBare = await opOn(bare, "set-google-client", "--file", file, "--origin", "http://127.0.0.1:8787"), bareStored = JSON.parse((await K.get(GOOGLE_CLIENT_KEY)) || "{}");
       const rSet = await op("set-google-client", "--file", file), stored = JSON.parse((await K.get(GOOGLE_CLIENT_KEY)) || "{}");
       const rClear = await op("clear-google-client"), rAgain = await op("clear-google-client");
       const said = out.join("\n");
       return [
-        [clientProblem(CLIENT) === "" && !!clientProblem({ ...CLIENT, client_id: "abc" }) && !!clientProblem({ ...CLIENT, client_secret: "short" }) && !!clientProblem(null),
-          "G5 · clientProblem: a Google client id and a printable secret, nothing else"],
+        [clientProblem(STORED) === "" && !!clientProblem({ ...STORED, client_id: "abc" }) && !!clientProblem({ ...STORED, client_secret: "short" }) && !!clientProblem(null),
+          "G5 · clientProblem: a Google client id and a printable secret (and its origins), nothing else"],
         [rLoose === 1 && afterLoose === null && /chmod 600/.test(said), `G5 · a file others may read is refused, nothing stored (rc ${rLoose})`],
         [rSet === 0 && stored.client_id === CLIENT.client_id && stored.client_secret === CLIENT.client_secret && /stored/.test(said) && said.includes("…client"),
           `G5 · set-google-client stores the two values from the mode-600 file and says "stored" and the id's tail (rc ${rSet})`],
+        [JSON.stringify(stored.origins) === JSON.stringify(["https://agent.example.test", "https://two.example.test"]) && clientProblem(stored) === "",
+          `G5 · with them the config's custom domains as the client's origins (a zone route is no custom domain) (${JSON.stringify(stored.origins)})`],
+        [rNone === 1 && rBoth === 1 && rBareHttp === 1 && afterNone === null && afterHttp === null && rBare === 0 && JSON.stringify(bareStored.origins) === JSON.stringify(["http://127.0.0.1:8787"]),
+          `G5 · a config with no custom domain takes --origin (a loopback http one; plain http elsewhere refused); none at all, or --origin beside the routes, refused, nothing stored (rc ${rNone}, ${rBoth}, ${rBareHttp}, ${rBare})`],
         [!said.includes(CLIENT.client_secret) && !said.includes(CLIENT.client_id), "G5 · nothing printed holds the secret or the whole id"],
         [rClear === 0 && rAgain === 1 && (await K.get(GOOGLE_CLIENT_KEY)) === null, `G5 · clear removes it; a second clear refused (rc ${rClear}, ${rAgain})`],
       ];
@@ -277,7 +318,7 @@ const CASES = {
       [!W.one("SELECT 1 AS x FROM accounts WHERE email = 'evil@else.test'") && acct && acct.google_sub === id.sub && acct.pass_hash === null
         && rows.length === 1 && rows[0].status === "open" && rows[0].verified_at && rows[0].account_id === acct.id && rows[0].source === "site",
         `G8 · filed ALREADY VERIFIED: the account (its Google subject, no passphrase), the request open and in line, its account, the source; the typed email ignored; the stranger's join gone (${rows.length} row)`],
-      [!ms.some((m) => /Verify your email/.test(m.subject)) && ms.some((m) => m.to === "ryuk@ryuklabs.io" && /Gee Works/.test(m.subject) && !/joiner/i.test(m.text + m.subject)),
+      [!ms.some((m) => /Verify your email/.test(m.subject)) && ms.some((m) => m.to === "acie@ryuklabs.io" && /Gee Works/.test(m.subject) && !/joiner/i.test(m.text + m.subject)),
         `G8 · no verification email; the team's alert (company, no name or email) (${ms.map((m) => m.subject).join(" | ")})`],
       [status.status === 200 && /data-screen="account-in-line"/.test(status.text) && again.status === 410 && /data-screen="request-access"/.test(again.text),
         `G8 · /account in line; the ticket spent: the form again says so (${status.status}, ${again.status})`],
@@ -433,6 +474,13 @@ const CASES = {
     const passForm = await p.call("GET", "/orgs/new", { nav: true });
     const empty = await p.call("POST", "/orgs", { form: org("pass-one", { email: "pass1@gee.test" }) }), emptyMade = !!founded("pass1@gee.test");
     const typed = await p.call("POST", "/orgs", { form: org("pass-one", { email: "pass1@gee.test", password: PASS }) });
+    // a Google-only person SEATED in another org (org 1, by SQL as an admin's add-person seats it): its Google sign-in opens an ORG session
+    const s = await joined("seated1");
+    W.w.db.prepare("INSERT INTO people (id, name, email, role, key_hash, active, created_at, org) VALUES ('seated-one', 'Seated', ?, 'member', ?, 1, ?, 1)").run(s.id.email, sha("seated-key"), new Date().toISOString());
+    const sb = W.browser(), sg = await W.google(sb, "signin", s.id, { query: { next: "/orgs/new" } });
+    const seatedForm = await sb.call("GET", "/orgs/new", { nav: true });
+    const seatedMade = await sb.call("POST", "/orgs", { form: org("seated-one", { email: s.id.email }) });
+    const anonForm = await W.browser().call("GET", "/orgs/new", { nav: true });
     return [
       [fresh.status === 200 && /data-region="google-step-up"/.test(fresh.text) && !/name="password"/.test(fresh.text) && fresh.text.includes(`value="${f.id.email}"`),
         `G16 · fresh: /orgs/new asks no passphrase, the email the session's (${fresh.status})`],
@@ -448,6 +496,103 @@ const CASES = {
       [/<input type="password" id="password" name="password" autocomplete="current-password" required/.test(passForm.text) && !/google-step-up/.test(passForm.text)
         && empty.status === 422 && !emptyMade && typed.status === 200 && founded("pass1@gee.test").slug === "pass-one",
         `G16 · a passphrase account unchanged: its field required, empty 422, its passphrase creates the org (${empty.status}, ${typed.status})`],
+      [sg.cb && sg.cb.status === 302 && !/^t_a_/.test(sb.jar.get("__Host-ar_session") || "") && /data-region="google-step-up"/.test(seatedForm.text) && !/name="password"/.test(seatedForm.text)
+        && seatedMade.status === 200 && founded(s.id.email) && founded(s.id.email).slug === "seated-one",
+        `G16 · a Google-only person seated elsewhere (an ORG session): the fresh step-up on its form, which creates its org (${sg.cb && sg.cb.status}, ${seatedMade.status})`],
+      [/data-region="sign-out-link"/.test(fresh.text) && !/data-region="sign-in-link"/.test(fresh.text) && /data-region="sign-out-link"/.test(seatedForm.text) && /data-region="sign-in-link"/.test(anonForm.text) && !/data-region="sign-out-link"/.test(anonForm.text),
+        "G16 · the org form's top bar: Sign out to an account session and to an org session, Sign in to no session"],
+    ];
+  },
+  async G17() {
+    const { identityOf } = await mod("google.js");
+    const base = { sub: "s", email_verified: true };
+    const auth = (email, hd) => (identityOf({ ...base, email, ...(hd === undefined ? {} : { hd }) }) || {}).authoritative;
+    const W = await world();
+    // an account whose email Google does not run (an outside address a Google account was made on), verified by email (a passphrase)
+    const owner = await W.verifiedByEmail("out@outside.test");
+    const before = W.one("SELECT COUNT(*) AS n FROM account_sessions WHERE revoked = 0 AND account_id = (SELECT id FROM accounts WHERE email = 'out@outside.test')").n;
+    const b = W.browser(), g = await W.google(b, "signin", { sub: "sub-out", email: "out@outside.test", email_verified: true, name: "Out", hd: null });
+    const unlinked = W.one("SELECT google_sub FROM accounts WHERE email = 'out@outside.test'").google_sub, signedAfterLinkPage = b.jar.has("__Host-ar_session");
+    const fails0 = W.one("SELECT COUNT(*) AS n FROM login_attempts WHERE ok = 0").n;
+    const wrong = await b.call("POST", "/auth/google/link", { form: { password: "not-the-passphrase-1" } });
+    const stillUnlinked = W.one("SELECT google_sub FROM accounts WHERE email = 'out@outside.test'").google_sub, fails1 = W.one("SELECT COUNT(*) AS n FROM login_attempts WHERE ok = 0").n;
+    const signedAfterWrong = b.jar.has("__Host-ar_session");
+    const xb = W.browser(); xb.jar.set("__Host-g_link", b.jar.get("__Host-g_link") || "");   // the same ticket, posted from another site
+    const cross = await xb.call("POST", "/auth/google/link", { form: { password: PASS }, headers: { "sec-fetch-site": "cross-site" } });
+        const right = await b.call("POST", "/auth/google/link", { form: { password: PASS } });
+    const linked = W.one("SELECT google_sub, pass_hash FROM accounts WHERE email = 'out@outside.test'");
+    const oldEnded = W.one("SELECT COUNT(*) AS n FROM account_sessions WHERE revoked = 0 AND account_id = (SELECT id FROM accounts WHERE email = 'out@outside.test')").n;
+    const ownerStatus = await owner.call("GET", "/account", { nav: true });
+    const nb = W.browser(), ng = await W.google(nb, "join", { sub: "sub-new-out", email: "new@outside.test", email_verified: true, name: "New", hd: null });
+    return [
+      [auth("a@gmail.com") === true && auth("a@googlemail.com") === true && auth("a@gee.test", "gee.test") === true && auth("a@gee.test", "GEE.test") === true
+        && auth("a@gee.test") === false && auth("a@gee.test", "other.test") === false && auth("a@sub.gee.test", "gee.test") === false,
+        "G17 · authoritative: gmail.com, googlemail.com, or the email's own domain as the token's hd; no hd, another hd, a subdomain: not"],
+      [before >= 1 && g.cb && g.cb.status === 200 && /data-screen="google-link"/.test(g.cb.text) && g.cb.text.includes('value="out@outside.test" readonly') && g.cb.cookies.some((c) => /^__Host-g_link=[0-9a-f]{64};.*HttpOnly; Secure; SameSite=Lax/.test(c))
+        && !signedAfterLinkPage && unlinked === null,
+        `G17 · an account on an outside email: the link page (the passphrase asked, the email locked), nothing linked, no session (${g.cb && g.cb.status})`],
+      [wrong.status === 401 && /data-screen="google-link"/.test(wrong.text) && /data-field-error/.test(wrong.text) && stillUnlinked === null && fails1 === fails0 + 1 && !signedAfterWrong && cross.status === 403,
+        `G17 · a wrong passphrase: the page again (401), still unlinked, the attempt counted (${fails0} -> ${fails1}); a cross-site POST refused (${cross.status})`],
+      [right.status === 302 && right.location === "/account" && /^t_a_/.test(b.jar.get("__Host-ar_session") || "") && linked.google_sub === "sub-out" && !!linked.pass_hash && !b.jar.has("__Host-g_link")
+        && oldEnded === 1 && ownerStatus.status === 302,
+        `G17 · the right one links and signs in (${right.status} ${right.location}); the account's earlier session ended (the old browser sent to sign in: ${ownerStatus.status})`],
+      [ng.cb && ng.cb.status === 200 && /data-screen="google-no-account"/.test(ng.cb.text) && /data-vouched="0"/.test(ng.cb.text) && !nb.jar.has("__Host-g_join") && !W.one("SELECT 1 AS x FROM accounts WHERE email = 'new@outside.test'"),
+        `G17 · a new person on an outside email: "No account yet" for the emailed join, no Google ticket (${ng.cb && ng.cb.status})`],
+    ];
+  },
+  async G18() {
+    const W = await world(), at = new Date().toISOString();
+    // org 1's admin seats victim@gee.test and redeems the invite itself (as THE INVITE LINK leaves it: the passphrase, the org's mark)
+    W.w.db.prepare("INSERT INTO people (id, name, email, role, key_hash, active, created_at, org) VALUES ('victim-seat', 'Victim', 'victim@gee.test', 'member', ?, 1, ?, 1)").run(sha("victim-seat-key"), at);
+    W.w.db.prepare("UPDATE accounts SET pass_hash = ?, pass_salt = ?, invited_org = 1 WHERE email = 'victim@gee.test'").run(pbkdf("the-squatters-passphrase"), SALT);
+    const squat = await W.w.fetch(new Request(O + "/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: "victim@gee.test", password: "the-squatters-passphrase" }) }));
+    const sq = await squat.json().catch(() => ({}));
+    const acct = W.one("SELECT id FROM accounts WHERE email = 'victim@gee.test'").id;
+    W.w.db.prepare("INSERT INTO account_resets (token_hash, account_id, created_at, expires_at) VALUES ('reset-open', ?, ?, ?)").run(acct, at, new Date(Date.now() + 600000).toISOString());
+    const b = W.browser(), g = await W.google(b, "signin", { sub: "sub-victim", email: "victim@gee.test", email_verified: true, name: "Victim" });
+    const a = W.one("SELECT google_sub, pass_hash, pass_salt, invited_org FROM accounts WHERE id = ?", acct);
+    const seat = W.one("SELECT active, pending FROM people WHERE id = 'victim-seat'");
+    const live = W.one("SELECT COUNT(*) AS n FROM tokens WHERE revoked = 0 AND token_hash = ?", sha(String(sq.token || ""))).n;
+    const resetUsed = W.one("SELECT used_at FROM account_resets WHERE token_hash = 'reset-open'").used_at;
+    const again = await W.w.fetch(new Request(O + "/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: "victim@gee.test", password: "the-squatters-passphrase" }) }));
+    const picker = await b.call("GET", "/orgs", { nav: true });
+    // then a reset by email (the mailbox's proof) unlinks the subject
+    await W.browser().call("POST", "/account/forgot", { form: { web: "1", email: "victim@gee.test" } });
+    const m = (await W.mails()).filter((x) => x.to === "victim@gee.test" && /\/account\/reset\//.test(x.text)).pop();
+    const t = (/\/account\/reset\/([0-9a-f]{48})/.exec((m && m.text) || "") || [])[1];
+    const reset = await W.browser().call("POST", "/account/reset", { form: { web: "1", token: t, password: PASS, confirm: PASS } });
+    const afterReset = W.one("SELECT google_sub FROM accounts WHERE id = ?", acct).google_sub;
+    return [
+      [squat.status === 200 && !!sq.token && g.cb && g.cb.status === 302 && live === 0, `G18 · the squatter's session (made with the invite's passphrase) is revoked by the owner's first Google sign-in (${g.cb && g.cb.status}, live ${live})`],
+      [a.google_sub === "sub-victim" && a.pass_hash === null && a.pass_salt === null && a.invited_org === null && again.status === 401,
+        `G18 · the invite's passphrase and its mark gone with the link: it signs in nowhere now (${again.status})`],
+      [seat.active === 0 && seat.pending === 1 && g.cb.location === "/orgs" && /data-region|data-screen/.test(picker.text) && picker.text.includes("victim-seat"),
+        `G18 · the seat WAITS for the owner's yes: the picker, never the org entered (${g.cb.location}; active ${seat.active}, pending ${seat.pending})`],
+      [!!resetUsed, "G18 · the account's open reset link spent with the link"],
+      [reset.status === 303 && afterReset === null, `G18 · a reset by email unlinks the Google subject (${reset.status}, ${afterReset})`],
+    ];
+  },
+  async G19() {
+    const W = await world(), at = new Date().toISOString();
+    // two add-person shells (an account made by seating its email, no passphrase, no subject): one seated, one whose seat is gone
+    W.w.db.prepare("INSERT INTO people (id, name, email, role, key_hash, active, created_at, org) VALUES ('shell-a', 'Shell A', 'shella@gee.test', 'member', ?, 1, ?, 1)").run(sha("shell-a-key"), at);
+    W.w.db.prepare("INSERT INTO people (id, name, email, role, key_hash, active, created_at, org) VALUES ('shell-b', 'Shell B', 'shellb@gee.test', 'member', ?, 1, ?, 1)").run(sha("shell-b-key"), at);
+    W.w.db.prepare("UPDATE people SET active = 0 WHERE id = 'shell-b'").run();
+    const shellA = W.one("SELECT id FROM accounts WHERE email = 'shella@gee.test'").id, shellB = W.one("SELECT id FROM accounts WHERE email = 'shellb@gee.test'").id;
+    await W.browser().call("POST", "/request-access", { form: { web: "1", name: "Shell A", email: "shella@gee.test", password: PASS, confirm: PASS, ...PROFILE } });
+    const ms = (await W.mails()).filter((m) => m.to === "shella@gee.test");
+    const t = (/\/account\/verify\/([0-9a-f]{48})/.exec(((ms[ms.length - 1]) || {}).text || "") || [])[1];
+    const v = await W.browser().call("POST", "/account/verify", { form: { web: "1", token: t, password: PASS } });
+    const a = W.one("SELECT id, pass_hash FROM accounts WHERE email = 'shella@gee.test'");
+    const b = W.browser(), id = { sub: "sub-shellb", email: "shellb@gee.test", email_verified: true, name: "Shell B" };
+    const g = await W.google(b, "join", id);
+    const post = await b.call("POST", "/request-access", { form: { web: "1", google: "1", name: "Shell B", ...PROFILE } });
+    const bb = W.one("SELECT id, google_sub FROM accounts WHERE email = 'shellb@gee.test'"), req = W.one("SELECT status, account_id FROM access_requests WHERE email = 'shellb@gee.test'");
+    return [
+      [ms.length === 1 && /Verify your email/.test(ms[0].subject) && !!t && v.status === 303 && a.id === shellA && !!a.pass_hash,
+        `G19 · a seated shell's email joins as anyone's: the verification email (${ms.map((m) => m.subject).join(" | ")}), then the passphrase the shell's own (${v.status})`],
+      [g.cb && g.cb.status === 303 && g.cb.location === "/request-access" && post.status === 303 && bb.id === shellB && bb.google_sub === "sub-shellb" && req && req.status === "open" && req.account_id === shellB,
+        `G19 · a seatless shell joins through Google: the shell's own account linked, its request open (${g.cb && g.cb.status}, ${post.status} ${post.location})`],
     ];
   },
 };
@@ -467,17 +612,31 @@ const MUTANTS = [
   { name: "the state kept after its use", file: "src/google.js",
     from: "  await env.OAUTH_KV.delete(key);\n  let rec = null;", to: "  let rec = null;", red: ["G4", "G11"] },
   { name: "a different Google account taken for a linked one", file: "src/accounts.js",
-    from: "  if (account.google_sub !== g) return { ...out, verdict: \"other_sub\" };\n", to: "", red: ["G10"] },
+    from: "  if (account.google_sub !== g) return { ...out, account, verdict: \"other_sub\" };\n", to: "", red: ["G10"] },
   { name: "the join takes the email from the form", file: "src/index.js",
     from: "  const read = readRequest({ ...body, email: who.email }), consent = readConsent(body);", to: "  const read = readRequest({ ...body, email: body.email || who.email }), consent = readConsent(body);", red: ["G8"] },
   { name: "the connect started by a link", file: "src/index.js",
     from: "      if (!GOOGLE_INTENTS.includes(intent) || (intent === \"connect\") !== post) return refused(\"failed\", 400);", to: "      if (!GOOGLE_INTENTS.includes(intent)) return refused(\"failed\", 400);", red: ["G14"] },
   { name: "any origin redirects", file: "src/google.js",
-    from: "  return REGISTERED_ORIGINS.includes(u.origin) || loop ? u.origin + CALLBACK_PATH : \"\";", to: "  return u.origin + CALLBACK_PATH;", red: ["G3", "G7"] },
+    from: "  return client.origins.includes(u.origin) ? u.origin + CALLBACK_PATH : \"\";", to: "  return u.origin + CALLBACK_PATH;", red: ["G3", "G7"] },
+  { name: "a stored origin not checked (http off loopback, a path)", file: "src/google.js",
+    from: "  return c.origins.map(originProblem).find(Boolean) || \"\";\n", to: "  return \"\";\n", red: ["G3"] },
   { name: "the step-up's freshness not checked", file: "src/accounts.js",
     from: "  if (googleFreshness(row) !== \"fresh\") return { ...out, verdict: \"stale\" };\n", to: "", red: ["G16"] },
   { name: "the step-up taken from a passphrase's session", file: "src/accounts.js",
     from: "s.revoked = 0 AND s.expires_at > ?2 AND s.proven_how = 'google' AND a.google_sub IS NOT NULL\";", to: "s.revoked = 0 AND s.expires_at > ?2\";", red: ["G16"] },
+  { name: "Google taken as answering for every domain", file: "src/google.js",
+    from: "  const authoritative = GOOGLE_MAIL_DOMAINS.includes(domain) || (typeof claims.hd === \"string\" && claims.hd.toLowerCase() === domain);", to: "  const authoritative = true;", red: ["G17"] },
+  { name: "the first link ends no session", file: "src/accounts.js",
+    from: "db(env).prepare(GOOGLE_LINK_END_TOKENS_SQL).bind(id), ", to: "", red: ["G18"] },
+  { name: "the first link keeps an invite's passphrase", file: "src/accounts.js",
+    from: "pass_hash = CASE WHEN invited_org IS NULL THEN pass_hash END, \" +\n  \"pass_salt = CASE WHEN invited_org IS NULL THEN pass_salt END, invited_org = NULL WHERE", to: "invited_org = NULL WHERE", red: ["G18"] },
+  { name: "an invite-made account's seats entered silently", file: "src/accounts.js",
+    from: "    db(env).prepare(GOOGLE_LINK_SEATS_WAIT_SQL).bind(id), ", to: "    ", red: ["G18"] },
+  { name: "a reset keeps the Google link", file: "src/accounts.js", from: "invited_org = NULL, google_sub = NULL, updated_at = ?2", to: "invited_org = NULL, updated_at = ?2", red: ["G18"] },
+  { name: "an add-person shell held as an account", file: "src/accounts.js", from: "  return !!(a && (a.pass_hash != null || a.google_sub != null));", to: "  return !!a;", red: ["G19"] },
+  { name: "no Google proof on an org session", file: "src/index.js",
+    from: "  if (!seatless && signin.session === \"account\") await putGoogleProof(env, opened.token, signin.account.id);\n", to: "", red: ["G16"] },
   { name: "the local IdP taken from any value", file: "src/google.js",
     from: "  const m = /^(127\\.0\\.0\\.1|localhost):([1-9][0-9]{1,4})$/.exec(v);", to: "  const m = /^(.+):([0-9]+)$/.exec(v.replace(/^https?:\\/\\//, \"\"));", red: ["G3"] },
 ];

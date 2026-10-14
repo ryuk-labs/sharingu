@@ -9,7 +9,7 @@
 //   GET  /jwks        the public key (Cache-Control: max-age=3600)
 // startFakeGoogle({ port, clientId, clientSecret }) -> { origin, address (host:port, the config var's form), next(identity), mint(claims,
 //   opts), authorized (the authorize requests seen), tokens (the token requests answered), close() }
-//   identity: { sub, email, email_verified (default true), name, deny, aud, iss, nonce, exp, alg ("none" | "HS256": a token
+//   identity: { sub, email, email_verified (default true), name, hd (a Workspace's hosted domain: none by default), deny, aud, iss, nonce, exp, alg ("none" | "HS256": a token
 //   no verifier may take), badSig (a signature over other bytes), kid } — one per authorize request (the next one set stays)
 // Used by tools/google-selftest.mjs, tools/smoke/s69-google.mjs and the slice's screenshots; never by the product.
 import { createServer } from "node:http";
@@ -66,7 +66,7 @@ export async function startFakeGoogle({ port = 0, clientId, clientSecret } = {})
       if (!good) return json(res, 400, { error: "invalid_grant" });
       const w = c.who, t = Math.floor(Date.now() / 1000);
       const claims = { iss: w.iss || st.origin, azp: clientId, aud: w.aud || clientId, sub: w.sub, email: w.email, name: w.name, nonce: w.nonce || c.nonce, iat: t, exp: w.exp || t + 3600,
-        ...(w.email_verified === undefined ? { email_verified: true } : w.email_verified === null ? {} : { email_verified: w.email_verified }) };
+        ...(w.hd ? { hd: w.hd } : {}), ...(w.email_verified === undefined ? { email_verified: true } : w.email_verified === null ? {} : { email_verified: w.email_verified }) };
       return json(res, 200, { access_token: randomBytes(16).toString("hex"), token_type: "Bearer", expires_in: 3599, scope: "openid email profile", id_token: mint(claims, w) });
     }
     res.writeHead(404); res.end();

@@ -64,7 +64,7 @@ smoke("data · the captured verification: the request names its account; the tea
   const v = await http("POST", "/account/verify", { form: { web: "1", token: t, password: PASS }, accept: "text/html" });
   const row = reqOf(S.a), acc = rows(`SELECT id FROM accounts WHERE email = ${q(S.a)}`)[0] || {};
   expect(v.status === 303 && row.status === "open" && row.account_id === acc.id && row.account_at === row.verified_at, () => `verified ${v.status}; ${brief({ acc: row.account_id === acc.id, at: row.account_at === row.verified_at })}`);
-  const team = await mailFor("ryuk@ryuklabs.io", (m) => m.subject === `New beta request: ${S.company}` && /Source: site/.test(m.text));
+  const team = await mailFor("acie@ryuklabs.io", (m) => m.subject === `New beta request: ${S.company}` && /Source: site/.test(m.text));
   expect(team && !/S68 Lin|s68a/i.test(team.text + team.html + team.subject), () => `the team's alert: ${brief(team && team.subject)}`);
   S.id1 = row.id;
   // the second person, sent by the showcase: joined and verified the same way (the page will decline them)

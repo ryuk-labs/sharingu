@@ -68,15 +68,15 @@ import { json, text, uid, now, sha256, TX_LANES, isEvalMark, evalView, crossSite
 import { countCall, installPlanNote, planNoteOf, planShownOf, setPlanReader, suspensionOf, suspendedAnswer } from "./plans.js";   // sprint 8, 8.2: every signed-in REST write is a call the org's plan counts; 8.4: Control shows the plan; 8.5: the suspension's one check
 import { handleStorage, handleLog } from "./reports.js";
 import { runControlAction } from "./admin.js";
-import { passphraseSignIn, countSignIn, openSession, landingOf, clientOf, NO_SEAT_HERE_WORDS, chooseOrgWords, PENDING_ONLY_WORDS, EMAIL_NOT_ASCII_WORDS, signUp, orgsOfAccount, answerSeat, SEAT_ANSWER_WORDS, PICKER_PATH, betaCount, normEmail, accountHolds, accountSessionOf, openAccountSession, endAccountSession, isAccountSessionToken, accountStanding, mayFound, verifyOpen, verifyJoin, startReset, resetOpen, finishReset, googleSignIn, googleJoin, normOrgArg, accountStepUp } from "./accounts.js";   // sprint 7, 7.1: one account per email, a seat per org; 7.2: sign-up
+import { passphraseSignIn, countSignIn, openSession, landingOf, clientOf, NO_SEAT_HERE_WORDS, chooseOrgWords, PENDING_ONLY_WORDS, EMAIL_NOT_ASCII_WORDS, signUp, orgsOfAccount, answerSeat, SEAT_ANSWER_WORDS, PICKER_PATH, betaCount, normEmail, accountHolds, accountSessionOf, openAccountSession, endAccountSession, isAccountSessionToken, accountStanding, mayFound, verifyOpen, verifyJoin, startReset, resetOpen, finishReset, googleSignIn, googleJoin, googleLinkByPassphrase, putGoogleProof, normOrgArg, accountStepUp } from "./accounts.js";   // sprint 7, 7.1: one account per email, a seat per org; 7.2: sign-up
 import { renderSignup, renderInvite, signupProblem, SIGNUP_REFUSED_WORDS, SIGNUP_FIELD_WORDS, EMAIL_RE } from "./signup.js";   // sprint 7, 7.2: sign-up by allowlist
 import { inviteSignup, isInviteBody, INVITE_HEADERS } from "./invite.js";   // sprint 12, 12.3: an org's invite link (src/accounts.js THE INVITE LINK)
 import { readRequest, readConsent, sourceOf, trapped, joinProblem, joinPass, fileRequest, pendingJoinOf, rotateVerify, verifiedRequestOf, placeInLine, approvedProfile, newLinkToken, verifyTokenHash, resetTokenHash, LINK_TOKEN_RE, REQUEST_FIELDS, REQUEST_TRAP, REQUEST_PATH, ACCOUNT_PATH, SENT_PATH, VERIFY_PATH, RESEND_PATH, FORGOT_PATH, RESET_PATH, CONSENT_VERSION } from "./requestaccess.js";   // sprint 21, 21.1: request access; 21.4a: the account flow
 import { renderRequestAccess, REQUEST_FIELD_WORDS, betaWords } from "./requestpage.js";
-import { renderSent, renderVerify, renderLinkDead, renderResend, renderForgot, renderForgotSent, renderReset, renderAccountStatus, renderNoAccount, renderGoogleRefused, GOOGLE_JOIN_GONE } from "./accountpage.js";   // sprint 21, 21.4a; 21.4c: Google's two pages
-import { START_PATH, CALLBACK_PATH, GOOGLE_INTENTS, STATE_COOKIE, JOIN_COOKIE, STATE_MINUTES, JOIN_MINUTES, googleClient, googleOffer, redirectUriFor, startFlow, takeFlow, sameState, exchangeCode, verifiedIdentity, putJoin, joinOf, dropJoin, flowCookie, clearCookie, cookieOf } from "./google.js";   // sprint 21, 21.4c: Google sign-in
+import { renderSent, renderVerify, renderLinkDead, renderResend, renderForgot, renderForgotSent, renderReset, renderAccountStatus, renderNoAccount, renderGoogleRefused, renderGoogleLink, GOOGLE_JOIN_GONE } from "./accountpage.js";   // sprint 21, 21.4a; 21.4c: Google's two pages
+import { START_PATH, CALLBACK_PATH, GOOGLE_INTENTS, STATE_COOKIE, JOIN_COOKIE, STATE_MINUTES, JOIN_MINUTES, googleClient, googleOffer, redirectUriFor, startFlow, takeFlow, sameState, exchangeCode, verifiedIdentity, putJoin, joinOf, dropJoin, putLink, linkOf, dropLink, LINK_COOKIE, LINK_MINUTES, LINK_PATH, flowCookie, clearCookie, cookieOf } from "./google.js";   // sprint 21, 21.4c: Google sign-in
 import { googleLink } from "./googlepage.js";
-import { sendMail, mailerOf, mailPaused, TEAM_TO, TEAM_CC } from "./email.js";   // sprint 21, 21.4a: THE send, under the cap
+import { sendMail, mailerOf, mailPaused, teamSend } from "./email.js";   // sprint 21, 21.4a: THE send, under the cap
 import { verifyMail, alreadyMail, resetMail, teamRequestMail } from "./mails.js";
 import { renderShowcase } from "./showcase.js";   // sprint 21, 21.3: `/` for a browser with no session
 import { createOrg, orgFields, orgFormProblem, ORG_FIELD_WORDS, ORG_WORDS, ORG_NAME_MAX } from "./orgs.js";   // sprint 7, 7.3: create an org
@@ -89,7 +89,7 @@ import { reservedNames, orgSlugProblem, suggestSlug, ORG_SLUG_MAX } from "./orgn
 import { backupPage, lastBackup } from "./backup.js";
 import { readMeasures, exportOf } from "./measures.js";
 import { SECRET_ACTIONS, runSecretAction } from "./secrets.js";
-import { PROJECT_ARG, READ_PROJECT_RULE, seatsOnce, orgIsMultiProject, isPartnerReader, consentOf, mandateFloorFor, backfillReports, backupDump, decideTransmission, projectSeatsFor, projectsHeldBy, countActiveProjects, activeKeysOnce, resolveAny, resolveReader, sessionCookieToken, credentialLive, sessionPlace, csrfRefused, SESSION_COOKIE, SESSION_COOKIE_ATTRS, sessionSetCookie, carriesTranscript, whoamiFor, bankArtifact, briefCountFor, liveStampOf, READ_SCOPE, switcherCurrentOf, transmissionOneFor, filingFor, artifactsListFor, mayReadArtifact } from "./core.js";
+import { PROJECT_ARG, READ_PROJECT_RULE, seatsOnce, orgIsMultiProject, isPartnerReader, consentOf, mandateFloorFor, backfillReports, backupDump, decideTransmission, projectSeatsFor, projectsHeldBy, countActiveProjects, activeKeysOnce, resolveAny, resolveReader, sessionCookieToken, credentialLive, sessionLive, sessionPlace, csrfRefused, SESSION_COOKIE, SESSION_COOKIE_ATTRS, sessionSetCookie, carriesTranscript, whoamiFor, bankArtifact, briefCountFor, liveStampOf, READ_SCOPE, switcherCurrentOf, transmissionOneFor, filingFor, artifactsListFor, mayReadArtifact } from "./core.js";
 import { resolveProject, projectOf, projectScopeOf, NO_PROJECT, keyInOrg, projectSlug } from "./project.js";
 import { renderDenied, placeMeterChip, LISTS_MARK } from "./ui.js";
 import { fontResponse, iconResponse } from "./fonts.js";
@@ -116,7 +116,7 @@ const CONSENT_GRADES = ["off", "traces", "traces+prompts"];
 const CAPABILITIES = [
   { m:"GET",  p:"/health",        auth:"none",   does:"is the door up, and which version answered (a platform check: it reads one row of the schema and names no org)" },
   { m:"GET",  p:"/fonts/:file",   auth:"none",   does:"the brand's three faces, self-hosted (manrope.woff2 · fredoka.woff2 · jetbrains-mono.woff2, SIL OFL 1.1, src/fonts.js): font/woff2, cached a year as immutable (the page's URL carries ?v=<the fonts' hash>); answered before any auth or D1 read; any other name is 404" },
-  { m:"GET",  p:"/assets/:path", auth:"none",   does:"the front door's pictures, self-hosted (sprint 21, 21.P; src/frontassets.js): the walkthrough's five posters (walkthrough/<n>-<name>.jpg, image/jpeg) and the connect page's two client logos (clients/claude.png, clients/chatgpt.png, image/png), the website's own files; cached a year as immutable (the page's URL carries ?v=<their hash>); answered before any auth or D1 read; any other path is 404" },
+  { m:"GET",  p:"/assets/:path", auth:"none",   does:"the front door's pictures, self-hosted (sprint 21, 21.P; src/frontassets.js): the walkthrough's five posters (walkthrough/<n>-<name>.jpg, image/jpeg), the connect page's two client logos (clients/claude.png, clients/chatgpt.png: the website's own files), Google's G mark beside Continue with Google (clients/google.png) and U-chan's mark the emails carry (brand/uchan-mark.png), each image/png; cached a year as immutable (the page's URL carries ?v=<their hash>); answered before any auth or D1 read; any other path is 404" },
   { m:"GET",  p:"/favicon.svg",   auth:"none",   does:"the favicon: U-chan, the brand's own vector (src/ui.js FAVICON_SVG, the website's favicon.svg), image/svg+xml; with ?v=<its hash> (the pages' link) cached a year as immutable, bare a day; answered before any auth or D1 read" },
   { m:"GET",  p:"/.well-known/openai-apps-challenge", auth:"none", does:"OpenAI's domain verification (sprint 11, 11.3; src/wellknown.js): the token the operator stored for this deployment (tools/operator.mjs set-openai-challenge), as text/plain and nothing else; 404 not_found when none is stored. The platform's, never an org's: answered at the root before any sign-in, with no D1 read" },
   { m:"POST", p:"/login",         auth:"none",   does:"email + password -> a 90-day token (sprint 7: one account per email, a seat per org; 7.4, the front door by path: the sign-in lives at the platform's root and CHOOSES the org — the org next names (/<org>/…) when your account holds a seat there, else your seat in org 1, else your first). Your ACCOUNT's passphrase signs in the chosen seat with an account session: a browser's cookie then reads, at any org's address /<org>/…, as your seat in that org. A seat's own secret (the key its admin gave you) signs in THAT seat only, with a seat session (its org alone). The token as a bearer is the seat it names. A form lands on next, else /<the chosen org>. A wrong or missing email or password is 401 invalid_login; your account's passphrase with no seat in any org is 403 no_seat_here for a script, and for a form (sprint 21, 21.4a) an ACCOUNT session landing on /account (your request's status; it signs in to no org); an email whose only trace is an unverified join, with that join's passphrase, is 403 email_unverified (a form: check your inbox, with a resend); 8 failures in 15 minutes on one account are 429 too_many_attempts" },
@@ -135,9 +135,10 @@ const CAPABILITIES = [
   { m:"POST", p:"/account/forgot", auth:"none", does:"ask for a reset link (sprint 21, 21.4a): {email} -> the SAME answer whether or not an account holds the email (a form: the page saying a link is on its way if one does; JSON {sent: true}); an account's email gets one link (single use, 30 minutes, only its hash kept), within the three a day per address and the cap. 422 bad_email; 403 cross_site_forgot; 429 too_many_attempts_ip" },
   { m:"GET",  p:"/account/reset/:token", auth:"none", does:"a reset link (sprint 21, 21.4a): a live link asks for the new passphrase twice (it changes nothing); an expired, used or wrong one is ONE 404 page with the way to a new link" },
   { m:"POST", p:"/account/reset", auth:"none", does:"set a new passphrase (sprint 21, 21.4a): {token, password (at least 12 characters), confirm} -> in one write: the account takes it (an org's invite mark ends: the link proves the email), EVERY session of the account ends — its org sessions in every org and its account sessions — with its other reset links and its seats' connected apps; then you are signed in fresh (a form: 303 to your org, the picker or /account, the new session's cookie set; JSON {reset, signedIn}). 404 invalid_link; 422 bad_reset {field}; 403 cross_site_reset; 429 too_many_attempts_ip" },
-  { m:"GET",  p:"/auth/google/start", auth:"none", does:"Continue with Google (sprint 21, 21.4c; OpenID Connect's authorization code flow with PKCE): ?intent=join (?from= the source, as the join form's) or ?intent=signin (?next=<same-origin path>, checked again at the end) -> 302 to Google's sign-in (scope openid email profile, prompt=select_account), a single-use state held server-side for 10 minutes with its nonce and its PKCE verifier, the state bound to this browser by a __Host- cookie. Only on the platform's registered addresses and only when the operator stored a Google client (tools/operator.mjs set-google-client): else 404, one plain page. 429 when the address's flood filter (POST /login's budget) is spent" },
+  { m:"GET",  p:"/auth/google/start", auth:"none", does:"Continue with Google (sprint 21, 21.4c; OpenID Connect's authorization code flow with PKCE): ?intent=join (?from= the source, as the join form's) or ?intent=signin (?next=<same-origin path>, checked again at the end) -> 302 to Google's sign-in (scope openid email profile, prompt=select_account), a single-use state held server-side for 10 minutes with its nonce and its PKCE verifier, the state bound to this browser by a __Host- cookie. Only when the operator stored a Google client (tools/operator.mjs set-google-client) and only on the addresses stored with it (the deployment's custom domains): else 404, one plain page. 429 when the address's flood filter (POST /login's budget) is spent" },
   { m:"POST", p:"/auth/google/start", auth:"none", does:"Continue with Google from the connect page (sprint 21, 21.4c): {intent: connect, oauth_req (the connect page's authorize request, as its passphrase form carries it), org? (the org this connection acts in, when the account holds several)} -> 303 to Google, as GET /auth/google/start; same-origin only (403 otherwise, before the body is read); the authorize request's redirect must be an allowed one and its client registered (400 otherwise). A connect never starts from a link" },
-  { m:"GET",  p:"/auth/google/callback", auth:"none", does:"Google's answer (sprint 21, 21.4c): the state must be this browser's (its cookie) and is spent (once); the code is exchanged with the verifier; the id_token is VERIFIED (RS256 against Google's keys, cached by their Cache-Control; iss, aud our client, exp and iat, the nonce) and only an email Google verified (email_verified) is matched, by email: an account signs in exactly as its passphrase would (an org session and its landing, or the picker; an account with no seat its account session at /account; its Google account linked on first use, and a later different Google account refused 403), the connect page's authorization completes as that account under its rules (no seat, seats waiting, several orgs: the choice); no account: the join (intent join: 303 to /request-access, the form filled in from Google with the email locked; else a page saying no account holds the email, with Join the beta). Every refusal is one plain page, nothing signed in: 400 a missing, foreign, used or expired state (a replay), 401 a token that fails verification or an unverified email, 403 a different Google account, 404 no client stored" },
+  { m:"GET",  p:"/auth/google/callback", auth:"none", does:"Google's answer (sprint 21, 21.4c): the state must be this browser's (its cookie) and is spent (once); the code is exchanged with the verifier; the id_token is VERIFIED (RS256 against Google's keys, cached by their Cache-Control; iss, aud our client, exp and iat, the nonce) and only an email Google verified (email_verified) is matched, by email — only where Google runs the mailbox (gmail.com, googlemail.com, or a Workspace domain the token names as the email's own: for any other address an account's first Google sign-in is the link page, POST /auth/google/link, and a new person joins by the emailed check): an account signs in exactly as its passphrase would (its FIRST Google sign-in ends every earlier session of the account, and a passphrase an org's invite link set is cleared, that account's seats then waiting for its yes on /orgs) (an org session and its landing, or the picker; an account with no seat its account session at /account; its Google account linked on first use, and a later different Google account refused 403), the connect page's authorization completes as that account under its rules (no seat, seats waiting, several orgs: the choice); no account: the join (intent join: 303 to /request-access, the form filled in from Google with the email locked; else a page saying no account holds the email, with Join the beta). Every refusal is one plain page, nothing signed in: 400 a missing, foreign, used or expired state (a replay), 401 a token that fails verification or an unverified email, 403 a different Google account, 404 no client stored" },
+  { m:"POST", p:"/auth/google/link", auth:"none", does:"link Google with your passphrase (the sprint-21 review; src/accounts.js WHO GOOGLE ANSWERS FOR): Google's verified email proves the mailbox only where Google runs it (gmail.com, googlemail.com, or a Workspace domain the token names as the email's own), so for any other address the callback's answer to an account that holds it is this page's form, and its FIRST Google sign-in takes the account's own passphrase too: {password} -> the Google identity this browser's link ticket holds (a __Host- cookie, 10 minutes; never the form's) linked to the account (every earlier session of the account ended: the first link is a reset), then the sign-in, or the connect page's authorization, finishes as the callback's would. A wrong passphrase is the form again (401; it counts in the account's lockout: 8 in 15 minutes are 429); 400 a ticket used or expired; 403 a passphrase an org's invite link set (reset it by email first), another Google account linked meanwhile, or a cross-site form; 429 too_many_attempts_ip" },
   { m:"GET",  p:"/orgs",          auth:"reader",   does:"your orgs (sprint 7, 7.4b): the browser's org picker at the platform's root. With an ACCOUNT session (signed in with your account's passphrase) whose account holds seats in several orgs: the page listing them (each org's name, its address and your role there), each a link to /<org>/home (or to the page ?to=<path> names, under that org). A one-org account and a SEAT session (signed in with a seat's own secret: that seat only) never see it: 302 straight to their org. No session: the sign-in rule (a page navigation goes to /login?next=…, a script 401 auth_required). It lists only your own account's seats; a bearer names one seat: 302 straight to its org" },
   { m:"POST", p:"/orgs/seat",     auth:"session",   does:"answer a seat that waits for your yes (sprint 7's review, A1): an org's admin who adds your email while your account already stands elsewhere (it holds your passphrase, or a seat in another org) makes a PENDING seat — it signs nothing in and counts nowhere until you accept it. Your org list (GET /orgs) shows it with Accept and Decline; each posts {seat, answer: accept|decline} here with your ACCOUNT session (signed in with your account's passphrase; a seat session answers nothing), same-origin only. accept: the seat becomes active (409 already_seated when your account already holds an active seat in that org); decline: it stays inactive. A form is sent back to /orgs; JSON {seat, answer: accepted|declined}. Any other seat, a seat no longer waiting, another account's: 404 not_yours, the same for every case; no session: the sign-in rule" },
   { m:"GET",  p:"/orgs/new",      auth:"none",   does:"the create-an-org page (sprint 7, 7.3): your account's email and passphrase (the ACCOUNT's own, chosen at sign-up: never a key an org's admin gave you), the org's name, its address (its path name: a to z, 0 to 9 and single dashes, 2 to 40 characters, never a name the platform uses; sprint 21, 21.P: suggested from the org's name as you type, still yours to edit), its first project's short name (default: the address) and your name; the page belongs to the platform (the product's wordmark, no org's). With an ACCOUNT session (sprint 21, 21.4a) whose request is approved it comes filled in from the request (your email, the company as the org's name and its suggested address, your name); one still in line is sent to /account. (21.4b) Under it the product step, \"What you'll build with sharingu\": the product and its line, its stage, then what it is, the AI you'll connect, where the work lives, what you want first and the people joining in the first month (chips: real checkboxes and radios, working with the keyboard and without a script). (21.4c) An account session Google proved less than 10 minutes ago: no passphrase field (the email locked); proven by Google longer ago: Continue with Google again (back to this form) beside the passphrase field" },
@@ -187,8 +188,8 @@ const CAPABILITIES = [
   { m:"GET",  p:"/control/people", auth:"reader", does:"Control's ONE read (UI-B12a, src/controlread.js readControl; GET /control renders the same object): JSON {org:{name, deploy, manifest:'served'|'fallback', projects}, reader:{id, admin, readOnly?}, admin:{name}, people:[{id, name, email|null, title|null, consent|null, admin, role:'admin'|'member'|'partner', hats:[<hat>], avatar:{initials, tone}, label|null, lastFiled|null, active, you, seats:[{project, name}], can:{role, remove, seat, reissue, reason}}], workspaces:[{key, name, seats}], archived:[{key, name, seats}], keys:[{person, devices:[{device, since, expires}]}], stamp:{people, projects}, live?:'unreachable', eval?:true, all?:true}; the admin reads everyone active with emails, each one's typed label (label, migrate-044) and newest filing (lastFiled), every ACTIVE project and the archived ones, and their own live devices (?eval=1 adds the suites' eval-fixed people; ?all=1 adds them, the archived people and every live device); a non-admin reads the people who share an ACTIVE project with them, their own email only, the seat chips of their own projects, their own seated projects and their own devices, every can.* false with the reason CONTROL_REASON naming the admin; the read-only credential reads what its person reads with every can.* false and READ_ONLY_REASON (reader.readOnly true); email and consent (ADR-102, read-only here) on the admin's and your own row only; seated nowhere: only themselves; anonymous 401; at most 3 D1 statements beyond the sign-in; no MCP twin (whoami carries the caller's own seats and hats); a Partner's org.projects is their own seated keys only" },
   { m:"GET",  p:"/control/measures", auth:"owner", does:"the beta measures (src/measures.js): the org's first pick-up, repeat pick-ups (with pick-ups per week, the last 8), week-1 and week-4 return, cross-role goals, the median days from invite to the first landed contribution, and whether the org is activated, each with its definition, counted from the ledger in three indexed statements (eval-marked rows never count); JSON {format, org, at, note, measures:[{key, label, definition, value}]}, ?download=1 as a file to save; counts, dates, project keys and a goal id only (no person); the admin only, anyone else 403 owner_only; no MCP twin" },
   { m:"POST", p:"/control",       auth:"owner",  does:"the ONE admin write door (UI-B12a): a form action add-person (Invite: name, email, role member|partner or a typed role a script names, projectKey repeated for the seats, accessHat repeated for the access hats: none named, the typed role's; Invite's form sends seatsChosen=1 and seats exactly the projects ticked, none when none is; a script naming none seats a member on the org's sole project and a Partner nowhere; eval=1 from a script mints one of the suites' seats, eval-fixed-*; deliver=link — Invite's form sends it — makes a ONE-TIME INVITE LINK for the new seat in place of showing its key (sprint 12, 12.3: <origin>/signup?via=invite#<token>, 7 days, that seat and its email only, shown once; the invitee chooses their own passphrase; a seat that waits for its holder's yes gets none: its holder accepts it on /orgs), no deliver: the key, as before) · invite-link (personId: a new link for an active seat of YOUR org that was never used — never signed in, nothing filed, its account holding no passphrase of its own — any older open one of that seat revoked; a working seat: 'Nothing done', its secret reset with rotate-key or set-password; a seat of another org, a pending or removed one: nothing) · rotate-key (the new key shown once; that person's open sessions revoked in the same action) · set-role (role admin|member|partner; seated = member) · set-access-hats (personId, accessHat repeated: the WHOLE list of the hats that unlock briefings and cards for that person, migrate-045; none ticked: none; a hat outside the seven refused; an events row kind access) · add-project · archive-project · activate-project · grant-seat · revoke-seat · remove-person · clean-eval (the suites' marked rows, and an archived eval project swept of its seats, knowledge, derived rows and previews; its grades stay) (+ set-title · set-password kept for scripts); owner-only, refused to a seat 403 independently of the render; a read-only credential 403, a cross-origin cookie 403, a key in the address signs no one in (G2 M2); every answer is 200 + the page with its flash, a refusal 'Nothing done — …' (set-role never leaves the org with no real admin, the suites' eval-fixed owner never counted; add-person never mints an admin; remove-person never removes the last real admin); the one-time secret of add-person and rotate-key, and an invite link, ride the response body only, never a Location or a URL the server is sent (the link's token is its fragment)" },
-  { m:"GET",  p:"/operator",      auth:"owner",  does:"the operator page (sprint 21, 21.4b; src/operatorread.js, src/operatorpage.js): for an ADMIN of org 1 (the operating org) only, under org 1's address (/<org 1>/operator) — the beta's funnel (requested, verified, approved, signed up: approved, then signed in again or made their org; org created — ONE aggregate over the newest 1,000 requests), then one page of 20 requests of a status (?status=open, the line, the default · approved · declined; ?after=<the next page's cursor>) in line order, each with its profile, its consent (each box, the words' version and time), its source, its path (requested, verified, account, approved or declined, org) and, once its org stands, the org's product answers. Anyone else signed in — another org's admin, a member or partner of org 1 — gets the one not-here 404 an address that serves nothing answers; no session: the sign-in rule (a page navigation goes to /login)" },
-  { m:"POST", p:"/operator",      auth:"owner",  does:"the operator page's two decisions (sprint 21, 21.4b), for an admin of org 1 only, same-origin only (a cross-site form 403, nothing changed): a form {action: approve|decline, request: <its id>}. approve: an OPEN request approved (the beta's places counted first, as operator allow --request counts them; at the cap it is refused here, past it only the operator's terminal approves) in one guarded write, then its ONE \"You're in\" email (counted in the email cap); decline: an open request declined (no email). A request not in line, an unknown id: nothing changed, said on the page. The answer is the page again with what was done (200); a read-only credential 403; anyone else signed in the one not-here 404; no session the sign-in rule" },
+  { m:"GET",  p:"/operator",      auth:"owner",  does:"the operator page (sprint 21, 21.4b; src/operatorread.js, src/operatorpage.js): for an ADMIN of org 1 (the operating org) only, under org 1's address (/<org 1>/operator) — in a browser (their session cookie: a bearer key or the read-only credential gets the one not-here 404) — the beta's funnel (requested, verified, approved, signed up: approved, then signed in again or made their org; org created — ONE aggregate over the newest 1,000 requests), then one page of 20 requests of a status (?status=open, the line, the default · approved · declined; ?after=<the next page's cursor>) in line order, each with its profile, its consent (each box, the words' version and time), its source, its path (requested, verified, account, approved or declined, org) and, once its org stands, the org's product answers. Anyone else signed in — another org's admin, a member or partner of org 1 — gets the one not-here 404 an address that serves nothing answers; no session: the sign-in rule (a page navigation goes to /login)" },
+  { m:"POST", p:"/operator",      auth:"owner",  does:"the operator page's two decisions (sprint 21, 21.4b), for an admin of org 1 only, same-origin only (a cross-site form 403, nothing changed): a form {action: approve|decline, request: <its id>}. approve: an OPEN request approved (the beta's places counted first, as operator allow --request counts them; at the cap it is refused here, past it only the operator's terminal approves) in one guarded write, then its ONE \"You're in\" email (counted in the email cap); decline: an open request declined (no email). A request not in line, an unknown id: nothing changed, said on the page. The answer is the page again with what was done (200); a bearer or the read-only credential, and anyone else signed in, the one not-here 404; no session the sign-in rule" },
   { m:"POST", p:"/respond",       auth:"bearer", does:"answer an open question with one of its options: {qid, option, provisional?} or {answers:[…]} — typed text is refused option_required, an absent option unknown_option, a qid this project has not filed unknown_qid, a ruled question not_open, nothing filed on any refusal; files the option's text (lane leader, kind answer, gapRefs q/<qid>) (QBDD22130). The owner's answer (not provisional) rules the question in the same request (ruled:true per answer); anyone else's waits with the owner, the question still open; a form is sent on to a same-origin next; no option is 422 option_required" },
   { m:"POST", p:"/round",         auth:"bearer", does:"the round is a filing (Q187911C3): {qid} adds a question to your round (lane leader, kind round, gapRefs q/<qid>); {export:true} banks your undecided answers and round filings as one rounds-format JSON artifact and returns {artifact, href, count}; a qid the project does not hold (or none) is 404 unknown_qid" },
   { m:"GET",  p:"/logout",        auth:"none",   does:"clear the web session cookie and return to the login page (ADR-056): the session it carried ends, an org session or (sprint 21, 21.4a) an account session" },
@@ -386,19 +387,46 @@ async function googleJoinAnswer(c, body, { isWeb, kept }) {
   const r = await googleJoin(env, read.request, { sub: who.sub, pass: chose ? await joinPass(body.password) : null, consent: consent.consent, consentVersion: CONSENT_VERSION, source });
   if (r.verdict !== "ok") return isWeb ? accountPage(renderGoogleRefused({ brand, why: "exists" }), 409, { "set-cookie": clearCookie(JOIN_COOKIE) }) : json({ error: "account_exists" }, 409);
   await dropJoin(env, ticket);
-  // the team's one alert for this request, as a verification's (uncounted): its company, role, team size and source, never the person
-  await afterAnswer(c, () => sendMail(env, mailerOf(env), { to: TEAM_TO, cc: TEAM_CC, counted: false, build: () => teamRequestMail({ origin: url.origin, request: { ...read.request, id: r.id, source } }) }));
+  // the team's one alert for this request, as a verification's (counted under the cap): its company, role, team size and source, never the person
+  await afterAnswer(c, () => teamSend(env, mailerOf(env), () => teamRequestMail({ origin: url.origin, request: { ...read.request, id: r.id, source } })));
   if (!isWeb) return json({ verified: true, signedIn: !!r.session });
   const h = new Headers({ location: r.session ? ACCOUNT_PATH : "/login", "cache-control": "no-store" });
   h.append("set-cookie", clearCookie(JOIN_COOKIE));
   if (r.session) h.append("set-cookie", sessionSetCookie(r.session.token));
   return new Response(null, { status: 303, headers: h });
 }
-// googleAnswer(location, cookies) -> a redirect setting each cookie (the flow's state cleared, a session or a join ticket set)
+// googleAnswer(location, cookies) -> a redirect setting each cookie (the flow's state cleared, a session or a join ticket set);
+// pageWithCookies(html, status, cookies) -> a page setting each
 function googleAnswer(location, cookies, status = 302) {
   const h = new Headers({ location, "cache-control": "no-store", "referrer-policy": "no-referrer" });
   for (const k of cookies) h.append("set-cookie", k);
   return new Response(null, { status, headers: h });
+}
+function pageWithCookies(html, status, cookies) {
+  const h = new Headers({ "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "referrer-policy": "no-referrer" });
+  for (const k of cookies) h.append("set-cookie", k);
+  return new Response(html, { status, headers: h });
+}
+// googleFinish(c, rec, sub, signin, cookies, refused) — a Google sign-in that matched its account (the callback, or the link once the
+// passphrase linked it): the connect page's authorization completed as that account (src/oauth.js connectByGoogle), else signed in
+// exactly as the account's passphrase signs in (POST /login): an org session and its landing — (the sprint end's review) its Google
+// proof recorded for the org form's step-up (src/accounts.js putGoogleProof) — else (no seat) an account session and its status page
+async function googleFinish(c, rec, sub, signin, cookies, refused) {
+  const { env, url } = c;
+  if (rec.intent === "connect") {
+    const res = await connectByGoogle(env, { ...rec.oauth, signin, origin: url.origin });
+    const h = new Headers(res.headers);
+    for (const k of cookies) h.append("set-cookie", k);
+    return new Response(res.body, { status: res.status, headers: h });
+  }
+  const seatless = signin.verdict === "no_seat_here";
+  const opened = seatless ? await openAccountSession(env, signin.account, { device: "web", google: sub }) : await openSession(env, signin, { device: "web" });
+  await countSignIn(env, seatless ? { ...signin, session: "account" } : signin, !!opened);
+  if (!opened) return refused("failed", 401);
+  if (!seatless && signin.session === "account") await putGoogleProof(env, opened.token, signin.account.id);
+  // (no seat: its account session lands on the next page it carried, a root page — the org form's step-up — else its status page)
+  const to = seatless ? (rec.next && !splitAddress(rec.next.split(/[?#]/)[0]) ? rec.next : ACCOUNT_PATH) : await landingFor(env, url.origin, signin, rec.next);
+  return googleAnswer(to, [...cookies, sessionSetCookie(opened.token)]);
 }
 // stepUpShown(env, origin, google) -> what the org form shows of THE STEP-UP (src/accounts.js accountStepUp; the owner's ruling,
 // 2026-10-14): "fresh" (no passphrase asked), "stale" (Continue with Google again beside the passphrase — only where the button may
@@ -1239,8 +1267,8 @@ const ABOVE_ROUTES = [
       if (r.verdict === "refused") return isWeb ? accountPage(renderLinkDead({ brand, kind: "verify" }), 404) : json({ error: "invalid_link" }, 404);
       if (r.verdict === "locked") return again(429, "Too many attempts. Wait 15 minutes and try again.");
       if (r.verdict === "wrong") return again(401, "That is not the passphrase this request chose. Type the one you chose when you asked to join.");
-      // the team's one alert for this request (uncounted: a verified destination): its company, role and team size, never the person
-      await afterAnswer(c, () => sendMail(env, mailerOf(env), { to: TEAM_TO, cc: TEAM_CC, counted: false, build: () => teamRequestMail({ origin: url.origin, request: r.request }) }));
+      // the team's one alert for this request (counted under the cap: src/email.js teamSend): its company, role and team size, never the person
+      await afterAnswer(c, () => teamSend(env, mailerOf(env), () => teamRequestMail({ origin: url.origin, request: r.request })));
       if (!isWeb) return json({ verified: true, signedIn: !!r.session });
       return r.session
         ? new Response(null, { status: 303, headers: { location: ACCOUNT_PATH, "set-cookie": sessionSetCookie(r.session.token), "cache-control": "no-store" } })
@@ -1341,8 +1369,8 @@ const ABOVE_ROUTES = [
       const intent = typeof body.intent === "string" ? body.intent : "";
       // a connect starts only from the connect page's own form: never a link, which anyone could hand a person
       if (!GOOGLE_INTENTS.includes(intent) || (intent === "connect") !== post) return refused("failed", 400);
-      const redirect = redirectUriFor(env, url.origin), client = redirect ? await googleClient(env) : null;
-      if (!client) return refused("off", 404);
+      const client = await googleClient(env), redirect = redirectUriFor(env, client, url.origin);
+      if (!redirect) return refused("off", 404);
       const rec = { intent, redirect };
       if (intent === "signin") rec.next = sameOriginPath(typeof body.next === "string" ? body.next : "", url.origin);
       if (intent === "join") rec.source = sourceOf(body.from);
@@ -1372,37 +1400,56 @@ const ABOVE_ROUTES = [
       if (!rec) return refused("expired");
       if (q.get("error")) return refused("cancelled");
       const client = await googleClient(env);
-      if (!client || rec.redirect !== redirectUriFor(env, url.origin)) return refused("off", 404);
+      if (!client || rec.redirect !== redirectUriFor(env, client, url.origin)) return refused("off", 404);
       const ex = await exchangeCode(env, client, { code: q.get("code"), redirect: rec.redirect, verifier: rec.verifier });
       if (ex.why) return refused("failed", 401);
       const v = await verifiedIdentity(env, client, ex.idToken, rec.nonce);
       if (v.why) return refused(v.why === "email_unverified" ? "unverified" : v.why === "email_form" ? "email_form" : "failed", 401);
       const who = v.identity;
-      const signin = await googleSignIn(env, { email: who.email, sub: who.sub, prefer: rec.intent === "signin" ? await preferOrgOf(env, url.origin, rec.next) : null,
+      const signin = await googleSignIn(env, { email: who.email, sub: who.sub, authoritative: who.authoritative, prefer: rec.intent === "signin" ? await preferOrgOf(env, url.origin, rec.next) : null,
         pick: rec.pick || "", client: await clientOf(request) });
       if (signin.verdict === "other_sub" || signin.verdict === "linked_elsewhere") return refused(signin.verdict, 403);
+      // (the sprint end's review: WHO GOOGLE ANSWERS FOR) an account whose email Google does not run: its passphrase links it first
+      if (signin.verdict === "needs_passphrase") {
+        const ticket = await putLink(env, who, rec);
+        return pageWithCookies(renderGoogleLink({ brand, email: who.email }), 200, [done, flowCookie(LINK_COOKIE, ticket, LINK_MINUTES * 60)]);
+      }
       if (signin.verdict === "none") {
+        // no account: the join filled in from Google — only for a mailbox Google runs; any other email joins by the emailed check
+        if (!who.authoritative) return pageWithCookies(renderNoAccount({ brand, email: who.email, vouched: false }), 200, [done]);
         const ticket = await putJoin(env, { ...who, source: rec.source || "direct" });
         const cookies = [done, flowCookie(JOIN_COOKIE, ticket, JOIN_MINUTES * 60)];
         if (rec.intent === "join") return googleAnswer(REQUEST_PATH, cookies, 303);
-        const h = new Headers({ "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "referrer-policy": "no-referrer" });
-        for (const k of cookies) h.append("set-cookie", k);
-        return new Response(renderNoAccount({ brand, email: who.email }), { status: 200, headers: h });
+        return pageWithCookies(renderNoAccount({ brand, email: who.email }), 200, cookies);
       }
-      if (rec.intent === "connect") {
-        const res = await connectByGoogle(env, { ...rec.oauth, signin, origin: url.origin });
-        const h = new Headers(res.headers);
-        h.append("set-cookie", done);
-        return new Response(res.body, { status: res.status, headers: h });
-      }
-      // signed in exactly as the account's passphrase signs in (POST /login): an org session and its landing, else (no seat) an
-      // account session and its status page
-      const opened = signin.verdict === "no_seat_here" ? await openAccountSession(env, signin.account, { device: "web", google: who.sub }) : await openSession(env, signin, { device: "web" });
-      await countSignIn(env, signin.verdict === "no_seat_here" ? { ...signin, session: "account" } : signin, !!opened);
-      if (!opened) return refused("failed", 401);
-      // (no seat: its account session lands on the next page it carried, a root page — the org form's step-up — else its status page)
-      const to = signin.verdict === "no_seat_here" ? (rec.next && !splitAddress(rec.next.split(/[?#]/)[0]) ? rec.next : ACCOUNT_PATH) : await landingFor(env, url.origin, signin, rec.next);
-      return googleAnswer(to, [done, sessionSetCookie(opened.token)]);
+      return googleFinish(c, rec, who.sub, signin, [done], refused);
+    },
+  },
+  {
+    // the link (the sprint end's review: WHO GOOGLE ANSWERS FOR): the account's passphrase, typed on the callback's link page, links the
+    // Google identity this browser's link ticket holds (src/accounts.js googleLinkByPassphrase: the lockout, the attempt counted; THE
+    // FIRST LINK IS A RESET), then the flow the ticket carried finishes as the callback's would. Same-origin, the flood filter first
+    test: (path, method) => path === LINK_PATH && method === "POST",
+    run: async (c) => {
+      const { request, env, url } = c;
+      const brand = (await getTenantConfig(env)).brand;
+      const gone = clearCookie(LINK_COOKIE);
+      const refused = (why, status = 400) => accountPage(renderGoogleRefused({ brand, why }), status, { "set-cookie": gone });
+      if (crossSiteLogin(request, url)) return refused("failed", 403);
+      if (await addressFlooded(request, env)) return refused("failed", 429);
+      const ticket = cookieOf(request, LINK_COOKIE), held = await linkOf(env, ticket);
+      if (!held) return refused("expired");
+      const body = await formOrJson(request, ["password"]);
+      const client = await clientOf(request);
+      const r = await googleLinkByPassphrase(env, url, { email: held.email, sub: held.sub, password: typeof body.password === "string" ? body.password : "", client });
+      // a wrong passphrase keeps the ticket (the page again, said on its field); the lockout says so
+      if (r.verdict === "wrong" || r.verdict === "locked") return accountPage(renderGoogleLink({ brand, email: held.email, error: r.verdict }), r.verdict === "locked" ? 429 : 401);
+      if (r.verdict !== "ok") return refused(r.verdict === "invited" ? "link_invited" : r.verdict, 403);
+      await dropLink(env, ticket);
+      const rec = held.rec || {};
+      const signin = await googleSignIn(env, { email: held.email, sub: held.sub, prefer: rec.intent === "signin" ? await preferOrgOf(env, url.origin, rec.next) : null, pick: rec.pick || "", client });
+      if (signin.verdict !== "ok" && signin.verdict !== "no_seat_here") return refused("failed", 401);
+      return googleFinish(c, rec, held.sub, signin, [gone], refused);
     },
   },
   {
@@ -1472,11 +1519,18 @@ const ABOVE_ROUTES = [
       const { request, env, url } = c;
       // (sprint 21, 21.4a) an ACCOUNT session (src/accounts.js THE ACCOUNT SESSION) gets the form filled in from its approved request
       // — the email the session carries, never one typed; one whose request still waits goes to its status page
-      const s = await accountSessionOf(env, sessionCookieToken(request));
+      const tok = sessionCookieToken(request);
+      const s = await accountSessionOf(env, tok);
       if (s && !(await mayFound(env, s.email))) return new Response(null, { status: 302, headers: { location: ACCOUNT_PATH, "cache-control": "private, no-store" } });
-      const values = s ? orgPrefill(s.email, await approvedProfile(env, s.email).catch(() => null)) : {};
-      // (21.4c, THE STEP-UP) a session Google proved: fresh, no passphrase asked; older, Continue with Google beside the passphrase
-      return new Response(renderOrgNew({ host: url.host, values, google: await stepUpShown(env, url.origin, s && s.google) }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+      // (the sprint end's review) an ORG session Google proved (a Google-only person seated in another org): the step-up too, its email
+      // the session's account's (src/accounts.js AN ORG SESSION's step-up)
+      const step = s || !tok ? null : await accountStepUp(env, tok);
+      const proven = step && step.verdict !== "none" ? (step.verdict === "stale" ? "stale" : "fresh") : "";
+      const values = s ? orgPrefill(s.email, await approvedProfile(env, s.email).catch(() => null)) : proven ? { email: step.email } : {};
+      // (21.4c, THE STEP-UP) a session Google proved: fresh, no passphrase asked; older, Continue with Google beside the passphrase.
+      // signedIn: an account session or a live org session (the top bar's Sign out, as every account page's)
+      const signedIn = !!s || (!!tok && (await sessionLive(tok, env)));
+      return new Response(renderOrgNew({ host: url.host, values, google: await stepUpShown(env, url.origin, s ? s.google : proven), signedIn }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
     },
   },
   {
@@ -1486,7 +1540,8 @@ const ABOVE_ROUTES = [
       const ct = request.headers.get("content-type") || "";
       const isForm = ct.includes("form");
       let shown = "";   // (21.4c) what a page sent back shows of the step-up
-      const page = (status, error, values = {}, extra = {}, field = "") => new Response(renderOrgNew({ error, field, values, host: url.host, google: shown }),
+      let signedIn = false;   // (the sprint end's fix list) a signed-in browser's form, sent back, keeps its bar's Sign out
+      const page = (status, error, values = {}, extra = {}, field = "") => new Response(renderOrgNew({ error, field, values, host: url.host, google: shown, signedIn }),
         { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...extra } });
       // the same-origin guard as POST /login and POST /signup (src/util.js crossSiteLogin), FIRST: nothing read, nothing written
       if (crossSiteLogin(request, url)) return isForm ? page(403, "Cross-site request refused.") : json({ error: "cross_site_org" }, 403);
@@ -1506,6 +1561,7 @@ const ABOVE_ROUTES = [
       // empty, from a browser whose account session Google proved less than 10 minutes ago creates the org with that proof — its email
       // the session's, never the form's; older, the form comes back offering Continue with Google again. A JSON body is unchanged
       const step = isForm && !f.password ? await accountStepUp(env, sessionCookieToken(request)) : null;
+      if (isForm) { const tok = sessionCookieToken(request); signedIn = !!(step && step.verdict !== "none") || (!!tok && (!!(await accountSessionOf(env, tok)) || (await sessionLive(tok, env)))); }
       if (step && step.verdict !== "none") { shown = await stepUpShown(env, url.origin, step.verdict === "stale" ? "stale" : "fresh"); f.email = step.email; }
       const stepUp = !!step && step.verdict !== "none";
       // what the page fills back in: never the passphrase; (21.4b) the product step's answers as sent, each text cut short
@@ -2240,9 +2296,10 @@ const ABOVE_ROUTES = [
   },
   {
     // sprint 21, 21.4b: THE OPERATOR PAGE (src/operatorread.js: who may, the read, the two decisions; src/operatorpage.js the screen),
-    // under org 1's address for org 1's admins alone. No session: the sign-in rule. Signed in as anyone else (another org's admin,
-    // a member or partner of org 1): the ONE not-here 404, the same as an address that serves nothing — its existence told to no one
-    // else. A POST is same-origin only (csrfRefused) and refused to the read-only credential, before the body is read.
+    // under org 1's address for org 1's admins alone, in a browser (mayOperate: their session cookie, never a bearer or the read-only
+    // credential). No session: the sign-in rule (every path under an org's address answers it alike). Signed in as anyone else
+    // (another org's admin, a member or partner of org 1, a bearer, the read-only credential): the ONE not-here 404, the same as an
+    // address that serves nothing — its existence told to no one else. A POST is same-origin only (csrfRefused), before the body is read.
     test: (path) => path === "/operator",
     run: async (c) => {
       const { request, env, url } = c;
@@ -2255,7 +2312,6 @@ const ABOVE_ROUTES = [
         return servePage(env, { active: "control", content: renderOperator(read, { flash, places: betaWords(places) }), owner: true, reader, status, cache: "private, no-store" });
       };
       if (request.method === "GET") return page(null);
-      if (reader.readOnly) return page({ ok: false, words: "A read-only credential reads this page but decides nothing. Nothing was changed." }, 403);
       if (csrfRefused(request, url, reader)) return page({ ok: false, words: "That decision did not come from this site, so it was refused. Nothing was changed." }, 403);
       const fd = await request.formData().catch(() => null);
       const action = fd ? String(fd.get("action") || "") : "", id = fd ? String(fd.get("request") || "").slice(0, 80) : "";

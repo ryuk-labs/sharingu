@@ -12,9 +12,12 @@
 //   renderReset({ brand, token, error })      a reset link's page: the new passphrase twice
 //   renderAccountStatus({ brand, request, place, count, standing })  the signed-in account's own page (an ACCOUNT session):
 //                                             in line (its place, the beta's count, the track), its place open (Create your org),
-//                                             closed, or its org made (sign in to it)
-//   renderNoAccount({ brand, email })         (21.4c) Google proved an email no account holds: Join the beta with it (the form
-//                                             comes filled in, the email locked)
+//                                             closed, cleared (no request on file: the 90-day clearing), or its org made (sign in to it)
+//   renderNoAccount({ brand, email, vouched })  (21.4c) Google proved an email no account holds: Join the beta with it (the form
+//                                             comes filled in, the email locked); vouched false — a mailbox Google does not run —
+//                                             the plain join, its email checked by the emailed link
+//   renderGoogleLink({ brand, email, error })   (the sprint end's review) an account whose email Google does not run: its passphrase
+//                                             links Google the first time (POST /auth/google/link)
 //   renderGoogleRefused({ brand, why })       (21.4c) Google's sign-in did not complete: ONE plain page, nothing signed in
 import { esc, errorState, uchanPose } from "./ui.js";
 import { DEFAULT_BRAND } from "./tenant.js";
@@ -25,6 +28,7 @@ import { WALKTHROUGH_PATH } from "./walkthrough.js";
 import { VERIFY_HOURS, RESET_MINUTES } from "./mails.js";
 import { ACCOUNT_MIN_PASSPHRASE } from "./secrets.js";
 import { googleLink, GOOGLE_CSS } from "./googlepage.js";   // sprint 21, 21.4c
+import { LINK_PATH } from "./google.js";
 
 const walkLink = (cls = "quiet") => `<a class="${cls}" href="${WALKTHROUGH_PATH}" data-walkthrough>See the walkthrough</a>`;
 const art = (pose) => `<div class="art-pose" data-art="${esc(pose)}">${uchanPose({ pose, size: 240 })}</div>`;
@@ -143,9 +147,10 @@ export function renderForgotSent(opts) {
 // renderNoAccount — Google proved an email no account holds (21.4c, the sign-in or the connect page): the way in is the join, its
 // form filled in from Google (the email locked: src/requestpage.js); Join the beta is the page's one primary
 export function renderNoAccount(opts) {
-  const { brand = DEFAULT_BRAND, email = "" } = opts || {};
-  const body = `<div class="done" data-screen="google-no-account" data-region="google-no-account">
-      <p class="done-why">No sharingu account holds <b data-google-email>${esc(email)}</b>. Join the beta with it: Google has checked the email, so no email comes to verify it.</p>
+  const { brand = DEFAULT_BRAND, email = "", vouched = true } = opts || {};
+  const how = vouched ? "Google has checked the email, so no email comes to verify it." : "Google does not run that address's mailbox, so we email you a link to verify it.";
+  const body = `<div class="done" data-screen="google-no-account" data-region="google-no-account" data-vouched="${vouched ? "1" : "0"}">
+      <p class="done-why">No sharingu account holds <b data-google-email>${esc(email)}</b>. Join the beta with it: ${how}</p>
       <div class="acts"><a class="primary" href="${REQUEST_PATH}" data-region="request-access-link">${JOIN_WORDS}</a><a class="quiet" href="/login">Back to sign in</a></div>
     </div>`;
   return authPage({ ...brandOf(brand, "No account yet"), lede: "No account yet.", solo: { pose: "comment", eyebrow: "Continue with Google" }, body, css: ACCOUNT_CSS });
@@ -163,7 +168,30 @@ export const GOOGLE_REFUSED_WORDS = {
   linked_elsewhere: "That Google account signs in to another sharingu account, under its earlier email.",
   connect: "That connection request expired. Start again from the app you were connecting.",
   exists: "An account holds that email already: sign in with Google or with its passphrase.",
+  link_invited: "That account's passphrase came from an org's invite link, so it cannot link Google. Reset the passphrase by email first, then continue with Google.",
 };
+// the link page's words on a refusal of its passphrase (the page again, the ticket kept)
+export const GOOGLE_LINK_WORDS = { wrong: "That is not this account's passphrase.", locked: "Too many attempts on this account. Wait 15 minutes and try again." };
+// renderGoogleLink — Google proved an email whose mailbox it does not run, and an account holds it: the account's own passphrase links
+// Google this once (the link ticket rides this browser's cookie, never the form); a forgotten one is reset by email first
+export function renderGoogleLink(opts) {
+  const { brand = DEFAULT_BRAND, email = "", error = "" } = opts || {};
+  const body = `<form method="POST" action="${LINK_PATH}" data-screen="google-link" data-region="google-link">
+      <div class="field">
+        <label for="google-email">Email</label>
+        <input type="email" id="google-email" value="${esc(email)}" readonly data-google-email data-input-exception="auth">
+      </div>
+      <div class="field">
+        <label for="password">Your sharingu passphrase</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required autofocus data-input-exception="auth"${error ? ' aria-invalid="true"' : ""}>
+        ${error ? `<p class="hint" data-field-error>${esc(GOOGLE_LINK_WORDS[error] || GOOGLE_LINK_WORDS.wrong)}</p>` : ""}
+      </div>
+      <button type="submit">Link Google and sign in</button>
+    </form>`;
+  return authPage({ ...brandOf(brand, "Link Google"), lede: "Link Google to your account", body, css: ACCOUNT_CSS,
+    footnote: `<p>Forgot it? <a href="${FORGOT_PATH}">Reset your passphrase</a>, then continue with Google again.</p>`,
+    intro: { eyebrow: "Continue with Google", heading: "Once, with your passphrase.", lede: "Google does not run this email's mailbox, so the first Google sign-in needs your sharingu passphrase too. After that, Google alone signs you in.", art: art("inspect"), phone: false } });
+}
 // the join form's words when its Google identity is gone (used, past JOIN_MINUTES, another browser): the plain form again
 export const GOOGLE_JOIN_GONE = "Your Google sign-in for this form expired. Continue with Google again, or join with your email and a passphrase.";
 export function renderGoogleRefused(opts) {
@@ -211,6 +239,11 @@ export function renderAccountStatus(opts) {
       ${track("approved")}
       <p class="done-why">Create the org for <b data-request-company>${esc((request && request.company) || "your team")}</b>: the form comes filled in from your request.</p>
       <div class="acts"><a class="primary" href="/orgs/new" data-region="create-org-link">Create your org</a></div>
+    </div>`);
+  // (the sprint end's review) no request on file: THE 90-DAY CLEARING emptied it (a declined one, or an approved one with no org)
+  if (!request && !standing.coded) return solo("Request cleared", "classic", "Your request", `<div class="done" data-screen="account-cleared" data-region="account-cleared">
+      <p class="done-why">Your request is no longer on file: we clear a request 90 days after it is declined, or 90 days after its approval when no org was made. To ask again, reply to any email we sent you.</p>
+      <div class="acts">${walkLink("primary")}<a class="quiet" href="${SITE_URL}">Visit sharingu.xyz</a></div>
     </div>`);
   if (status !== "open") return solo("Request closed", "classic", "Your request", `<div class="done" data-screen="account-closed" data-region="account-closed">
       <p class="done-why">We cannot offer you a place in this beta.</p>

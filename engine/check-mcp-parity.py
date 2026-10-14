@@ -29,6 +29,9 @@ NOT_TOOLS = {"/install", "/map", "/docs", "/home", "/projects", "/audit", "/logo
     # pages (the verification, the resend, the reset, the account session's status), a person's in a browser, never an agent's verb
     "/request-access", "/account", "/account/sent", "/account/verify", "/account/verify/:token", "/account/resend", "/account/forgot",
     "/account/reset", "/account/reset/:token",
+    # sprint 21, 21.4c: Continue with Google, Google's answer and the link by passphrase, a person's browser on its way to Google and
+    # back (state, nonce and PKCE bound to that browser), never an agent's verb
+    "/auth/google/start", "/auth/google/callback", "/auth/google/link",
     # sprint 21, 21.P: the front door's pictures, static bytes (as the fonts)
     "/assets/:path",
     # sprint 7's review, A1: the holder's answer to a seat that waits for their yes — their own ACCOUNT session in a browser,

@@ -20,8 +20,9 @@ import { passphraseProblem, ACCOUNT_MIN_PASSPHRASE } from "./secrets.js";
 import { asciiEmail, normInvite, INVITE_TOKEN_RE } from "./accounts.js";
 
 // the one refusal (an email not allowed; a wrong, used, expired or revoked code): the same words for every case
-// (21.P D20: the code comes from sharingu, by email, when a place opens; never "from the person who invited you")
-export const SIGNUP_REFUSED_WORDS = "That email and code do not open a sign-up. Check both against the email that brought your code.";
+// (the sprint-21 review: the code is the operator's own, handed over for that email — a request's approval sends "You're in" and no
+// code, src/accounts.js THE ACCOUNT FLOW; never "from the person who invited you")
+export const SIGNUP_REFUSED_WORDS = "That email and code do not open a sign-up. Check both against what the sharingu operator gave you.";
 // the field problems, in the words the page shows (nothing here depends on the allowlist)
 export const SIGNUP_FIELD_WORDS = {
   email: "Type the email the code was given for.",
@@ -80,7 +81,7 @@ export function renderSignup(opts) {
     banner: error ? errorState({ what: error }) : "",
     body,
     footnote: `Already signed up? <a href="/login">Sign in</a>`,
-    intro: { eyebrow: "Your place is open", heading: "Welcome to the beta.", lede: "Your sign-up code comes from sharingu, by email, when your place opens.",
+    intro: { eyebrow: "Your place is open", heading: "Welcome to the beta.", lede: "Your sign-up code is the one the sharingu operator gave you, for your email. Joined the beta? Sign in instead: no code is needed.",
       art: `<div class="art-pose" data-art="verify">${uchanPose({ pose: "verify", size: 240 })}</div>`, phone: false },
   });
 }

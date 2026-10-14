@@ -6,7 +6,7 @@
 //   · before verifying: the sign-in with the joined passphrase is 403 check your inbox (with its resend); a second address's
 //     resends stop at three emails a day (the fourth answers the same, sends nothing)
 //   · the captured "Verify your email": its GET the confirm page, its POST with the passphrase 303 to /account signed in, the
-//     status page with its place in line; the team's alert to ryuk@ cc acie@ carries the company, never a name or an email
+//     status page with its place in line; the team's alert to acie@ cc ryuk@ carries the company, never a name or an email
 //   · the account session reaches nothing else: an org's address sends it to the sign-in, /mcp 401 as a cookie and as a bearer,
 //     /orgs/new back to /account, POST /orgs 403 org_waiting
 //   · `operator allow --request` (local): the captured "You're in" -> sign in (an account session) -> the org form filled in from
@@ -38,7 +38,7 @@ const S = { a: `s67a${TAG}@smoke.local`, b: `s67b${TAG}@smoke.local` };
 
 smoke("account flow · join with a passphrase: a new email, an existing account's email and the honeypot answer the SAME 303 to /account/sent", async () => {
   const fresh = await join(S.a);
-  const acct = (rows("SELECT email FROM accounts ORDER BY created_at LIMIT 1")[0] || {}).email;
+  const acct = (rows("SELECT email FROM accounts WHERE pass_hash IS NOT NULL ORDER BY created_at LIMIT 1")[0] || {}).email;   // a HELD account (a passphrase: B4 — an add-person shell joins like a new email)
   expect(acct, "no account on this worker (an earlier case makes several)");
   const held = await join(acct), trap = await join(`s67bot${TAG}@smoke.local`, "Bot", { trap: "https://spam.example.org" });
   expect(fresh.status === 303 && fresh.locationRaw === "/account/sent" && shape(held) === shape(fresh) && shape(trap) === shape(fresh),
@@ -73,10 +73,10 @@ smoke("account flow · the captured verification: its GET the confirm page, its 
   expect(v.status === 303 && v.locationRaw === "/account" && /^t_a_/.test(S.acct), () => `the verification: ${v.status} -> ${v.locationRaw}`);
   const p = await http("GET", "/account", { cookie: S.acct, accept: "text/html", nav: true });
   expect(p.status === 200 && /data-screen="account-in-line"/.test(p.raw) && /data-request-place>\d+</.test(p.raw), () => `the status page: ${p.status}`);
-  const team = await mailFor("ryuk@ryuklabs.io", (x) => x.subject === `New beta request: S67 Works ${TAG}`);
-  expect(team && team.cc === "acie@ryuklabs.io" && /CTO/.test(team.text) && !/S67 Mary|s67a/i.test(team.text + team.html + team.subject), () => `the team's alert: ${brief(team && team.subject)}`);
+  const team = await mailFor("acie@ryuklabs.io", (x) => x.subject === `New beta request: S67 Works ${TAG}`);
+  expect(team && team.cc === "ryuk@ryuklabs.io" && /CTO/.test(team.text) && !/S67 Mary|s67a/i.test(team.text + team.html + team.subject), () => `the team's alert: ${brief(team && team.subject)}`);
   S.id = (rows(`SELECT id FROM access_requests WHERE email = ${q(S.a)} AND status = 'open'`)[0] || {}).id;
-  return `verified, signed in to /account (place ${(/data-request-place>(\d+)</.exec(p.raw) || [])[1]}); the team's alert to ryuk@ cc acie@, no name or email`;
+  return `verified, signed in to /account (place ${(/data-request-place>(\d+)</.exec(p.raw) || [])[1]}); the team's alert to acie@ cc ryuk@, no name or email`;
 });
 
 smoke("account flow · the account session reaches nothing else: an org's address, /mcp as a cookie and a bearer, /orgs/new and POST /orgs before the approval", async () => {
@@ -139,11 +139,11 @@ smoke("account flow · THE CAP: at 2,900 in the window a join answers the same, 
     const sent = await http("GET", "/account/sent", { accept: "text/html" });
     await new Promise((ok) => setTimeout(ok, 2000));
     const toThem = [...(await mails({ to: c1 })), ...(await mails({ to: c2 }))];
-    const alerts = (await mails({ to: "ryuk@ryuklabs.io" })).filter((m) => /paused/i.test(m.subject));
+    const alerts = (await mails({ to: "acie@ryuklabs.io" })).filter((m) => /paused/i.test(m.subject));
     expect(shape(a) === shape(ref) && shape(b) === shape(ref) && rows(`SELECT 1 FROM access_requests WHERE email IN (${q(c1)}, ${q(c2)})`).length === 0 && toThem.length === 0,
       () => `at the cap: ${shape(a)} vs ${shape(ref)}; ${toThem.length} emails to them`);
     // (21.4c) no Google client is stored on the smoke's worker yet (s69 stores one): no button, "try again in a few days"
-    expect(sent.status === 200 && /data-screen="account-paused"/.test(sent.raw) && /Try again in a few days/.test(sent.raw) && !/data-region="google"/.test(sent.raw) && alerts.length === 1 && alerts[0].cc === "acie@ryuklabs.io",
+    expect(sent.status === 200 && /data-screen="account-paused"/.test(sent.raw) && /Try again in a few days/.test(sent.raw) && !/data-region="google"/.test(sent.raw) && alerts.length === 1 && alerts[0].cc === "ryuk@ryuklabs.io",
       () => `the paused page ${sent.status}; ${alerts.length} alerts`);
     return `two joins at the cap: the same 303, nothing filed or sent; paused said; ${alerts.length} alert to the team`;
   } finally {

@@ -690,14 +690,14 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   The private status link retires (one way: sign in). The team's alert per new request to acie@ryuklabs.io, cc
   ryuk@ryuklabs.io (both verified once as Cloudflare destination addresses: free). About two emails a person.
   EVERY email is sent From hello@sharingu.xyz (the owner, 2026-10-14): to a person, only verify, you're in and reset (counted);
-  to ryuk@ cc acie@, only a new application and the cap reached (free). A reply to hello@ is forwarded to acie@ryuklabs.io
+  to acie@ cc ryuk@, only a new application and the cap reached (counted in the cap too: the sprint end's review). A reply to hello@ is forwarded to acie@ryuklabs.io
   (Cloudflare Email Routing, the owner's dashboard). DMARC stays as it is; no report feature. A request counts only once its
   email is VERIFIED, by Google or by an emailed check (Cloudflare Email Service, the owner's MCQ 2026-10-14: our Workers Paid plan,
   a `send_email` binding, from an address at sharingu.xyz; Cloudflare's page read 2026-10-14: 3,000 a month included on
   Workers Paid, then $0.35 per 1,000, a beta). THE CAP (the owner, 2026-10-14: stay inside the 3,000): the worker counts its
   sends per day in D1 and sends only while the last 31 days hold fewer than 2,900, so any billing cycle stays under 3,000;
   at the cap it sends nothing, the page offers Google, and the owner is told once; three verification emails per address
-  a day and the flood filter, so no one burns the quota; the owner's own alerts (free, uncounted) one per request;
+  a day and the flood filter, so no one burns the quota; the owner's own alerts one per request (counted in the cap too, the cap's own alert once a day past it: the sprint end's review);
   the status page reached again by either. The data, approved as shown: two required consent boxes (the terms and
   privacy; keeping the profile to review the request) and two optional (updates, a feedback call), each with its version
   and time; the source (`?from=`, never a cookie); the request linked to its account (signed up at) and its org (created
@@ -713,7 +713,7 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   (`account_sessions`), "You're in" by `operator allow --request`, the reset signing out every session, ONE send function
   under the cap (`mail_days`, `mail_addresses`), the emails From hello@sharingu.xyz, a local capture. For the review: a
   distributed bot can still spend the cap (it then fails safe); a reset clears an invite-made account's one-org mark (the
-  reset email proves the address); the operator's live REST send has never run (its first send to ryuk@, free).
+  reset email proves the address); the operator's live REST send has never run (its first send to ryuk@, counted in the cap).
 - [x] **21.4b · The data** — committed with its proof (data 53/53, every node selftest green, smoke 366/366, s68): consent
   on the join (two required, two optional, each with its wording's version and time), the source (`?from=`, allowed
   values only), the request linked to its account and its org, the product step on the org form (`org_profile`, in the
@@ -757,8 +757,8 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   "Connect an AI" until the first filing; Control > Connect leads with Claude and ChatGPT; the org's address suggested
   from its name). orgs 42/42, wire 428/428, showcase 32/32; smoke 355/355 (s65, s66). The adversarial read of the sign-in
   change rides the sprint-end review.
-- [ ] **The sprint end's fix list** (found in review, folded here so none is lost): the org form's top bar says Sign in to a
-  signed-in, approved account; the site's privacy page gains 21.4b's paragraph (in the site's `journey-polish` branch,
+- [ ] **The sprint end's fix list** (found in review, folded here so none is lost): the org form's top bar (DONE in the review's
+  fixes: Sign out for an account or an org session, as every account page); the site's privacy page gains 21.4b's paragraph (in the site's `journey-polish` branch,
   shipped with the buttons): "When you join the beta we collect your name, work email, company, role and team size, and
   anything optional you add (website, LinkedIn, X, GitHub, the AI tools you use, one line on your use). We record which
   page sent you, and your consent: you agree to our Terms and Privacy policy and that we may keep this profile to review
@@ -767,6 +767,16 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   to set it up and improve the beta. Only you and the sharingu operator see this. If your request is declined, or
   approved but no org is created, we clear your profile 90 days later and keep only anonymous counts. To ask for
   deletion, email acie@ryuklabs.io."
+- [ ] **The sprint end's review fixes** (the independent review, 2026-10-14; the main session smokes and commits them): the gate's
+  four reds (parity's Google doors, the brand gate — the Google client's origins now ride the client in OAUTH_KV, from the config's
+  custom domains — the code atlas, the cross-org suite's stale mutation); Google answers only for its own mailboxes (gmail.com,
+  googlemail.com, a Workspace `hd`), any other email's first link takes the account's passphrase (POST /auth/google/link); THE FIRST
+  LINK IS A RESET (every session, reset link and connected app ends; an invite-set passphrase cleared, its seats waiting for the
+  holder's yes); a reset unlinks Google; the team's alerts TO acie@ CC ryuk@ and counted in the cap (the cap's own alert past it,
+  once a day); an add-person shell is no one's (it joins, by email or Google); the operator page in a browser only; a wrong sign-in
+  costs the same hashes whoever holds the email; the per-address limit by mailbox; a Google-only person seated elsewhere steps up
+  by an org session; org_profile in the scoped-data gate; idx_signup_used; migrate-081's partial-run recovery; a cleared request's
+  own words on /account; the sign-up code's words; the threat notes (engine/CLAUDE.md).
 - [ ] **The sprint end.** The site's access buttons move to the worker's request page and the site's waitlist page redirects there,
   merged right after the ship (live must answer the page first), together with the site's 21.P polish (branch
   `journey-polish`, 29e6a17, verify 260/260; held by the owner, 2026-10-14).

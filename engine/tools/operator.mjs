@@ -115,10 +115,12 @@
 //   set-google-client --file <path>
 //                       reads the file's two lines GOOGLE_CLIENT_ID=… and GOOGLE_CLIENT_SECRET=… (an `export ` and quotes are allowed)
 //                       — only from a file no one but its owner may read (mode 600: refused otherwise, nothing read) — checks both
-//                       (src/google.js clientProblem: a Google client id, a secret of printable characters) and stores them. It prints
-//                       "stored" and the client id's last characters, NEVER the secret (nor the id whole, nor any value in a refusal).
-//                       A client stored before is replaced. Every page then shows Continue with Google on the registered origins
-//                       (live KV: within a minute).
+//                       (src/google.js credentialProblem: a Google client id, a secret of printable characters) and stores them WITH the
+//                       deployment's origins (the worker names no domain of its own): one https://<pattern> per custom domain of the
+//                       config's routes, the addresses registered with Google beside the client; a config with none (a local one)
+//                       takes --origin <its worker's address> instead (both: refused). It prints "stored", the client id's last
+//                       characters and the origins, NEVER the secret (nor the id whole, nor any value in a refusal). A client stored
+//                       before is replaced. Every page then shows Continue with Google on those origins (live KV: within a minute).
 //   clear-google-client
 //                       removes it: no Google button anywhere, every Google door refused. Nothing stored: refused (exit 1).
 // THE SHIP'S OWN PLAN (8.5's must-close, 8.2f's find): `suite` — SUITE_PLAN below, big honest numbers sized to the suites (the
@@ -149,7 +151,7 @@ import { readConfig, liveD1 } from "./org-undo.mjs";
 import { sendMail, captureMailer } from "../src/email.js";   // sprint 21, 21.4a: THE send, under the worker's own cap
 import { inMail } from "../src/mails.js";
 import { OPENAI_CHALLENGE_KEY, challengeTokenProblem } from "../src/wellknown.js";
-import { GOOGLE_CLIENT_KEY, clientProblem } from "../src/google.js";   // sprint 21, 21.4c: the platform's Google client
+import { GOOGLE_CLIENT_KEY, credentialProblem, originProblem } from "../src/google.js";   // sprint 21, 21.4c: the platform's Google client
 
 const ENGINE = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const DEFAULT_DAYS = 7, MAX_DAYS = 30;
@@ -487,6 +489,16 @@ export async function clearChallenge(KV) {
 }
 
 // ---- 21.4c · the platform's Google OAuth client (KV: the deployment's OAUTH_KV, one key) ----
+// clientOrigins(cfg, given) -> { origins } | { refused }: the deployment's origins, one https://<pattern> per custom domain of the config's
+// routes; a config with none (a local one) takes the --origin given (an origin src/google.js originProblem accepts); both: refused
+export function clientOrigins(cfg, given) {
+  const routes = ((cfg && cfg.routes) || []).filter((x) => x && x.custom_domain && typeof x.pattern === "string").map((x) => `https://${x.pattern}`);
+  if (routes.length && given) return { refused: "--origin is for a config with no custom domain (a local one): this config's routes name its origins" };
+  const origins = routes.length ? routes : given ? [String(given)] : [];
+  if (!origins.length) return { refused: "the config names no custom domain in its routes: pass --origin <the worker's address>" };
+  const bad = origins.map(originProblem).find(Boolean);
+  return bad ? { refused: bad } : { origins };
+}
 // readClientFile(path) -> { client: { client_id, client_secret } } | { refused }: the file's two lines, from a file only its owner may
 // read; a refusal names the file and the rule, never a value
 export function readClientFile(path) {
@@ -499,15 +511,15 @@ export function readClientFile(path) {
     if (m) vals[m[1]] = m[2].replace(/^(["'])(.*)\1$/, "$2");
   }
   const client = { client_id: vals.GOOGLE_CLIENT_ID || "", client_secret: vals.GOOGLE_CLIENT_SECRET || "" };
-  const bad = clientProblem(client);
+  const bad = credentialProblem(client);   // the two values (the origins are the config's: clientOrigins)
   return bad ? { refused: `${path}: ${bad}` } : { client };
 }
 // clientTail(id) -> the client id's last characters, as this tool prints it (never the id whole)
 export const clientTail = (id) => `…${String(id).replace(/\.apps\.googleusercontent\.com$/, "").slice(-6)}`;
-// setGoogleClient(KV, client) -> { replaced }; clearGoogleClient(KV) -> {} | { refused }
-export async function setGoogleClient(KV, client) {
+// setGoogleClient(KV, client, origins) -> { replaced }; clearGoogleClient(KV) -> {} | { refused }
+export async function setGoogleClient(KV, client, origins) {
   const before = await KV.get(GOOGLE_CLIENT_KEY);
-  await KV.put(GOOGLE_CLIENT_KEY, JSON.stringify({ client_id: client.client_id, client_secret: client.client_secret }));
+  await KV.put(GOOGLE_CLIENT_KEY, JSON.stringify({ client_id: client.client_id, client_secret: client.client_secret, origins }));
   return { replaced: before != null };
 }
 export async function clearGoogleClient(KV) {
@@ -613,7 +625,7 @@ export function orgLine(o) {
 export const USAGE = "usage: node tools/operator.mjs <allow|list|revoke|remove-account|requests|decline|list-orgs|set-plan|raise|suspend|unsuspend|set-openai-challenge|clear-openai-challenge|set-google-client|clear-google-client> (--local <persist dir> --config <wrangler config> | --live --config <wrangler config> --confirm-live <D1 database name>) " +
   "allow --email <e> [--days N] [--reset] [--beyond-cap] · allow --request <id> [--beyond-cap] [--origin <url>] · list [--email <e>] [--json] · revoke --email <e> · remove-account --email <e> · requests · decline --request <id> · list-orgs [--json] · " +
   "set-plan --org <id|suites> --plan <name> · raise --org <id|suites> --plan <name> [--people N] [--projects N] [--items-month N] [--calls-day N] [--burst-minute N] [--storage-bytes N] · " +
-  "suspend --org <id> [--really] · unsuspend --org <id> · set-openai-challenge --token <t> · clear-openai-challenge · set-google-client --file <path> · clear-google-client";
+  "suspend --org <id> [--really] · unsuspend --org <id> · set-openai-challenge --token <t> · clear-openai-challenge · set-google-client --file <path> [--origin <url>: a config with no custom domain] · clear-google-client";
 const EMAIL_COMMANDS = ["allow", "list", "revoke", "remove-account"];
 const ORG_COMMANDS = ["set-plan", "raise", "suspend", "unsuspend"];
 // 11.3: the platform's own writes, on the deployment's KV (never an org's row); 21.4c: its Google client too
@@ -672,12 +684,14 @@ export async function run(argv, { open, say = (s) => console.log(s), err = (s) =
     // the file read and the client checked, then the namespace, before anything is opened; the secret is printed nowhere
     const file = cmd === "set-google-client" ? readClientFile(flag("--file")) : null;
     if (file && file.refused) { err(`refused (nothing written): ${file.refused}`); return 1; }
+    const where = file ? clientOrigins(cfg, flag("--origin")) : null;
+    if (where && where.refused) { err(`refused (nothing written): ${where.refused}`); return 1; }
     if (!(cfg.kv_namespaces || []).some((b) => b.binding === "OAUTH_KV")) { err(`${cfgPath}: no OAUTH_KV namespace (the deployment's KV, where the client lies)`); return 2; }
     const kb = await (open || defaultOpen)(cfg, { local, live, kv: true });
     try {
       if (file) {
-        const r = await setGoogleClient(kb.KV, file.client);
-        say(`✓ stored: the Google client ${clientTail(file.client.client_id)} on ${kb.database}${r.replaced ? " (replacing the one before)" : ""}${live ? " (live KV: within a minute)" : ""}`);
+        const r = await setGoogleClient(kb.KV, file.client, where.origins);
+        say(`✓ stored: the Google client ${clientTail(file.client.client_id)} for ${where.origins.join(", ")} on ${kb.database}${r.replaced ? " (replacing the one before)" : ""}${live ? " (live KV: within a minute)" : ""}`);
         return 0;
       }
       const r = await clearGoogleClient(kb.KV);

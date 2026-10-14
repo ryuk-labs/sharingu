@@ -54,7 +54,8 @@
 //   C15 · A2 + B1 + A4: an admin's Reissue and removal of a seat end its SEAT sessions only — an ACCOUNT session anchored there
 //        reads on in the other org; the holder's proven account passphrase change ends every other session of the account (the
 //        one it was proven on stays), rotate-my-key proven by it every one; proven by a seat's own key, only that seat's
-//   C16 · A6: a sign-in for an email no account holds costs one passphrase hash, as an account's does
+//   C16 · A6 (and the sprint-21 review): a WRONG sign-in costs WRONG_HASHES passphrase hashes whoever holds the email — no account, an
+//        account with one seat, an account with its own passphrase and two seats: the same count
 //   C17 · B5: a session's project stamp set in org 2 is no stamp in org 1 (its project picker shows again)
 //   C18 · A5: add-person refuses a non-ASCII email (email_not_ascii), nothing created
 //   C19 · migrate-074 over a database as live holds it at 073: every row NOT pending, active flags, accounts, keys and secrets
@@ -554,6 +555,7 @@ const CASES = {
   async C16() {
     // A6: a sign-in hashes once whether or not an account answers the email (the time tells no platform membership)
     const W = await world(), out = [];
+    const { WRONG_HASHES } = await import(pathToFileURL(join(MUT.src || join(ENGINE, "src"), "accounts.js")).href);
     const sub = globalThis.crypto.subtle, real = sub.deriveBits.bind(sub);
     let n = 0;
     sub.deriveBits = (...a) => { n++; return real(...a); };
@@ -562,7 +564,12 @@ const CASES = {
       const noneN = n;
       await W.seatPass("one-mia", "mia-pass");
       n = 0; const some = await W.login("mia@one.test", "a-guess-of-twelve");
-      out.push([none.status === 401 && some.status === 401 && noneN >= 1, `C16 · a sign-in for an email no account holds costs ${noneN} passphrase hash(es) (one for an account's: ${n}): the time says nothing of membership`]);
+      const someN = n;
+      await W.ownPass("owner@one.test", "owner-account-pass");
+      await W.add("two-owner-key", "Owner One (in Two)", "owner@one.test");
+      n = 0; const many = await W.login("owner@one.test", "a-guess-of-twelve");
+      out.push([none.status === 401 && some.status === 401 && many.status === 401 && WRONG_HASHES === 6 && noneN === WRONG_HASHES && someN === WRONG_HASHES && n === WRONG_HASHES,
+        `C16 · a wrong sign-in costs ${WRONG_HASHES} passphrase hashes whoever holds the email (no account ${noneN}, one seat ${someN}, a passphrase and two seats ${n}): the time says nothing of membership`]);
     } finally { sub.deriveBits = real; }
     return out;
   },
@@ -864,8 +871,10 @@ const MUTANTS = [
     from: 'const client = clientNamed(r.client, ok, r.session === "account" || r.vouched === true);', to: "const client = clientNamed(r.client, ok, true);", red: ["C20"] },
   { name: "/profile vouches for any credential (the seat's key too)", file: "src/secrets.js",
     from: "const vouched = !!(reader && reader.viaCookie && person.account_id && String(reader.session_account || \"\") === String(person.account_id));", to: "const vouched = true;", red: ["C21"] },
-  { name: "a sign-in for an unknown email hashes nothing (A6)", file: "src/accounts.js",
-    from: ': (await pbkdf2(pw, NO_SALT), false);', to: ': false;', red: ["C16"] },
+  { name: "a sign-in for an unknown email pads nothing (A6)", file: "src/accounts.js",
+    from: "    const ok = await matches(join);\n    await padHashes(pw, spent);\n", to: "    const ok = await matches(join);\n", red: ["C16"] },
+  { name: "a wrong sign-in of an account pads nothing", file: "src/accounts.js",
+    from: "  const unverified = await matches(join);\n  await padHashes(pw, spent);\n", to: "  const unverified = await matches(join);\n", red: ["C16"] },
   { name: "a stamp of another org is this org's (B5)", file: "src/core.js",
     from: "return o && Number(o.org) === Number(row.org) ? row : { ...row, token_project: null };", to: "return row;", red: ["C17"] },
   { name: "add-person takes a non-ASCII email (A5)", file: "src/admin.js",

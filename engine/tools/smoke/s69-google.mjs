@@ -5,7 +5,7 @@
 // file in a scratch directory. Self-contained (its own emails, s69<tag>…@smoke.local); LAST, because it links the smoke owner's account
 // to a Google subject.
 //   · no client stored: no Continue with Google on /login, /request-access, the paused page or the connect page; the start a 404
-//   · `operator set-google-client --file` (local): the button on all four
+//   · `operator set-google-client --file --origin <the worker>` (local: its config names no custom domain): the button on all four
 //   · join by Google: the callback 303 to the form Google filled in (the email locked), its POST filed already verified (in line,
 //     the account linked), no verification email captured, the team's alert captured; 303 /account signed in
 //   · sign-in by Google: that pending account to its status page; the seated owner to its org
@@ -53,7 +53,8 @@ const browser = () => {
 };
 // google(b, intent, identity, { query, form }) -> { start, back, cb }: the start, the fake's redirect back, the callback in the same browser
 async function google(b, intent, identity, { query = {}, form = null } = {}) {
-  S.fake.next(identity);
+  // a Workspace's token names its hosted domain: here the email's own (Google runs the mailbox: src/google.js identityOf authoritative)
+  S.fake.next({ ...(identity.email ? { hd: String(identity.email).split("@")[1].toLowerCase() } : {}), ...identity });
   const start = form ? await b.call("POST", "/auth/google/start", { form: { intent, ...form } }) : await b.call("GET", `/auth/google/start?${new URLSearchParams({ intent, ...query })}`, { nav: true });
   if (!start.location.startsWith(S.fake.origin + "/authorize?")) return { start, back: "", cb: null };
   const back = (await fetch(start.location, { redirect: "manual" })).headers.get("location") || "";
@@ -103,8 +104,9 @@ smoke("google · no client stored: no Continue with Google on /login, /request-a
   S.dir = mkdtempSync(join(tmpdir(), "s69-"));
   const file = join(S.dir, "google-oauth.env");
   writeFileSync(file, `GOOGLE_CLIENT_ID=${CLIENT.client_id}\nGOOGLE_CLIENT_SECRET=${CLIENT.client_secret}\n`); chmodSync(file, 0o600);
-  const set = await op("set-google-client", "--file", file);
-  expect(set.rc === 0 && /stored/.test(set.out) && !set.out.includes(CLIENT.client_secret), () => `set-google-client: rc ${set.rc} ${set.out.slice(0, 200)}`);
+  // the local config names no custom domain (tools/lib-r-local.sh strips the routes): the worker's own address is the client's origin
+  const set = await op("set-google-client", "--file", file, "--origin", new URL(BASE).origin);
+  expect(set.rc === 0 && /stored/.test(set.out) && set.out.includes(new URL(BASE).origin) && !set.out.includes(CLIENT.client_secret), () => `set-google-client: rc ${set.rc} ${set.out.slice(0, 200)}`);
   const on = await until(fourPages, (a) => Object.values(a.has).every(Boolean));
   expect(Object.values(on.has).every(Boolean), () => `stored: buttons ${JSON.stringify(on.has)}`);
   return `none stored: no button on the four pages, the start 404; set-google-client: "stored", the secret never printed; then the button on /login, /request-access, the paused page and the connect page`;
@@ -123,7 +125,7 @@ smoke("google · join by Google: the form Google filled in (the email locked), f
   const acct = rows(`SELECT id, google_sub, pass_hash FROM accounts WHERE email = ${q(S.email)}`)[0];
   await sleep(1500);
   const toThem = (await mails({ to: S.email })).filter((m) => /Verify your email/.test(m.subject));
-  const team = (await mails({ to: "ryuk@ryuklabs.io" })).filter((m) => m.subject === `New beta request: S69 Works ${TAG}`);
+  const team = (await mails({ to: "acie@ryuklabs.io" })).filter((m) => m.subject === `New beta request: S69 Works ${TAG}`);
   expect(post.status === 303 && post.location === "/account" && /^t_a_/.test(b.jar.get("__Host-ar_session") || "") && req.length === 1 && req[0].status === "open" && req[0].verified_at
     && acct && req[0].account_id === acct.id && acct.google_sub === `s69-sub-${TAG}` && acct.pass_hash == null && req[0].source === "site" && toThem.length === 0 && team.length === 1 && !/S69 Joiner|s69j/i.test(team[0].text),
     () => `the POST ${post.status} ${post.location}; the request ${JSON.stringify(req)}; the account ${JSON.stringify(acct && { g: acct.google_sub, pass: !!acct.pass_hash })}; ${toThem.length} verification emails; ${team.length} team alerts`);

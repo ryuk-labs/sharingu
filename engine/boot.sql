@@ -107,7 +107,8 @@
 -- idx_account_resets_account, idx_account_sessions_account) in the export's name order; its re-made slug triggers (org_slug_on_insert, org_slug_on_update: 'request-access' among the reserved
 -- names) in place at the END of this file. (21.4c, Google sign-in) migrate-081.sql's accounts column (google_sub: the Google account's
 -- subject, linked on its first Google sign-in) in the accounts table below and its index (idx_accounts_google_sub) in the export's
--- name order.
+-- name order. (The sprint end's review) migrate-081.sql's signup_codes index (idx_signup_used: an email's used codes) beside
+-- idx_signup_open.
 
 -- migrate-081: a person's request for a beta place (unverified until its email is; then one verified request per email, in line
 -- by its verification)
@@ -989,6 +990,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_org_slug ON projects(org, slug);
 CREATE INDEX IF NOT EXISTS idx_seat_invites_person ON seat_invites(person_id) WHERE used_at IS NULL AND revoked_at IS NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_signup_open ON signup_codes(email) WHERE used_at IS NULL AND revoked_at IS NULL;
+
+-- migrate-081: an email's USED codes (whether the operator's code signed it up: may it found an org, where it stands)
+CREATE INDEX IF NOT EXISTS idx_signup_used ON signup_codes(email) WHERE used_at IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_tokens_person ON tokens(person_id, revoked);
 

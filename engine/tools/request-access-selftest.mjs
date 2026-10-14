@@ -26,7 +26,7 @@
 //   R7 · THE VERIFICATION: the link's GET shows the confirm page and changes nothing; a wrong passphrase is 401, the request still
 //        unverified, the attempt counted; the right one: 303 to /account with an ACCOUNT session (its own table, prefix t_a_), the
 //        account made with the joined passphrase, the request open (verified_at), its hashes cleared, the email's other unverified
-//        join deleted; the team's email to ryuk@ cc acie@: company, role, team size, never the person's name or email; the same link
+//        join deleted; the team's email to acie@ cc ryuk@: company, role, team size, never the person's name or email; the same link
 //        again, the other join's link and an expired one are ONE 404 page with a resend
 //   R8 · THE SIGN-IN: before verifying, the joined passphrase is 403 check your inbox (the email filled in its resend), another is
 //        the one 401; after, a browser's sign-in is 302 to /account with an account session; a script's stays 403 no_seat_here
@@ -44,7 +44,8 @@
 //        once; an expired link 404; the old passphrase fails, the new one signs in
 //   R13 · the place in line by VERIFICATION time (1 + the open requests verified before, ties by id; approved, declined and
 //        unverified never counted); REQUEST_PLACE_SQL one statement, its two counts each a SEARCH of the line index (the earlier ones
-//        COVERING); APPROVED_PROFILE_SQL one SEARCH on the email index; the beta count's statements each one aggregate, the worker's
+//        COVERING); APPROVED_PROFILE_SQL one SEARCH on the email index; MAY_FOUND_SQL and ACCOUNT_STANDING_SQL never scan signup_codes
+//        (idx_signup_used: an email's used codes) nor access_requests; the beta count's statements each one aggregate, the worker's
 //        betaCount the operator's betaPlaces (an approved request with no org holds a place); betaWords' rules
 //   R14 · the refusals, nothing written: a cross-site POST to each door 403; the flood filter 429; a bad email 422; under an org's
 //        address /request-access and /account are the one not-here 404; the next join deletes an expired unverified request
@@ -241,7 +242,7 @@ const CASES = {
     const req = W.q("SELECT * FROM access_requests WHERE email = 'ada@analytical.test'");
     const acct = W.one("SELECT * FROM accounts WHERE email = 'ada@analytical.test'") || {};
     const sess = ok.cookie ? W.one("SELECT * FROM account_sessions WHERE token_hash = ?", sha(ok.cookie)) || {} : {};
-    const team = (await W.mails()).filter((m) => m.to === "ryuk@ryuklabs.io");
+    const team = (await W.mails()).filter((m) => m.to === "acie@ryuklabs.io");
     const again = await W.call("GET", `/account/verify/${t}`, { nav: true }), againPost = await W.call("POST", "/account/verify", { form: { web: "1", token: t, password: PASS } });
     const other = await W.call("GET", `/account/verify/${stranger}`, { nav: true });
     // an expired link: a fresh join whose end is set in the past
@@ -258,8 +259,8 @@ const CASES = {
         `R7 · verified: 303 -> ${ok.location}, an ACCOUNT session (its own table, never tokens: ${ok.cookie ? "t_a_<40 hex>" : "none"})`],
       [acct.pass_hash && acct.pass_hash === pbkdf2(PASS, acct.pass_salt) && req.length === 1 && req[0].status === "open" && req[0].verified_at && req[0].pass_hash === null && req[0].pass_salt === null && req[0].verify_hash === null && req[0].company === "Analytical Engines",
         `R7 · one write: the account holds the joined passphrase, the request open (verified ${req[0] && req[0].verified_at}), its hashes cleared, the stranger's join gone (${req.length} request)`],
-      [team.length === 1 && team[0].cc === "acie@ryuklabs.io" && /Analytical Engines/.test(team[0].text) && /Founder/.test(team[0].text) && /2-10/.test(team[0].text) && !/Ada Lovelace|Lovelace|ada@analytical/i.test(team[0].text + team[0].html + team[0].subject),
-        `R7 · the team's ONE email to ryuk@ cc acie@: company, role, team size, never her name or email ("${team[0] && team[0].subject}")`],
+      [team.length === 1 && team[0].cc === "ryuk@ryuklabs.io" && /Analytical Engines/.test(team[0].text) && /Founder/.test(team[0].text) && /2-10/.test(team[0].text) && !/Ada Lovelace|Lovelace|ada@analytical/i.test(team[0].text + team[0].html + team[0].subject),
+        `R7 · the team's ONE email to acie@ cc ryuk@: company, role, team size, never her name or email ("${team[0] && team[0].subject}")`],
       [again.status === 404 && againPost.status === 404 && other.status === 404 && late.status === 404 && latePost.status === 404 && again.text === other.text && other.text === late.text && /data-screen="account-link-dead"/.test(late.text) && /action="\/account\/resend"/.test(late.text)
         && W.one("SELECT status FROM access_requests WHERE email = 'late@one.test'").status === "unverified",
         `R7 · the link again, the stranger's link and an expired one: ONE 404 page with a resend (${[again, againPost, other, late, latePost].map((x) => x.status).join("/")})`],
@@ -396,7 +397,7 @@ const CASES = {
     const { REQUEST_PLACE_SQL, APPROVED_PROFILE_SQL } = await mod("requestaccess.js");
     const { betaWords } = await mod("requestpage.js");
     const B = await mod("beta.js");
-    const { betaCount } = await mod("accounts.js");
+    const { betaCount, MAY_FOUND_SQL, ACCOUNT_STANDING_SQL } = await mod("accounts.js");
     const W = await world();
     const db = W.w.db;
     const put = (id, at, status = "open") => db.prepare("INSERT INTO access_requests (id, email, name, company, role, team_size, status, verified_at, created_at, updated_at) VALUES (?, ?, ?, ?, 'Founder', '2-10', ?, ?, ?, ?)")
@@ -409,6 +410,8 @@ const CASES = {
     const after = ["r-a", "r-c"].map(place);
     const plan = db.prepare("EXPLAIN QUERY PLAN " + REQUEST_PLACE_SQL).all("x", "y").map((r) => r.detail);
     const prefill = db.prepare("EXPLAIN QUERY PLAN " + APPROVED_PROFILE_SQL).all("x").map((r) => r.detail);
+    const found = db.prepare("EXPLAIN QUERY PLAN " + MAY_FOUND_SQL).all("x").map((r) => r.detail), standing = db.prepare("EXPLAIN QUERY PLAN " + ACCOUNT_STANDING_SQL).all("a", "x").map((r) => r.detail);
+    const noScan = (plan) => !plan.some((d) => /^SCAN (?!CONSTANT ROW)/.test(d)) && plan.some((d) => /^SEARCH \S+ USING (?:COVERING )?INDEX idx_signup_used \(email=\?\)/.test(d));
     const one = (sql) => /^SELECT COUNT\((?:\*|DISTINCT s\.email)\) AS n FROM /.test(sql) && !/;\s*\S/.test(sql);
     for (let id = 2; id <= 5; id++) db.prepare("INSERT INTO org (id, name, created_at, updated_at, plan) VALUES (?, ?, ?, ?, 'free')").run(id, `Org ${id}`, T0, T0);
     db.prepare("INSERT INTO signup_codes (id, email, code_hash, created_at, expires_at) VALUES ('c1', 'open@x.test', 'h', ?, '2099-01-01T00:00:00.000Z')").run(T0);
@@ -418,6 +421,7 @@ const CASES = {
       [plan.length === 5 && plan.filter((d) => /^SEARCH access_requests USING (?:COVERING )?INDEX idx_access_requests_line /.test(d)).length === 2 && /COVERING INDEX idx_access_requests_line \(verified_at<\?\)/.test(plan.join("|")) && !plan.some((d) => /^SCAN access_requests/.test(d)),
         `R13 · the place is one statement, its two counts each a SEARCH of the line index, the earlier ones COVERING (${plan.join(" | ")})`],
       [prefill.length === 1 && /^SEARCH access_requests USING INDEX idx_access_requests_email \(email=\? AND status=\?\)$/.test(prefill[0]), `R13 · the org form's prefill is one SEARCH on the email index (${prefill.join(" | ")})`],
+      [noScan(found) && noScan(standing), `R13 · may it found an org, and where it stands: signup_codes by idx_signup_used, never a scan (${found.join(" | ")} || ${standing.join(" | ")})`],
       [one(B.BETA_ORGS_SQL) && one(B.BETA_CODES_SQL) && one(B.BETA_APPROVED_SQL) && worker.orgs === 4 && worker.codes === 1 && worker.approved === 2 && worker.taken === 7 && op.taken === worker.taken && op.left === worker.left,
         `R13 · the beta's count: three aggregates; the worker's betaCount is the operator's (${JSON.stringify(worker)}; the two approved requests with no org hold places)`],
       [betaWords({ taken: 7, cap: 50 }) === "7 of 50 places taken" && betaWords({ taken: 50, cap: 50 }) === "All 50 places taken" && betaWords({ taken: 51, cap: 50 }) === "All 50 places taken" && betaWords(null) === "" && betaWords({ taken: -1, cap: 50 }) === "",
@@ -456,12 +460,12 @@ const CASES = {
     const sent = await W.call("GET", "/account/sent", { nav: true });
     const ms = await W.mails();
     return [
-      [W.shape(a) === W.shape(ref) && W.shape(b) === W.shape(ref) && W.rows().length === 0 && !ms.some((m) => m.to !== "ryuk@ryuklabs.io"),
+      [W.shape(a) === W.shape(ref) && W.shape(b) === W.shape(ref) && W.rows().length === 0 && !ms.some((m) => m.to !== "acie@ryuklabs.io"),
         `R15 · at the cap a join answers the same 303, files nothing and sends the person nothing (${a.status}, ${W.rows().length} rows)`],
       [sent.status === 200 && /data-screen="account-paused"/.test(sent.text) && /Email checks are paused/.test(sent.text) && /Try again in a few days/.test(sent.text)
         && !/data-region="google"/.test(sent.text) && /data-screen="account-paused"/.test(f.text),
         `R15 · /account/sent and the forgot answer say email checks are paused; no Google client stored: no button, try again later (${sent.status})`],
-      [ms.length === 1 && ms[0].to === "ryuk@ryuklabs.io" && ms[0].cc === "acie@ryuklabs.io" && /paused/i.test(ms[0].subject) && Number(W.one("SELECT n FROM mail_days WHERE day = ?", windowStartOf(new Date().toISOString())).n) === MAIL_CAP,
+      [ms.length === 1 && ms[0].to === "acie@ryuklabs.io" && ms[0].cc === "ryuk@ryuklabs.io" && /paused/i.test(ms[0].subject) && Number(W.one("SELECT n FROM mail_days WHERE day = ?", windowStartOf(new Date().toISOString())).n) === MAIL_CAP,
         `R15 · the team's cap alert captured ONCE for three refusals (${ms.length}); the count unmoved`],
     ];
   },
@@ -484,7 +488,7 @@ const MUTANTS = [
   { name: "the team's email naming the person", file: "src/mails.js",
     from: "  facts: [[\"Company\", request.company],", to: "  facts: [[\"Name\", request.name], [\"Email\", request.email], [\"Company\", request.company],", red: ["R7"] },
   { name: "an unverified join's passphrase never compared (the sign-in says nothing)", file: "src/accounts.js",
-    from: "    return { ...out, verdict: ok && pw ? \"unverified\" : \"wrong\" };", to: "    return { ...out, verdict: \"wrong\" };", red: ["R8"] },
+    from: "    return { ...out, verdict: ok ? \"unverified\" : \"wrong\" };", to: "    return { ...out, verdict: \"wrong\" };", red: ["R8"] },
   { name: "the account session read as an org session (minted in tokens)", file: "src/accounts.js",
     from: "export const isAccountSessionToken = (t) => String(t == null ? \"\" : t).startsWith(ACCOUNT_SESSION_PREFIX);", to: "export const isAccountSessionToken = () => false;", red: ["R9"] },
   { name: "org creation ignores the approval", file: "src/accounts.js",

@@ -96,7 +96,7 @@ function productStep(values, wrong) {
 // locked); "stale" — proven by Google longer ago: the passphrase field, and Continue with Google again beside it (back to this form);
 // "" — the passphrase, as before
 export function renderOrgNew(opts) {
-  const { error = "", field: wrong = "", values = {}, host = "", google = "" } = opts || {};
+  const { error = "", field: wrong = "", values = {}, host = "", google = "", signedIn = false } = opts || {};   // signedIn: a signed-in browser reads it (its bar's Sign out)
   const v = (k) => esc(String(values[k] == null ? "" : values[k]));
   const { wordmark } = frame(DEFAULT_BRAND);
   const body = `<form method="POST" action="/orgs" data-screen="org-new" data-region="create-org">
@@ -134,7 +134,7 @@ export function renderOrgNew(opts) {
     </form>${SLUG_JS}`;
   return authPage({
     title: "Create an org · sharingu",
-    wordmark,
+    wordmark, here: signedIn ? "account" : "",
     lede: "Create your org",
     // a product step's field says so on itself (21.4b); any other refusal is the banner
     banner: error && !PRODUCT_FIELD_WORDS[wrong] ? errorState({ what: error }) : "",

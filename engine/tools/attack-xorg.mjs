@@ -197,7 +197,7 @@ export const MUTATIONS = [
     why: "sprint 7, 7.5a: a call's orgSlug naming another org is not refused — a key or a seat grant of org B names org A and the call runs (in its own org: the refusal is the wall's word that the call acts nowhere else)" },
   // sprint 7, 7.5b: the sign-in surfaces — each walk's own guard reverted, that walk alone (only), red by it (expect)
   { name: "oauth-seat-secret-account-grant", file: "src/oauth.js", only: "signin", expect: /the sign-in moves/,
-    from: 'if (signin.session === "account" && signin.account && signin.account.id) {', to: "if (signin.account && signin.account.id) {",
+    from: 'if (signin.session === "account" && signin.account && signin.account.id && signin.account.pass_hash) {', to: "if (signin.account && signin.account.id && signin.account.pass_hash) {",
     why: "7.5b, the OAuth form: a seat's own secret makes an ACCOUNT grant — the other org's admin, holding a seat secret of an account seated in the victim's org too (its own Control minted it), connects as that account and reaches the victim's seat" },
   { name: "cookie-seat-secret-account-session", file: "src/accounts.js", only: "signin", expect: /sign-in moves\) · its session/,
     from: 'const accountId = r.session === "account" && r.account ? r.account.id : null;', to: "const accountId = r.account ? r.account.id : null;",

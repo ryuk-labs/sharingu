@@ -157,6 +157,11 @@ export const PENDING_OF_SQL = "SELECT p.id, p.org, p.role, o.slug, o.name FROM p
   "ORDER BY p.created_at ASC LIMIT 20";
 // the seats whose OWN secret a sign-in compares, in that order (each costs one passphrase hash)
 export const SEAT_TRIES = 4;
+// (the sprint end's review) a WRONG sign-in costs the same number of passphrase hashes whoever holds the email: the most an account's
+// can cost — its passphrase, SEAT_TRIES seats' own secrets and its newest unverified join's — padded to on every wrong answer, so the
+// time of a "wrong" says nothing of whether an account (or how many seats) stands behind the email (passphraseSignIn)
+export const WRONG_HASHES = 2 + SEAT_TRIES;
+const padHashes = async (pw, spent) => { for (let i = spent; i < WRONG_HASHES; i++) await pbkdf2(pw, NO_SALT); };
 // the lockout's count (THE LOCKOUT, above; lockOf), ONE statement: n, the account's failures from every client, and the failures
 // its email collected while no account answered it; mine, those from this client; known, whether the account's passphrase signed
 // in from this client since ?5 (idx_login_known: one index row, whatever the failures the account holds). The window's rows are
@@ -291,14 +296,16 @@ export async function passphraseSignIn(env, url, { email, password, prefer = nul
   const account = e ? await db(env).prepare(ACCOUNT_BY_EMAIL_SQL).bind(e).first() : null;
   const out = { email: e, org: HOME_ORG, account: account || null, seat: null, session: null, client: client ? String(client) : "" };
   if (await lockOf(env, account ? account.id : null, e, out.client)) return { ...out, verdict: "locked" };
-  // A6: one passphrase hash when no account answers, as one does when it answers, so the time says nothing of who holds one —
-  // (sprint 21, 21.4a) compared with the email's newest unverified join's passphrase when there is one (THE ACCOUNT FLOW): the
-  // person who joined is told to check their inbox, anyone else gets the one "wrong"
+  const pw = String(password == null ? "" : password);
+  let spent = 0;   // the passphrase hashes this sign-in has cost (WRONG_HASHES: a wrong answer pads to the same count)
+  const matches = async (row) => { if (!(pw && row && row.pass_hash && row.pass_salt)) return false; spent++; return (await pbkdf2(pw, row.pass_salt)) === row.pass_hash; };
+  // A6: no account answers — (sprint 21, 21.4a) the email's newest unverified join's passphrase compared when there is one (THE ACCOUNT
+  // FLOW): the person who joined is told to check their inbox, anyone else gets the one "wrong", both after WRONG_HASHES hashes
   if (!account) {
-    const pw = String(password == null ? "" : password);
     const join = e ? await db(env).prepare(UNVERIFIED_PASS_SQL).bind(e, now()).first() : null;
-    const ok = join && join.pass_hash && join.pass_salt ? (await pbkdf2(pw, join.pass_salt)) === join.pass_hash : (await pbkdf2(pw, NO_SALT), false);
-    return { ...out, verdict: ok && pw ? "unverified" : "wrong" };
+    const ok = await matches(join);
+    await padHashes(pw, spent);
+    return { ...out, verdict: ok ? "unverified" : "wrong" };
   }
   const seats = await seatsOf(env, account.id, prefer);
   const want = normOrgArg(pick);
@@ -306,15 +313,16 @@ export async function passphraseSignIn(env, url, { email, password, prefer = nul
   const chosen = picked || seats[0] || null;
   if (chosen) out.org = Number(chosen.org);
   out.seatCount = seats.length;   // 7.4b: an ACCOUNT session with seats in several orgs lands on the picker (landingOf)
-  if (await secretMatches(password, account)) return accountSignedIn(env, out, account, seats, { prefer, want });
+  if (await matches(account)) return accountSignedIn(env, out, account, seats, { prefer, want });
   for (const s of seats.slice(0, SEAT_TRIES)) {
-    if (!sameSecret(account, s) && (await secretMatches(password, s))) return { ...out, org: Number(s.org), seat: s, session: "seat", verdict: "ok" };
+    if (!sameSecret(account, s) && (await matches(s))) return { ...out, org: Number(s.org), seat: s, session: "seat", verdict: "ok" };
   }
   // (21.4a) a join for this account's email holds this passphrase (its link was sent to no one: "you already have an account"): the
   // same "check your inbox" a join for an unknown email answers, so a join then a sign-in never tells which emails hold an account
   const join = await db(env).prepare(UNVERIFIED_PASS_SQL).bind(e, now()).first();
-  if (join && (await secretMatches(password, join))) return { ...out, verdict: "unverified" };
-  return { ...out, verdict: "wrong" };
+  const unverified = await matches(join);
+  await padHashes(pw, spent);
+  return { ...out, verdict: unverified ? "unverified" : "wrong" };
 }
 // accountSignedIn(env, out, account, seats, { prefer, want }) -> the sign-in's answer once the ACCOUNT's holder is proven (its
 // passphrase; sprint 21, 21.4c: or Google's verified email, googleSignIn): an ACCOUNT session on the chosen seat (ask, waits,
@@ -813,9 +821,12 @@ export async function mayFound(env, email) {
   const r = await db(env).prepare(MAY_FOUND_SQL).bind(normEmail(email)).first();
   return !!(r && Number(r.ok) === 1);
 }
-// accountHolds(env, email) -> true when an account answers the email (the join's one question: it files nothing for one that does)
+// accountHolds(env, email) -> true when someone holds the email's account (the join's one question: it files nothing for one that
+// does): a passphrase or a Google subject. An add-person shell (an account an org's admin made by seating the email, neither set) is
+// no one's yet: its person joins as anyone does, and the verification gives it the joined passphrase (VERIFY_ACCOUNT_SQL)
 export async function accountHolds(env, email) {
-  return !!(await db(env).prepare(ACCOUNT_BY_EMAIL_SQL).bind(normEmail(email)).first());
+  const a = await db(env).prepare(GOOGLE_ACCOUNT_SQL).bind(normEmail(email)).first();
+  return !!(a && (a.pass_hash != null || a.google_sub != null));
 }
 
 // ---- the verification (POST /account/verify) ----
@@ -827,10 +838,10 @@ export const VERIFY_SPEND_SQL = "UPDATE access_requests SET status = 'open', ver
   "WHERE id = ?2 AND verify_hash = ?3 AND status = 'unverified' AND verify_expires > ?1 " +
   "AND NOT EXISTS (SELECT 1 FROM access_requests v WHERE v.email = access_requests.email AND v.status <> 'unverified')";
 const SPENT = "EXISTS (SELECT 1 FROM access_requests r WHERE r.id = ?6 AND r.status = 'open' AND r.verified_at = ?5)";
-// 2 · the account takes the passphrase (made; an account with none takes it; one with its own keeps it) — only when THIS batch
-// spent the link. ?1 a new id, ?2 the email, ?3 the hash, ?4 the salt, ?5 now, ?6 the request
+// 2 · the account takes the passphrase (made; an account with neither a passphrase nor a Google subject takes it — an add-person
+// shell; one with its own keeps it) — only when THIS batch spent the link. ?1 a new id, ?2 the email, ?3 the hash, ?4 the salt, ?5 now, ?6 the request
 export const VERIFY_ACCOUNT_SQL = `INSERT INTO accounts (id, email, pass_hash, pass_salt, created_at, updated_at) SELECT ?1, ?2, ?3, ?4, ?5, ?5 WHERE ${SPENT} ` +
-  "ON CONFLICT (email) DO UPDATE SET pass_hash = excluded.pass_hash, pass_salt = excluded.pass_salt, updated_at = excluded.updated_at WHERE accounts.pass_hash IS NULL";
+  "ON CONFLICT (email) DO UPDATE SET pass_hash = excluded.pass_hash, pass_salt = excluded.pass_salt, updated_at = excluded.updated_at WHERE accounts.pass_hash IS NULL AND accounts.google_sub IS NULL";
 // 3 · the account session, only for an account that took THIS passphrase and holds no seat. ?1 the token's hash, ?2 device, ?3 the
 // expiry, ?4 the email, ?5 now, ?6 the request, ?7 the hash
 export const VERIFY_SESSION_SQL = `INSERT INTO account_sessions (token_hash, account_id, device, created_at, expires_at, revoked, proven_how, proven_at) SELECT ?1, a.id, ?2, ?5, ?3, 0, 'verify', ?5 FROM accounts a WHERE a.email = ?4 AND a.pass_hash = ?7 ` +
@@ -877,8 +888,9 @@ export const RESET_OPEN_SQL = "SELECT r.account_id, a.email FROM account_resets 
 // THE BATCH. 1 · the spend (?1 now, ?2 the token's hash)
 export const RESET_SPEND_SQL = "UPDATE account_resets SET used_at = ?1 WHERE token_hash = ?2 AND used_at IS NULL AND expires_at > ?1";
 const RESET_SPENT = "EXISTS (SELECT 1 FROM account_resets x WHERE x.token_hash = ?3 AND x.used_at = ?2 AND x.account_id = ?1)";
-// 2 · the passphrase (the invite mark ends: the link proves the email). ?1 the account, ?2 now, ?3 the token's hash, ?4 hash, ?5 salt
-export const RESET_ACCOUNT_SQL = `UPDATE accounts SET pass_hash = ?4, pass_salt = ?5, invited_org = NULL, updated_at = ?2 WHERE id = ?1 AND ${RESET_SPENT}`;
+// 2 · the passphrase (the invite mark ends: the link proves the email; the Google subject unlinked: the mailbox's holder may link it
+// again, THE FIRST LINK IS A RESET). ?1 the account, ?2 now, ?3 the token's hash, ?4 hash, ?5 salt
+export const RESET_ACCOUNT_SQL = `UPDATE accounts SET pass_hash = ?4, pass_salt = ?5, invited_org = NULL, google_sub = NULL, updated_at = ?2 WHERE id = ?1 AND ${RESET_SPENT}`;
 // 3 · every org session of the account, in every org (its account sessions and each of its seats' own). ?1 ?2 ?3 as above
 export const RESET_END_TOKENS_SQL = `UPDATE tokens SET revoked = 1 WHERE revoked = 0 AND (account_id = ?1 OR person_id IN (SELECT id FROM people WHERE account_id = ?1)) AND ${RESET_SPENT}`;
 // 4 · its account sessions; 5 · its other open reset links
@@ -927,6 +939,17 @@ export async function finishReset(env, { tokenHash, password } = {}) {
 // account (a Google account whose email moved is refused, never matched to a second account). A linked subject is the holder
 // standing, as a passphrase is: a seat another org adds for the email waits for its yes (SEAT_CONSENT_SQL) and an invite link sets
 // nothing on the account (INVITE_SPEND_SQL, INVITE_ACCOUNT_SQL).
+// WHO GOOGLE ANSWERS FOR (the sprint end's review): Google's verified email is the mailbox's proof only where Google runs the mailbox
+// — a gmail.com or googlemail.com address, or a Workspace domain the token names as its hosted domain (src/google.js identityOf:
+// authoritative). For any other address (a Google account made on an outside email, which Google checked once, long ago) the FIRST
+// link needs the account's own passphrase too (googleLinkByPassphrase: the callback's link page), never Google alone; a person with
+// no account joins by the emailed check, as without Google.
+// THE FIRST LINK IS A RESET (linkGoogle, one batch, only while no subject is linked): every session of the account ends — its org
+// sessions in every org, its account sessions — and its open reset links, then its seats' connected apps, since whoever held the
+// account before its mailbox's owner came may hold those. An account an org's INVITE LINK set the passphrase of (accounts.invited_org:
+// a passphrase only that org's admin's link proved, never the mailbox) loses that passphrase and its mark, and its seats WAIT for its
+// holder's yes (people.pending): the mailbox's owner answers each on the picker, so no org that squatted the email is entered silently.
+// A reset (RESET_ACCOUNT_SQL) unlinks the subject in turn: the reset's link proves the mailbox, and its holder may link Google again.
 // THE JOIN (googleJoin): an email no account holds, joined through Google's form, is filed ALREADY VERIFIED — no verification
 // email: ONE batch makes the account (its Google subject, and the passphrase only if the person chose one: an account may live by
 // Google alone: its org's creation takes a fresh Google sign-in, THE STEP-UP below), the request open and in line from this moment with the person's path (its
@@ -935,47 +958,97 @@ export async function finishReset(env, { tokenHash, password } = {}) {
 // The reviewer accounts (@review.sharingu.xyz: a domain Google cannot verify) keep their passphrase: nothing here names them.
 export const GOOGLE_ACCOUNT_SQL = "SELECT id, email, pass_hash, pass_salt, invited_org, google_sub FROM accounts WHERE email = ?1";
 export const GOOGLE_HOLDER_SQL = "SELECT id FROM accounts WHERE google_sub = ?1";
-// the first use links the subject (?1 the account, ?2 the sub, ?3 now): only while none is linked
-export const GOOGLE_LINK_SQL = "UPDATE accounts SET google_sub = ?2, updated_at = ?3 WHERE id = ?1 AND google_sub IS NULL";
-// googleSignIn(env, { email, sub, prefer, pick, client }) -> passphraseSignIn's answer shape (verdict "ok" or "no_seat_here", the
-// ACCOUNT session's fields), or verdict "none" (no account holds the email) · "other_sub" (the account is linked to another Google
-// account) · "linked_elsewhere" (this Google account is linked to another account). google: the sub (an account session's mint)
-export async function googleSignIn(env, { email, sub, prefer = null, pick = "", client = "" } = {}) {
+// whether the account holds a seat, active or waiting (?1 the account): an account with no passphrase, no subject and no seat is no
+// one's (an add-person shell whose seat is gone): Google's sign-in treats it as none, its join takes it (GOOGLE_JOIN_ACCOUNT_SQL)
+export const ACCOUNT_SEATED_SQL = "SELECT EXISTS (SELECT 1 FROM people p WHERE p.account_id = ?1 AND (p.active = 1 OR p.pending = 1)) AS seated";
+// THE FIRST LINK's batch (linkGoogle): each statement only while the account has no subject (UNLINKED), the link LAST. ?1 the
+// account (each), ?2 now (4 and 5), ?3 the sub (5). 1 · an invite-made account's seats wait for its holder's yes
+const UNLINKED = "EXISTS (SELECT 1 FROM accounts u WHERE u.id = ?1 AND u.google_sub IS NULL)";
+export const GOOGLE_LINK_SEATS_WAIT_SQL = "UPDATE people SET active = 0, pending = 1 WHERE account_id = ?1 AND active = 1 " +
+  "AND EXISTS (SELECT 1 FROM accounts u WHERE u.id = ?1 AND u.google_sub IS NULL AND u.invited_org IS NOT NULL)";
+// 2 · every org session of the account, in every org (its account sessions and each of its seats' own); 3 · its account sessions;
+// 4 · its open reset links
+export const GOOGLE_LINK_END_TOKENS_SQL = `UPDATE tokens SET revoked = 1 WHERE revoked = 0 AND (account_id = ?1 OR person_id IN (SELECT id FROM people WHERE account_id = ?1)) AND ${UNLINKED}`;
+export const GOOGLE_LINK_END_ACCOUNT_SESSIONS_SQL = `UPDATE account_sessions SET revoked = 1 WHERE account_id = ?1 AND revoked = 0 AND ${UNLINKED}`;
+export const GOOGLE_LINK_END_RESETS_SQL = `UPDATE account_resets SET used_at = ?2 WHERE account_id = ?1 AND used_at IS NULL AND ${UNLINKED}`;
+// 5 · the link: the subject, and an invite-made account's passphrase and mark gone (SQLite's SET reads the row as it stood)
+export const GOOGLE_LINK_SQL = "UPDATE accounts SET google_sub = ?3, updated_at = ?2, pass_hash = CASE WHEN invited_org IS NULL THEN pass_hash END, " +
+  "pass_salt = CASE WHEN invited_org IS NULL THEN pass_salt END, invited_org = NULL WHERE id = ?1 AND google_sub IS NULL";
+// linkGoogle(env, accountId, sub) -> true when THIS call linked the subject (THE FIRST LINK IS A RESET, above): the batch, then the
+// connected apps of every seat of the account
+export async function linkGoogle(env, accountId, sub) {
+  const id = String(accountId), g = String(sub), at = now();
+  const res = await db(env).batch([
+    db(env).prepare(GOOGLE_LINK_SEATS_WAIT_SQL).bind(id), db(env).prepare(GOOGLE_LINK_END_TOKENS_SQL).bind(id), db(env).prepare(GOOGLE_LINK_END_ACCOUNT_SESSIONS_SQL).bind(id),
+    db(env).prepare(GOOGLE_LINK_END_RESETS_SQL).bind(id, at), db(env).prepare(GOOGLE_LINK_SQL).bind(id, at, g),
+  ]);
+  const linked = ((res && res[4] && res[4].meta && res[4].meta.changes) || 0) === 1;
+  if (linked) for (const s of await accountSeatIds(env, id)) await revokeOAuthGrants(env, s);
+  return linked;
+}
+// googleSignIn(env, { email, sub, authoritative, prefer, pick, client }) -> passphraseSignIn's answer shape (verdict "ok" or
+// "no_seat_here", the ACCOUNT session's fields), or verdict "none" (no one holds the email: no account, or a shell with no seat) ·
+// "other_sub" (the account is linked to another Google account) · "linked_elsewhere" (this Google account is linked to another
+// account) · "needs_passphrase" (an unlinked account, an email Google does not answer for: the first link takes its passphrase,
+// googleLinkByPassphrase). authoritative: src/google.js identityOf's. google: the sub (an account session's mint)
+export async function googleSignIn(env, { email, sub, authoritative = false, prefer = null, pick = "", client = "" } = {}) {
   const e = normEmail(email), g = String(sub == null ? "" : sub);
   const [a, h] = await db(env).batch([db(env).prepare(GOOGLE_ACCOUNT_SQL).bind(e), db(env).prepare(GOOGLE_HOLDER_SQL).bind(g)]);
-  const account = ((a && a.results) || [])[0] || null, holder = ((h && h.results) || [])[0] || null;
+  let account = ((a && a.results) || [])[0] || null;
+  const holder = ((h && h.results) || [])[0] || null;
   const out = { email: e, org: HOME_ORG, account, seat: null, session: null, client: client ? String(client) : "", vouched: true, google: g };
   if (!e || !g) return { ...out, verdict: "none" };
   if (holder && (!account || String(holder.id) !== String(account.id))) return { ...out, verdict: "linked_elsewhere" };
   if (!account) return { ...out, verdict: "none" };
   if (account.google_sub == null) {
-    await db(env).prepare(GOOGLE_LINK_SQL).bind(String(account.id), g, now()).run();
-    const linked = await db(env).prepare(GOOGLE_ACCOUNT_SQL).bind(e).first();   // read again: a concurrent first use may have won
-    account.google_sub = linked ? linked.google_sub : null;
+    if (account.pass_hash == null && !(await accountSeated(env, account.id))) return { ...out, verdict: "none" };   // a shell: the join takes it
+    if (!authoritative) return { ...out, verdict: "needs_passphrase" };
+    await linkGoogle(env, account.id, g);
+    account = (await db(env).prepare(GOOGLE_ACCOUNT_SQL).bind(e).first()) || account;   // read again: the link's reset, or a concurrent first use that won
   }
-  if (account.google_sub !== g) return { ...out, verdict: "other_sub" };
+  if (account.google_sub !== g) return { ...out, account, verdict: "other_sub" };
   const seats = await seatsOf(env, account.id, prefer);
-  return accountSignedIn(env, { ...out, org: seats[0] ? Number(seats[0].org) : HOME_ORG }, account, seats, { prefer, want: normOrgArg(pick) });
+  return accountSignedIn(env, { ...out, account, org: seats[0] ? Number(seats[0].org) : HOME_ORG }, account, seats, { prefer, want: normOrgArg(pick) });
 }
-// THE JOIN's batch. 1 · the account, only when no account holds the email or the sub and no verified request of the email stands:
-// ?1 its id, ?2 the email, ?3 the hash (NULL: none), ?4 the salt, ?5 the sub, ?6 now
+const accountSeated = async (env, id) => Number(((await db(env).prepare(ACCOUNT_SEATED_SQL).bind(String(id)).first()) || {}).seated) === 1;
+// googleLinkByPassphrase(env, url, { email, sub, password, client }) -> { verdict }: the FIRST link of an account whose email Google
+// does not answer for, proven by the account's own passphrase (accountProof: the lockout, the attempt counted) — "ok" (linked: the
+// FIRST LINK IS A RESET) · "wrong" · "locked" · "invited" (a passphrase an org's invite link set proves no mailbox: refused) ·
+// "linked_elsewhere" · "other_sub" (a subject was linked meanwhile)
+export async function googleLinkByPassphrase(env, url, { email, sub, password, client = "" } = {}) {
+  const g = String(sub == null ? "" : sub);
+  const holder = g ? await db(env).prepare(GOOGLE_HOLDER_SQL).bind(g).first() : null;
+  const proof = await accountProof(env, url, { email, password, client });
+  if (proof.verdict !== "ok" && proof.verdict !== "waiting") return { verdict: proof.verdict };
+  if (holder && String(holder.id) !== String(proof.account.id)) return { verdict: "linked_elsewhere" };
+  const linked = ((await db(env).prepare(GOOGLE_ACCOUNT_SQL).bind(proof.email).first()) || {}).google_sub ?? null;
+  if (linked != null) return { verdict: linked === g ? "ok" : "other_sub" };
+  return { verdict: (await linkGoogle(env, proof.account.id, g)) ? "ok" : "other_sub" };
+}
+// THE JOIN's batch. 1 · the account, only when no account holds the sub and no verified request of the email stands — made, or an
+// add-person shell with no seat taken (no passphrase, no subject, no mark: no one's, accountHolds): ?1 its id, ?2 the email, ?3 the
+// hash (NULL: none), ?4 the salt, ?5 the sub, ?6 now
 export const GOOGLE_JOIN_ACCOUNT_SQL = "INSERT INTO accounts (id, email, pass_hash, pass_salt, google_sub, created_at, updated_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?6 " +
-  "WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE email = ?2 OR google_sub = ?5) AND NOT EXISTS (SELECT 1 FROM access_requests WHERE email = ?2 AND status <> 'unverified')";
-// the account THIS batch made (?20 its id, ?21 the sub, ?13 now: the binds of the request below)
-const GOOGLE_MADE = "EXISTS (SELECT 1 FROM accounts m WHERE m.id = ?20 AND m.google_sub = ?21 AND m.created_at = ?13)";
+  "WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE google_sub = ?5) AND NOT EXISTS (SELECT 1 FROM access_requests WHERE email = ?2 AND status <> 'unverified') " +
+  "ON CONFLICT (email) DO UPDATE SET pass_hash = excluded.pass_hash, pass_salt = excluded.pass_salt, google_sub = excluded.google_sub, updated_at = excluded.updated_at " +
+  "WHERE accounts.pass_hash IS NULL AND accounts.google_sub IS NULL AND accounts.invited_org IS NULL AND NOT EXISTS (SELECT 1 FROM people p WHERE p.account_id = accounts.id AND (p.active = 1 OR p.pending = 1))";
+// the account THIS batch made or took (?2 the email, ?20 the sub, ?13 now: the binds of the request below)
+const GOOGLE_MADE = "EXISTS (SELECT 1 FROM accounts m WHERE m.email = ?2 AND m.google_sub = ?20 AND m.updated_at = ?13)";
 // 2 · the request, open (verified now: in line from this moment) and naming its account: ?1 id, ?2 email, ?3 name, ?4 company, ?5 role,
 // ?6 team size, ?7 website, ?8 linkedin, ?9 x, ?10 github, ?11 ai tools, ?12 use case, ?13 now, ?14 source, ?15 the consent's version,
-// ?16 terms, ?17 keep, ?18 updates, ?19 call, ?20 the account, ?21 the sub
+// ?16 terms, ?17 keep, ?18 updates, ?19 call, ?20 the sub
 export const GOOGLE_JOIN_REQUEST_SQL = "INSERT INTO access_requests (id, email, name, company, role, team_size, website, linkedin, x, github, ai_tools, use_case, status, verified_at, created_at, updated_at, " +
   "source, consent_version, consent_at, consent_terms, consent_keep, consent_updates, consent_call, account_id, account_at) " +
-  `SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, 'open', ?13, ?13, ?13, ?14, ?15, ?13, ?16, ?17, ?18, ?19, ?20, ?13 WHERE ${GOOGLE_MADE}`;
+  `SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, 'open', ?13, ?13, ?13, ?14, ?15, ?13, ?16, ?17, ?18, ?19, (SELECT m.id FROM accounts m WHERE m.email = ?2), ?13 WHERE ${GOOGLE_MADE}`;
 // 3 · the email's unverified joins go (VERIFY_DROP_OTHERS_SQL, bound to this request); 4 · the account session: ?1 the token's hash,
-// ?2 now, ?3 the expiry, ?4 the account, ?5 the sub
+// ?2 now, ?3 the expiry, ?4 the email, ?5 the sub
 export const GOOGLE_JOIN_SESSION_SQL = "INSERT INTO account_sessions (token_hash, account_id, device, created_at, expires_at, revoked, proven_how, proven_at) SELECT ?1, a.id, 'web', ?2, ?3, 0, 'google', ?2 FROM accounts a " +
-  "WHERE a.id = ?4 AND a.google_sub = ?5 AND a.created_at = ?2";
+  "WHERE a.email = ?4 AND a.google_sub = ?5 AND a.updated_at = ?2";
+// isUniqueError(e) -> true for SQLite's unique-constraint refusal (a race lost), never for any other error (an outage is not "exists")
+export const isUniqueError = (e) => /UNIQUE constraint failed/i.test(String((e && e.message) || e));
 // googleJoin(env, request, { sub, pass, consent, consentVersion, source }) -> { verdict: "ok", id, session } | { verdict: "exists" } —
 // request: src/requestaccess.js readRequest's (its email the one Google verified); pass: { hash, salt } or null (no passphrase);
-// consent: readConsent's; source: sourceOf's word
+// consent: readConsent's; source: sourceOf's word. Any error but a unique refusal is thrown (the door answers it as an error)
 export async function googleJoin(env, r, { sub, pass = null, consent = {}, consentVersion, source = "direct" } = {}) {
   const id = uid(), acct = hex(16), at = now(), token = newAccountToken(), expires = sessionExpiry(), g = String(sub), c = consent || {};
   let res;
@@ -983,11 +1056,14 @@ export async function googleJoin(env, r, { sub, pass = null, consent = {}, conse
     res = await db(env).batch([
       db(env).prepare(GOOGLE_JOIN_ACCOUNT_SQL).bind(acct, r.email, pass ? pass.hash : null, pass ? pass.salt : null, g, at),
       db(env).prepare(GOOGLE_JOIN_REQUEST_SQL).bind(id, r.email, r.name, r.company, r.role, r.team_size, r.website, r.linkedin, r.x, r.github, r.ai_tools, r.use_case,
-        at, String(source), String(consentVersion), c.terms ? 1 : 0, c.keep ? 1 : 0, c.updates ? 1 : 0, c.call ? 1 : 0, acct, g),
+        at, String(source), String(consentVersion), c.terms ? 1 : 0, c.keep ? 1 : 0, c.updates ? 1 : 0, c.call ? 1 : 0, g),
       db(env).prepare(VERIFY_DROP_OTHERS_SQL).bind(r.email, id, at),
-      db(env).prepare(GOOGLE_JOIN_SESSION_SQL).bind(await sha256(token), at, expires, acct, g),
+      db(env).prepare(GOOGLE_JOIN_SESSION_SQL).bind(await sha256(token), at, expires, r.email, g),
     ]);
-  } catch { return { verdict: "exists" }; }   // a race lost to the unique email, sub or verified request: nothing of this batch stands
+  } catch (e) {
+    if (isUniqueError(e)) return { verdict: "exists" };   // a race lost to the unique email, sub or verified request: nothing of this batch stands
+    throw e;
+  }
   const changed = (i) => ((res && res[i] && res[i].meta && res[i].meta.changes) || 0) >= 1;
   if (!changed(0) || !changed(1)) return { verdict: "exists" };
   return { verdict: "ok", id, session: changed(3) ? { token, expires } : null };
@@ -1007,12 +1083,33 @@ export const googleFreshness = (row) => (!row || row.proven_how !== "google" ? "
 // the step-up's one read (?1 the token's hash, ?2 now): the live session Google proved, its account still linked to Google
 export const STEP_UP_SQL = "SELECT a.id, a.email, a.pass_hash, a.pass_salt, a.invited_org, a.google_sub, s.proven_how, s.proven_at FROM account_sessions s JOIN accounts a ON a.id = s.account_id " +
   "WHERE s.token_hash = ?1 AND s.revoked = 0 AND s.expires_at > ?2 AND s.proven_how = 'google' AND a.google_sub IS NOT NULL";
+// AN ORG SESSION's step-up (the sprint end's review: a Google-only person seated in another org creates its own org too): a Google
+// sign-in that opened an ORG session (an ACCOUNT session in tokens) records its proof beside it, in the deployment's KV under
+// GOOGLE_PROOF_PREFIX + the session token's hash, for STEP_UP_MINUTES (putGoogleProof); ORG_STEP_UP_SQL reads that session live, its
+// account linked to Google, and the proof names the same account. A Google-linked account's org session with no live proof is
+// "stale": the form offers Continue with Google again.
+export const GOOGLE_PROOF_PREFIX = "google-proof:";
+export const ORG_STEP_UP_SQL = "SELECT a.id, a.email, a.pass_hash, a.pass_salt, a.invited_org, a.google_sub FROM tokens t JOIN accounts a ON a.id = t.account_id " +
+  "WHERE t.token_hash = ?1 AND t.revoked = 0 AND t.expires_at > ?2 AND a.google_sub IS NOT NULL";
+// putGoogleProof(env, token, accountId) — the proof of a Google sign-in on the org session it opened
+export async function putGoogleProof(env, token, accountId) {
+  if (!env || !env.OAUTH_KV || !token || !accountId) return;
+  await env.OAUTH_KV.put(GOOGLE_PROOF_PREFIX + (await sha256(String(token))), JSON.stringify({ account: String(accountId), at: now() }), { expirationTtl: STEP_UP_MINUTES * 60 }).catch(() => {});
+}
+async function orgStepUpRow(env, hash) {
+  const row = await db(env).prepare(ORG_STEP_UP_SQL).bind(hash, now()).first();
+  if (!row) return null;
+  const proof = env.OAUTH_KV ? await env.OAUTH_KV.get(GOOGLE_PROOF_PREFIX + hash, { type: "json" }).catch(() => null) : null;
+  return { ...row, proven_how: "google", proven_at: proof && proof.account === String(row.id) ? String(proof.at || "") : "" };
+}
 // accountStepUp(env, token) -> { verdict, email, org, account }: "ok" · "invited" · "waiting" (as accountProof's) · "stale" (Google
-// proved the session STEP_UP_MINUTES ago or more) · "none" (no live session Google proved: the passphrase is asked)
+// proved the session STEP_UP_MINUTES ago or more) · "none" (no live session Google proved: the passphrase is asked). token: an
+// account session's (STEP_UP_SQL) or an org session's (AN ORG SESSION's step-up)
 export async function accountStepUp(env, token) {
   const none = { verdict: "none", email: "", org: HOME_ORG, account: null };
-  if (!isAccountSessionToken(token)) return none;
-  const row = await db(env).prepare(STEP_UP_SQL).bind(await sha256(String(token)), now()).first();
+  if (!token) return none;
+  const hash = await sha256(String(token));
+  const row = isAccountSessionToken(token) ? await db(env).prepare(STEP_UP_SQL).bind(hash, now()).first() : await orgStepUpRow(env, hash);
   if (!row) return none;
   const account = { id: String(row.id), email: String(row.email), pass_hash: row.pass_hash ?? null, pass_salt: row.pass_salt ?? null, invited_org: row.invited_org ?? null, google_sub: row.google_sub };
   const out = { email: account.email, org: HOME_ORG, account, seat: null };

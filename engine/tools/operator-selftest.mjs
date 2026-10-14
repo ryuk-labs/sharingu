@@ -758,6 +758,11 @@ try {
         && OP.linkOrigin({ routes: [{ pattern: "agent.ryuklabs.io", custom_domain: true }] }, { live: true }) === null && OP.linkOrigin({}, { live: false }) === null
         && OP.linkOrigin({}, { given: "javascript:alert(1)" }) === null && OP.linkOrigin({}, { given: "http://127.0.0.1:8899/x" }) === "http://127.0.0.1:8899",
         "O27 · the links' origin: --live the config's sharingu.xyz route, else none; --origin an http(s) address's origin only");
+      // (the sprint-21 review) the Google client's origins: the config's custom domains, the worker naming none of its own
+      const live2 = { routes: [{ pattern: "agent.ryuklabs.io", custom_domain: true }, { pattern: "x.test/*", zone_name: "x.test" }, { pattern: "agent.sharingu.xyz", custom_domain: true }] };
+      ok(JSON.stringify(OP.clientOrigins(live2).origins) === JSON.stringify(["https://agent.ryuklabs.io", "https://agent.sharingu.xyz"]) && !!OP.clientOrigins(live2, "http://127.0.0.1:1").refused
+        && !!OP.clientOrigins({}).refused && JSON.stringify(OP.clientOrigins({}, "http://127.0.0.1:8899").origins) === '["http://127.0.0.1:8899"]' && !!OP.clientOrigins({}, "http://agent.x.test").refused && !!OP.clientOrigins({}, "https://a.test/x").refused,
+        "O27 · the Google client's origins: one https://<pattern> per custom domain of the routes (a zone route none); a config with none takes --origin (https, or http on loopback; no path); none, or both, refused");
       // the cap: 50 places taken (49 outside orgs beside Acme's): refused, the request stays open, nothing sent; --beyond-cap approves
       const full = line(world());
       for (let i = 0; i < 48; i++) full.prepare("INSERT INTO org (id, name, created_at, updated_at) VALUES (?, ?, '2026-10-01', '2026-10-01')").run(200 + i, `Full ${i}`);
@@ -773,9 +778,9 @@ try {
       const e1 = await cliRec(edb, recDir, null, EK)("allow", "--request", "r-a", ...ORIGIN, "--local", "DIR", "--config", "CFG");
       const e2 = await cliRec(edb, recDir, null, EK)("allow", "--request", "r-b", ...ORIGIN, "--local", "DIR", "--config", "CFG");
       const em = await mailsOf(EK);
-      ok(e1.rc === 0 && reqOf(edb, "r-a").status === "approved" && e1.said.some((x) => /"You're in" was NOT sent \(cap\)/.test(x)) && e2.rc === 0 && counted(edb) === MAIL_CAP
-        && em.length === 1 && em[0].to === "ryuk@ryuklabs.io" && em[0].cc === "acie@ryuklabs.io" && /paused/i.test(em[0].subject),
-        `O27 · at the email cap the approvals stand, their emails are not sent (counted ${counted(edb)}), the team's alert captured once (${em.map((x) => x.subject).join(" | ")})`);
+      ok(e1.rc === 0 && reqOf(edb, "r-a").status === "approved" && e1.said.some((x) => /"You're in" was NOT sent \(cap\)/.test(x)) && e2.rc === 0 && counted(edb) === MAIL_CAP + 1
+        && em.length === 1 && em[0].to === "acie@ryuklabs.io" && em[0].cc === "ryuk@ryuklabs.io" && /paused/i.test(em[0].subject),
+        `O27 · at the email cap the approvals stand, their emails are not sent (counted ${counted(edb)}: the cap's one alert past it), the team's alert captured once (${em.map((x) => x.subject).join(" | ")})`);
     }
     // O28 · decline --request (sprint 21, 21.P): an open request declined in one guarded write; nothing else touched
     {

@@ -59,7 +59,7 @@ smoke("request access · a full join: 303 to /account/sent; one unverified row, 
 
 smoke("request access · THE SAME ANSWER: an existing account's email (\"you already have an account\" sent, no link, its passphrase untouched) and the honeypot (nothing filed or sent) answer as the new email did", async () => {
   expect(S.first, "the full join case did not run");
-  const acct = rows("SELECT email FROM accounts ORDER BY created_at LIMIT 1")[0];
+  const acct = rows("SELECT email FROM accounts WHERE pass_hash IS NOT NULL ORDER BY created_at LIMIT 1")[0];   // a HELD account (a passphrase: B4 — an add-person shell joins like a new email)
   expect(acct && acct.email, "no account on this worker (an earlier case makes several)");
   const before = rows(`SELECT pass_hash FROM accounts WHERE email = ${q(acct.email)}`)[0];
   const r = await ask({ email: acct.email });

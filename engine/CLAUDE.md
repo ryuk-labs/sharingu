@@ -55,36 +55,49 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   size, never the person). THE ACCOUNT SESSION (`account_sessions`, the same cookie, prefix `t_a_`) belongs to an account with no
   seat: no reader of `tokens` finds it, so it signs in to no org, no /mcp, no bearer; only GET /account (the status: in line, its
   place open with Create your org, closed), /orgs/new's prefill and /logout read it (`accountSessionOf`). A sign-in before verifying
-  is "check your inbox" with a resend (/account/resend: three emails a day per address); /account/forgot answers the same for any
+  is "check your inbox" with a resend (/account/resend: three emails a day per mailbox — the address's +tag, and at Gmail its dots,
+  dropped); /account/forgot answers the same for any
   email, a reset link (`account_resets`, 30 minutes, once) sets the passphrase and ends EVERY session of the account. POST /orgs
   still asks the passphrase (before an owner key is minted) and waits for the approval (`mayFound`: a used code or an approved
   request; else 403 org_waiting). The org form is filled in from the email's approved request (`approvedProfile`: only for an email a
-  session or a code proved).
+  session or a code proved). An add-person shell (an account an admin made by seating the email: no passphrase, no Google subject) is
+  no one's: its person joins as anyone does (`accountHolds`). THREAT NOTES (the sprint-21 review, recorded): a stranger's join with a
+  victim's email spends that address's three emails of the day (the victim's own join or resend that day may then send nothing; the
+  cap and the flood filter bound it, and it reaches no account); a distributed bot can still spend the 31-day cap (it then fails
+  safe: nothing is sent, the pages say so).
   THE DATA (21.4b, the owner's approved data collection): the join's four consent boxes (`readConsent`: two required, each stored
   with the words' version `CONSENT_VERSION` and its time), the page that sent the person (`sourceOf`: a `?from=` tag, site · showcase
   · direct, never a cookie), the person's path on the request row (the account its verification made, the org it founded); the
   90-day clearing (`clearStale`, the cron's step: `CLEAR_FIELDS` emptied, the counts kept). `src/orgprofile.js` — the product step
   on the org form (`readProductStep`; migrate-081's `org_profile`, written in the org's own batch, src/orgs.js), required from the
   web form, optional from a script's JSON. `src/operatorread.js` · `src/operatorpage.js` — the operator page (`/<org 1>/operator`,
-  org 1's admins alone; anyone else signed in the one not-here 404): the funnel (one aggregate over the newest 1,000 requests), one
+  org 1's admins alone, in a browser: their session cookie, never a bearer key or the read-only credential; anyone else signed in
+  the one not-here 404): the funnel (one aggregate over the newest 1,000 requests), one
   keyset page of people with their profile, consent, source, path and product answers, Approve and Decline (same-origin; the
   request statements `tools/operator.mjs` shares).
 - `src/google.js` · `src/googlepage.js` — GOOGLE SIGN-IN (sprint 21, 21.4c): OpenID Connect's code flow with PKCE (S256), a single-use
   state and a nonce held in OAUTH_KV under the state's hash, the state bound to the browser by a `__Host-g_state` cookie; the id_token
   verified here (RS256 against Google's JWKS, cached in KV by its Cache-Control; iss, aud, exp/iat, the nonce, `email_verified`
   true). The client is the deployment's, in OAUTH_KV, written only by `tools/operator.mjs set-google-client --file <mode-600 file>`
-  (the worker reads no env secret); none stored, or an origin outside the two registered ones: no button, every door refused.
+  (the worker reads no env secret) WITH its origins (the config's custom domains; a local config's `--origin`: the worker names no
+  domain of its own); none stored, a client stored without origins, or an origin not among them: no button, every door refused.
   `src/accounts.js` GOOGLE SIGN-IN matches by email (signed in as the account's passphrase would; its Google `sub` linked on first
-  use, `accounts.google_sub`, and a different one refused), a join through Google filed ALREADY VERIFIED (googleJoin; the form's email
+  use, `accounts.google_sub`, and a different one refused) — only where Google runs the mailbox (gmail.com, googlemail.com, or the
+  token's `hd` naming the email's own domain: `identityOf`'s authoritative; any other address's first link takes the account's
+  passphrase on the link page, POST `/auth/google/link`, `googleLinkByPassphrase`, and a new person joins by the emailed check) — and
+  THE FIRST LINK IS A RESET (`linkGoogle`: every session, reset link and connected app of the account ends; a passphrase an invite
+  link set is cleared with its mark, that account's seats then waiting for its yes); a reset unlinks the subject. A join through
+  Google filed ALREADY VERIFIED (googleJoin, an add-person shell with no seat taken, never a 409; the form's email
   is the join ticket's, `__Host-g_join`), creating the org takes the passphrase OR a Google sign-in under 10 minutes old (THE STEP-UP: `accountStepUp`, account_sessions'
-  `proven_how`/`proven_at`; the web form only), the connect page's authorization completed as that account (`src/oauth.js connectByGoogle`;
-  a connect starts only from that page's same-origin POST). `/auth/google/start` and `/auth/google/callback` (src/index.js). Locally
+  `proven_how`/`proven_at`, or for an org session — a Google-only person seated elsewhere — its proof in OAUTH_KV beside it,
+  `putGoogleProof`; the web form only), the connect page's authorization completed as that account (`src/oauth.js connectByGoogle`;
+  a connect starts only from that page's same-origin POST). `/auth/google/start`, `/auth/google/callback` and `/auth/google/link` (src/index.js). Locally
   the config's GOOGLE_LOCAL_IDP (only `tools/lib-r-local.sh` writes it) points the endpoints at `tools/fake-google.mjs`
   (`tools/google-selftest.mjs`, smoke s69); production's wrangler.jsonc never names it.
 - `src/email.js` · `src/mails.js` — THE SEND (sprint 21, 21.4a): every email the worker or the operator sends goes through
   `sendMail`, From hello@sharingu.xyz, under THE CAP (fewer than 2,900 counted in any 31 days: `mail_days`, one conditional upsert a
   send) and three a day per address (`mail_addresses`, a digest; a refused address never spends the cap); at the cap nothing is sent,
-  the pages say email checks are paused and the team is told once a day; team sends uncounted. The transport: the `send_email`
+  the pages say email checks are paused and the team is told once a day. The team's sends count too (the new request's alert under the cap, the cap's own alert once a day past it: at most 2,900 + 31). The transport: the `send_email`
   binding EMAIL (wrangler.jsonc), or THE LOCAL CAPTURE when the config's MAIL_CAPTURE var is "kv" (every local config: tools/lib-r-local.sh)
   — each email in the worker's own OAUTH_KV under `mail-capture:`, read by `tools/mail-capture.mjs`; nothing local reaches Cloudflare.
   `src/mails.js` holds the six emails (verify, you're in, reset, already; the team's new request and cap) in the website's look,
@@ -101,7 +114,7 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   data-shell="front">`: the top bar (the website, Sign in; Sign out on an account session's pages), the quiet foot, one orange primary a view, the card,
   the scene or the solo page (`authPage`), U-chan's poses and the brand's marks from `src/ui.js` (`uchanPose`, `brandMark`, the
   website's own vectors) (`tools/showcase-selftest.mjs`). `src/frontassets.js` serves the posters and the connect page's client
-  logos at `/assets/:path` (the website's files under `assets/walkthrough`, `assets/clients`; `tools/make-front-assets.mjs` bundles them
+  logos at `/assets/:path` (the website's files under `assets/walkthrough`, `assets/clients` — Google's G mark beside them — and `assets/brand`'s U-chan mark the emails carry; `tools/make-front-assets.mjs` bundles them
   into `src/frontassetdata.js`, `--check` for drift).
 - `src/data.js` — THE scoped data layer (sprint 6): every statement runs on `db(env)`; `{org}`/`{orgbucket}` tokens
   take the signed-in reader's org (a validated integer, from the sign-in only — never a parameter); no token and no

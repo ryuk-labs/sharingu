@@ -2,16 +2,18 @@
 // and mail_addresses): the one send every email goes through, over a node:sqlite D1 built from boot.sql (tools/fixtures/sqlite-worker.mjs
 // d1), its transport a recorder or the local capture.
 //   E1 · the window: dayOf is the UTC day; the window is the 31 days that end today (its first day counted, the day before it not);
-//        addressDigest is one digest per address whatever its case, never the address itself
+//        addressDigest is one digest per MAILBOX (mailboxOf: whatever its case, its +tag, and at gmail.com or googlemail.com its
+//        dots), never the address itself; two mailboxes stay two
 //   E2 · THE CAP: with 2,899 counted in the window the next counted send goes (2,900), the one after is refused "cap" and its
 //        message is never built; a day before the window is deleted by the next send and never counted
 //   E3 · atomic: with ONE unit left, two sends at once — exactly one goes
 //   E4 · the per-address limit: three counted sends a day to one address, the fourth refused "address_limit" WITHOUT spending the
 //        cap (mail_days unmoved); another address still goes; the next day the address goes again (yesterday's rows deleted);
 //        mail_addresses holds a digest, never the address; a send not held to it (perAddress false) touches no address row
-//   E5 · the alert: at the cap the first refusal of the day sends the team ONE alert (to ryuk@, cc acie@, uncounted), the next
-//        refusal none; the next day one again
-//   E6 · a team send (counted false) moves no counter and goes even at the cap
+//   E5 · the alert: at the cap the first refusal of the day sends the team ONE alert (to acie@, cc ryuk@, counted PAST the cap: the
+//        window one over it), the next refusal none; the next day one again
+//   E6 · the team's request alert (teamSend): counted under the cap like any send (one unit, no address row: not limited per
+//        address), and at the cap refused like any send
 //   E7 · the mailer: MAIL_CAPTURE "kv" writes the local capture (the binding never called), the EMAIL binding otherwise (called with
 //        From hello@sharingu.xyz, to, cc, subject, html, text), none at all "no_mailer" with nothing counted; a send that throws is
 //        "send_failed" with its code; build() answering null is "nothing"; mailPaused says the cap
@@ -49,12 +51,15 @@ const CASES = {
     W.db.prepare("INSERT INTO mail_days (day, n) VALUES ('2026-09-14', 7), ('2026-09-13', 100)").run();
     const inWindow = await E.mailPaused(W.env, DAY);
     const sum = Number(W.db.prepare(E.MAIL_WINDOW_SQL).get(E.windowStartOf(DAY)).n);
-    const a = await E.addressDigest("Ada@X.test"), b = await E.addressDigest(" ada@x.test ");
+    const a = await E.addressDigest("Ada@X.test"), b = await E.addressDigest(" ada+join@x.test ");
+    const g = await Promise.all(["a.d.a@gmail.com", "Ada+x@googlemail.com", "ada@gmail.com"].map(E.addressDigest)), other = await E.addressDigest("a.da@x.test");
     return [
       [E.dayOf(DAY) === "2026-10-14" && E.windowStartOf(DAY) === "2026-09-14" && E.MAIL_WINDOW_DAYS === 31 && E.MAIL_CAP === 2900 && E.MAIL_PER_ADDRESS_DAY === 3,
         `E1 · the window: the 31 days that end today (${E.windowStartOf(DAY)} to ${E.dayOf(DAY)}), the cap ${E.MAIL_CAP}, three a day to one address`],
       [sum === 7 && !inWindow, `E1 · the window's first day counted, the day before it not (${sum})`],
-      [a === b && /^[0-9a-f]{64}$/.test(a) && !a.includes("ada"), "E1 · one digest per address whatever its case and spaces, never the address"],
+      [a === b && /^[0-9a-f]{64}$/.test(a) && !a.includes("ada"), "E1 · one digest per mailbox whatever its case, spaces and +tag, never the address"],
+      [g.every((x) => x === g[0]) && other !== a && E.mailboxOf("A.D.A+tag@GoogleMail.com") === "ada@gmail.com" && E.mailboxOf("a.da+t@x.test") === "a.da@x.test",
+        "E1 · at gmail.com and googlemail.com the dots go too (one inbox); elsewhere a dot is the address's own"],
     ];
   },
   async E2() {
@@ -64,9 +69,10 @@ const CASES = {
     let built = 0;
     const build = () => { built++; return MSG; };
     const one = await E.sendMail(W.env, W.mailer, { to: "a@x.test", at: DAY, build });
+    const afterOne = W.counted();
     const two = await E.sendMail(W.env, W.mailer, { to: "b@x.test", at: DAY, build });
     return [
-      [one.sent === true && W.counted() === E.MAIL_CAP && W.sent.filter((m) => m.to === "a@x.test").length === 1, `E2 · at 2,899 the next counted send goes (${W.counted()})`],
+      [one.sent === true && afterOne === E.MAIL_CAP && W.sent.filter((m) => m.to === "a@x.test").length === 1, `E2 · at 2,899 the next counted send goes (${afterOne})`],
       [two.sent === false && two.reason === "cap" && built === 1 && !W.sent.some((m) => m.to === "b@x.test"), `E2 · at 2,900 the next is refused "${two.reason}", its message never built (${built} built)`],
       [!W.db.prepare("SELECT 1 FROM mail_days WHERE day = '2026-01-01'").get(), "E2 · a day before the window deleted by the next send"],
     ];
@@ -76,7 +82,8 @@ const CASES = {
     const W = world();
     W.db.prepare("INSERT INTO mail_days (day, n) VALUES (?, ?)").run(E.windowStartOf(DAY), E.MAIL_CAP - 1);
     const both = await Promise.all([E.sendMail(W.env, W.mailer, { to: "a@x.test", at: DAY, build: () => MSG }), E.sendMail(W.env, W.mailer, { to: "b@x.test", at: DAY, build: () => MSG })]);
-    return [[both.filter((r) => r.sent).length === 1 && W.counted() === E.MAIL_CAP, `E3 · one unit left, two at once: exactly one goes (${both.map((r) => r.sent ? "sent" : r.reason).join(", ")})`]];
+    return [[both.filter((r) => r.sent).length === 1 && W.counted() === E.MAIL_CAP + 1 && W.sent.filter((m) => m.to === E.TEAM_TO).length === 1,
+      `E3 · one unit left, two at once: exactly one goes (${both.map((r) => r.sent ? "sent" : r.reason).join(", ")}), the other's refusal the cap's one alert, past it (${W.counted()})`]];
   },
   async E4() {
     const E = await mod("email.js");
@@ -103,23 +110,27 @@ const CASES = {
     const W = world();
     W.db.prepare("INSERT INTO mail_days (day, n) VALUES (?, ?)").run(E.windowStartOf(NEXT), E.MAIL_CAP);
     const r = [await E.sendMail(W.env, W.mailer, { to: "a@x.test", at: DAY, build: () => MSG }), await E.sendMail(W.env, W.mailer, { to: "b@x.test", at: DAY, build: () => MSG })];
-    const day1 = W.sent.filter((m) => m.to === E.TEAM_TO);
+    const day1 = W.sent.filter((m) => m.to === E.TEAM_TO), c1 = W.counted();
     await E.sendMail(W.env, W.mailer, { to: "c@x.test", at: NEXT, build: () => MSG });
     const both = W.sent.filter((m) => m.to === E.TEAM_TO);
     return [
-      [r.every((x) => x.reason === "cap") && day1.length === 1 && day1[0].cc === E.TEAM_CC && /paused/i.test(day1[0].subject) && /2900|2,900/.test(day1[0].text) && W.counted() === E.MAIL_CAP,
-        `E5 · at the cap: ONE alert to ${E.TEAM_TO} cc ${E.TEAM_CC} for two refusals ("${day1[0] && day1[0].subject}"), uncounted`],
-      [both.length === 2, `E5 · the next day one again (${both.length})`],
+      [r.every((x) => x.reason === "cap") && day1.length === 1 && day1[0].cc === E.TEAM_CC && /paused/i.test(day1[0].subject) && /2900|2,900/.test(day1[0].text) && c1 === E.MAIL_CAP + 1,
+        `E5 · at the cap: ONE alert to ${E.TEAM_TO} cc ${E.TEAM_CC} for two refusals ("${day1[0] && day1[0].subject}"), counted past the cap (${c1})`],
+      [both.length === 2 && W.counted() === E.MAIL_CAP + 2, `E5 · the next day one again (${both.length}), counted too (${W.counted()})`],
     ];
   },
   async E6() {
     const E = await mod("email.js");
     const W = world();
-    W.db.prepare("INSERT INTO mail_days (day, n) VALUES (?, ?)").run(E.windowStartOf(DAY), E.MAIL_CAP);
-    const before = JSON.stringify(W.db.prepare("SELECT * FROM mail_days").all());
-    const r = await E.sendMail(W.env, W.mailer, { to: E.TEAM_TO, cc: E.TEAM_CC, counted: false, at: DAY, build: () => MSG });
-    return [[r.sent && JSON.stringify(W.db.prepare("SELECT * FROM mail_days").all()) === before && W.db.prepare("SELECT COUNT(*) AS n FROM mail_addresses").get().n === 0 && W.sent[0].cc === E.TEAM_CC,
-      "E6 · a team send moves no counter and goes even at the cap"]];
+    const c0 = W.counted();
+    const r = await E.teamSend(W.env, W.mailer, () => MSG);
+    const c1 = W.counted(), rows = W.db.prepare("SELECT COUNT(*) AS n FROM mail_addresses").get().n;
+    W.db.prepare("INSERT INTO mail_days (day, n) VALUES (?, ?)").run(E.windowStartOf(new Date().toISOString()), E.MAIL_CAP);
+    const atCap = await E.teamSend(W.env, W.mailer, () => MSG);
+    return [
+      [r.sent && c1 === c0 + 1 && rows === 0 && W.sent[0].to === E.TEAM_TO && W.sent[0].cc === E.TEAM_CC, `E6 · the team's request alert counted under the cap (${c0} -> ${c1}), no address row (${rows})`],
+      [atCap.sent === false && atCap.reason === "cap", `E6 · at the cap it is refused like any send (${atCap.reason})`],
+    ];
   },
   async E7() {
     const E = await mod("email.js");
@@ -185,6 +196,11 @@ const MUTANTS = [
   { name: "a window of 32 days", file: "src/email.js", from: "(MAIL_WINDOW_DAYS - 1) * 86400000", to: "MAIL_WINDOW_DAYS * 86400000", red: ["E1"] },
   { name: "the capture beside the binding (both)", file: "src/email.js",
     from: "  if (env && env.MAIL_CAPTURE === \"kv\") return env.OAUTH_KV ? captureMailer(env.OAUTH_KV) : null;\n", to: "", red: ["E7"] },
+  { name: "the mailbox not normalised (a +tag or a dot a new address)", file: "src/email.js",
+    from: "sha256(`sharingu-mail-address:v1:${mailboxOf(address)}`)", to: "sha256(`sharingu-mail-address:v1:${String(address).toLowerCase().trim()}`)", red: ["E1"] },
+  { name: "the team's request alert past the cap", file: "src/email.js",
+    from: "sendMail(env, mailer, { to: TEAM_TO, cc: TEAM_CC, perAddress: false, build });", to: "sendMail(env, mailer, { to: TEAM_TO, cc: TEAM_CC, perAddress: false, pastCap: true, build });", red: ["E6"] },
+  { name: "the cap's alert held inside the cap (never sent)", file: "src/email.js", from: "perAddress: false, pastCap: true, at, build:", to: "perAddress: false, at, build:", red: ["E5"] },
   { name: "the team's email naming the person", file: "src/mails.js", from: "  facts: [[\"Company\", request.company],", to: "  facts: [[\"Name\", request.name], [\"Company\", request.company],", red: ["E8"] },
 ];
 

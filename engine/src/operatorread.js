@@ -3,10 +3,12 @@
 //
 // WHO (mayOperate): an ADMIN of org 1 (HOME_ORG, the operating org: the org the sign-in found is 1 — src/data.js readerOrg, from the
 // credential alone — and the reader's own row says org 1 and role owner, the one admin marker every door reads). The page lives under
-// org 1's address (/<org 1>/operator; `operator` is one of the platform's fixed words, src/orgnames.js, so no org takes it). Anyone
-// else — an admin of any other org, a member of org 1, a read-only credential's write, no session — gets the ONE not-here answer the
-// router gives an address that serves nothing (src/index.js NOT_HERE), the same for every case: the page's existence is told to no
-// one but its readers. This is the one place the worker reads across orgs on purpose: the platform's own requests (access_requests,
+// org 1's address (/<org 1>/operator; `operator` is one of the platform's fixed words, src/orgnames.js, so no org takes it), and only
+// through a BROWSER session (the cookie: viaCookie) that is not read-only — a bearer key, an OAuth grant and the read-only credential
+// never open it, for a read or a decision. Anyone else signed in — an admin of any other org, a member of org 1, a bearer of org 1's
+// owner key, a read-only credential — gets the ONE not-here answer the router gives an address that serves nothing (src/index.js
+// NOT_HERE), the same for every case; no session gets the sign-in rule, which every path under an org's address answers alike (one
+// that serves nothing too). So the page's existence is told to no one but its readers. This is the one place the worker reads across orgs on purpose: the platform's own requests (access_requests,
 // no org's row) and, for an org a request founded, its name, path name and product profile (org_profile) — what its founder agreed
 // the operator sees ("Only you and the sharingu operator see it", src/orgprofile.js PRODUCT_NOTE).
 //
@@ -42,8 +44,9 @@ export const PAGE_ROWS = 20;
 export const PEOPLE_STATUSES = ["open", "approved", "declined"];
 export const REQUEST_ID_RE = /^[A-Za-z0-9-]{1,80}$/;   // the worker's ids are UUIDs; a quote or a space is never one
 
-// mayOperate(env, reader) -> true for an admin of org 1 signed in as that seat (the org from the sign-in, never a parameter)
-export const mayOperate = (env, reader) => !!reader && readerOrg(env) === HOME_ORG && Number(reader.org) === HOME_ORG && reader.role === "owner";
+// mayOperate(env, reader) -> true for an admin of org 1 signed in as that seat in a browser (its session cookie, never a bearer, a
+// grant or a read-only credential; the org from the sign-in, never a parameter)
+export const mayOperate = (env, reader) => !!reader && reader.viaCookie === true && !reader.readOnly && readerOrg(env) === HOME_ORG && Number(reader.org) === HOME_ORG && reader.role === "owner";
 
 // ---- the statements ----
 // the funnel: ?1 FUNNEL_ROWS

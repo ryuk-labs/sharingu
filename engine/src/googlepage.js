@@ -3,8 +3,8 @@
 // a hairline edge, never recoloured), on the front door's own tokens — the surface, the strong line, the text — so it reads as
 // Google's light button on Paper and its dark one on Ink (the repo's colour law: no colour literal on a page; the G mark is
 // Google's own picture, engine/assets/clients/google.png, served by the worker itself). A SECONDARY: the page's one orange primary
-// stays its own action (src/login.js authPage). Shown only when src/google.js googleOffer says so (a client stored, a registered
-// origin). No statement here.
+// stays its own action (src/login.js authPage). Shown only when src/google.js googleOffer says so (a client stored, on an origin
+// stored with it). No statement here.
 //   googleLink(intent, extra)       a link to GET /auth/google/start (join, signin), extra: the next page or the source
 //   googleForm(fields, inner)       a same-origin POST to /auth/google/start (the connect page: its authorize request rides it)
 //   googleOr                        the quiet "or" between the page's own form and the button

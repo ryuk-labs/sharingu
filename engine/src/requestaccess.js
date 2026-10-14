@@ -216,9 +216,11 @@ export async function approvedProfile(env, email) {
 // ---- THE 90-DAY CLEARING (21.4b; src/cron.js runs it once a run) ----
 // CLEAR_DAYS after its decline (a declined request) or its approval (an approved request whose person founded no org), a request's
 // profile is emptied. WHAT GOES (CLEAR_FIELDS): every field a person typed or that names them — the name, company and role (emptied:
-// NOT NULL columns), the email (replaced by "cleared:<the row's id>": the column is NOT NULL and an email's one verified request is
-// unique, so the person may ask again), the website, LinkedIn, X and GitHub addresses, the AI tools and the use case, and the link to
-// their account (account_id). WHAT STAYS, and why: the id, the status and every date (created, verified, approved, declined, the
+// NOT NULL columns), the email (replaced by "cleared:<the row's id>": the column is NOT NULL, and the row no longer answers for the
+// email — it approves no org and is no one's request), the website, LinkedIn, X and GitHub addresses, the AI tools and the use case,
+// and the link to their account (account_id). A cleared person whose account stands cannot ask again by the join (a join for an
+// email an account holds files nothing: "you already have an account"); their /account says the request is cleared and that a reply
+// to any of our emails asks again (src/accountpage.js renderAccountStatus). WHAT STAYS, and why: the id, the status and every date (created, verified, approved, declined, the
 // account's and the org's, the clearing's own) — the funnel's counts and the line's history; the team size and the source — two
 // coarse words that name no one and are the beta's own measures; the consent's four answers, its version and its time — the record
 // that the profile was given with consent and is now cleared. An approved request cleared holds no place any more (src/beta.js

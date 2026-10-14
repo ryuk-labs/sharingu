@@ -19,9 +19,10 @@
 //        NO org, every answer kept as sent; complete -> 200, the org, its org_profile row (the JSON arrays, the singles) and the
 //        request naming the org (org_id, org_at) — in ONE batch (a profile the table refuses lands no org either); a script's JSON
 //        with no step: the org, no profile; with part of it: 422 bad_org naming the first missing field
-//   D7 · the operator page's door: org 1's admin 200 (the screen, the funnel's five tiles, the line); org 1's member, another org's
-//        admin (at its own address, at org 1's, at the root) each the ONE not-here 404, the same bytes; no session: a browser to
-//        the sign-in, a script 401
+//   D7 · the operator page's door: org 1's admin in a browser (its session cookie) 200 (the screen, the funnel's five tiles, the
+//        line); org 1's admin by its BEARER key or its read-only credential (a read and a decision), org 1's member, another org's
+//        admin (at its own address, at org 1's, at the root) each the ONE not-here 404, the same bytes; no session: a browser to the
+//        sign-in, a script 401
 //   D8 · its decisions: Approve (same-origin, a cookie) -> approved, ONE "You're in" captured and counted; Decline -> declined with
 //        declined_at; a request not in line -> refused, nothing changed; a cross-site POST -> 403, nothing changed; the cap: with
 //        the 50 places taken Approve is refused, nothing changed, nothing sent
@@ -31,7 +32,7 @@
 //   D10 · THE CLEARING: exactly the declined requests 90+ days after their decline and the approved ones with no org 90+ days after
 //        their approval are cleared; CLEAR_FIELDS emptied, every other field as it was; a cleared one is not taken again; CLEAR_BATCH
 //        a run (the rest the next run); each statement a SEARCH of its partial index; the cron runs it once a run; a cleared approval
-//        holds no beta place and approves no org
+//        holds no beta place and approves no org; a cleared person's /account says so in its own words (never "closed")
 // And the MUTATION PROOF: each named mutant (a scratch copy of src/) turns its case(s) red, by an assertion, never a crash.
 // Exit 1 on any failure. A gate step (every tools/*-selftest.mjs).
 import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync } from "node:fs";
@@ -155,7 +156,7 @@ const CASES = {
     const W = await world();
     const v = await W.verified({ from: "showcase" });
     const acc = W.one("SELECT id FROM accounts WHERE email = ?", v.email) || {};
-    const team = (await W.mails()).find((m) => m.to === "ryuk@ryuklabs.io" && /^New beta request/.test(m.subject)) || {};
+    const team = (await W.mails()).find((m) => m.to === "acie@ryuklabs.io" && /^New beta request/.test(m.subject)) || {};
     return [
       [v.row.status === "open" && v.row.account_id === acc.id && !!acc.id && v.row.account_at === v.row.verified_at, `D4 · the verification names its account (${v.row.account_id === acc.id}) at its own time (${v.row.account_at === v.row.verified_at})`],
       [/Source: showcase/.test(team.text || "") && !/Ada Lovelace|ada@analytical\.test/i.test((team.text || "") + (team.html || "") + (team.subject || "")),
@@ -231,20 +232,24 @@ const CASES = {
   async D7() {
     const W = await world();
     const s1 = W.slug(1), s2 = W.slug(2);
-    const admin = await W.call("GET", `/${s1}/operator`, { key: "one-owner-key", nav: true });
-    const member = await W.call("GET", `/${s1}/operator`, { key: "one-mia-key", nav: true });
-    const otherOwn = await W.call("GET", `/${s2}/operator`, { key: "two-owner-key", nav: true });
+    const admin = await W.call("GET", `/${s1}/operator`, { cookie: await W.sessionOf("owner@one.test"), nav: true });
+    const ro = sha(sha("one-owner-key") + ":agent-r-read-only:v1");   // the admin's read-only credential (src/core.js ADR-050)
+    const bearer = await W.call("GET", `/${s1}/operator`, { key: "one-owner-key", nav: true }), bearerPost = await W.call("POST", `/${s1}/operator`, { key: "one-owner-key", form: { action: "approve", request: "x" } });
+    const readOnly = await W.call("GET", `/${s1}/operator`, { key: ro, nav: true }), readOnlyPost = await W.call("POST", `/${s1}/operator`, { key: ro, form: { action: "approve", request: "x" } });
+    // a member and another org's admin in their browsers (a cookie each: the operator page's own door), the rest by their keys
+    const member = await W.call("GET", `/${s1}/operator`, { cookie: await W.sessionOf("mia@one.test"), nav: true });
+    const otherOwn = await W.call("GET", `/${s2}/operator`, { cookie: await W.sessionOf("owner@two.test"), nav: true });
     const otherAt1 = await W.call("GET", `/${s1}/operator`, { key: "two-owner-key", nav: true });
     const otherRoot = await W.call("GET", `/operator`, { key: "two-owner-key", nav: true });
     const otherPost = await W.call("POST", `/${s2}/operator`, { key: "two-owner-key", form: { action: "approve", request: "x" } });
     const anon = await W.call("GET", `/${s1}/operator`, { nav: true }), script = await W.call("GET", `/${s1}/operator`);
     const nf = await W.call("GET", `/${s1}/no-such-page-here`, { key: "two-owner-key", nav: true });
-    const refused = [member, otherOwn, otherAt1, otherRoot, otherPost];
+    const refused = [member, otherOwn, otherAt1, otherRoot, otherPost, bearer, bearerPost, readOnly, readOnlyPost];
     return [
       [admin.status === 200 && /data-screen="operator"/.test(admin.text) && ["requested", "verified", "approved", "signed-up", "orgs"].every((k) => new RegExp(`data-metric="${k}"`).test(admin.text)) && /data-region="operator-filter"/.test(admin.text),
         `D7 · org 1's admin: 200 the operator page, the funnel's five tiles and the filter (${admin.status})`],
       [refused.every((r) => r.status === 404 && same(r, member)) && same(member, nf) && !refused.some((r) => /data-screen="operator"|funnel/.test(r.text)),
-        `D7 · org 1's member, another org's admin at its own address, at org 1's, at the root, and its POST: each the ONE not-here 404 (${refused.map((r) => r.status).join("/")}), the same bytes as an unknown address`],
+        `D7 · org 1's member, another org's admin at its own address, at org 1's, at the root, and its POST, org 1's admin by its bearer key and its read-only credential (a read and a POST): each the ONE not-here 404 (${refused.map((r) => r.status).join("/")}), the same bytes as an unknown address`],
       [anon.status === 302 && /^\/login/.test(anon.location) && script.status === 401, `D7 · no session: a browser to the sign-in (${anon.status} ${anon.location}), a script 401 (${script.status})`],
     ];
   },
@@ -360,6 +365,11 @@ const CASES = {
     for (let i = 0; i < CLEAR_BATCH + 5; i++) put(db, `c-many-${String(i).padStart(3, "0")}`, { status: "declined", declined: OLD });
     const b1 = await clearStale({ DB: W.w.env.DB }, NOW);
     const cron = await runCron(W.w.env, Date.parse(NOW));
+    // a person signed in to their account session, their request declined long ago and then cleared: /account in its own words
+    const v = await W.verified({ email: "gone@line.test", company: "Gone Co" });
+    db.prepare("UPDATE access_requests SET status = 'declined', declined_at = ? WHERE email = 'gone@line.test'").run(OLD);
+    await clearStale({ DB: W.w.env.DB }, NOW);
+    const gone = await W.call("GET", "/account", { cookie: v.cookie, nav: true });
     return [
       [r1.declined === 1 && r1.abandoned === 1 && cleared.sort().join() === "c-a-old,c-d-old" && untouched, `D10 · exactly the declined one 90+ days after its decline and the approved one with no org 90+ days after its approval (${cleared.join(", ")}); the young, the one with an org, the open one untouched`],
       [exact, `D10 · CLEAR_FIELDS emptied (${CLEAR_FIELDS.join(", ")}; the email "cleared:<id>"), every other field as it was (status, dates, team size, source, consent), cleared_at the run's time`],
@@ -368,6 +378,8 @@ const CASES = {
       [plans.every((p) => /SEARCH access_requests USING INDEX idx_access_requests_(declined|abandoned) \((declined|approved)_at<\?\)/.test(p) && !/SCAN access_requests/.test(p)),
         `D10 · each selection a SEARCH of its partial index, never a scan (${plans.join(" || ")})`],
       [b1.declined === CLEAR_BATCH && cron.clear && cron.clear.declined === 5 && cron.clear.abandoned === 0, `D10 · ${CLEAR_BATCH} a run (${b1.declined}), the rest by the next: the cron's own step (${JSON.stringify(cron.clear)})`],
+      [gone.status === 200 && /data-screen="account-cleared"/.test(gone.text) && /no longer on file/.test(gone.text) && !/data-screen="account-closed"/.test(gone.text),
+        `D10 · a cleared person's /account: "no longer on file", its own words (${gone.status})`],
     ];
   },
 };
@@ -386,6 +398,8 @@ const MUTANTS = [
     from: "        ...(profile ? [db(fe).prepare(FOUND_PROFILE_SQL)", to: "        ...(false ? [db(fe).prepare(FOUND_PROFILE_SQL)", red: ["D6"] },
   { name: "the operator page open to any org's admin", file: "src/operatorread.js",
     from: "readerOrg(env) === HOME_ORG && Number(reader.org) === HOME_ORG && reader.role === \"owner\"", to: "reader.role === \"owner\"", red: ["D7"] },
+  { name: "the operator page open to a bearer key or the read-only credential", file: "src/operatorread.js",
+    from: "!!reader && reader.viaCookie === true && !reader.readOnly && readerOrg(env)", to: "!!reader && readerOrg(env)", red: ["D7"] },
   { name: "the operator page open to org 1's members", file: "src/operatorread.js",
     from: "Number(reader.org) === HOME_ORG && reader.role === \"owner\"", to: "Number(reader.org) === HOME_ORG", red: ["D7"] },
   { name: "the operator page's decisions without the same-origin guard", file: "src/index.js",

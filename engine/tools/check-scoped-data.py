@@ -239,7 +239,7 @@ def call_arg(code, plain, open_paren):
 
 
 # ---- the scope rule: the statement text the checker can see ----
-TABLES = NINE + ["projects"]
+TABLES = NINE + ["projects", "org_profile"]   # (sprint 21, 21.4b) org_profile: an org's product step, one row per org
 TABLE_RE = re.compile(r"\b(?:FROM|JOIN|UPDATE|INTO)\s+([A-Za-z_]\w*)", re.I)   # FROM/JOIN, UPDATE, INSERT/REPLACE INTO, DELETE FROM
 TOKEN_RE = re.compile(r"\{org(?:bucket)?\}")
 SQL_RE = re.compile(r"\b(?:SELECT|INSERT|UPDATE|DELETE|REPLACE|WITH)\b")
@@ -283,6 +283,20 @@ ALLOW_SCOPE = [
      "the verification's account session (POST /account/verify): the account the verified email names, holding the passphrase the link's own request chose, only while it holds no seat of any org (a yes or no); no row of any org leaves"),
     ("accounts.js", r"UPDATE tokens SET revoked = 1 WHERE revoked = 0 AND \(account_id = \?1 OR person_id IN \(SELECT id FROM people WHERE account_id = \?1\)\) AND \$\{RESET_SPENT\}",
      "a reset link's spend (POST /account/reset): every session of the account the link was minted for (its email proven by the link), in every org — its account sessions and each of its own seats' — only when THIS request spent that link"),
+    # -- the operator page (sprint 21, 21.4b; src/operatorread.js): the ONE place the worker reads across orgs on purpose --
+    ("operatorread.js", r"LEFT JOIN org o ON o\.id = r\.org_id LEFT JOIN org_profile p ON p\.org = r\.org_id ",
+     "the operator page's people (org 1's admins only, in a browser: mayOperate): for a request that founded an org, that org's product answers, by the org id the founding batch wrote on the request — what its founder agreed the operator sees (src/orgprofile.js PRODUCT_NOTE)"),
+    # -- Google sign-in's first link and join (the sprint-21 review; src/accounts.js THE FIRST LINK IS A RESET): an account's own rows --
+    ("accounts.js", r"[\"'`]UPDATE people SET active = 0, pending = 1 WHERE account_id = \?1 AND active = 1 AND EXISTS \(SELECT 1 FROM accounts u WHERE u\.id = \?1 AND u\.google_sub IS NULL AND u\.invited_org IS NOT NULL\)",
+     "the first Google link of an account an org's invite link set the passphrase of (Google just proved its email's mailbox): that account's OWN seats, in every org, wait for its holder's yes — bound to the account the verified email names, only while it has no subject linked; no row is read"),
+    ("accounts.js", r"UPDATE tokens SET revoked = 1 WHERE revoked = 0 AND \(account_id = \?1 OR person_id IN \(SELECT id FROM people WHERE account_id = \?1\)\) AND \$\{UNLINKED\}",
+     "the first Google link (a reset: Google just proved the email's mailbox): every session of that account — its account sessions and each of its own seats', in every org — ends, only while it has no subject linked"),
+    ("accounts.js", r"[\"'`]SELECT EXISTS \(SELECT 1 FROM people p WHERE p\.account_id = \?1 AND \(p\.active = 1 OR p\.pending = 1\)\) AS seated",
+     "whether the account the verified email names holds any seat (a yes or no: no row of any org leaves): a shell with none is no one's (Google's sign-in treats it as none)"),
+    ("accounts.js", r"INSERT INTO accounts \(id, email, pass_hash, pass_salt, google_sub, created_at, updated_at\) SELECT \?1, \?2, \?3, \?4, \?5, \?6, \?6 ",
+     "a join through Google (its email the one Google verified): an account made, or an add-person shell taken only while it holds no seat of any org (a yes or no on its own seats: no row of any org leaves)"),
+    ("accounts.js", r"[\"'`]SELECT a\.id, a\.email, a\.pass_hash, a\.pass_salt, a\.invited_org, a\.google_sub FROM tokens t JOIN accounts a ON a\.id = t\.account_id WHERE t\.token_hash = \?1",
+     "an org session's step-up (POST /orgs, GET /orgs/new): the request's own session cookie by its hash, live, and its ACCOUNT (tokens.account_id, set only when the account's holder proved it) — the account's own row, no seat's"),
     # -- the invite link (sprint 12, 12.3; src/accounts.js THE INVITE LINK): no one is signed in yet; the link names its org --
     ("accounts.js", r"FROM seat_invites i JOIN people p ON p\.id = i\.person_id AND p\.org = i\.org LEFT JOIN accounts a ON a\.id = p\.account_id WHERE i\.token_hash = \?1 AND i\.used_at IS NULL",
      "the invite link's one read (POST /signup): the link found by its token's hash (192 bits, only its holder knows it), its seat joined in the LINK's own org (the org its admin minted it in, {org} at the mint) and that seat's account; whether the account holds another seat is a yes or no, no row of that org leaves"),
