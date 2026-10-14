@@ -251,7 +251,7 @@ const PAGES = want ? ALL.filter(([n]) => want.split(",").includes(n)) : ALL;
 // signs in only there (a page at the root would be sent there anyway); a page shot signed out, and a bearer's, at the root
 // (7.4b: a platform door, /orgs, /login, stays at the root whoever asks)
 let ORG_BASE = "";
-const PLATFORM_SEGS = new Set(["login", "logout", "signup", "request-access", "orgs", "install", "mcp", "oauth", ".well-known", "health", "fonts", "favicon.svg"]);
+const PLATFORM_SEGS = new Set(["login", "logout", "signup", "request-access", "account", "orgs", "install", "mcp", "oauth", ".well-known", "health", "fonts", "favicon.svg"]);
 const atRoot = (path) => PLATFORM_SEGS.has((String(path).split(/[/?#]/)[1] || "").toLowerCase());
 // --project all (sprint 11, 11.2): no ?project= at all, the reader's own default (an owner's: the org rollup, All projects)
 const urlOf = (path, keyed = false) => `${BASE}${keyed && !atRoot(path) ? ORG_BASE : ""}${path}${PROJECT === "all" ? "" : `${path.includes("?") ? "&" : "?"}project=${encodeURIComponent(PROJECT)}`}`;

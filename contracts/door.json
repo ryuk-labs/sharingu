@@ -711,6 +711,79 @@
    "refusals": []
   },
   {
+   "method": "GET",
+   "path": "/account",
+   "auth": "session",
+   "does": "your request's status (sprint 21, 21.4a), for an ACCOUNT session (the browser's session of an account that holds no seat yet: made by verifying your email, or by signing in before your org exists; it signs you in to no org, no /mcp and no API). In line: your place (1 + the open requests verified before yours), the beta's places live (N of 50 places taken; left out if it cannot be read), the request's steps and what comes next; approved: Create your org (-> /orgs/new, filled in from your request); declined: one sentence and a way on; your org made: sign in to it. No account session: the sign-in rule (a page navigation goes to /login)",
+   "refusals": [
+    "not-authenticated",
+    "not-allowed"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/account/forgot",
+   "auth": "none",
+   "does": "forgot your passphrase (sprint 21, 21.4a): the form, your email",
+   "refusals": []
+  },
+  {
+   "method": "POST",
+   "path": "/account/forgot",
+   "auth": "none",
+   "does": "ask for a reset link (sprint 21, 21.4a): {email} -> the SAME answer whether or not an account holds the email (a form: the page saying a link is on its way if one does; JSON {sent: true}); an account's email gets one link (single use, 30 minutes, only its hash kept), within the three a day per address and the cap. 422 bad_email; 403 cross_site_forgot; 429 too_many_attempts_ip",
+   "refusals": []
+  },
+  {
+   "method": "GET",
+   "path": "/account/resend",
+   "auth": "none",
+   "does": "the verification's resend form (sprint 21, 21.4a: the sign-in's \\\"Didn't get the email? Resend\\\")",
+   "refusals": []
+  },
+  {
+   "method": "POST",
+   "path": "/account/resend",
+   "auth": "none",
+   "does": "resend the verification (sprint 21, 21.4a): {email} -> ALWAYS a 303 to /account/sent; an email whose newest unverified request is live gets a NEW link (the old one stops working), within the three a day per address and the cap (a refused send keeps the old link). 422 bad_email; 403 cross_site_resend; 429 too_many_attempts_ip",
+   "refusals": []
+  },
+  {
+   "method": "POST",
+   "path": "/account/reset",
+   "auth": "none",
+   "does": "set a new passphrase (sprint 21, 21.4a): {token, password (at least 12 characters), confirm} -> in one write: the account takes it (an org's invite mark ends: the link proves the email), EVERY session of the account ends — its org sessions in every org and its account sessions — with its other reset links and its seats' connected apps; then you are signed in fresh (a form: 303 to your org, the picker or /account, the new session's cookie set; JSON {reset, signedIn}). 404 invalid_link; 422 bad_reset {field}; 403 cross_site_reset; 429 too_many_attempts_ip",
+   "refusals": []
+  },
+  {
+   "method": "GET",
+   "path": "/account/reset/:token",
+   "auth": "none",
+   "does": "a reset link (sprint 21, 21.4a): a live link asks for the new passphrase twice (it changes nothing); an expired, used or wrong one is ONE 404 page with the way to a new link",
+   "refusals": []
+  },
+  {
+   "method": "GET",
+   "path": "/account/sent",
+   "auth": "none",
+   "does": "check your inbox (sprint 21, 21.4a): the ONE answer of POST /request-access and POST /account/resend, the same for every email; at the email cap it says email checks are paused; a resend form beside it. It reads one aggregate (the cap's window)",
+   "refusals": []
+  },
+  {
+   "method": "POST",
+   "path": "/account/verify",
+   "auth": "none",
+   "does": "verify your email (sprint 21, 21.4a): {token (the link's), password (the join's passphrase)} -> in one write: the request verified (it takes its place in line by this moment), the account made with that passphrase (an account with none takes it; one with its own keeps it), its other unverified requests gone, and, for an account with no seat, an ACCOUNT session (a form: 303 to /account with the session cookie; JSON {verified, signedIn}); the team is told (company, role, team size: never your name or email). 404 invalid_link (expired, used, never sent, or a verified request of the email stands: nothing written); 401 wrong_passphrase (the attempt counts in the email's lockout: 8 in 15 minutes are 429 too_many_attempts); 403 cross_site_verify; 429 too_many_attempts_ip",
+   "refusals": []
+  },
+  {
+   "method": "GET",
+   "path": "/account/verify/:token",
+   "auth": "none",
+   "does": "a verification link (sprint 21, 21.4a): a live link shows its email and asks for the passphrase you chose when you joined (it changes nothing: a mail scanner that follows the link spends nothing); an expired, used or wrong link is ONE 404 page with a resend form",
+   "refusals": []
+  },
+  {
    "method": "POST",
    "path": "/artifact",
    "auth": "bearer",
@@ -1111,14 +1184,14 @@
    "method": "POST",
    "path": "/login",
    "auth": "none",
-   "does": "email + password -> a 90-day token (sprint 7: one account per email, a seat per org; 7.4, the front door by path: the sign-in lives at the platform's root and CHOOSES the org — the org next names (/<org>/…) when your account holds a seat there, else your seat in org 1, else your first). Your ACCOUNT's passphrase signs in the chosen seat with an account session: a browser's cookie then reads, at any org's address /<org>/…, as your seat in that org. A seat's own secret (the key its admin gave you) signs in THAT seat only, with a seat session (its org alone). The token as a bearer is the seat it names. A form lands on next, else /<the chosen org>. A wrong or missing email or password is 401 invalid_login; your account's passphrase with no seat in any org is 403 no_seat_here (nothing signed in); 8 failures in 15 minutes on one account are 429 too_many_attempts",
+   "does": "email + password -> a 90-day token (sprint 7: one account per email, a seat per org; 7.4, the front door by path: the sign-in lives at the platform's root and CHOOSES the org — the org next names (/<org>/…) when your account holds a seat there, else your seat in org 1, else your first). Your ACCOUNT's passphrase signs in the chosen seat with an account session: a browser's cookie then reads, at any org's address /<org>/…, as your seat in that org. A seat's own secret (the key its admin gave you) signs in THAT seat only, with a seat session (its org alone). The token as a bearer is the seat it names. A form lands on next, else /<the chosen org>. A wrong or missing email or password is 401 invalid_login; your account's passphrase with no seat in any org is 403 no_seat_here for a script, and for a form (sprint 21, 21.4a) an ACCOUNT session landing on /account (your request's status; it signs in to no org); an email whose only trace is an unverified join, with that join's passphrase, is 403 email_unverified (a form: check your inbox, with a resend); 8 failures in 15 minutes on one account are 429 too_many_attempts",
    "refusals": []
   },
   {
    "method": "GET",
    "path": "/logout",
    "auth": "none",
-   "does": "clear the web session cookie and return to the login page (ADR-056)",
+   "does": "clear the web session cookie and return to the login page (ADR-056): the session it carried ends, an org session or (sprint 21, 21.4a) an account session",
    "refusals": []
   },
   {
@@ -1204,14 +1277,14 @@
    "method": "POST",
    "path": "/orgs",
    "auth": "none",
-   "does": "create an org (sprint 7, 7.3; the write new-org.sh did by SQL): {email, password (your ACCOUNT passphrase), name, slug (its address: a-z, 0-9 and single dashes, 2 to 40 characters, never a name the platform uses: every first segment of the door's routes and the platform's fixed words), project? (the first project's slug, 2 to 30, default the slug), projectName? (default the name), you? (your seat's name, default your email's first part)} -> in ONE write: the org (its name and address), your OWNER seat in it (a seat of your account) and its first project o<id>--<project>; 200 {org:{id, name, slug}, project:{key, name}, person:{id, name, email}, key, mcp, address, note} — key is your new seat's own secret (its sign-in and its API key), shown ONCE in this answer only; address is the org's own address (its pages at /<slug>/…, sprint 7, 7.4), and your AI reaches it at the one /mcp with the key as its bearer. A form (sprint 21, 21.P) gets the done page with the key, never a redirect, and is signed in at once: the session cookie POST /login sets, an account session on the new owner seat (a script's JSON answer sets none). Who may: an account holder proven by the ACCOUNT's passphrase (no seat needed; a seat's own secret never creates an org); an account creates at most ONE org (the beta's free tier). Refusals, nothing written but the proof's attempt: 422 bad_org {field: email|password|name|slug|project|you} and 409 org_name_reserved, both before anything is read; 401 invalid_account (one answer: no account, an account with no passphrase yet, a wrong one or a seat's secret; it counts in the account's lockout: 8 failures in 15 minutes, with the sign-in's, are 429 too_many_attempts); 409 org_limit (this account already created its org); 403 org_by_invite (sprint 12, 12.3: an account an org's invite link made creates no org — the waitlist; the operator's code confirms its email first); 409 org_name_taken; 429 too_many_attempts_ip (the address's flood filter, the budget POST /login and POST /signup spend); 403 cross_site_org (a cross-site form, refused before the body is read)",
+   "does": "create an org (sprint 7, 7.3; the write new-org.sh did by SQL): {email, password (your ACCOUNT passphrase), name, slug (its address: a-z, 0-9 and single dashes, 2 to 40 characters, never a name the platform uses: every first segment of the door's routes and the platform's fixed words), project? (the first project's slug, 2 to 30, default the slug), projectName? (default the name), you? (your seat's name, default your email's first part)} -> in ONE write: the org (its name and address), your OWNER seat in it (a seat of your account) and its first project o<id>--<project>; 200 {org:{id, name, slug}, project:{key, name}, person:{id, name, email}, key, mcp, address, note} — key is your new seat's own secret (its sign-in and its API key), shown ONCE in this answer only; address is the org's own address (its pages at /<slug>/…, sprint 7, 7.4), and your AI reaches it at the one /mcp with the key as its bearer. A form (sprint 21, 21.P) gets the done page with the key, never a redirect, and is signed in at once: the session cookie POST /login sets, an account session on the new owner seat (a script's JSON answer sets none). Who may: an account holder proven by the ACCOUNT's passphrase (no seat needed; a seat's own secret never creates an org; signed in or not, the passphrase is asked again before an owner key is minted), whose email the operator approved; an account creates at most ONE org (the beta's free tier). Refusals, nothing written but the proof's attempt: 422 bad_org {field: email|password|name|slug|project|you} and 409 org_name_reserved, both before anything is read; 401 invalid_account (one answer: no account, an account with no passphrase yet, a wrong one or a seat's secret; it counts in the account's lockout: 8 failures in 15 minutes, with the sign-in's, are 429 too_many_attempts); 409 org_limit (this account already created its org); 403 org_by_invite (sprint 12, 12.3: an account an org's invite link made creates no org — the waitlist; the operator's code confirms its email first); 403 org_waiting (sprint 21, 21.4a: an account whose email holds neither a used operator's code nor an approved request — its request still in line); 409 org_name_taken; 429 too_many_attempts_ip (the address's flood filter, the budget POST /login and POST /signup spend); 403 cross_site_org (a cross-site form, refused before the body is read)",
    "refusals": []
   },
   {
    "method": "GET",
    "path": "/orgs/new",
    "auth": "none",
-   "does": "the create-an-org page (sprint 7, 7.3): your account's email and passphrase (the ACCOUNT's own, chosen at sign-up: never a key an org's admin gave you), the org's name, its address (its path name: a to z, 0 to 9 and single dashes, 2 to 40 characters, never a name the platform uses; sprint 21, 21.P: suggested from the org's name as you type, still yours to edit), its first project's short name (default: the address) and your name; the page belongs to the platform (the product's wordmark, no org's)",
+   "does": "the create-an-org page (sprint 7, 7.3): your account's email and passphrase (the ACCOUNT's own, chosen at sign-up: never a key an org's admin gave you), the org's name, its address (its path name: a to z, 0 to 9 and single dashes, 2 to 40 characters, never a name the platform uses; sprint 21, 21.P: suggested from the org's name as you type, still yours to edit), its first project's short name (default: the address) and your name; the page belongs to the platform (the product's wordmark, no org's). With an ACCOUNT session (sprint 21, 21.4a) whose request is approved it comes filled in from the request (your email, the company as the org's name and its suggested address, your name); one still in line is sent to /account",
    "refusals": []
   },
   {
@@ -1373,21 +1446,14 @@
    "method": "GET",
    "path": "/request-access",
    "auth": "none",
-   "does": "the request-access page (sprint 21, 21.1): the profile's form, the optional fields folded under one disclosure (open when one holds a value or is wrong), beside what the beta holds; a wrong field marked on itself; a link to sign in",
+   "does": "the join form (sprint 21, 21.1; 21.4a): the profile and a passphrase twice, the optional fields folded under one disclosure (open when one holds a value or is wrong), beside what the beta holds; a wrong field marked on itself; a link to sign in",
    "refusals": []
   },
   {
    "method": "POST",
    "path": "/request-access",
    "auth": "none",
-   "does": "request access to the beta (sprint 21, 21.1; migrate-081; no session, no account, no org yet): name, email (your work email), company, role, team_size (1 | 2-10 | 11-50 | 51-200 | 201+) required; website, linkedin, x, github (each an http(s) address or that service's handle: the door stores the service's address it builds), ai_tools, use_case (one line) optional -> 303 to /request-access/<token>, your request's own private link (only its hash is kept). One open request per email, and the FIRST stands: a repeat for an email whose request is open changes nothing (no profile, no new link: the first link keeps working) and is a 303 to /request-access/asked, which says the email already asked. Nothing about accounts is read: an account's email with no open request files a request as any other. A request whose hidden field (trap) is filled is dropped with a new request's answer (its link opens nothing). 422 bad_request_access {field, note} before anything is written; 403 cross_site_request_access (a cross-site form, refused before the body is read); 429 too_many_attempts_ip (the address's flood filter, the budget POST /login and POST /signup spend). A form gets the page again with its values for a wrong field",
-   "refusals": []
-  },
-  {
-   "method": "GET",
-   "path": "/request-access/:token",
-   "auth": "none",
-   "does": "your request's own page at its private link (sprint 21, 21.1 and 21.2), by its status. Open: you're in line — your name and company, your place in line (1 + the open requests that came before yours), the beta's places live from the database (N of 50 places taken; left out if it cannot be read), the request's steps (requested, in line, approved, signed up, your org), what comes next (the requests are reviewed in order; a sign-up code is emailed to your address when your place opens; with it, sign up: the org form comes filled in from this request), this page's own address to keep (Copy link) and a link to the walkthrough (the showcase's own section, /#walkthrough). Approved: your place is open, the code comes by email, a link to /signup. Declined: one sentence, the walkthrough and the website. A link that opens no request (wrong or malformed) is ONE 404 page. /request-access/asked (no token's shape) is the repeat's page: the email already asked, the first request's link shows your place, the beta's places and the walkthrough; it names nothing the request typed. /request-access/check (sprint 21, 21.P: Check my request) says the request's own link holds its place, and that a check by Google or by email is coming; it reads nothing",
+   "does": "join the beta (sprint 21, 21.1 and 21.4a; migrate-081; no session, no account, no org yet): name, email (your work email), company, role, team_size (1 | 2-10 | 11-50 | 51-200 | 201+), password (your passphrase, at least 12 characters: you sign in with it) and confirm (the same again; checked when sent) required; website, linkedin, x, github (each an http(s) address or that service's handle: the door stores the service's address it builds), ai_tools, use_case (one line) optional -> ALWAYS a 303 to /account/sent, whatever the email: a new email files an UNVERIFIED request holding the passphrase's hash (no account yet) and is sent ONE verification email (its link works once, for 24 hours; only its hash is kept); an email that already holds an account files nothing and is sent at most a short \\\"you already have an account\\\" email (its passphrase never changes here); a filled hidden field (trap) files and sends nothing. An unverified request holds no place and is deleted after its 24 hours; the first VERIFIED request of an email stands. Every email to a person counts against the platform's cap (fewer than 2,900 in any 31 days) and three a day per address; at the cap nothing is sent and the page says email checks are paused. 422 bad_request_access {field, note} before anything is written; 403 cross_site_request_access (a cross-site form, refused before the body is read); 429 too_many_attempts_ip (the address's flood filter, the budget POST /login and POST /signup spend). A form gets the page again with its values (never the passphrase) for a wrong field",
    "refusals": []
   },
   {
@@ -1527,8 +1593,8 @@
  ],
  "counts": {
   "tools": 37,
-  "rest": 94,
-  "errors": 149
+  "rest": 103,
+  "errors": 159
  },
  "evalMark": {
   "rule": "a suite row carries the mark on every door: body.eval, ?eval=1, an MCP argument eval:true, or group 'eval'; the engine stamps eval:1 into the event it writes; clean-eval removes exactly the marked rows",
@@ -3233,6 +3299,79 @@
     "fails": []
    },
    {
+    "method": "GET",
+    "path": "/account",
+    "kind": "read",
+    "who": "a signed-in browser",
+    "fails": [
+     "not-authenticated",
+     "not-allowed"
+    ]
+   },
+   {
+    "method": "GET",
+    "path": "/account/forgot",
+    "kind": "read",
+    "who": "anyone",
+    "fails": []
+   },
+   {
+    "method": "POST",
+    "path": "/account/forgot",
+    "kind": "write",
+    "who": "anyone",
+    "fails": []
+   },
+   {
+    "method": "GET",
+    "path": "/account/resend",
+    "kind": "read",
+    "who": "anyone",
+    "fails": []
+   },
+   {
+    "method": "POST",
+    "path": "/account/resend",
+    "kind": "write",
+    "who": "anyone",
+    "fails": []
+   },
+   {
+    "method": "POST",
+    "path": "/account/reset",
+    "kind": "write",
+    "who": "anyone",
+    "fails": []
+   },
+   {
+    "method": "GET",
+    "path": "/account/reset/:token",
+    "kind": "read",
+    "who": "anyone",
+    "fails": []
+   },
+   {
+    "method": "GET",
+    "path": "/account/sent",
+    "kind": "read",
+    "who": "anyone",
+    "fails": []
+   },
+   {
+    "method": "POST",
+    "path": "/account/verify",
+    "kind": "write",
+    "who": "anyone",
+    "fails": []
+   },
+   {
+    "method": "GET",
+    "path": "/account/verify/:token",
+    "kind": "read",
+    "who": "anyone",
+    "fails": []
+   },
+   {
     "method": "POST",
     "path": "/artifact",
     "kind": "write",
@@ -3902,13 +4041,6 @@
     "method": "POST",
     "path": "/request-access",
     "kind": "write",
-    "who": "anyone",
-    "fails": []
-   },
-   {
-    "method": "GET",
-    "path": "/request-access/:token",
-    "kind": "read",
     "who": "anyone",
     "fails": []
    },
@@ -8169,6 +8301,84 @@
    "class": "not-allowed",
    "files": [
     "index.js"
+   ],
+   "live": true
+  },
+  "email_unverified": {
+   "meaning": "POST /login (a script) for an email that holds no account yet, with the passphrase of its newest unverified join (sprint 21, 21.4a: the account flow): the email was never verified, so no account exists and nothing is signed in.",
+   "nextAction": "Open the verification link the join's email carries (POST /account/resend {email} sends a new one), type the passphrase there, then sign in.",
+   "files": [
+    "index.js"
+   ],
+   "live": true
+  },
+  "invalid_link": {
+   "meaning": "POST /account/verify or POST /account/reset with a link that opens nothing (sprint 21, 21.4a): expired (a verification works 24 hours, a reset 30 minutes), used already, never sent, or (a verification) a verified request of that email stands. ONE answer for every case; nothing written.",
+   "nextAction": "Ask for a new link: POST /account/resend {email} (a verification) or POST /account/forgot {email} (a reset).",
+   "files": [
+    "index.js"
+   ],
+   "live": true
+  },
+  "wrong_passphrase": {
+   "meaning": "POST /account/verify with a live link but a passphrase that is not the one the join chose (sprint 21, 21.4a): the mailbox alone does not verify a request, so a stranger's join for an address cannot be completed by its owner's click. The attempt counts in the email's lockout; the request stays unverified.",
+   "nextAction": "Type the passphrase chosen when asking to join (8 failures in 15 minutes are 429 too_many_attempts).",
+   "files": [],
+   "live": false
+  },
+  "bad_email": {
+   "meaning": "POST /account/resend or POST /account/forgot whose email is not one plain ASCII address (sprint 21, 21.4a). Checked before anything is read: it says nothing about which emails hold an account.",
+   "nextAction": "Send {email} as one plain address.",
+   "files": [
+    "index.js"
+   ],
+   "live": true
+  },
+  "bad_reset": {
+   "meaning": "POST /account/reset whose new passphrase breaks the account rule (field password: at least 12 characters) or whose confirm differs (field confirm) (sprint 21, 21.4a). Nothing written; the link stays live.",
+   "nextAction": "Choose a passphrase of at least 12 characters and send the same one as confirm.",
+   "files": [
+    "index.js"
+   ],
+   "live": true
+  },
+  "cross_site_verify": {
+   "meaning": "POST /account/verify flagged as arriving from a different site than this door (Sec-Fetch-Site, or Origin when that header is absent), the same guard as POST /login's cross_site_login (sprint 21, 21.4a). Refused before the body is read: nothing written.",
+   "nextAction": "Verify from the link's own page (GET /account/verify/<token>); a script client sends neither header.",
+   "files": [
+    "index.js"
+   ],
+   "live": true
+  },
+  "cross_site_resend": {
+   "meaning": "POST /account/resend flagged as arriving from a different site than this door, the same guard as POST /login's (sprint 21, 21.4a). Refused before the body is read: nothing sent.",
+   "nextAction": "Ask from the door's own page (GET /account/resend).",
+   "files": [
+    "index.js"
+   ],
+   "live": true
+  },
+  "cross_site_forgot": {
+   "meaning": "POST /account/forgot flagged as arriving from a different site than this door, the same guard as POST /login's (sprint 21, 21.4a). Refused before the body is read: nothing sent.",
+   "nextAction": "Ask from the door's own page (GET /account/forgot).",
+   "files": [
+    "index.js"
+   ],
+   "live": true
+  },
+  "cross_site_reset": {
+   "meaning": "POST /account/reset flagged as arriving from a different site than this door, the same guard as POST /login's (sprint 21, 21.4a). Refused before the body is read: nothing written.",
+   "nextAction": "Set the passphrase from the link's own page (GET /account/reset/<token>).",
+   "files": [
+    "index.js"
+   ],
+   "live": true
+  },
+  "org_waiting": {
+   "meaning": "POST /orgs by an account whose own passphrase is right but whose email holds neither a used operator's code nor an approved request (sprint 21, 21.4a): a verified person still in line. The beta's orgs stay on the waitlist; nothing made but the proof's attempt.",
+   "nextAction": "Wait for the approval (the person's status: GET /account; the operator's allow --request sends \"You're in\"), then create the org.",
+   "files": [
+    "orgs.js"
    ],
    "live": true
   },

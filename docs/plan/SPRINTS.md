@@ -661,8 +661,8 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   HASH; one open request per email; a line index for 21.2) and migrate-072's two slug triggers re-made with
   `request-access` reserved (the ship's preflight: `check-org-names --slugs` on live's slugs first). `GET/POST
   /request-access` (public: the same-origin guard and the flood filter `/login` spends; a honeypot; nothing reads
-  accounts) and the private page `/request-access/:token`; the FIRST request stands (the owner's MCQ): a repeat changes
-  nothing and lands on `/request-access/asked`. The cap and its two counts moved to `src/beta.js`, which
+  accounts) and the private page at its link (retired by 21.4a: one way in, sign in); the FIRST request stands (the owner's
+  MCQ): a repeat changed nothing and landed on an asked page (21.4a: one answer for every email). The cap and its two counts moved to `src/beta.js`, which
   `tools/operator.mjs` imports. request-access selftest 47/47; smoke 336/337, its one red the listing page generated
   from the contract (regenerated, `make-listing-docs --check` green).
 - [x] **21.2 · You're in line.** The private page: the place (1 + the open requests before it, on the line index), the
@@ -708,6 +708,12 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   cleared after 90 days; the site's privacy page names it all. Google: sign-up, sign-in and the connect page, matched by
   email, still behind the operator's approval; the reviewer accounts keep their passphrase (needs the owner's Google
   Cloud OAuth client).
+- [x] **21.4a · The account flow** — committed with its proof (email 27/27, every selftest green, smoke 359/359, s67):
+  verify once (the confirm POST takes the join's passphrase), a seatless pending session in its own table
+  (`account_sessions`), "You're in" by `operator allow --request`, the reset signing out every session, ONE send function
+  under the cap (`mail_days`, `mail_addresses`), the emails From hello@sharingu.xyz, a local capture. For the review: a
+  distributed bot can still spend the cap (it then fails safe); a reset clears an invite-made account's one-org mark (the
+  reset email proves the address); the operator's live REST send has never run (its first send to ryuk@, free).
 - [ ] **21.4's order** (the main session, 2026-10-14): three builders one after another, each briefed, reviewed, smoked and
   committed: 21.4a the account flow (verify once, the passphrase, the reset, the cap, the alerts, the emails in the
   website's look with a plain-text twin); 21.4b the data (consent, the source, the request -> account -> org link, the

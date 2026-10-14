@@ -1,9 +1,9 @@
 // tools/smoke/s65-front-doors.mjs — sprint 21, slice 21.P (the journey polish: src/login.js frontTop, frontFoot, authPage; src/showcase.js;
-// src/walkthrough.js; src/frontassets.js; src/requestpage.js renderRequestCheck; src/oauth.js connectHead), on the real local worker,
-// signed out, at the platform's root. Self-contained: it registers its own OAuth clients (as s43 and s64 do).
-//   · the doors: every front page's top bar carries the website, Check my request and Sign in (none on its own page), and the
-//     quiet foot; the wordmark goes home to `/`
-//   · the check page: 200, no form, Join the beta its one way on, Google or email named as coming
+// src/walkthrough.js; src/frontassets.js; src/accountpage.js; src/oauth.js connectHead), on the real local worker, signed out, at the
+// platform's root. Self-contained: it registers its own OAuth clients (as s43 and s64 do).
+//   · the doors: every front page's top bar carries the website and Sign in (none on its own page; 21.4a: ONE door, no Check my
+//     request), and the quiet foot; the wordmark goes home to `/`
+//   · the sign-in's two other ways (21.4a): Forgot your passphrase? and Didn't get the email? Resend, each its own page
 //   · the walkthrough in place: five facades on the website's order, each our own poster served by the worker (image/jpeg, a year
 //     immutable), a plain youtu.be link before the script, the player's script building the youtube-nocookie embed; no iframe
 //   · one accent: each front page holds exactly ONE orange primary
@@ -23,7 +23,7 @@ const http = async (method, path, o) => {
 };
 const NAV = { accept: "text/html", nav: true, root: true };
 const PRIMARY = /class="primary"|class="access"|<button type="submit"|class="done-action"/g;
-const PAGES = ["/", "/login", "/signup", "/signup?via=invite", "/request-access", "/request-access/check", "/request-access/asked"];
+const PAGES = ["/", "/login", "/signup", "/signup?via=invite", "/request-access", "/account/sent", "/account/resend", "/account/forgot"];
 const S = {};
 // connect(name) -> the OAuth connect page a client of that name opens (its own registration, a PKCE request)
 async function connect(name, redirect = "http://127.0.0.1:9/cb") {
@@ -34,24 +34,25 @@ async function connect(name, redirect = "http://127.0.0.1:9/cb") {
   return { status: r.status, raw: await r.text() };
 }
 
-smoke("front doors · every front page's top bar: the website, Check my request and Sign in (none on its own page), the wordmark home, the quiet foot", async () => {
+smoke("front doors · every front page's top bar: the website and Sign in (none on its own page), no Check my request, the wordmark home, the quiet foot", async () => {
   S.pages = Object.fromEntries(await Promise.all(PAGES.map(async (p) => [p, await http("GET", p, NAV)])));
   const off = Object.entries(S.pages).filter(([p, r]) => {
     const bar = (/<header class="front-top">[\s\S]*?<\/header>/.exec(r.raw) || [""])[0];
     return !(r.status === 200 && /<a class="front-brand" href="\/">/.test(bar) && /<a class="front-site" href="https:\/\/www\.sharingu\.xyz\/"/.test(bar)
-      && /href="\/request-access\/check"[^>]*>Check my request</.test(bar) === (p !== "/request-access/check") && /href="\/login"[^>]*>Sign in</.test(bar) === (p !== "/login")
+      && !/Check my request|request-access\/check/.test(r.raw) && /href="\/login"[^>]*>Sign in</.test(bar) === (p !== "/login")
       && /<footer class="front-foot">/.test(r.raw));
   }).map(([p, r]) => `${p} ${r.status}`);
   expect(!off.length, () => `off the doors: ${off.join(", ")}`);
-  return `${PAGES.length} pages: the website, Check my request, Sign in (each left out on its own page), the foot`;
+  return `${PAGES.length} pages: the website and Sign in (left out on its own page), no Check my request, the foot`;
 });
 
-smoke("front doors · the check page: 200, no form, Join the beta its one way on, a check by Google or by email named as coming", async () => {
+smoke("front doors · the sign-in's two other ways: Forgot your passphrase? and Didn't get the email? Resend, each its own form page", async () => {
   expect(S.pages, "the doors case did not run");
-  const r = S.pages["/request-access/check"];
-  expect(r.status === 200 && /data-screen="request-check"/.test(r.raw) && !/<form\b/.test(r.raw) && /<a class="primary" href="\/request-access"[^>]*>Join the beta</.test(r.raw)
-    && /Google or by email is coming/.test(r.raw), () => `GET /request-access/check: ${r.status} ${r.raw.slice(0, 200)}`);
-  return "200; no form; Join the beta; Google or email coming";
+  const l = S.pages["/login"].raw, f = S.pages["/account/forgot"], r = S.pages["/account/resend"];
+  expect(/<a href="\/account\/forgot"[^>]*>Forgot your passphrase\?</.test(l) && /<a href="\/account\/resend"[^>]*>Didn(?:&#39;|')t get the email\? Resend</.test(l)
+    && f.status === 200 && /data-screen="account-forgot"/.test(f.raw) && /action="\/account\/forgot"/.test(f.raw) && r.status === 200 && /data-screen="account-resend"/.test(r.raw) && /action="\/account\/resend"/.test(r.raw),
+    () => `the sign-in's ways: forgot ${f.status}, resend ${r.status}`);
+  return "the sign-in links both; each a form page posting to its own door";
 });
 
 smoke("front doors · the walkthrough plays in place: five facades in the website's order, our own posters served by the worker, youtu.be links before the script, the youtube-nocookie player on a press; no iframe", async () => {

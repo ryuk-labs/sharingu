@@ -5,7 +5,8 @@
 //
 // WHO MAY CREATE (the no-widening argument, said once here):
 //   · an ACCOUNT holder, proven by the ACCOUNT's own passphrase (src/accounts.js accountProof: the one a person chose at
-//     sign-up with the operator's code, or proved on /profile). No seat is needed (a person freshly signed up holds none) and
+//     sign-up with the operator's code, at the join and verified by email (sprint 21, 21.4a), or proved on /profile), whose email
+//     the operator approved (a used code or an approved request: src/accounts.js mayFound). No seat is needed (a person freshly signed up holds none) and
 //     none is used: a SEAT's secret (the key an org's admin minted or set) never creates an org — what an org's admin knows
 //     proves nothing about the account's holder. The attempt counts in the account's lockout, as a sign-in's does, keyed by the
 //     account and the caller's client (sprint 8, 8.3a: src/accounts.js THE LOCKOUT — a stranger's failures on the email never
@@ -25,7 +26,9 @@
 // Refusals (the route's answer: src/index.js POST /orgs): before anything is read, a malformed field (bad_org {field}) or a
 // reserved path name (org_name_reserved); then the account proof (invalid_account, one answer for every case; too_many_attempts);
 // then the account's founded org (org_limit) and the path name held (org_name_taken); an account an invite link made is refused
-// (org_by_invite, sprint 12, 12.3: the waitlist). Nothing is written on a refusal but the proof's attempt.
+// (org_by_invite, sprint 12, 12.3: the waitlist), and so is an account whose email holds neither a used operator's code nor an
+// approved request (org_waiting, sprint 21, 21.4a: a verified person still in line). Nothing is written on a refusal but the proof's
+// attempt.
 import { db, foundingEnv } from "./data.js";
 import { uid, now, sha256, pbkdf2, hex } from "./util.js";
 import { TOKEN_PREFIX } from "./tenant.js";
@@ -75,6 +78,7 @@ export const ORG_WORDS = {
   org_name_reserved: "That name belongs to the platform (one of its pages or doors). Choose another address for your org.",
   org_name_taken: "That address is taken. Choose another address for your org.",
   org_by_invite: "Your account was made by an org's invite link, so it does not create an org during the beta: orgs join by the waitlist. Ask the sharingu operator for a sign-up code (it confirms your email), then create your org.",
+  org_waiting: "Your request waits for its place: you can create your org once it is approved (we email you). Your status: /account.",
   org_limit: "Your account has already created its org. During the beta an account creates one org, and may be a member of any number.",
   too_many_attempts: "Too many attempts. Wait 15 minutes and try again.",
 };
@@ -115,6 +119,9 @@ export async function createOrg(env, url, f, { client = "" } = {}) {
   // sprint 12, 12.3: an account whose passphrase an org's invite link set (src/accounts.js THE INVITE LINK) creates no org — the
   // beta's orgs stay on the waitlist, and the operator's code alone makes an account that creates one
   if (proof.verdict === "invited") return { error: "org_by_invite", status: 403 };
+  // sprint 21, 21.4a: an account still in line (its email verified, its request not approved: src/accounts.js mayFound) creates no
+  // org — the operator's approval (allow --request) or code comes first
+  if (proof.verdict === "waiting") return { error: "org_waiting", status: 403 };
   if (proof.verdict !== "ok" || !proof.account) return { error: "invalid_account", status: 401 };
   const account = proof.account;
   const limit = async () => !!(await db(env).prepare(FOUNDED_SQL).bind(account.id).first());

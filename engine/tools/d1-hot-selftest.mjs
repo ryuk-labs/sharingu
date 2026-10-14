@@ -2314,15 +2314,16 @@ const mapWorld = () => {
 
     // X4 · the mutation proof: the handler's zero-row check removed (a scratch copy of src/) -> the raced sign-in answers 200 with a
     // token that is DEAD — so X2's 401 is the check's own, and never a live token (the statement still refuses the row)
-    const needle = `        ok = ((minted && minted.meta && minted.meta.changes) || 0) >= 1;\n`;
+    // (21.P E2: the check lives in src/accounts.js openSession, THE one mint every sign-in door calls)
+    const needle = `  return ((minted && minted.meta && minted.meta.changes) || 0) >= 1 ? { token, expires } : null;\n`;
     const mutDir = mkdtempSync(join(ENGINE, ".d1-hot-mutation-"));
     try {
       cpSync(join(ENGINE, "src"), join(mutDir, "src"), { recursive: true });
-      const p = join(mutDir, "src", "index.js"), orig = readFileSync(p, "utf8");
-      if (orig.split(needle).length !== 2) ok(false, "X4 · the zero-row check is not found exactly once in src/index.js — this selftest is stale against its shape");
+      const p = join(mutDir, "src", "accounts.js"), orig = readFileSync(p, "utf8");
+      if (orig.split(needle).length !== 2) ok(false, "X4 · the zero-row check is not found exactly once in src/accounts.js — this selftest is stale against its shape");
       else {
-        writeFileSync(p, orig.replace(needle, ""));
-        const { default: mutated } = await import(pathToFileURL(p).href);
+        writeFileSync(p, orig.replace(needle, "  return { token, expires };\n"));
+        const { default: mutated } = await import(pathToFileURL(join(mutDir, "src", "index.js")).href);
         const m = await race(mutated, ROTATE["the admin's Reissue (rotate-key)"]);
         ok(m.fired && m.status === 200 && !!m.token && m.who === 401 && m.live === 0,
           `X4 · the mutation: the zero-row check removed, the raced sign-in answers ${m.status} with a token that answers /whoami ${m.who} (${m.live} live) — the 401 above is the check's own, load-bearing`);

@@ -77,6 +77,9 @@ async function world() {
     return one("SELECT id, email FROM accounts WHERE email = ?", email);
   };
   const create = (fields) => call("POST", "/orgs", { body: fields });
+  // approve(email) — the email approved as the operator's code approves one (a used code: src/accounts.js mayFound), for an account
+  // whose passphrase a case sets by SQL
+  const approve = (email) => w.db.prepare("INSERT INTO signup_codes (id, email, code_hash, created_at, expires_at, used_at, used_how) VALUES (?1, ?2, 'x', ?3, ?3, ?3, 'set')").run(`used-${email}`, email, new Date().toISOString());
   const mcp = async (key, name, args = {}) => {
     const r = await call("POST", "/mcp", { key, body: { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } } });
     let out = null; try { out = JSON.parse(r.json.result.content[0].text); } catch { out = r.json; }
@@ -89,7 +92,7 @@ async function world() {
   // org `n`'s own rows (orgs 1 and 2: the wall's instrument)
   const orgRows = (n) => JSON.stringify([q("SELECT * FROM org WHERE id = ?", n), q("SELECT * FROM people WHERE org = ? ORDER BY id", n), q("SELECT * FROM projects WHERE org = ? ORDER BY key", n),
     q("SELECT * FROM transmission WHERE org = ? ORDER BY id", n), q("SELECT * FROM tokens WHERE org = ? ORDER BY token_hash", n)]);
-  return { w, q, one, DB, call, account, create, mcp, attempts, snap, orgRows };
+  return { w, q, one, DB, call, account, create, approve, mcp, attempts, snap, orgRows };
 }
 const PASS = "a-long-account-passphrase";
 const base = (o = {}) => ({ email: "ada@fresh.test", password: PASS, name: "Ada Works", slug: "ada-works", ...o });
@@ -147,6 +150,7 @@ const CASES = {
       `O2 · the form's creator is signed in: the session cookie with POST /login's attributes (${f.cookie ? f.cookie.replace(/=[^;]+/, "=<token>") : "none"}), an account session on the new owner seat (${row.person_id === owner.id}, account ${row.account_id === acc.id}, org ${row.org}); /ada-works/home ${home.status}, signed in, the Connect card first`]);
     // an account with a seat elsewhere (Mia, a member of org 1, her account's own passphrase): ONE session, on the seat the creation made
     await W.w.db.prepare("UPDATE accounts SET pass_hash = ?, pass_salt = ? WHERE email = 'mia@one.test'").run(await pbkdf2("mia-account-pass", SALT), SALT);
+    W.approve("mia@one.test");
     const mf = await W.call("POST", "/orgs", { form: { email: "mia@one.test", password: "mia-account-pass", name: "Mia Co", slug: "mia-co", web: "1" } });
     const mt = (/^__Host-ar_session=([^;]+);/.exec(mf.cookie || "") || [])[1];
     const mrow = mt ? W.one("SELECT person_id, account_id, org FROM tokens WHERE token_hash = ?", sha(mt)) || {} : {};
@@ -193,8 +197,14 @@ const CASES = {
     for (const [what, f] of tries) { const r = await W.create(f); bodies.add(`${r.status} ${r.text}`); seen.push(`${what}: ${r.status}`); }
     out.push([bodies.size === 1 && [...bodies][0].startsWith("401 ") && /invalid_account/.test([...bodies][0]) && W.snap() === s0 && W.attempts(0) === f0 + tries.length,
       `O4 · ${tries.length} proofs refused with ONE answer (${[...bodies].map((b) => b.slice(0, 40)).join(" | ")}); rows unchanged; ${W.attempts(0) - f0} attempts counted (${seen.join("; ")})`]);
+    // (sprint 21, 21.4a) its own passphrase, but its email neither signed up by the operator's code nor approved: 403 org_waiting,
+    // nothing made; approved (an approved request), it creates
+    const wait = await W.create(base({ email: "owner@one.test", password: "owner-account-pass", slug: "one-owner-org" }));
+    out.push([wait.status === 403 && wait.json && wait.json.error === "org_waiting" && !W.one("SELECT 1 AS x FROM org WHERE slug = 'one-owner-org'"),
+      `O4 · an account still in line (no used code, no approved request) creates no org: ${wait.status} ${wait.json && wait.json.error}`]);
+    W.w.db.prepare("INSERT INTO access_requests (id, email, name, company, role, team_size, status, verified_at, created_at, updated_at, approved_at) VALUES ('o4-req', 'owner@one.test', 'Owner', 'One', 'Founder', '2-10', 'approved', ?1, ?1, ?1, ?1)").run(new Date().toISOString());
     const ok = await W.create(base({ email: "owner@one.test", password: "owner-account-pass", slug: "one-owner-org" }));
-    out.push([ok.status === 200, `O4 · the instrument: the same account with its own passphrase creates (${ok.status})`]);
+    out.push([ok.status === 200, `O4 · the instrument: the same account with its own passphrase and an approved request creates (${ok.status})`]);
     await W.account("lock@fresh.test", PASS);
     for (let i = 0; i < 8; i++) await W.create(base({ email: "lock@fresh.test", password: `wrong-${i}`, slug: "locked-org" }));
     const s1 = W.snap();
@@ -321,7 +331,9 @@ const MUTANTS = [
   { name: "an existing org's id taken over (the org insert ignored, the seat lands in that org)", file: "src/orgs.js",
     from: "\"INSERT INTO org (id, name, slug", to: "\"INSERT OR IGNORE INTO org (id, name, slug", red: ["O6"] },
   { name: "a refused proof counts no attempt", file: "src/accounts.js",
-    from: "  await countSignIn(env, { ...out, vouched: ok }, ok);   // only the account's own passphrase gets here as ok: it vouches\n  return { ...out, verdict: !ok ? \"wrong\" : account.invited_org != null ? \"invited\" : \"ok\" };", to: "  return { ...out, verdict: !ok ? \"wrong\" : account.invited_org != null ? \"invited\" : \"ok\" };", red: ["O4"] },
+    from: "  await countSignIn(env, { ...out, vouched: ok }, ok);   // only the account's own passphrase gets here as ok: it vouches\n", to: "", red: ["O4"] },
+  { name: "the proof ignores the approval (an account in line creates its org)", file: "src/accounts.js",
+    from: "  if (ok && account.invited_org == null && !(await mayFound(env, e))) return { ...out, verdict: \"waiting\" };\n", to: "", red: ["O4"] },
   { name: "the proof skips the lockout", file: "src/accounts.js",
     from: "  if (await lockOf(env, account ? account.id : null, e, out.client)) return { ...out, verdict: \"locked\" };\n  const comparable", to: "  const comparable", red: ["O4"] },
   { name: "the creation without the same-origin guard", file: "src/index.js",

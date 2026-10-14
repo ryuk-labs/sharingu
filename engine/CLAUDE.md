@@ -44,16 +44,31 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   (a seat session and a one-org account go straight in); the rail's org switcher lists the same account's orgs. A page at the
   root before a sign-in wears the platform's brand (sharingu), the sign-in from an org's address that org's; the one not-here
   answer is a page in the platform's brand (`src/login.js renderNotHere`).
-- `src/requestaccess.js` · `src/requestpage.js` — request access (sprint 21, `migrate-081`'s `access_requests`, a platform table:
-  no org): POST /request-access, public, reads the profile strictly (`readRequest`), files ONE open request per email and answers
-  a 303 to its private link `/request-access/<token>` (only its hash kept); the first request stands: a repeat changes nothing and
-  goes to `/request-access/asked`; the honeypot gets a link that opens nothing; nothing reads accounts. The private link is the
-  request's own page by its status (21.2): open, "you're in line" — its place (`placeInLine`: one range count on the line index,
-  ties by id), the beta's count live from D1, what comes next, the walkthrough; approved, its place open; declined, one sentence and a way on (21.P: each a scene in the website's look — the place in line the hero
-  number, the request's steps as a track, the page's address with Copy link; `/request-access/check`, Check my request, reads
-  nothing). A web sign-up with no seat answers the org form, filled
-  in from the email's newest approved request (`approvedProfile`: only for the email the code proved).
-  `src/beta.js` — the beta's 50 places, the ONE source of the cap and its two counts (`tools/operator.mjs` imports it; the worker
+- `src/requestaccess.js` · `src/requestpage.js` · `src/accountpage.js` — request access and THE ACCOUNT FLOW (sprint 21, 21.1, 21.2,
+  21.4a; `migrate-081`'s platform tables: no org): POST /request-access, public, reads the profile strictly (`readRequest`) and a
+  passphrase twice, and answers EVERY email the same 303 to /account/sent (the work that differs runs after the answer): a new email
+  files an UNVERIFIED request holding the passphrase's hash (no account row yet, so nothing reads an unverified passphrase) and gets
+  ONE verification email; an email that holds an account files nothing and gets "you already have an account"; the honeypot,
+  nothing. The link's GET (/account/verify/<token>) only shows the confirm page; its POST takes the token AND the passphrase
+  (`src/accounts.js verifyJoin`, one batch: the request open — its place in line by verification time, `placeInLine` — the account
+  made with that passphrase, the email's other unverified joins gone, an ACCOUNT session) and tells the team (company, role, team
+  size, never the person). THE ACCOUNT SESSION (`account_sessions`, the same cookie, prefix `t_a_`) belongs to an account with no
+  seat: no reader of `tokens` finds it, so it signs in to no org, no /mcp, no bearer; only GET /account (the status: in line, its
+  place open with Create your org, closed), /orgs/new's prefill and /logout read it (`accountSessionOf`). A sign-in before verifying
+  is "check your inbox" with a resend (/account/resend: three emails a day per address); /account/forgot answers the same for any
+  email, a reset link (`account_resets`, 30 minutes, once) sets the passphrase and ends EVERY session of the account. POST /orgs
+  still asks the passphrase (before an owner key is minted) and waits for the approval (`mayFound`: a used code or an approved
+  request; else 403 org_waiting). The org form is filled in from the email's approved request (`approvedProfile`: only for an email a
+  session or a code proved).
+- `src/email.js` · `src/mails.js` — THE SEND (sprint 21, 21.4a): every email the worker or the operator sends goes through
+  `sendMail`, From hello@sharingu.xyz, under THE CAP (fewer than 2,900 counted in any 31 days: `mail_days`, one conditional upsert a
+  send) and three a day per address (`mail_addresses`, a digest; a refused address never spends the cap); at the cap nothing is sent,
+  the pages say email checks are paused and the team is told once a day; team sends uncounted. The transport: the `send_email`
+  binding EMAIL (wrangler.jsonc), or THE LOCAL CAPTURE when the config's MAIL_CAPTURE var is "kv" (every local config: tools/lib-r-local.sh)
+  — each email in the worker's own OAUTH_KV under `mail-capture:`, read by `tools/mail-capture.mjs`; nothing local reaches Cloudflare.
+  `src/mails.js` holds the six emails (verify, you're in, reset, already; the team's new request and cap) in the website's look,
+  each with a plain-text twin.
+  `src/beta.js` — the beta's 50 places, the ONE source of the cap and its three counts (`tools/operator.mjs` imports it; the worker
   reads it by `src/accounts.js betaCount`; a count that cannot be read is left out of a page, never guessed).
 - `src/showcase.js` · `src/walkthrough.js` · `src/login.js` (`frontHead`, `frontTop`, `frontFoot`, `authPage`) — the front door (sprint 21,
   21.3; 21.P): `/` at the root, for a browser navigation that signs no one in, is the showcase (the hero line, Join the beta, the
@@ -62,7 +77,7 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   as `/#walkthrough`; a first-visit splash under 1.5 s, skippable, never under reduced motion); a session still goes to its org or
   the picker, a script still gets 401. Every page drawn before a session (sign-in, sign-up and its invite, creating an org, request
   access and its pages, the OAuth connect page, the org picker, not-here) stands on ONE frame in the website's look, `<body
-  data-shell="front">`: the top bar (the website, Check my request, Sign in), the quiet foot, one orange primary a view, the card,
+  data-shell="front">`: the top bar (the website, Sign in; Sign out on an account session's pages), the quiet foot, one orange primary a view, the card,
   the scene or the solo page (`authPage`), U-chan's poses and the brand's marks from `src/ui.js` (`uchanPose`, `brandMark`, the
   website's own vectors) (`tools/showcase-selftest.mjs`). `src/frontassets.js` serves the posters and the connect page's client
   logos at `/assets/:path` (the website's files under `assets/walkthrough`, `assets/clients`; `tools/make-front-assets.mjs` bundles them
@@ -160,9 +175,10 @@ at the org's resolve; sprint 11: set-openai-challenge / clear-openai-challenge, 
 token in the deployment's KV, answered at `/.well-known/openai-apps-challenge` by `src/wellknown.js`; sprint 12: allow counts the
 beta's 50 places — `BETA_ORG_CAP` (`src/beta.js` since sprint 21), the owner's one number: the outside orgs that stand plus the allowed emails with an open code and
 no org yet — and refuses past them unless `--beyond-cap`; list and list-orgs say the count at their head; the worker does not
-enforce it; sprint 21: `requests` lists the open requests for a place in line order, and `allow --request <id>` approves one —
-the same allow as `--email` its email, the request marked approved in the same batch; `decline --request <id>` declines an open
-one in one guarded write, no code) and `tools/org-undo.mjs` (one org's export, restore,
+enforce it; sprint 21: `requests` lists the open (verified) requests for a place in line order, and `allow --request <id>`
+approves one — the same cap, then one guarded write and ONE "You're in" email through src/email.js sendMail (counted in the cap;
+--live by Cloudflare's REST send, --local into the local capture; `--origin` the links' start), no code; an approved request with no
+org holds a place; `decline --request <id>` declines an open one in one guarded write, no code) and `tools/org-undo.mjs` (one org's export, restore,
 verify, delete). Credentials: `set -a; . ~/.sharingu/env-sharingu.sh; set +a` (a bare
 `wrangler` hangs on a login prompt).
 

@@ -1,8 +1,8 @@
 // src/showcase.js — the platform's front page for a visitor with no session (sprint 21, 21.3; the owner's MCQs of 2026-10-13/14):
 // GET / at the root answers a browser navigation that signs no one in with this page, where it used to send it to /login (a
 // signed-in browser still goes to its org or the org picker, a script with no credential still gets its 401: src/index.js).
-// The front door's frame (src/login.js frontHead, frontTop: the paper page, the wordmark top-left, the website, Check my request
-// and Sign in top-right; frontFoot), the website's hero line and its lede, ONE orange button (Join the beta: 21.P, the one word on
+// The front door's frame (src/login.js frontHead, frontTop: the paper page, the wordmark top-left, the website and Sign in
+// top-right; frontFoot), the website's hero line and its lede, ONE orange button (Join the beta: 21.P, the one word on
 // the site and in the app) and the walkthrough beside it, the beta's places taken in the mono label style (src/accounts.js
 // betaCount, read by the route; left out when it could not be read, never guessed), U-chan (ui.js uchan, the brand's own vector),
 // and the walkthrough's section (21.P B9/B10): the website's five videos in its order (src/walkthrough.js, the one list), each our

@@ -150,6 +150,8 @@ export function ruleOf(t) {
   if (t.name === "plan_limits") return { skip: "the platform's plans and their limits (migrate-075): no org's row" };
   // sprint 21 (21.1, migrate-081): a person's request for a beta place, before any account or org
   if (t.name === "access_requests") return { skip: "the platform's requests for a beta place (migrate-081): no org's row" };
+  // sprint 21 (21.4a, migrate-081): an account's seatless sessions and reset links, and the email cap's counters, the platform's
+  if (["account_sessions", "account_resets", "mail_days", "mail_addresses"].includes(t.name)) return { skip: `the platform's ${t.name} (migrate-081, the account flow): no org's row` };
   return { unplaced: true };
 }
 export const rulesOf = (schema) => Object.fromEntries(schema.map((t) => [t.name, ruleOf(t)]));

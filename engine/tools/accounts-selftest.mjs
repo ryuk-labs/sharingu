@@ -643,6 +643,8 @@ const CASES = {
     const W = await world(), out = [];
     const A = await import(pathToFileURL(join(MUT.src || join(ENGINE, "src"), "accounts.js")).href);
     await W.ownPass("mia@one.test", "mia-own-passphrase"); await W.seatPass("one-mia", "mia-seat-pass");
+    // (sprint 21, 21.4a) Mia's email was approved as the operator's code approves one (a used code): create-org's proof answers her
+    W.w.db.prepare("INSERT INTO signup_codes (id, email, code_hash, created_at, expires_at, used_at, used_how) VALUES ('c20-used', 'mia@one.test', 'x', ?1, ?1, ?1, 'set')").run("2026-10-01T00:00:00.000Z");
     const env = W.w.env, url = new URL(W.w.origin + "/login");
     const tryAt = async (password, client) => {
       const r = await A.passphraseSignIn(env, url, { email: "mia@one.test", password, client });
@@ -787,6 +789,10 @@ const PRE070 = (() => {
   cut(/,\n  slug {7}TEXT CHECK [^\n]*\n  created_by_account TEXT\n\);/, "migrate-072's org columns");
   b = b.replace(/settings IS NULL OR json_valid\(settings\)\)$/m, "settings IS NULL OR json_valid(settings))\n);");
   for (const ix of ["idx_org_founder", "idx_org_slug"]) cut(new RegExp(`CREATE (?:UNIQUE )?INDEX IF NOT EXISTS ${ix} [^;]*;\\n`), ix);
+  // migrate-081 (sprint 21, 21.4a) came after: its account tables and their indexes out too
+  cut(/-- migrate-081: a forgotten passphrase's single-use link[^\n]*\nCREATE TABLE IF NOT EXISTS account_resets \([\s\S]*?\n\);\n/, "migrate-081's account_resets");
+  cut(/-- migrate-081: an account's browser session[^\n]*\nCREATE TABLE IF NOT EXISTS account_sessions \([\s\S]*?\n\);\n/, "migrate-081's account_sessions");
+  for (const ix of ["idx_account_resets_account", "idx_account_sessions_account"]) cut(new RegExp(`CREATE (?:UNIQUE )?INDEX IF NOT EXISTS ${ix} [^;]*;\\n`), ix);
   cut(/-- migrate-070\.sql \(sprint 7, 7\.1\)[\s\S]*$/, "migrate-070's triggers");
   if (b.split("\n").some((l) => !/^\s*--/.test(l) && /account/.test(l))) throw new Error("PRE070: boot.sql still names an account after the strip");
   return b;
@@ -856,7 +862,7 @@ const MUTANTS = [
   { name: "/profile vouches for any credential (the seat's key too)", file: "src/secrets.js",
     from: "const vouched = !!(reader && reader.viaCookie && person.account_id && String(reader.session_account || \"\") === String(person.account_id));", to: "const vouched = true;", red: ["C21"] },
   { name: "a sign-in for an unknown email hashes nothing (A6)", file: "src/accounts.js",
-    from: 'if (!account) { await pbkdf2(String(password == null ? "" : password), NO_SALT); return { ...out, verdict: "wrong" }; }', to: 'if (!account) return { ...out, verdict: "wrong" };', red: ["C16"] },
+    from: ': (await pbkdf2(pw, NO_SALT), false);', to: ': false;', red: ["C16"] },
   { name: "a stamp of another org is this org's (B5)", file: "src/core.js",
     from: "return o && Number(o.org) === Number(row.org) ? row : { ...row, token_project: null };", to: "return row;", red: ["C17"] },
   { name: "add-person takes a non-ASCII email (A5)", file: "src/admin.js",

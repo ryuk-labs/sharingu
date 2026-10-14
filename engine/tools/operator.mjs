@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // tools/operator.mjs — THE operator's tool (sprint 7, 7.2; docs/plan/PLATFORM.md §2 items 6 and 10). Sign-up is by allowlist:
-// only an email the OPERATOR allowed signs up, with a one-time code the operator hands over BY HAND (no email service: nothing
-// is mailed, ever). The operator is the deployment, never an app seat: this tool reads and writes the shared D1 directly (the
+// only an email the OPERATOR allowed signs up, with a one-time code the operator hands over BY HAND (the code path mails nothing),
+// or (sprint 21, 21.4a) a verified request the operator approves, which is sent ONE "You're in" email (src/email.js sendMail: the
+// platform's one send, under the same cap as the worker's). The operator is the deployment, never an app seat: this tool reads and writes the shared D1 directly (the
 // local worker's persisted state through wrangler's getPlatformProxy, or the Cloudflare API with the deployment's credentials),
 // and no route of the worker can do what it does (tools/check-scoped-data.py's `signup` rule: no statement of src/ inserts or
 // deletes a code). Sprint 8.5's operator CLI grows from it.
@@ -27,23 +28,30 @@
 //                       account made no org yet (each could make one) — and says how many are left after this one ("37 of 50
 //                       left"). With all 50 taken it is REFUSED (exit 1, nothing written), unless --beyond-cap (the owner's
 //                       call, said on the line). An email whose account already made an org takes no new place.
-//   allow  --request <id> [--days N] [--reset] [--beyond-cap]
-//                       (sprint 21, 21.2) approves an OPEN request for a place (migrate-081's access_requests, filed at the
-//                       worker's /request-access): reads it by its id, then does exactly what allow --email <its email> does
-//                       (the same seats line, the same cap, the same --reset and --beyond-cap, the same code printed once, the
-//                       same refusals) and, in the SAME batch, marks the request approved (status, approved_at, updated_at): its
-//                       private page then says its place is open. The code's revoke and mint are each guarded by that approval,
-//                       so a request decided between the read and the write leaves everything as it was. Refused, nothing
-//                       written: an id that is no request, or a request that is not open (approved or declined already).
-//                       The operator hands the code to the request's email (the page says it comes by email).
+//   allow  --request <id> [--beyond-cap] [--origin <url>]
+//                       (sprint 21, 21.2; 21.4a: no code) approves an OPEN request for a place (migrate-081's access_requests: a
+//                       request whose email was VERIFIED at the worker's /account/verify): reads it by its id, counts the beta's
+//                       places as allow --email does (the same cap, the same --beyond-cap), marks it approved in ONE guarded write
+//                       (status, approved_at, updated_at: a request decided between the read and the write changes nothing) and
+//                       sends its email ONE "You're in" (src/mails.js inMail: sign in, then create your org — the person's account
+//                       holds the passphrase they chose; there is no code to carry), through src/email.js sendMail: COUNTED in the
+//                       cap (mail_days, the same D1 counter the worker takes), not held to the per-address limit (no stranger can
+//                       trigger it). --live sends through Cloudflare's REST send API with the deployment's credentials
+//                       (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID); --local writes the message to the local worker's capture
+//                       (its OAUTH_KV, mail-capture:…: tools/mail-capture.mjs reads it), never the network. --origin: where the
+//                       email's links start (default on --live: https:// and the config's sharingu.xyz route; required on --local).
+//                       Refused, nothing written: an id that is no request, a request that is not open (unverified, approved or
+//                       declined already), the cap without --beyond-cap. At the email cap the approval stands and the line says the
+//                       email was not sent (tell the person yourself).
 //   decline --request <id>
-//                       (sprint 21, 21.P) declines an OPEN request: its status declined, updated_at now; its private page then says
-//                       the request is closed (no reason, no count) with the walkthrough and the website. One guarded write (WHERE
+//                       (sprint 21, 21.P) declines an OPEN request: its status declined, updated_at now; its person's status page
+//                       (/account) then says the request is closed (no reason, no count) with the walkthrough and the website. One guarded write (WHERE
 //                       status = 'open'): a request decided between the read and the write changes nothing. Refused, nothing
 //                       written: an id that is no request, or a request that is not open. No code, no account, no email touched.
 //   requests            (sprint 21, 21.2) the beta's places at its head (as list), then the OPEN requests in line order (the
-//                       order the worker's page counts a place by): place, id, company, role, team size, when it was asked,
-//                       the person's name and email. The operator's own terminal: never a code (none is kept).
+//                       order the worker's page counts a place by: when each email was verified): place, id, company, role, team
+//                       size, when it was verified, the person's name and email. The operator's own terminal: never a code (none
+//                       is kept). An unverified request is no one's place and is not listed.
 //   list   [--email <e>] [--json]
 //                       the beta's places at its head, then the allowed emails, newest first, each with its newest code's state:
 //                       open · used (created · set · reset) · expired · revoked, and its dates. Never a code (none is kept), never
@@ -51,8 +59,8 @@
 //   revoke --email <e>  ends the email's open code (a code handed to the wrong person, or no longer wanted). Nothing open: exit 1.
 //   remove-account --email <e>
 //                       removes the email's ACCOUNT from the platform (the sprint-7 review, D6: a person who leaves, on their
-//                       request; a throwaway a suite or a walk made): the account row, its sessions (tokens.account_id), its
-//                       sign-in attempts and the email's sign-up codes. ONLY an account that holds no ACTIVE seat in any org and
+//                       request; a throwaway a suite or a walk made): the account row, its sessions (tokens.account_id, and its
+//                       account sessions and reset links: migrate-081), its sign-in attempts and the email's sign-up codes. ONLY an account that holds no ACTIVE seat in any org and
 //                       founded no org that still stands (its org is deleted first: tools/org-undo.mjs delete); otherwise
 //                       refused, nothing written. Its inactive seats (a removed person's row in an org) stay as that org's record
 //                       (ledger attribution), detached from the account (people.account_id = NULL; their email stays, set once);
@@ -122,9 +130,11 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { normEmail, signupCodeHash, SIGNUP_CODE_ALPHABET, SIGNUP_CODE_LENGTH } from "../src/accounts.js";
-import { BETA_ORG_CAP, BETA_ORGS_SQL, BETA_CODES_SQL, placesOf } from "../src/beta.js";   // sprint 21, 21.1: the beta's places, one source
+import { BETA_ORG_CAP, BETA_ORGS_SQL, BETA_CODES_SQL, BETA_APPROVED_SQL, placesOf } from "../src/beta.js";   // sprint 21, 21.1: the beta's places, one source
 import { REQUEST_PLACE_SQL, TEAM_SIZES } from "../src/requestaccess.js";   // sprint 21, 21.2: the place the worker's page counts
 import { readConfig, liveD1 } from "./org-undo.mjs";
+import { sendMail, captureMailer } from "../src/email.js";   // sprint 21, 21.4a: THE send, under the worker's own cap
+import { inMail } from "../src/mails.js";
 import { OPENAI_CHALLENGE_KEY, challengeTokenProblem } from "../src/wellknown.js";
 
 const ENGINE = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -151,6 +161,9 @@ export const REMOVE_ACCOUNT_SQL = [
   `DELETE FROM tokens WHERE account_id = ?1 AND ${FREE_GUARD}`,
   `DELETE FROM login_attempts WHERE (account_id = ?1 OR email = ?2) AND ${FREE_GUARD}`,
   `DELETE FROM signup_codes WHERE email = ?2 AND ${FREE_GUARD}`,
+  // sprint 21, 21.4a: its account sessions and its reset links (migrate-081)
+  `DELETE FROM account_sessions WHERE account_id = ?1 AND ${FREE_GUARD}`,
+  `DELETE FROM account_resets WHERE account_id = ?1 AND ${FREE_GUARD}`,
   `DELETE FROM accounts WHERE id = ?1 AND email = ?2 AND ${FREE_GUARD}`,
 ];
 // the newest code of each email (its state), newest first; never the hash
@@ -163,30 +176,27 @@ export const LIST_SQL = "SELECT s.email, s.created_at, s.expires_at, s.used_at, 
 // WAITLIST and the owner approves each — through `allow`). The cap and its two counting statements live in src/beta.js (sprint 21,
 // 21.1: the ONE source the worker's request page reads too); the worker does not enforce it, the operator's allow does, before it
 // mints. Re-exported here for the operator's callers and its selftest.
-export { BETA_ORG_CAP, BETA_ORGS_SQL, BETA_CODES_SQL };
+export { BETA_ORG_CAP, BETA_ORGS_SQL, BETA_CODES_SQL, BETA_APPROVED_SQL };
 export const FOUNDED_BY_EMAIL_SQL = "SELECT COUNT(*) AS n FROM accounts a JOIN org o ON o.created_by_account = a.id WHERE a.email = ?1";
-// betaPlaces(DB, { email, at }) -> { cap, orgs, codes, taken, left, founded }: the places taken now (email's own open code left
-// out); founded: whether email's account already made an org (then its code takes no new place)
+// betaPlaces(DB, { email, at }) -> { cap, orgs, codes, approved, taken, left, founded }: the places taken now (email's own open code
+// and approved request left out); founded: whether email's account already made an org (then it takes no new place)
 export async function betaPlaces(DB, { email = null, at = new Date().toISOString() } = {}) {
   const e = email ? normEmail(email) : null;
   const n = async (sql, ...b) => Number(((await DB.prepare(sql).bind(...b).first()) || {}).n || 0);
-  const orgs = await n(BETA_ORGS_SQL), codes = await n(BETA_CODES_SQL, at, e);
+  const orgs = await n(BETA_ORGS_SQL), codes = await n(BETA_CODES_SQL, at, e), approved = await n(BETA_APPROVED_SQL, at, e);
   const founded = e ? (await n(FOUNDED_BY_EMAIL_SQL, e)) > 0 : false;
-  return { ...placesOf(orgs, codes), founded };
+  return { ...placesOf(orgs, codes, approved), founded };
 }
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
 // ---- 21.2 · the requests for a place (migrate-081; the worker files them, src/requestaccess.js; the operator approves) ----
-// the open requests in line order, on the line index (created_at, then id: the worker's REQUEST_PLACE_SQL counts the same order)
-export const REQUESTS_SQL = "SELECT id, email, name, company, role, team_size, created_at FROM access_requests INDEXED BY idx_access_requests_line " +
-  "WHERE status = 'open' ORDER BY created_at, id LIMIT 500";
-export const REQUEST_ROW_SQL = "SELECT id, email, name, company, status, created_at, approved_at FROM access_requests WHERE id = ?1";
-// the approval (?1 the request, ?2 when), then the allow's two writes each guarded by THAT approval (?3 / ?6 the request, the
-// email and the moment its own): a request decided meanwhile makes the guard false and nothing is written
+// the open (verified) requests in line order, on the line index (verified_at, then id: the worker's REQUEST_PLACE_SQL counts the
+// same order)
+export const REQUESTS_SQL = "SELECT id, email, name, company, role, team_size, verified_at FROM access_requests INDEXED BY idx_access_requests_line " +
+  "WHERE status = 'open' ORDER BY verified_at, id LIMIT 500";
+export const REQUEST_ROW_SQL = "SELECT id, email, name, company, status, verified_at, approved_at FROM access_requests WHERE id = ?1";
+// the approval (?1 the request, ?2 when): guarded by its status, so only an open request is approved
 export const APPROVE_REQUEST_SQL = "UPDATE access_requests SET status = 'approved', approved_at = ?2, updated_at = ?2 WHERE id = ?1 AND status = 'open'";
-export const REQUEST_REVOKE_SQL = REVOKE_OPEN_SQL + " AND EXISTS (SELECT 1 FROM access_requests r WHERE r.id = ?3 AND r.email = ?1 AND r.status = 'approved' AND r.approved_at = ?2)";
-export const REQUEST_MINT_SQL = "INSERT INTO signup_codes (id, email, code_hash, created_at, expires_at) SELECT ?1, ?2, ?3, ?4, ?5 " +
-  "WHERE EXISTS (SELECT 1 FROM access_requests r WHERE r.id = ?6 AND r.email = ?2 AND r.status = 'approved' AND r.approved_at = ?4)";
 const REQUEST_ID_RE = /^[A-Za-z0-9-]{1,80}$/;   // the worker's ids are UUIDs; a quote or a space is never one
 // openRequest(DB, id) -> { request: { id, email, name, company, place } } | { refused }: only an OPEN request is approved
 export async function openRequest(DB, id) {
@@ -195,7 +205,7 @@ export async function openRequest(DB, id) {
   const r = await DB.prepare(REQUEST_ROW_SQL).bind(rid).first();
   if (!r) return { refused: `no request ${rid} on this database (the requests command lists the open ones)` };
   if (r.status !== "open") return { refused: `request ${rid} is ${r.status}${r.approved_at ? ` (since ${r.approved_at})` : ""}, not open: only an open request is decided` };
-  const p = await DB.prepare(REQUEST_PLACE_SQL).bind(String(r.created_at), String(r.id)).first();
+  const p = await DB.prepare(REQUEST_PLACE_SQL).bind(String(r.verified_at), String(r.id)).first();
   return { request: { id: String(r.id), email: String(r.email), name: String(r.name), company: String(r.company), place: Number((p && p.place) || 0) } };
 }
 // 21.P · the decline (?1 the request, ?2 when): guarded by its status, so only an open request is declined
@@ -208,13 +218,30 @@ export async function declineRequest(DB, id, { at = new Date().toISOString() } =
   if (((res && res.meta && res.meta.changes) || 0) !== 1) return { refused: `request ${q.request.id} was not declined (it was decided since it was read): nothing changed` };
   return { request: q.request, at };
 }
-// listRequests(DB) -> [{ place, id, email, name, company, role, team_size, created_at }]: the open ones, the first in line first
+// listRequests(DB) -> [{ place, id, email, name, company, role, team_size, verified_at }]: the open ones, the first in line first
 export async function listRequests(DB) {
   const rows = (await DB.prepare(REQUESTS_SQL).all()).results || [];
-  return rows.map((r, i) => ({ place: i + 1, id: String(r.id), email: String(r.email), name: String(r.name), company: String(r.company), role: String(r.role), team_size: String(r.team_size), created_at: String(r.created_at) }));
+  return rows.map((r, i) => ({ place: i + 1, id: String(r.id), email: String(r.email), name: String(r.name), company: String(r.company), role: String(r.role), team_size: String(r.team_size), verified_at: String(r.verified_at) }));
 }
+// approveRequest(DB, request, { beta, at }) -> { request, places? } | { refused, places? }: the open request (openRequest's answer)
+// approved in its one guarded write, after the beta's places are counted (beta: { beyond }, as allowEmail's; the email's own open
+// code left out of the count: approved, it is counted by its request)
+export async function approveRequest(DB, request, { beta = null, at = new Date().toISOString() } = {}) {
+  let places;
+  if (beta) {
+    const p = await betaPlaces(DB, { email: request.email, at });
+    const need = p.founded ? 0 : 1;
+    places = { ...p, need, leftAfter: p.left - need, beyond: need === 1 && p.left - need < 0 };
+    if (places.beyond && !beta.beyond) return { refused: `the beta's ${p.cap} places are taken: ${placesWords(p)} (the owner's ruling, 2026-10-10: the beta's ${p.cap} orgs, first come first served; pass --beyond-cap to approve past it)`, places };
+  }
+  const res = await DB.prepare(APPROVE_REQUEST_SQL).bind(request.id, at).run();
+  if (Number((res && res.meta && res.meta.changes) || 0) !== 1) return { refused: `request ${request.id} was not approved (it was decided since it was read): nothing changed`, ...(places ? { places } : {}) };
+  return { request, at, ...(places ? { places } : {}) };
+}
+// placesWords(p) -> what holds the places taken: the orgs, the open codes and the approved requests with no org yet
+const placesWords = (p) => `${plural(p.orgs, "org")}, ${plural(p.codes, "open code")} and ${plural(p.approved || 0, "approved request")} with no org yet`;
 // placesLine(p) -> the head line of list and list-orgs
-export const placesLine = (p) => `the beta's places: ${p.taken} of ${p.cap} taken (${plural(p.orgs, "org")}, ${plural(p.codes, "open code")} with no org yet), ` +
+export const placesLine = (p) => `the beta's places: ${p.taken} of ${p.cap} taken (${placesWords(p)}), ` +
   `${Math.max(0, p.left)} left${p.left < 0 ? ` (${-p.left} beyond the cap)` : ""} — org 1, the suites' org, reviewer worlds and the ship's suite orgs hold none`;
 
 // newCode() -> 20 characters of Crockford's base32 (100 bits from the system's CSPRNG), four groups of five
@@ -233,15 +260,13 @@ export const emailProblem = (email) => {
 export const stateOf = (r, at = new Date().toISOString()) =>
   r.revoked_at ? "revoked" : r.used_at ? "used" : String(r.expires_at) <= at ? "expired" : "open";
 
-// allowEmail(DB, email, { days, reset, at, beta, request }) -> { email, code, expiresAt, replaced, reset, places?, request? } | { refused, places? }
-// The code is returned to the caller (the CLI prints it once); the database gets only its hash. request (21.2; allow --request):
-// the open request's id, whose email this is — it is marked approved in the same batch, and the code's two writes are guarded by
-// that approval (a request decided since openRequest read it: refused, nothing written).
+// allowEmail(DB, email, { days, reset, at, beta }) -> { email, code, expiresAt, replaced, reset, places? } | { refused, places? }
+// The code is returned to the caller (the CLI prints it once); the database gets only its hash.
 // beta (12.7; the CLI's allow passes it): { beyond } — the beta's places counted BEFORE the mint; with every place taken the allow
 // is refused, nothing written, unless beyond (--beyond-cap). places: betaPlaces' answer plus need (0: the email already made an
 // org, so its code takes no new place; 1 otherwise) and leftAfter. Without beta nothing is counted (the reviewer tool's own
 // accounts, the selftests' fixtures).
-export async function allowEmail(DB, email, { days = DEFAULT_DAYS, reset = false, at = new Date().toISOString(), beta = null, request = null } = {}) {
+export async function allowEmail(DB, email, { days = DEFAULT_DAYS, reset = false, at = new Date().toISOString(), beta = null } = {}) {
   const e = normEmail(email);
   const bad = emailProblem(e);
   if (bad) return { refused: `${JSON.stringify(String(email || ""))}: ${bad}` };
@@ -254,22 +279,17 @@ export async function allowEmail(DB, email, { days = DEFAULT_DAYS, reset = false
     const p = await betaPlaces(DB, { email: e, at });
     const need = p.founded ? 0 : 1;
     places = { ...p, need, leftAfter: p.left - need, beyond: need === 1 && p.left - need < 0 };
-    if (places.beyond && !beta.beyond) return { refused: `the beta's ${p.cap} places are taken: ${plural(p.orgs, "org")}, ${plural(p.codes, "open code")} (the owner's ruling, 2026-10-10: the beta's ${p.cap} orgs, first come first served; pass --beyond-cap to allow past it)`, places };
+    if (places.beyond && !beta.beyond) return { refused: `the beta's ${p.cap} places are taken: ${placesWords(p)} (the owner's ruling, 2026-10-10: the beta's ${p.cap} orgs, first come first served; pass --beyond-cap to allow past it)`, places };
   }
   const code = newCode();
   const expiresAt = new Date(Date.parse(at) + days * 24 * 60 * 60 * 1000).toISOString();
   const hash = await signupCodeHash(code);
-  const res = await DB.batch(request ? [
-    DB.prepare(APPROVE_REQUEST_SQL).bind(request, at),
-    DB.prepare(REQUEST_REVOKE_SQL).bind(e, at, request),
-    DB.prepare(REQUEST_MINT_SQL).bind(randomUUID(), e, hash, at, expiresAt, request),
-  ] : [
+  const res = await DB.batch([
     DB.prepare(REVOKE_OPEN_SQL).bind(e, at),
     DB.prepare(MINT_SQL).bind(randomUUID(), e, hash, at, expiresAt),
   ]);
   const n = (i) => Number((res && res[i] && res[i].meta && res[i].meta.changes) || 0);
-  if (request && (n(0) !== 1 || n(2) !== 1)) return { refused: `request ${request} was not approved (it was decided since it was read): nothing changed`, ...(places ? { places } : {}) };
-  return { email: e, code, expiresAt, days, replaced: n(request ? 1 : 0), reset: hasPass, ...(places ? { places } : {}), ...(request ? { request } : {}) };
+  return { email: e, code, expiresAt, days, replaced: n(0), reset: hasPass, ...(places ? { places } : {}) };
 }
 // seatsOfEmail(DB, email) -> { seats, orgs }: the active seats the email's account holds, and in how many orgs (A7; no names)
 export async function seatsOfEmail(DB, email) {
@@ -291,8 +311,8 @@ export async function removeAccount(DB, email) {
   if (Number(a.founded)) return { refused: `${e} founded an org that still stands: delete that org first (tools/org-undo.mjs export, then delete)` };
   const res = await DB.batch(REMOVE_ACCOUNT_SQL.map((s) => (s.includes("?2") ? DB.prepare(s).bind(a.id, e) : DB.prepare(s).bind(a.id))));
   const n = (i) => Number((res && res[i] && res[i].meta && res[i].meta.changes) || 0);
-  if (n(4) !== 1) return { refused: `${e}: the account was not removed (a seat or an org of it appeared since the check): nothing changed` };
-  return { email: e, detached: n(0), sessions: n(1), attempts: n(2), codes: n(3) };
+  if (n(REMOVE_ACCOUNT_SQL.length - 1) !== 1) return { refused: `${e}: the account was not removed (a seat or an org of it appeared since the check): nothing changed` };
+  return { email: e, detached: n(0), sessions: n(1) + n(4), attempts: n(2), codes: n(3) };
 }
 // listAllowed(DB, { email, at }) -> [{ email, state, how, created, expires, used, revoked, codes }]
 export async function listAllowed(DB, { email = null, at = new Date().toISOString() } = {}) {
@@ -506,6 +526,36 @@ export function liveKV(namespaceId, env = process.env) {
   return { get: (k) => call("GET", k), put: (k, v) => call("PUT", k, String(v)), delete: (k) => call("DELETE", k) };
 }
 
+// ---- 21.4a · the approval's email: its transport and where its links start ----
+// localMailBackend(persistDir, cfg) -> the local worker's own D1 and, as the mailer, its capture in its own OAUTH_KV (the same
+// mail-capture:… keys the worker's src/email.js captureMailer writes: tools/mail-capture.mjs reads both); nothing leaves the machine
+export async function localMailBackend(persistDir, cfg) {
+  const d1 = cfg.d1_databases[0], ns = (cfg.kv_namespaces || []).find((b) => b.binding === "OAUTH_KV");
+  if (!ns) throw new Error("the config names no OAUTH_KV namespace (the local capture lies there)");
+  const p = await localProxy(persistDir, { d1_databases: [{ binding: "DB", database_name: d1.database_name, database_id: d1.database_id }], kv_namespaces: [{ binding: "OAUTH_KV", id: ns.id }] });
+  return { DB: p.env.DB, database: `local:${d1.database_name}`, mailer: captureMailer(p.env.OAUTH_KV), close: p.close };
+}
+// restMailer(env) -> a mailer over Cloudflare Email Service's REST send (POST …/accounts/<id>/email/sending/send), the message as the
+// worker's binding takes it ({ from, to, subject, html, text }), with CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID from the
+// environment (nothing here prints either). WRITTEN, NOT YET RUN, as liveD1 was: its first --live use is the owner's.
+export function restMailer(env = process.env) {
+  const token = env.CLOUDFLARE_API_TOKEN, account = env.CLOUDFLARE_ACCOUNT_ID;
+  if (!token || !account) throw new Error("--live needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in the environment (source the deployment's credentials file)");
+  const url = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/email/sending/send`;
+  return { kind: "cloudflare", send: async (m) => {
+    const r = await fetch(url, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "user-agent": "sharingu-operator/1.0" }, body: JSON.stringify(m) });
+    const j = await r.json().catch(() => null);
+    if (!r.ok || !j || j.success === false) throw Object.assign(new Error(`email send: HTTP ${r.status} ${JSON.stringify((j && j.errors) || "").slice(0, 300)}`), { code: String(r.status) });
+  } };
+}
+// linkOrigin(cfg, { live, given }) -> the origin the email's links start with: --origin (an http(s) address), else on --live the
+// config's custom domain under sharingu.xyz (the brand's address); null for none
+export function linkOrigin(cfg, { live = false, given } = {}) {
+  if (given) { try { const u = new URL(String(given)); return u.protocol === "https:" || u.protocol === "http:" ? u.origin : null; } catch { return null; } }
+  const route = live ? ((cfg && cfg.routes) || []).find((x) => x && x.custom_domain && /(^|\.)sharingu\.xyz$/.test(String(x.pattern))) : null;
+  return route ? `https://${route.pattern}` : null;
+}
+
 // orgLine(o) -> one org of list-orgs, on one line
 const human = (b) => (b >= 2 ** 30 ? `${+(b / 2 ** 30).toFixed(2)} GB` : b >= 2 ** 20 ? `${+(b / 2 ** 20).toFixed(1)} MB` : b >= 1024 ? `${+(b / 1024).toFixed(1)} KB` : `${b} B`);
 export function orgLine(o) {
@@ -519,7 +569,7 @@ export function orgLine(o) {
 
 // ---- the CLI ----
 export const USAGE = "usage: node tools/operator.mjs <allow|list|revoke|remove-account|requests|decline|list-orgs|set-plan|raise|suspend|unsuspend|set-openai-challenge|clear-openai-challenge> (--local <persist dir> --config <wrangler config> | --live --config <wrangler config> --confirm-live <D1 database name>) " +
-  "allow (--email <e> | --request <id>) [--days N] [--reset] [--beyond-cap] · list [--email <e>] [--json] · revoke --email <e> · remove-account --email <e> · requests · decline --request <id> · list-orgs [--json] · " +
+  "allow --email <e> [--days N] [--reset] [--beyond-cap] · allow --request <id> [--beyond-cap] [--origin <url>] · list [--email <e>] [--json] · revoke --email <e> · remove-account --email <e> · requests · decline --request <id> · list-orgs [--json] · " +
   "set-plan --org <id|suites> --plan <name> · raise --org <id|suites> --plan <name> [--people N] [--projects N] [--items-month N] [--calls-day N] [--burst-minute N] [--storage-bytes N] · " +
   "suspend --org <id> [--really] · unsuspend --org <id> · set-openai-challenge --token <t> · clear-openai-challenge";
 const EMAIL_COMMANDS = ["allow", "list", "revoke", "remove-account"];
@@ -565,6 +615,9 @@ export async function run(argv, { open, say = (s) => console.log(s), err = (s) =
   if (cmd === "allow" && (!/^\d+$/.test(String(daysRaw ?? DEFAULT_DAYS)) || days < 1 || days > MAX_DAYS)) { err(`--days must be a whole number from 1 to ${MAX_DAYS}`); return 2; }
   let cfg;
   try { cfg = readConfig(cfgPath); } catch (e) { err(`${cfgPath}: ${String((e && e.message) || e)}`); return 2; }
+  // 21.4a: where the approval's email links start (--origin; on --live the config's sharingu.xyz route by default)
+  const origin = byRequest ? linkOrigin(cfg, { live, given: flag("--origin") }) : null;
+  if (byRequest && !origin) { err(`allow --request needs --origin <https://the worker's address> (where the "You're in" email's links start)${live ? ": the config names no sharingu.xyz route" : " on --local"}`); return 2; }
   if (!cfg.d1_databases || !cfg.d1_databases[0]) { err(`${cfgPath}: no D1 database`); return 2; }
   if (live && flag("--confirm-live") !== cfg.d1_databases[0].database_name) {
     err(`--live refused: --confirm-live must name the D1 database of ${cfgPath} (${cfg.d1_databases[0].database_name}) — the live shared database, every org's`);
@@ -585,27 +638,36 @@ export async function run(argv, { open, say = (s) => console.log(s), err = (s) =
       return 0;
     } finally { await kb.close(); }
   }
-  const be = await (open || defaultOpen)(cfg, { local, live });
+  const be = await (open || defaultOpen)(cfg, { local, live, mail: byRequest });
   try {
+    if (cmd === "allow" && byRequest) {
+      // 21.2 / 21.4a: the open (verified) request read first; then the places, the one guarded approval and its one email
+      const q = await openRequest(be.DB, flag("--request"));
+      if (q.refused) { err(`refused (nothing written): ${q.refused}`); return 1; }
+      const request = q.request;
+      say(`  request ${request.id}: ${request.name}, ${request.company} <${request.email}>, place ${request.place} in line`);
+      const r = await approveRequest(be.DB, request, { beta: { beyond: argv.includes("--beyond-cap") } });
+      if (r.refused) { err(`refused (nothing written): ${r.refused}`); return 1; }
+      say(`✓ request ${request.id} approved on ${be.database}: its status page says its place is open`);
+      const p = r.places;
+      say(p.beyond ? `  --beyond-cap: approved PAST the beta's ${p.cap} places — ${p.taken + p.need} of ${p.cap} taken with this one (${placesWords(p)} before it)`
+        : `  the beta's places: ${p.leftAfter} of ${p.cap} left${p.need ? " after this one" : " (this email already made an org: it takes no new place)"} (${placesWords(p)} before it)`);
+      const m = await sendMail({ DB: be.DB }, be.mailer, { to: request.email, perAddress: false, build: () => inMail({ origin, name: request.name, company: request.company }) });
+      say(m.sent ? `  "You're in" sent to ${request.email} (${be.mailer.kind === "capture" ? "the local capture" : "Cloudflare Email Service"}, counted in the cap)`
+        : `  ! "You're in" was NOT sent (${m.reason}${m.code ? ` ${m.code}` : ""}): the approval stands — tell ${request.email} yourself that their place is open`);
+      return 0;
+    }
     if (cmd === "allow") {
-      // 21.2: --request reads the open request first (its email is the one allowed); anything else is refused before a write
-      let email = flag("--email"), request = null;
-      if (byRequest) {
-        const q = await openRequest(be.DB, flag("--request"));
-        if (q.refused) { err(`refused (nothing written): ${q.refused}`); return 1; }
-        request = q.request; email = request.email;
-        say(`  request ${request.id}: ${request.name}, ${request.company} <${request.email}>, place ${request.place} in line`);
-      }
+      const email = flag("--email");
       // A7: what the code will open, said BEFORE it is minted
       const held = seatsLine(await seatsOfEmail(be.DB, email));
       if (held) say(held);
-      const r = await allowEmail(be.DB, email, { days, reset: argv.includes("--reset"), beta: { beyond: argv.includes("--beyond-cap") }, request: request ? request.id : null });
+      const r = await allowEmail(be.DB, email, { days, reset: argv.includes("--reset"), beta: { beyond: argv.includes("--beyond-cap") } });
       if (r.refused) { err(`refused (nothing written): ${r.refused}`); return 1; }
-      say(`✓ allowed ${r.email} on ${be.database}, until ${r.expiresAt} (${r.days} day${r.days === 1 ? "" : "s"})${r.replaced ? `; its earlier open code is revoked` : ""}${r.reset ? "; its sign-up RESETS the account (every session of its seats ends)" : ""}` +
-        `${r.request ? `; request ${r.request} approved (its page says its place is open)` : ""}`);
+      say(`✓ allowed ${r.email} on ${be.database}, until ${r.expiresAt} (${r.days} day${r.days === 1 ? "" : "s"})${r.replaced ? `; its earlier open code is revoked` : ""}${r.reset ? "; its sign-up RESETS the account (every session of its seats ends)" : ""}`);
       const p = r.places;
-      say(p.beyond ? `  --beyond-cap: allowed PAST the beta's ${p.cap} places — ${p.taken + p.need} of ${p.cap} taken with this one (${plural(p.orgs, "org")}, ${plural(p.codes, "open code")} before it)`
-        : `  the beta's places: ${p.leftAfter} of ${p.cap} left${p.need ? " after this one" : " (this email already made an org: its code takes no new place)"} (${plural(p.orgs, "org")}, ${plural(p.codes, "open code")} before it)`);
+      say(p.beyond ? `  --beyond-cap: allowed PAST the beta's ${p.cap} places — ${p.taken + p.need} of ${p.cap} taken with this one (${placesWords(p)} before it)`
+        : `  the beta's places: ${p.leftAfter} of ${p.cap} left${p.need ? " after this one" : " (this email already made an org: its code takes no new place)"} (${placesWords(p)} before it)`);
       say(`  code: ${r.code}`);
       say("  Hand the email and this code to the person yourself. It is shown this once and kept nowhere (the database holds its hash); it opens one sign-up, at /signup, for this email only.");
       return 0;
@@ -613,14 +675,14 @@ export async function run(argv, { open, say = (s) => console.log(s), err = (s) =
     if (cmd === "decline") {
       const r = await declineRequest(be.DB, flag("--request"));
       if (r.refused) { err(`refused (nothing written): ${r.refused}`); return 1; }
-      say(`✓ request ${r.request.id} declined on ${be.database}: ${r.request.name}, ${r.request.company} <${r.request.email}> (was place ${r.request.place} in line); its page says the request is closed`);
+      say(`✓ request ${r.request.id} declined on ${be.database}: ${r.request.name}, ${r.request.company} <${r.request.email}> (was place ${r.request.place} in line); its status page says the request is closed`);
       return 0;
     }
     if (cmd === "requests") {
       const rows = await listRequests(be.DB);
       say(placesLine(await betaPlaces(be.DB)));
       say(`${plural(rows.length, "open request")} on ${be.database}${rows.length ? ", in line order (approve one: allow --request <id>):" : ""}`);
-      for (const r of rows) say(`  ${r.place}  ${r.id}  ${r.company} · ${r.role} · ${TEAM_SIZES[r.team_size] || r.team_size}  ${r.name} <${r.email}>  asked ${r.created_at}`);
+      for (const r of rows) say(`  ${r.place}  ${r.id}  ${r.company} · ${r.role} · ${TEAM_SIZES[r.team_size] || r.team_size}  ${r.name} <${r.email}>  verified ${r.verified_at}`);
       return 0;
     }
     if (cmd === "list") {
@@ -680,8 +742,10 @@ export async function run(argv, { open, say = (s) => console.log(s), err = (s) =
     return 0;
   } finally { await be.close(); }
 }
-const defaultOpen = async (cfg, { local, live, kv }) => {
+const defaultOpen = async (cfg, { local, live, kv, mail }) => {
   if (kv) { const ns = cfg.kv_namespaces.find((b) => b.binding === "OAUTH_KV"); return live ? { KV: liveKV(ns.id), database: `live:OAUTH_KV (${cfg.name || "the worker"})`, close: async () => {} } : localKV(local, ns); }
+  // 21.4a: allow --request also sends its email — live through Cloudflare's REST send API, local into the worker's own capture
+  if (mail) return live ? { DB: liveD1(cfg.d1_databases[0].database_id), database: `live:${cfg.d1_databases[0].database_name}`, mailer: restMailer(), close: async () => {} } : localMailBackend(local, cfg);
   return live ? { DB: liveD1(cfg.d1_databases[0].database_id), database: `live:${cfg.d1_databases[0].database_name}`, close: async () => {} } : localD1(local, cfg);
 };
 

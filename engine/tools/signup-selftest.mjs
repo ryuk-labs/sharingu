@@ -30,10 +30,10 @@
 //        and a seat waiting for its yes signs up by JSON to NOTHING (signedIn false, no session minted, the note saying a seat
 //        waits and where it is answered); its new passphrase at /login asks (409 choose_org, its one active org) and signs in
 //        once `org` names it; a browser's sign-up is untouched (it lands on the picker with its session)
-//   S10 · (sprint 21, 21.2: "prefills the org at sign-up") a form sign-up with no seat, for an email with APPROVED requests,
-//        answers the org form with the newest one's company as the org's name (and, 21.P D19, its suggested address) and its name
-//        as yours; an email whose request is
-//        only OPEN, and an email beside another's approved request, get the email alone; the JSON answer unchanged (no page)
+//   S10 · (sprint 21, 21.2: "prefills the org at sign-up") a form sign-up with no seat, for an email with an APPROVED request (an
+//        unverified one beside it), answers the org form with its company as the org's name (and, 21.P D19, its suggested address)
+//        and its name as yours; an email whose request is only OPEN, and an email beside another's approved request, get the email
+//        alone; the JSON answer unchanged (no page)
 // And the MUTATION PROOF: each named mutant (a scratch copy of src/) must turn its case(s) red.
 // Exit 1 on any failure. A gate step.
 import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync } from "node:fs";
@@ -257,17 +257,18 @@ const CASES = {
   },
   async S10() {
     const W = await world(), out = [];
-    // req(id, email, company, status, approvedAt): a request as the worker files it and the operator's allow --request approves it
-    const req = (id, email, company, status, at = null) => W.w.db.prepare("INSERT INTO access_requests (id, email, name, company, role, team_size, status, token_hash, created_at, updated_at, approved_at) " +
-      "VALUES (?, ?, ?, ?, 'Founder', '2-10', ?, ?, '2026-10-13T09:00:00.000Z', '2026-10-13T09:00:00.000Z', ?)").run(id, email, `Grace ${id}`, company, status, `th-${id}`, at);
-    req("q-old", "grace@fresh.test", "Old Co", "approved", "2026-10-13T10:00:00.000Z"); req("q-new", "grace@fresh.test", "Hopper Labs", "approved", "2026-10-13T11:00:00.000Z");
+    // req(id, email, company, status, approvedAt): a verified request (one per email, migrate-081) as the operator's allow --request
+    // approves it, and an unverified one of the same email beside it
+    const req = (id, email, company, status, at = null) => W.w.db.prepare("INSERT INTO access_requests (id, email, name, company, role, team_size, status, verified_at, created_at, updated_at, approved_at) " +
+      "VALUES (?, ?, ?, ?, 'Founder', '2-10', ?, ?, '2026-10-13T09:00:00.000Z', '2026-10-13T09:00:00.000Z', ?)").run(id, email, `Grace ${id}`, company, status, status === "unverified" ? null : "2026-10-13T09:30:00.000Z", at);
+    req("q-new", "grace@fresh.test", "Hopper Labs", "approved", "2026-10-13T11:00:00.000Z"); req("q-un", "grace@fresh.test", "Unverified Co", "unverified");
     req("q-open", "waits@fresh.test", "Open Co", "open"); req("q-other", "other@fresh.test", "Not Yours", "approved", "2026-10-13T11:00:00.000Z");
     const form = async (email, pass) => { const c = await W.allow(email); return W.call("POST", "/signup", { form: { email, code: c.code, password: pass, confirm: pass, web: "1" } }); };
     const g = await form("Grace@Fresh.test", "grace-passphrase-1"), o = await form("waits@fresh.test", "waits-passphrase-1"), n = await form("nobody@fresh.test", "nobody-passphrase-1");
     const val = (t, f) => (new RegExp(`id="${f}"[^>]*value="([^"]*)"`).exec(t) || [])[1];
     out.push([g.status === 200 && /data-screen="org-new"/.test(g.text) && val(g.text, "email") === "Grace@Fresh.test" && val(g.text, "name") === "Hopper Labs" && val(g.text, "you") === "Grace q-new" && val(g.text, "slug") === "hopper-labs"
       && /id="password"[^>]*autofocus/.test(g.text) && !g.text.includes("grace-passphrase-1"),
-      `S10 · an approved request: the org form holds the newest one's company (${val(g.text, "name")}) and name (${val(g.text, "you")}), the email as typed, the address suggested from the company (${val(g.text, "slug")}, 21.P D19), the passphrase focused, never echoed`]);
+      `S10 · an approved request: the org form holds its company (${val(g.text, "name")}) and name (${val(g.text, "you")}), the email as typed, the address suggested from the company (${val(g.text, "slug")}, 21.P D19), the passphrase focused, never echoed`]);
     out.push([o.status === 200 && val(o.text, "name") === "" && val(o.text, "you") === "" && n.status === 200 && val(n.text, "name") === "" && !/Not Yours|Open Co/.test(o.text + n.text),
       `S10 · a request only open, and another email's approved one, fill in nothing but the email (${val(o.text, "name") === "" && val(n.text, "name") === ""})`]);
     const j = await W.allow("json@fresh.test");
@@ -303,11 +304,11 @@ const MUTANTS = [
   // sprint 8, 8.3a (the sprint-7 review's A3): a valid code passes the lock
   { name: "a valid code meets the lock (no bypass: a stranger keeps the holder from signing up)", file: "src/accounts.js",
     from: "const locked = await lockOf(env, before ? before.id : null, e, out.client);", to: "const locked = await lockOf(env, before ? before.id : null, e, out.client);\n  if (locked) return { ...out, verdict: \"locked\" };", red: ["S5"] },
-  // sprint 21, 21.2: the org form a web sign-up answers is filled in from the email's newest APPROVED request only
+  // sprint 21, 21.2: the org form a web sign-up answers is filled in from the email's APPROVED request only (21.4a: one per email)
   { name: "the prefill reading an open request too", file: "src/requestaccess.js",
-    from: "WHERE email = ?1 AND status = 'approved' ORDER BY", to: "WHERE email = ?1 AND status IN ('approved', 'open') ORDER BY", red: ["S10"] },
-  { name: "the prefill from the oldest approval", file: "src/requestaccess.js",
-    from: "ORDER BY approved_at DESC LIMIT 1", to: "ORDER BY approved_at ASC LIMIT 1", red: ["S10"] },
+    from: "WHERE email = ?1 AND status = 'approved'\"", to: "WHERE email = ?1 AND status IN ('approved', 'open')\"", red: ["S10"] },
+  { name: "the prefill reading an unverified request too", file: "src/requestaccess.js",
+    from: "WHERE email = ?1 AND status = 'approved'\"", to: "WHERE email = ?1 AND status IN ('approved', 'unverified') ORDER BY status DESC\"", red: ["S10"] },
   { name: "the sign-up without the same-origin guard", file: "src/index.js",
     from: "if (crossSiteLogin(request, url)) return isForm ? page(403, \"Cross-site sign-up refused.\") : json({ error: \"cross_site_signup\" }, 403);", to: "", red: ["S7"] },
 ];

@@ -5,8 +5,8 @@
 // src/index.js.
 //
 // renderOrgNew({ error, values, host }) · renderOrgMade({ made, origin, signedIn }) -> the pages. `values` re-fills what was typed
-// (never the passphrase), or, as a web sign-up's answer (sprint 21, 21.2), the email and the approved request's company, its
-// suggested address and name (then the passphrase takes the focus); `host` is the address the org's path will hang off (the
+// (never the passphrase), or, as a web sign-up's answer (sprint 21, 21.2) or an approved account session's form (21.4a), the email
+// and the approved request's company, its suggested address and name (then the passphrase takes the focus: it is asked again); `host` is the address the org's path will hang off (the
 // request's own: nothing per deployment here).
 // sprint 21, 21.P (the owner's MCQs of 2026-10-14): D19 — the address is suggested from the org's name as the person types
 // (src/orgnames.js suggestSlug, the same function the page's script runs by its own source), still theirs to edit: once they

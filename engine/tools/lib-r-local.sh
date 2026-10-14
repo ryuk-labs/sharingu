@@ -88,7 +88,9 @@ rl_pick_port() {
 # here), strips the "routes" list (QD99DA798: the real config's Custom Domain agent.ryuklabs.io —
 # `wrangler dev` may take its dev host from the first route, and the local R must keep its own
 # 127.0.0.1 origin for every same-origin check), and points "main" at an ABSOLUTE path to src/index.js — the generated config lives outside
-# the repo (the org's state dir), so a relative "main" would resolve against the wrong directory.
+# the repo (the org's state dir), so a relative "main" would resolve against the wrong directory; and (sprint 21, 21.4a) writes the one
+# var MAIL_CAPTURE = "kv": a local worker's emails land in its own OAUTH_KV (src/email.js THE LOCAL CAPTURE; tools/mail-capture.mjs
+# reads them), so nothing it runs can reach an email service.
 # Idempotent and side-effect-free beyond writing that one file; safe to call on every `up`.
 #
 # R_LOCAL_CONFIG_SRC (optional — the local-first suites, Q9CF32D8F): generate from THAT config instead of the
@@ -111,6 +113,9 @@ t = t.replace("<ORG>", slug).replace("<D1_ID>", d1).replace("<KV_ID>", kv)
 t = re.sub(r',?\s*"triggers":\s*\{[^}]*\}', '', t, count=1)
 t = re.sub(r'\n[ \t]*"routes":\s*\[[^\]]*\],?', '', t, count=1)
 t = re.sub(r'"main":\s*"[^"]*"', '"main": ' + json.dumps(main_abs), t, count=1)
+# THE LOCAL CAPTURE (sprint 21, 21.4a; src/email.js THE MAILER): every local worker writes its emails into its own OAUTH_KV, never out
+if re.search(r'"vars"\s*:\s*\{', t): t = re.sub(r'"vars"\s*:\s*\{', '"vars": { "MAIL_CAPTURE": "kv",', t, count=1)
+else: t = re.sub(r'("main":\s*"[^"]*",)', r'\1\n  "vars": { "MAIL_CAPTURE": "kv" },', t, count=1)
 t = re.sub(r'"database_id":\s*"[^"]*"', '"database_id": ' + json.dumps(d1), t, count=1)
 t = re.sub(r'("binding":\s*"OAUTH_KV",\s*"id":\s*)"[^"]*"', lambda m: m.group(1) + json.dumps(kv), t, count=1)
 open(out, "w").write(t)

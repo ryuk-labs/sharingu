@@ -151,7 +151,11 @@ export const BACKUP_NEVER = {
   signup_codes: "credentials: the operator's one-time sign-up codes (their hashes; sprint 7, migrate-071), the platform's, before any org — no org's row",
   seat_invites: "credentials: an org's one-time invite links (their hashes; sprint 12, migrate-079), each bound to a seat's secrets as they stood — a restore's seats come back with new secrets, so no link of the old ones could open them; the admin makes new links",
   previews: "a plan not yet filed, valid for an hour; a client previews again",
-  access_requests: "a person's request for a beta place (sprint 21, migrate-081: a profile and its private link's hash), the platform's, before any account or org — no org's row",
+  access_requests: "a person's request for a beta place (sprint 21, migrate-081: a profile, while unverified its passphrase's and its verification link's hashes), the platform's, before any account or org — no org's row",
+  account_sessions: "credentials: an account's browser sessions before its first seat (their hashes; sprint 21, migrate-081), the platform's — no org's row",
+  account_resets: "credentials: a forgotten passphrase's one-time links (their hashes; sprint 21, migrate-081), the platform's — no org's row",
+  mail_days: "the platform's email cap (sprint 21, migrate-081: its counted sends per day), no org's row",
+  mail_addresses: "the platform's per-address email limit (sprint 21, migrate-081: a digest of each address, its sends today), no org's row",
   plan_limits: "the platform's plans and their limits (sprint 8, migrate-075: the owner's ruled numbers), no org's row — the org's own plan rides its org row",
   org_usage: "the plan's running counters (sprint 8, migrate-076): the day's calls, the minute's burst, the month's items — rebuilt by use (a restored org's counters start at zero), the month's tally reseeded from the ledger by migrate-076",
 };

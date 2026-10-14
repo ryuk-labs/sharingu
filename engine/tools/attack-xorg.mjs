@@ -227,7 +227,8 @@ export const MUTATIONS = [
     from: 'const INVITED_ELSEWHERE = " AND NOT EXISTS', to: 'const INVITED_ELSEWHERE = "" && " AND NOT EXISTS',
     why: "12.3, the mark: an invite-made account (its passphrase the inviting admin's to hold) answers another org's waiting seat — the attacker redeems its own link, the victim seats the email, the attacker accepts the victim's seat" },
   { name: "invite-org-by-invite", file: "src/orgs.js", only: "invite", expect: /the invite moves/,
-    from: '  if (proof.verdict === "invited") return { error: "org_by_invite", status: 403 };\n  if (proof.verdict !== "ok" || !proof.account) return', to: '  if ((proof.verdict !== "ok" && proof.verdict !== "invited") || !proof.account) return',
+    edits: [["src/orgs.js", '  if (proof.verdict === "invited") return { error: "org_by_invite", status: 403 };\n', ""],
+      ["src/orgs.js", '  if (proof.verdict !== "ok" || !proof.account) return', '  if ((proof.verdict !== "ok" && proof.verdict !== "invited") || !proof.account) return']],
     why: "12.3, the waitlist: an invite-made account creates an org — any approved org's admin mints org creators past the owner's approval" },
   // sprint 12, 12.5: the activity walk — each org filter reverted, the activity walk alone, red by it. The activity read's org
   // filters go together (edits): each project's scan is by a key of the reader's own set, and its shown rows are read again by
@@ -498,6 +499,7 @@ function postCalls(route, V, VAL, evalMark = false) {
 const SKIP = new Map([["/logout", "ends the session"], ["/mcp", "walked as the MCP door itself"], ["/login", "walked by the account moves (a sign-in at the root lands in the seat it chooses, never the victim's for the attacker's values)"],
   ["/signup", "walked by the sign-up moves (its every call spends the address's sign-in budget, LOGIN_LIMIT, shared with /login)"],
   ["/request-access", "a platform door before any account or org (its every POST spends the address's sign-in budget, LOGIN_LIMIT, shared with /login): smoke s62 and tools/request-access-selftest.mjs"],
+  ...["/account/verify", "/account/resend", "/account/forgot", "/account/reset"].map((p) => [p, "the account flow's platform door (sprint 21, 21.4a: its every POST spends the address's sign-in budget, LOGIN_LIMIT, shared with /login; an email it sends counts in the platform's cap): smoke s67 and tools/request-access-selftest.mjs"]),
   ["/favicon.svg", "static bytes"], ["/fonts/:file", "static bytes"], ["/install", "static page"], ["/health", "the platform's check, names no org"]]);
 
 // ---- the snapshot: every row of an org, table by table (count and content hash) ----

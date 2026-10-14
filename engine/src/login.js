@@ -29,7 +29,7 @@
 // one artifact, so importing from ui.js/tenant.js adds no request.
 
 import { esc, errorState, uchan, uchanPose } from "./ui.js";
-import { REQUEST_PATH, REQUEST_CHECK_PATH } from "./requestaccess.js";
+import { REQUEST_PATH, FORGOT_PATH, RESEND_PATH } from "./requestaccess.js";
 import { DEFAULT_BRAND } from "./tenant.js";
 import { PLATFORM_ROOT } from "./orgpath.js";
 import { BRAND_FONTS_LINK, WORLDS_CSS, BASE_CSS, STATE_CSS, THEME_BOOT, PRODUCT_NAME, FAVICON_LINK } from "./shell.js";
@@ -53,7 +53,7 @@ export function authBrand(brand) {
 // invite, creating an org and its done page, request access and its pages, the OAuth connect page, the org picker, the not-here
 // page — and the showcase at `/` (src/showcase.js) stand on ONE frame: the paper page (Paper and Ink from the shell's own tokens,
 // following the system and the choice remembered in this browser; shell.js, one copy: no second skin), the top bar (the lowercase
-// Fredoka wordmark beside U-chan, home to `/`; on the right the way back to the website, Check my request and Sign in), Manrope for
+// Fredoka wordmark beside U-chan, home to `/`; on the right the way back to the website and Sign in), Manrope for
 // reading, the mono label for an eyebrow, and a quiet foot (the website, its privacy, terms and support pages). The faces and the
 // state patterns are the shell's. ONE accent a view: the page's one primary action is the orange button; every other link or
 // button is ink. <body data-shell="front"> is the frame's one marker (the smoke and the selftests find a front page by it).
@@ -120,16 +120,17 @@ const FRONT_CSS = `
 `;
 // frontTop(wordmark, here) -> the top bar: the wordmark (authBrand's: the product, the org as secondary text) home to the
 // platform's own `/` (src/orgpath.js PLATFORM_ROOT: never an org's, so the not-here page's bytes stay one for every org), then
-// the website (wide screens: the foot carries it on a phone), Check my request and Sign in. here: the page's own door, left out
-// ("login" on the sign-in, "check" on the check page)
-// (here "in": a page that has just signed its reader in, the org's done page: no Sign in, no Check my request)
+// the website (wide screens: the foot carries it on a phone) and Sign in — the ONE door (sprint 21, 21.4a: a request is checked by
+// signing in). here: "login" on the sign-in (no Sign in on itself); "in", a page that has just signed its reader in (the org's done
+// page: no Sign in); "account", a page an account session reads (src/accountpage.js: Sign out in its place)
 export function frontTop(wordmark, here = "") {
+  const door = here === "account" ? `<a class="front-link" href="/logout" data-region="sign-out-link">Sign out</a>`
+    : here === "login" || here === "in" ? "" : `<a class="front-link" href="/login" data-region="sign-in-link">Sign in</a>`;
   return `<header class="front-top"><div class="front-bar">
     <a class="front-brand" href="${PLATFORM_ROOT}">${uchan({ size: 30 })}<span class="wordmark">${wordmark}</span></a>
     <nav class="front-nav" aria-label="sharingu">
       <a class="front-site" href="${SITE_URL}" data-region="site-link">sharingu.xyz</a>
-      ${here === "check" || here === "in" ? "" : `<a href="${REQUEST_CHECK_PATH}" data-region="check-link">Check my request</a>`}
-      ${here === "login" || here === "in" ? "" : `<a class="front-link" href="/login" data-region="sign-in-link">Sign in</a>`}
+      ${door}
     </nav>
   </div></header>`;
 }
@@ -306,16 +307,18 @@ export function renderLogin(opts) {
     body,
     // every text slot is escaped here; only footnoteHtml and headHtml (a renderer's own markup: the connect page's) are raw. The
     // platform's own sign-in (action /login) carries one quiet way in for a person with no account yet (sprint 21, 21.1: GET
-    // /request-access; 21.P: the one button word, "Join the beta")
+    // /request-access; 21.P: the one button word, "Join the beta"), and (21.4a) Forgot your passphrase? and the verification's resend
     footnote: footnoteHtml !== undefined ? footnoteHtml
       : footnote !== undefined ? esc(footnote) : action === "/login" ? joinLink() : "",
     sub: esc(sub),
     css: (choice ? ORG_CHOICE_CSS : "") + css,
   });
 }
-// the sign-in's way to request access (sprint 21, 21.1; 21.P: "Join the beta", the one word for it on the site and in the app)
+// the sign-in's way to request access (sprint 21, 21.1; 21.P: "Join the beta", the one word for it on the site and in the app), and
+// (21.4a) the account's two other ways: a forgotten passphrase, a verification email that did not arrive
 export const JOIN_WORDS = "Join the beta";
-const joinLink = () => `No account yet? <a href="${REQUEST_PATH}" data-region="request-access-link">${JOIN_WORDS}</a>`;
+const joinLink = () => `<p>No account yet? <a href="${REQUEST_PATH}" data-region="request-access-link">${JOIN_WORDS}</a></p>` +
+  `<p><a href="${FORGOT_PATH}" data-region="forgot-link">Forgot your passphrase?</a> · <a href="${RESEND_PATH}" data-region="resend-link">Didn't get the email? Resend</a></p>`;
 // the OAuth form's org choice: one bordered list, a radio per org (its name, its address)
 const ORG_CHOICE_CSS = `
   .org-choice{margin:0;padding:0;border:0;min-width:0}

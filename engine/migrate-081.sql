@@ -1,65 +1,134 @@
--- migrate-081.sql — request access (sprint 21, slice 21.1; docs/plan/SPRINTS.md 21.1; the owner's MCQs of 2026-10-13: request
--- access is a worker page writing D1, with a profile; the site's waitlist button links to it, its Telegram-only form retires).
--- EXPAND ONLY (PLATFORM §5): one table and three indexes added, and migrate-072's two slug triggers re-created with one more reserved
--- name; nothing renamed, no column or table dropped; the old code names none of it.
---   1 · access_requests: ONE person's request for a place in the beta, before any account or org (a PLATFORM row: no org, as
---       signup_codes). The profile as the person typed it, normalised at the door (src/requestaccess.js readRequest): name, email
---       (lower-cased and trimmed, as accounts.email), company, role and team_size required; website, linkedin, x and github (each
---       an http(s) address the door built), ai_tools and use_case optional. Its status: open (in line), approved (the operator's
---       allow, slice 21.2: approved_at) or declined. Its private page's link: only the HASH is kept (token_hash: sha256 of a
---       domain tag and the token, src/requestaccess.js requestTokenHash; the token itself rides the person's link
---       /request-access/<token> and is stored nowhere), so slice 21.2's "you're in line" page needs no new migration. THE FIRST
---       REQUEST STANDS (the owner's ruling, 2026-10-13): a repeat for an email whose request is open changes nothing.
---   2 · idx_access_requests_open: at most ONE open request per email (the door's one insert does nothing on it: the repeat).
---   3 · idx_access_requests_line: the open requests in the order they came (slice 21.2's place in line: one range count on it).
---   3b · idx_access_requests_email (slice 21.2, added here before 081 shipped): an email's requests by status, newest approval
---       first. What reads it: a web sign-up with no seat (POST /signup), whose code proved the email, answers the org form
---       filled in from that email's newest APPROVED request (src/requestaccess.js approvedProfile: ONE SEARCH on (email, status),
---       its order the index's; never read by an email no code proved). Write cost: one index entry per request, kept on the
---       one status update the operator's allow --request makes.
+-- migrate-081.sql — request access and the account flow (sprint 21, slices 21.1 and 21.4a; docs/plan/SPRINTS.md 21.1, 21.4; the owner's
+-- MCQs of 2026-10-13 and 2026-10-14: request access is a worker page writing D1, with a profile and a passphrase; ONE verification
+-- email; sign in with the passphrase; a reset link; every email under one cap). UNSHIPPED until sprint 21's ship: edited in place.
+-- EXPAND ONLY (PLATFORM §5): five tables and their indexes added, and migrate-072's two slug triggers re-created with one more
+-- reserved name; nothing renamed, no column or table dropped; the old code names none of it.
+--   1 · access_requests: ONE person's request for a place in the beta (a PLATFORM row: no org, as signup_codes). The profile as the
+--       person typed it, normalised at the door (src/requestaccess.js readRequest): name, email (lower-cased and trimmed, as
+--       accounts.email), company, role and team_size required; website, linkedin, x and github (each an http(s) address the door
+--       built), ai_tools and use_case optional. Its status: UNVERIFIED (just filed: it holds no place), open (its email verified: in
+--       line, by verified_at), approved (the operator's allow --request: approved_at) or declined. While unverified it holds the
+--       passphrase the person chose, as its pbkdf2 hash and salt (pass_hash, pass_salt: the account it PREPARES — no account row
+--       exists until the email is verified, so no sign-in, seat consent or org creation ever reads an unverified passphrase), and its
+--       verification link's hash (verify_hash: sha256 of a domain tag and the link's token, src/requestaccess.js verifyTokenHash; the
+--       token rides only the email) until verify_expires (24 h after the link was sent: a resend sends a new link and moves it). The
+--       verification (src/accounts.js verifyJoin, one batch) clears all three, sets verified_at and status open, and makes the
+--       account with that passphrase. An unverified request past verify_expires is deleted by the next request filed (the cleanup
+--       on write, src/requestaccess.js fileRequest; idx_access_requests_unverified), and is never read as live before that.
+--   2 · idx_access_requests_verified: at most ONE verified request per email, whatever its status (THE FIRST VERIFIED REQUEST
+--       STANDS, the owner's ruling of 2026-10-14; a verified email holds an account, and a later join for it gets the "you already
+--       have an account" email instead). Unverified ones are many (each a join, each its own link and passphrase): the per-address
+--       email limit holds them to three a day.
+--   3 · idx_access_requests_line: the open requests in the order their emails were VERIFIED (the place in line: one range count).
+--   3b · idx_access_requests_email: an email's requests by status (an approved request's prefill of the org form; the newest
+--       unverified one of a sign-in or a resend; one SEARCH on (email, status)).
+--   3c · idx_access_requests_verify: the verification link's one read, by its hash (unique while it is set).
+--   3d · idx_access_requests_unverified: the unverified requests by their end (the cleanup's range).
 --   4 · THE RESERVED NAME: /request-access is a new first segment of the door's routes, so it is a name the platform uses
---       (src/orgnames.js reservedNames). migrate-072's two default-slug triggers (org_slug_on_insert, org_slug_on_update) hold
---       that list written out (SQL cannot derive it); they are dropped and re-created here, word for word but for
---       'request-access' added in its order (92 names), so a self-hosted org 1 or a suites' org named "Request access" falls to
---       its base-<id>. tools/orgs-selftest.mjs O10 holds the newest migration's list and boot.sql's EQUAL to the derivation.
---       THE SHIP'S PREFLIGHT, read-only, before this file: node tools/check-org-names.mjs --slugs <the slugs SELECT slug FROM org
---       answers>: an org that already holds request-access (POST /orgs did not refuse the name before this code) would be
---       shadowed by the route, and the check fails loudly on it.
--- WHO WRITES IT: the worker's POST /request-access (src/requestaccess.js fileRequest, public: no session); the operator's
--- `allow --request` (slice 21.2). Nothing reads accounts beside it: an email that holds an account files a request as any other.
--- WRITE COST on live: nothing (an empty table and its three indexes; the triggers fire only on an org insert or an update to a NULL slug).
--- ORDER: BEFORE the code (the new code's POST /request-access writes it; the old code names neither the table nor the indexes).
+--       (src/orgnames.js reservedNames; /account, the flow's other pages, is one of the platform's fixed words already).
+--       migrate-072's two default-slug triggers (org_slug_on_insert, org_slug_on_update) hold that list written out (SQL cannot
+--       derive it); they are dropped and re-created here, word for word but for 'request-access' added in its order (92 names), so
+--       a self-hosted org 1 or a suites' org named "Request access" falls to its base-<id>. tools/orgs-selftest.mjs O10 holds the
+--       newest migration's list and boot.sql's EQUAL to the derivation. THE SHIP'S PREFLIGHT, read-only, before this file: node
+--       tools/check-org-names.mjs --slugs <the slugs SELECT slug FROM org answers>: an org that already holds request-access (POST
+--       /orgs did not refuse the name before this code) would be shadowed by the route, and the check fails loudly on it.
+--   5 · account_sessions: a browser session of an ACCOUNT that holds no seat yet (a verified person in line, or approved and
+--       before their org): the same cookie as an org session (__Host-ar_session), its token's hash only, its own table, so NO
+--       reader of tokens (an org's address, /mcp, a bearer, the OAuth form) can ever find it — it reaches only the root's account
+--       pages (src/index.js /account, /orgs/new's prefill) and sign-out (src/accounts.js accountSessionOf). Revoked by sign-out
+--       and by a reset; idx_account_sessions_account ends every one of an account at once.
+--   6 · account_resets: a forgotten passphrase's single-use link (POST /account/forgot): its token's hash, its account, 30 minutes
+--       (expires_at), its spend (used_at); idx_account_resets_account ends an account's other open links with the one used.
+--   7 · mail_days: THE CAP (the owner, 2026-10-14: stay inside Cloudflare Email Service's 3,000 a month): the worker's and the
+--       operator's counted sends per UTC day (n), read as the last 31 days' sum before each counted send and taken only while it is
+--       under 2,900 (src/email.js MAIL_DAY_TAKE_SQL: one conditional upsert), and whether the owner was told today that the cap was
+--       reached (alerted: once a day).
+--   8 · mail_addresses: the per-address limit (three counted emails a day to one address): the day, a digest of the address (never
+--       the address: src/email.js addressDigest), its count and the nonce of the send that took it last; yesterday's rows are deleted
+--       by the next counted send.
+-- WHO WRITES IT: the worker's public doors (POST /request-access, /account/verify, /account/resend, /account/forgot,
+-- /account/reset: src/requestaccess.js, src/accounts.js, src/email.js) and the operator's allow --request and decline --request
+-- (tools/operator.mjs: the approval and its one "You're in" email, through the same cap).
+-- WRITE COST on live: nothing (five empty tables and their indexes; the triggers fire only on an org insert or an update to a NULL slug).
+-- ORDER: BEFORE the code (the new code writes these tables; the old code names none of them).
 -- WRANGLER'S SPLITTER (engine/CLAUDE.md scars): the triggers as migrate-072 wrote them (no quoted two dashes, no "END)").
 -- Re-runnable: IF NOT EXISTS, and each trigger dropped IF EXISTS before it is made again — a replay changes nothing.
--- THE UNDO: the code's rollback alone (the old code reads nothing of it); the table can stay, or be dropped with
--- DROP TABLE access_requests (a Time Travel bookmark first) once no request is wanted; the triggers' longer list harms no old
--- code (one more name an operator's org 1 or suites' org never takes plain).
+-- THE UNDO: the code's rollback alone (the old code reads nothing of it); the tables can stay, or be dropped (a Time Travel bookmark
+-- first) once no request, session or count is wanted; the triggers' longer list harms no old code (one more name an operator's
+-- org 1 or suites' org never takes plain).
 
 CREATE TABLE IF NOT EXISTS access_requests (
-  id          TEXT PRIMARY KEY,
-  email       TEXT NOT NULL CHECK (email = lower(trim(email)) AND email <> ''),
-  name        TEXT NOT NULL,
-  company     TEXT NOT NULL,
-  role        TEXT NOT NULL,
-  team_size   TEXT NOT NULL,
-  website     TEXT,
-  linkedin    TEXT,
-  x           TEXT,
-  github      TEXT,
-  ai_tools    TEXT,
-  use_case    TEXT,
-  status      TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'approved', 'declined')),
-  token_hash  TEXT NOT NULL UNIQUE,
-  created_at  TEXT NOT NULL,
-  updated_at  TEXT NOT NULL,
-  approved_at TEXT
+  id             TEXT PRIMARY KEY,
+  email          TEXT NOT NULL CHECK (email = lower(trim(email)) AND email <> ''),
+  name           TEXT NOT NULL,
+  company        TEXT NOT NULL,
+  role           TEXT NOT NULL,
+  team_size      TEXT NOT NULL,
+  website        TEXT,
+  linkedin       TEXT,
+  x              TEXT,
+  github         TEXT,
+  ai_tools       TEXT,
+  use_case       TEXT,
+  status         TEXT NOT NULL DEFAULT 'unverified' CHECK (status IN ('unverified', 'open', 'approved', 'declined')),
+  pass_hash      TEXT,
+  pass_salt      TEXT,
+  verify_hash    TEXT,
+  verify_expires TEXT,
+  verified_at    TEXT,
+  created_at     TEXT NOT NULL,
+  updated_at     TEXT NOT NULL,
+  approved_at    TEXT
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_access_requests_open ON access_requests(email) WHERE status = 'open';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_access_requests_verified ON access_requests(email) WHERE status <> 'unverified';
 
-CREATE INDEX IF NOT EXISTS idx_access_requests_line ON access_requests(created_at) WHERE status = 'open';
+CREATE INDEX IF NOT EXISTS idx_access_requests_line ON access_requests(verified_at) WHERE status = 'open';
 
 CREATE INDEX IF NOT EXISTS idx_access_requests_email ON access_requests(email, status, approved_at);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_access_requests_verify ON access_requests(verify_hash) WHERE verify_hash IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_access_requests_unverified ON access_requests(verify_expires) WHERE status = 'unverified';
+
+-- 5 · an account's browser session before its first seat
+CREATE TABLE IF NOT EXISTS account_sessions (
+  token_hash TEXT PRIMARY KEY,
+  account_id TEXT NOT NULL,
+  device     TEXT,
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  revoked    INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_account_sessions_account ON account_sessions(account_id);
+
+-- 6 · a forgotten passphrase's single-use link
+CREATE TABLE IF NOT EXISTS account_resets (
+  token_hash TEXT PRIMARY KEY,
+  account_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  used_at    TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_account_resets_account ON account_resets(account_id);
+
+-- 7 · the cap: counted sends per UTC day, and the owner's one alert a day
+CREATE TABLE IF NOT EXISTS mail_days (
+  day     TEXT PRIMARY KEY,
+  n       INTEGER NOT NULL DEFAULT 0,
+  alerted INTEGER NOT NULL DEFAULT 0
+);
+
+-- 8 · the per-address limit: counted sends to one address (its digest) per UTC day
+CREATE TABLE IF NOT EXISTS mail_addresses (
+  day     TEXT NOT NULL,
+  address TEXT NOT NULL,
+  n       INTEGER NOT NULL DEFAULT 0,
+  nonce   TEXT,
+  PRIMARY KEY (day, address)
+);
 
 -- 4 · the default slug's reserved names, one more (migrate-072's two triggers, re-created)
 DROP TRIGGER IF EXISTS org_slug_on_insert;

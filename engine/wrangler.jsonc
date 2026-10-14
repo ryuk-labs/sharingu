@@ -40,6 +40,10 @@
   "r2_buckets": [
     { "binding": "BRAIN", "bucket_name": "ryuklabs-brain" }
   ],
+  // THE SEND (sprint 21, 21.4a; src/email.js): Cloudflare Email Service's binding, the worker's ONE way to email a person or the
+  // team, From hello@sharingu.xyz (Email Sending onboarded for sharingu.xyz: HANDOFF, "Sprint 21's outside setup"), every send
+  // under the cap src/email.js counts in D1. A local run never uses it: tools/lib-r-local.sh adds MAIL_CAPTURE, the local capture.
+  "send_email": [ { "name": "EMAIL" } ],
   "d1_databases": [
     {
       "binding": "DB",

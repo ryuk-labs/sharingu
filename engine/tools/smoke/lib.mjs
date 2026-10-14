@@ -84,7 +84,7 @@ export async function addPerson(name, email) {
 
 // ---- the address (sprint 7, 7.4): each org at /<its path name> ----
 // the platform's root doors (src/orgpath.js PLATFORM_PATHS): a cookie request to one of them is never sent under an address
-const PLATFORM = new Set(["login", "logout", "signup", "request-access", "orgs", "install", "mcp", "oauth", ".well-known", "health", "fonts", "favicon.svg"]);
+const PLATFORM = new Set(["login", "logout", "signup", "request-access", "account", "orgs", "install", "mcp", "oauth", ".well-known", "health", "fonts", "favicon.svg"]);
 let RESERVED = null;
 // unbased(text) -> the text with every org base taken off its paths: "/<org>/home" -> "/home", "/<org>" -> "/". An org's path name
 // is never a reserved name (src/orgnames.js: the registry's first segments and the platform's words), so a reserved name after it
@@ -333,3 +333,25 @@ export const acceptWaiting = (email) => {
   if (n) d1rows(`UPDATE people SET active = 1, pending = 0 WHERE pending = 1 AND email = '${e}'`);
   return n;
 };
+// ---- THE LOCAL CAPTURE (sprint 21, 21.4a: src/email.js THE MAILER; s62, s63, s67) ----
+// mails({ to }) -> the emails the local worker (and the operator's tool --local) "sent", in the order sent: tools/mail-capture.mjs
+// --json on the smoke's own state, read in-process (their links hold tokens: never printed)
+export async function mails({ to = "" } = {}) {
+  const { SMOKE_D1_PERSIST: persist, SMOKE_D1_CFG: cfg } = process.env;
+  expect(persist && cfg, "SMOKE_D1_PERSIST and SMOKE_D1_CFG (tools/smoke.sh sets both)");
+  const { rc, out } = await new Promise((done) => execFile("node", [join(ENGINE, "tools", "mail-capture.mjs"), "--local", persist, "--config", cfg, "--json", ...(to ? ["--to", to] : [])], { encoding: "utf8", maxBuffer: 1 << 26 },
+    (e, stdout) => done({ rc: e ? 1 : 0, out: stdout || "" })));
+  expect(rc === 0, "tools/mail-capture.mjs --json failed");
+  return JSON.parse(out.trim().split("\n").pop() || "[]");
+}
+// mailFor(to, test, { tries }) -> the newest email to `to` passing test(m), waiting for the worker's after-answer send (its waitUntil)
+export async function mailFor(to, test = () => true, { tries = 12 } = {}) {
+  for (let i = 0; i < tries; i++) {
+    const m = (await mails({ to })).filter(test).pop();
+    if (m) return m;
+    await new Promise((ok) => setTimeout(ok, 500));
+  }
+  return null;
+}
+// linkIn(mail, kind) -> the 48-hex token of the email's /account/<kind>/ link, or null
+export const linkIn = (m, kind = "verify") => ((new RegExp(`/account/${kind}/([0-9a-f]{48})`).exec((m && m.text) || "") || [])[1]) || null;

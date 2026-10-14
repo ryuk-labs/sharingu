@@ -160,7 +160,8 @@ import { renderLogin, authPage, authBrand } from "../src/login.js";
 import { renderShowcase } from "../src/showcase.js";
 import { renderSignup, SIGNUP_REFUSED_WORDS } from "../src/signup.js";
 import { renderOrgNew, renderOrgMade } from "../src/orgpage.js";
-import { renderRequestAccess, renderRequestReceived, renderRequestAsked, renderRequestMissing, REQUEST_FIELD_WORDS } from "../src/requestpage.js";
+import { renderRequestAccess, REQUEST_FIELD_WORDS } from "../src/requestpage.js";
+import { renderSent, renderVerify, renderLinkDead, renderResend, renderForgot, renderForgotSent, renderReset, renderAccountStatus } from "../src/accountpage.js";
 import { ORG_WORDS } from "../src/orgs.js";
 import { renderProfilePage } from "../src/profile.js";
 import { renderDocs } from "../src/docs.js";
@@ -749,14 +750,21 @@ const STANDALONE = {
   // sprint 7, 7.2: the sign-up's pages are the front door's own (one card, the shell's tokens, declared inputs)
   signup: [renderSignup({ brand: servedBrand }), "Northwind"],
   signupRefused: [renderSignup({ brand: servedBrand, error: SIGNUP_REFUSED_WORDS, email: "a@b.test" }), "Northwind"],
-  // sprint 21, 21.1: request access and the request's own pages are the front door's own too
+  // sprint 21, 21.1: request access is the front door's own too; 21.4a: the account flow's pages
   requestAccess: [renderRequestAccess({ brand: servedBrand }), "Northwind"],
   requestAccessRefused: [renderRequestAccess({ brand: servedBrand, error: REQUEST_FIELD_WORDS.email, values: { name: "Ada", email: "ada" } }), "Northwind"],
-  requestInLine: [renderRequestReceived({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "open" }, place: 3, count: { taken: 7, cap: 50 } }), "Northwind"],
-  requestApproved: [renderRequestReceived({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "approved" } }), "Northwind"],
-  requestDeclined: [renderRequestReceived({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "declined" } }), "Northwind"],
-  requestAsked: [renderRequestAsked({ brand: servedBrand, count: { taken: 7, cap: 50 } }), "Northwind"],
-  requestMissing: [renderRequestMissing({ brand: servedBrand }), "Northwind"],
+  accountSent: [renderSent({ brand: servedBrand }), "Northwind"],
+  accountPaused: [renderSent({ brand: servedBrand, paused: true }), "Northwind"],
+  accountVerify: [renderVerify({ brand: servedBrand, token: "ab".repeat(24), email: "ada@x.test" }), "Northwind"],
+  accountVerifyDead: [renderLinkDead({ brand: servedBrand, kind: "verify" }), "Northwind"],
+  accountResend: [renderResend({ brand: servedBrand }), "Northwind"],
+  accountForgot: [renderForgot({ brand: servedBrand }), "Northwind"],
+  accountForgotSent: [renderForgotSent({ brand: servedBrand }), "Northwind"],
+  accountReset: [renderReset({ brand: servedBrand, token: "ab".repeat(24) }), "Northwind"],
+  accountResetDead: [renderLinkDead({ brand: servedBrand, kind: "reset" }), "Northwind"],
+  accountInLine: [renderAccountStatus({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "open" }, place: 3, count: { taken: 7, cap: 50 } }), "Northwind"],
+  accountApproved: [renderAccountStatus({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "approved" } }), "Northwind"],
+  accountDeclined: [renderAccountStatus({ brand: servedBrand, request: { name: "Ada", company: "Analytical", status: "declined" } }), "Northwind"],
   // sprint 7, 7.3: the create-an-org pages: the platform's (the product's wordmark alone), and the made page the new org's
   orgNew: [renderOrgNew({ host: "agent.example.test" }), ""],
   // sprint 21, 21.2: the org form a web sign-up answers, filled in from the approved request

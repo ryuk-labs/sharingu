@@ -16,13 +16,14 @@
 //        website's own uchan-nod keyframes. Both ways: a script without its reduced-motion test, or without its re-read of the
 //        flag, goes red
 //   F4 · ONE front shell: the sign-in, the connect page, the sign-up and its invite, creating an org and its done page, request
-//        access and its pages (the check page, approved and declined among them), the org picker, the not-here page and the
-//        showcase each stand on <body data-shell="front"> with the top bar's wordmark home to `/`; each page one card, or a
-//        state's page with U-chan's pose and none; one orange primary a view (exactly one on each of the front door's own); the
-//        doors on every page (21.P F24: the website, Check my request and Sign in in the top bar, none on its own page; the foot);
-//        the request's pages send the walkthrough to the showcase's section (/#walkthrough), and no source names the website's
-//        docs list any more; GET /login, /signup, /signup?via=invite, /orgs/new, /request-access and /request-access/check
-//        answer 200 on the shell
+//        access and the account flow's pages (21.4a: check your inbox and paused, verify, a dead link, resend, forgot and its
+//        answer, reset; the signed-in status in line, approved and declined), the org picker, the not-here page and the showcase
+//        each stand on <body data-shell="front"> with the top bar's wordmark home to `/`; each page one card, or a state's page with
+//        U-chan's pose and none; one orange primary a view (exactly one on each of the front door's own); the doors on every page
+//        (the website and Sign in in the top bar, none on its own page, Sign out on an account session's pages, no Check my request
+//        anywhere: 21.4a; the foot); the request's pages send the walkthrough to the showcase's section (/#walkthrough), and no
+//        source names the website's docs list any more; GET /login, /signup, /signup?via=invite, /orgs/new, /request-access,
+//        /account/sent, /account/resend and /account/forgot answer 200 on the shell
 //   F5 · (21.P B9/B10) the walkthrough in place: the five videos the website's own (its docs.html, when its checkout is on this
 //        machine: the same ids, titles, durations, order); each a facade without a script (our poster from /assets/, its badge,
 //        title and duration, a plain youtu.be link), no row printing youtu.be; the worker serves the posters and the logos
@@ -221,44 +222,49 @@ for (const [name, mut, red] of MUTANTS) {
   const { renderLogin, renderNotHere } = await mod("login.js");
   const { renderSignup, renderInvite } = await mod("signup.js");
   const { renderOrgNew, renderOrgMade } = await mod("orgpage.js");
-  const { renderRequestAccess, renderRequestReceived, renderRequestAsked, renderRequestMissing, renderRequestCheck } = await mod("requestpage.js");
+  const { renderRequestAccess } = await mod("requestpage.js");
+  const A = await mod("accountpage.js");
   const { renderOrgPicker } = await mod("orgpicker.js");
   const cards = {
     login: renderLogin({}),
     connect: renderLogin({ action: "", lede: "A client asks to connect as you", hidden: [{ name: "oauth_req", value: "e30=" }], submit: "Sign in and connect", footnoteHtml: "<p>It sends you back.</p>" }),
     signup: renderSignup({}), invite: renderInvite({}), orgNew: renderOrgNew({ host: "agent.example.test" }),
     orgMade: renderOrgMade({ origin: "https://agent.example.test", made: { org: { name: "Acme", slug: "acme" }, project: { key: "o3--acme", name: "Acme" }, key: "k" } }),
-    requestAccess: renderRequestAccess({}), inLine: renderRequestReceived({ request: { name: "Ada", company: "A", status: "open" }, place: 1, count: { taken: 3, cap: 50 }, url: "https://agent.example.test/request-access/x" }),
-    asked: renderRequestAsked({ count: { taken: 3, cap: 50 } }), missing: renderRequestMissing({}), check: renderRequestCheck({}),
-    approved: renderRequestReceived({ request: { name: "Ada", company: "A", status: "approved" } }), declined: renderRequestReceived({ request: { status: "declined" } }), picker: renderOrgPicker({ orgs: [{ slug: "acme", name: "Acme", role: "owner" }] }), notHere: renderNotHere(),
+    requestAccess: renderRequestAccess({}), inLine: A.renderAccountStatus({ request: { name: "Ada", company: "A", status: "open" }, place: 1, count: { taken: 3, cap: 50 } }),
+    sent: A.renderSent({}), paused: A.renderSent({ paused: true }), verify: A.renderVerify({ token: "ab".repeat(24), email: "ada@x.test" }), linkDead: A.renderLinkDead({}),
+    resend: A.renderResend({}), forgot: A.renderForgot({}), forgotSent: A.renderForgotSent({}), reset: A.renderReset({ token: "ab".repeat(24) }), resetDead: A.renderLinkDead({ kind: "reset" }),
+    approved: A.renderAccountStatus({ request: { name: "Ada", company: "A", status: "approved" } }), declined: A.renderAccountStatus({ request: { status: "declined" } }), picker: renderOrgPicker({ orgs: [{ slug: "acme", name: "Acme", role: "owner" }] }), notHere: renderNotHere(),
   };
   const off = Object.entries({ ...cards, showcase: page }).filter(([, h]) => !(/<body data-shell="front">/.test(h) && /<header class="front-top">[\s\S]*?<a class="front-brand" href="\/">[\s\S]*?class="wordmark"><span class="wm-product">sharingu<\/span>/.test(h))).map(([k]) => k);
   ok(off.length === 0, `F4 · ${Object.keys(cards).length + 1} front pages on the one shell, the wordmark home to / (off it: ${off.join(", ") || "none"})`);
   // the three compositions (21.P): a state's page (solo: U-chan's pose, no card) or one card, never two
-  const solo = ["asked", "missing", "notHere", "check", "approved", "declined"];
+  const solo = ["sent", "paused", "linkDead", "forgotSent", "resetDead", "notHere", "approved", "declined"];
   const badCards = Object.entries(cards).filter(([k, h]) => (h.match(/<div class="card /g) || []).length !== (solo.includes(k) ? 0 : 1) || (solo.includes(k) && !/<svg class="u-uchan u-pose /.test(h))).map(([k]) => k);
   ok(badCards.length === 0, `F4 · each page one card, or a state's page with U-chan's pose and none (off: ${badCards.join(", ") || "none"})`);
   // ONE accent a view: at most one orange primary on any front page, exactly one on each of the front door's own
   const PRIMARY = /class="primary"|class="access"|<button type="submit"|class="done-action"/g;
   const nPrimary = (h) => (h.match(PRIMARY) || []).length;
-  const mine = ["login", "connect", "signup", "invite", "requestAccess", "inLine", "asked", "missing", "notHere", "check", "approved", "declined"];
+  const mine = ["login", "connect", "signup", "invite", "requestAccess", "sent", "paused", "verify", "linkDead", "resend", "forgot", "forgotSent", "reset", "resetDead", "notHere", "approved", "declined"];
   const accents = Object.entries({ ...cards, showcase: page }).filter(([k, h]) => nPrimary(h) > 1 || (mine.includes(k) && nPrimary(h) !== 1)).map(([k, h]) => `${k} ${nPrimary(h)}`);
   ok(accents.length === 0 && /form button\[type="submit"\],\.done-action\{[^}]*background:var\(--accent\)/.test(cards.login), `F4 · one orange primary a view (off: ${accents.join(", ") || "none"}); the forms' submit is the orange one`);
-  // the doors (21.P F24): every front page's top bar has the website, Check my request and Sign in, the page's own left out
+  // the doors (21.P F24; 21.4a: ONE door, Sign in — a request is checked by signing in): every front page's top bar has the website
+  // and Sign in (none on its own page), an account session's own pages Sign out in its place; no Check my request anywhere
+  const signedIn = ["inLine", "approved", "declined"];
   const doors = Object.entries({ ...cards, showcase: page }).filter(([k, h]) => {
     const bar = (/<header class="front-top">[\s\S]*?<\/header>/.exec(h) || [""])[0];
-    const site = /<a class="front-site" href="https:\/\/www\.sharingu\.xyz\/"/.test(bar), check = /href="\/request-access\/check"[^>]*>Check my request</.test(bar), sign = /href="\/login"[^>]*>Sign in</.test(bar);
-    return !(site && check === (k !== "check") && sign === !["login", "connect"].includes(k) && /<footer class="front-foot">/.test(h));
+    const site = /<a class="front-site" href="https:\/\/www\.sharingu\.xyz\/"/.test(bar), sign = /href="\/login"[^>]*>Sign in</.test(bar), out = /href="\/logout"[^>]*>Sign out</.test(bar);
+    return !(site && sign === !["login", "connect", ...signedIn].includes(k) && out === signedIn.includes(k) && !/Check my request|request-access\/check/.test(h) && /<footer class="front-foot">/.test(h));
   }).map(([k]) => k);
-  ok(doors.length === 0, `F4 · the doors on every front page: the website, Check my request and Sign in in the top bar (none on its own page), the foot (off: ${doors.join(", ") || "none"})`);
+  ok(doors.length === 0, `F4 · the doors on every front page: the website and Sign in in the top bar (none on its own page; Sign out on an account session's pages), no Check my request, the foot (off: ${doors.join(", ") || "none"})`);
   const walk = `href="${WALKTHROUGH_PATH}"`;
   const docsList = readdirSync(join(ENGINE, "src")).filter((f) => f.endsWith(".js") && readFileSync(join(ENGINE, "src", f), "utf8").includes("sharingu.xyz/docs.html#walkthrough"));
-  ok(WALKTHROUGH_PATH === "/#walkthrough" && cards.inLine.includes(walk) && cards.asked.includes(walk) && docsList.length === 0,
+  ok(WALKTHROUGH_PATH === "/#walkthrough" && cards.inLine.includes(walk) && cards.sent.includes(walk) && docsList.length === 0,
     `F4 · the request's pages send the walkthrough to the showcase's section (${WALKTHROUGH_PATH}); no source names the website's docs list (${docsList.join(", ") || "none"})`);
   const W = await world();
-  const got = await Promise.all(["/login", "/signup", "/signup?via=invite", "/orgs/new", "/request-access", "/request-access/check"].map(async (p) => [p, await W.call("GET", p, { nav: true })]));
+  const PAGES = ["/login", "/signup", "/signup?via=invite", "/orgs/new", "/request-access", "/account/sent", "/account/resend", "/account/forgot"];
+  const got = await Promise.all(PAGES.map(async (p) => [p, await W.call("GET", p, { nav: true })]));
   const bad = got.filter(([, r]) => r.status !== 200 || !/<body data-shell="front">/.test(r.text)).map(([p, r]) => `${p} ${r.status}`);
-  ok(bad.length === 0, `F4 · GET /login, /signup, /signup?via=invite, /orgs/new, /request-access and /request-access/check: 200 on the shell (${bad.join(", ") || "all"})`);
+  ok(bad.length === 0, `F4 · GET ${PAGES.join(", ")}: 200 on the shell (${bad.join(", ") || "all"})`);
 }
 
 // F6 · the connect page's head (21.P): a known client's logo only when the code goes back to that client's own host; a name

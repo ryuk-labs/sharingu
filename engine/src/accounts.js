@@ -105,7 +105,8 @@ import { db, signInEnv, HOME_ORG } from "./data.js";
 import { SESSION_TOKEN_PREFIX } from "./tenant.js";
 import { uid, now, pbkdf2, sha256, hex } from "./util.js";
 import { revokeOAuthGrants } from "./oauthgrants.js";
-import { BETA_ORGS_SQL, BETA_CODES_SQL, placesOf } from "./beta.js";   // sprint 21, 21.1: the beta's places, one source with the operator's
+import { BETA_ORGS_SQL, BETA_CODES_SQL, BETA_APPROVED_SQL, placesOf } from "./beta.js";   // sprint 21, 21.1: the beta's places, one source with the operator's
+import { RESET_MINUTES } from "./mails.js";   // sprint 21, 21.4a: a reset link's life, said in its email too
 
 export const LOCKOUT_FAILS = 8;
 // the words a right secret with no seat at the address gets (POST /login, the OAuth sign-in form): said plainly, never another org
@@ -271,7 +272,9 @@ export async function seatsOf(env, accountId, prefer = null) {
 //   pendingCount, ask, orgs, pendingOnly }
 //   verdict: "ok" (the password is the account's passphrase — session "account", seat the chosen one — or an active seat's own
 //   secret — session "seat", seat that one) · "wrong" · "locked" (the account's lockout; nothing checked) · "no_seat_here" (the
-//   account's passphrase, and the account holds no active seat and no pending one in any org: signed in to nothing)
+//   account's passphrase, and the account holds no active seat and no pending one in any org: no org session; a browser's sign-in
+//   then opens an ACCOUNT SESSION, THE ACCOUNT FLOW below) · "unverified" (sprint 21, 21.4a: the email's newest unverified join
+//   holds this passphrase — no account answers the email, or one does and the passphrase is none of its own: check your inbox)
 //   prefer: the org the sign-in is going to (an org id, from the page it came from), or null; pick: the org a sign-in ASKED for
 //   (its path name: POST /login's `org`, the OAuth form's choice), or "" — either is the person's own choice of org
 //   ask (A1): true when the account's passphrase signed in, the account holds more than one active seat and neither prefer nor
@@ -288,8 +291,15 @@ export async function passphraseSignIn(env, url, { email, password, prefer = nul
   const account = e ? await db(env).prepare(ACCOUNT_BY_EMAIL_SQL).bind(e).first() : null;
   const out = { email: e, org: HOME_ORG, account: account || null, seat: null, session: null, client: client ? String(client) : "" };
   if (await lockOf(env, account ? account.id : null, e, out.client)) return { ...out, verdict: "locked" };
-  // A6: one passphrase hash when no account answers, as one does when it answers, so the time says nothing of who holds one
-  if (!account) { await pbkdf2(String(password == null ? "" : password), NO_SALT); return { ...out, verdict: "wrong" }; }
+  // A6: one passphrase hash when no account answers, as one does when it answers, so the time says nothing of who holds one —
+  // (sprint 21, 21.4a) compared with the email's newest unverified join's passphrase when there is one (THE ACCOUNT FLOW): the
+  // person who joined is told to check their inbox, anyone else gets the one "wrong"
+  if (!account) {
+    const pw = String(password == null ? "" : password);
+    const join = e ? await db(env).prepare(UNVERIFIED_PASS_SQL).bind(e, now()).first() : null;
+    const ok = join && join.pass_hash && join.pass_salt ? (await pbkdf2(pw, join.pass_salt)) === join.pass_hash : (await pbkdf2(pw, NO_SALT), false);
+    return { ...out, verdict: ok && pw ? "unverified" : "wrong" };
+  }
   const seats = await seatsOf(env, account.id, prefer);
   const want = normOrgArg(pick);
   const picked = want ? seats.find((s) => String(s.org_slug) === want) || null : null;
@@ -308,6 +318,10 @@ export async function passphraseSignIn(env, url, { email, password, prefer = nul
   for (const s of seats.slice(0, SEAT_TRIES)) {
     if (!sameSecret(account, s) && (await secretMatches(password, s))) return { ...out, org: Number(s.org), seat: s, session: "seat", verdict: "ok" };
   }
+  // (21.4a) a join for this account's email holds this passphrase (its link was sent to no one: "you already have an account"): the
+  // same "check your inbox" a join for an unknown email answers, so a join then a sign-in never tells which emails hold an account
+  const join = await db(env).prepare(UNVERIFIED_PASS_SQL).bind(e, now()).first();
+  if (join && (await secretMatches(password, join))) return { ...out, verdict: "unverified" };
   return { ...out, verdict: "wrong" };
 }
 // pendingOf(env, accountId) -> [{ id, org, role, slug, name }]: the account's seats waiting for its holder's yes (PENDING_OF_SQL)
@@ -419,6 +433,8 @@ export async function countSignIn(env, r, ok) {
 //   account's lockout, keyed by the account and the client: nothing compared, nothing written) · "invited" (sprint 12, 12.3: the
 //   account's own passphrase, but an org's invite link set it — accounts.invited_org — so it proves only what that org's admin
 //   could hand over: it creates no org; the beta's orgs stay on the waitlist, the operator's code alone makes an account that does)
+//   · "waiting" (sprint 21, 21.4a: the account's own passphrase, but its email holds neither a used operator's code nor an approved
+//   request — a verified person still in line: mayFound, THE ACCOUNT FLOW)
 // No seat is asked for (a person freshly signed up holds none). The attempt counts as a sign-in's does (countSignIn: the
 // account's lockout, in the org the address serves), and every refusal costs one passphrase hash, whether or not an account
 // answered the email, so the time taken says nothing about which emails hold one.
@@ -431,6 +447,7 @@ export async function accountProof(env, url, { email, password, client = "" } = 
   const comparable = !!(account && account.pass_hash && account.pass_salt);
   const ok = comparable ? await secretMatches(password, account) : (await pbkdf2(String(password == null ? "" : password), NO_SALT), false);
   await countSignIn(env, { ...out, vouched: ok }, ok);   // only the account's own passphrase gets here as ok: it vouches
+  if (ok && account.invited_org == null && !(await mayFound(env, e))) return { ...out, verdict: "waiting" };
   return { ...out, verdict: !ok ? "wrong" : account.invited_org != null ? "invited" : "ok" };
 }
 
@@ -690,10 +707,190 @@ export async function redeemInvite(env, url, { token, password, client = "" } = 
 
 // ---- THE BETA'S PLACES, read by the worker (sprint 21, 21.1; src/beta.js: the cap and the two counts the operator's allow makes
 // before it mints, tools/operator.mjs betaPlaces). Here because its statements name signup_codes and accounts, whose one module this
-// is. Two aggregate statements in one batch: each answers one count (SQL aggregates), never the rows themselves.
-// betaCount(env, at) -> { cap, orgs, codes, taken, left } at time `at` (the codes unexpired then)
+// is. Three aggregate statements in one batch: each answers one count (SQL aggregates), never the rows themselves.
+// betaCount(env, at) -> { cap, orgs, codes, approved, taken, left } at time `at` (the codes unexpired then)
 export async function betaCount(env, at = now()) {
-  const [o, c] = await db(env).batch([db(env).prepare(BETA_ORGS_SQL), db(env).prepare(BETA_CODES_SQL).bind(at, null)]);
+  const [o, c, a] = await db(env).batch([db(env).prepare(BETA_ORGS_SQL), db(env).prepare(BETA_CODES_SQL).bind(at, null), db(env).prepare(BETA_APPROVED_SQL).bind(at, null)]);
   const n = (r) => Number((((r && r.results) || [])[0] || {}).n || 0);
-  return placesOf(n(o), n(c));
+  return placesOf(n(o), n(c), n(a));
+}
+
+// ---- THE ACCOUNT FLOW (sprint 21, 21.4a; migrate-081; the owner's MCQ of 2026-10-14, the standard) ----
+// JOIN: POST /request-access files the profile AND a passphrase as an UNVERIFIED request (src/requestaccess.js fileRequest: the
+// passphrase's hash rides the request; no account row exists yet, so no sign-in, seat consent or org creation can ever read an
+// unverified passphrase — an attacker's join for someone else's email prepares nothing anyone else's code reads) and sends ONE
+// verification email. An email that already holds an account gets "you already have an account" instead (its passphrase never
+// changes) and a request whose link goes to no one (it can never be verified), so a join then a sign-in with that passphrase answers
+// "check your inbox" whether or not the email holds an account.
+// VERIFY (verifyJoin): the link's GET only shows the confirm page (an email scanner that follows links spends nothing); its POST
+// takes the link's token AND the passphrase — proof of the mailbox and of the join's own passphrase together, so a stranger's join
+// for this address cannot be completed by its owner's click (the pre-account takeover) — and in ONE batch: the request verified
+// (status open, verified_at: its place in line), the passphrase's hash cleared from it, the account made with it (an account
+// with no passphrase takes it, as the operator's code does; one that has its own keeps it), and, when the account holds no seat,
+// an ACCOUNT SESSION. The first verified request per email stands (migrate-081's idx_access_requests_verified, and the batch's
+// guard before it).
+// THE ACCOUNT SESSION (account_sessions): a browser session for an account that holds no seat — a person in line, approved, or
+// signed up by the operator's code and before their org. It is the same cookie as an org session (__Host-ar_session), its token
+// ACCOUNT_SESSION_PREFIX'd and kept in its OWN table by its hash, so nothing that reads tokens — an org's address
+// (authenticateSession), /mcp, a bearer (keyRow), the OAuth form, sessionPlace at the root — can ever find it: it signs no one
+// in to any org. Only accountSessionOf reads it, and only the root's account pages call that: the status page (GET /account),
+// the org form's prefill (GET /orgs/new) and sign-out (GET /logout). It is minted only for an account whose passphrase was just
+// proven (POST /login, the verification, a reset), that holds no active or pending seat and no invite mark, from a fresh random
+// token (no fixation); a reset or sign-out revokes it.
+// SIGN-IN: an email whose newest unverified join holds the passphrase typed (and none of its account's secrets is it) answers
+// "unverified" (POST /login: check your inbox, and a resend) — for an unknown email after the one passphrase hash every sign-in for
+// it costs; a verified account with no seat signs in to an account session (POST /login, a browser).
+// RESET (startReset, finishReset): a link (account_resets: its hash, 30 minutes, single use) for an account the email names;
+// spending it sets the new passphrase (the account rules), clears an invite mark (the link proves the email, as the operator's
+// code does), ends EVERY session of the account — its org sessions in every org, its account sessions — its other reset links
+// and its seats' connected apps, then signs the person in fresh.
+// ORG CREATION waits for the approval (mayFound, read by accountProof): only an account whose email holds a USED operator's code
+// or an APPROVED request creates an org — a verified person in line holds a passphrase now, and the beta's orgs stay on the
+// waitlist.
+export const ACCOUNT_SESSION_PREFIX = SESSION_TOKEN_PREFIX + "a_";
+export const isAccountSessionToken = (t) => String(t == null ? "" : t).startsWith(ACCOUNT_SESSION_PREFIX);
+// the newest unverified join's passphrase for an email with no account (the sign-in's one hash; idx_access_requests_email)
+export const UNVERIFIED_PASS_SQL = "SELECT pass_hash, pass_salt FROM access_requests INDEXED BY idx_access_requests_email WHERE email = ?1 AND status = 'unverified' AND verify_expires > ?2 " +
+  "ORDER BY created_at DESC LIMIT 1";
+// the account session's one read (?1 the token's hash, ?2 now)
+export const ACCOUNT_SESSION_SQL = "SELECT s.account_id, a.email FROM account_sessions s JOIN accounts a ON a.id = s.account_id WHERE s.token_hash = ?1 AND s.revoked = 0 AND s.expires_at > ?2";
+// the mint, only while the account holds the passphrase just proven (?6), no seat (active or pending) and no invite mark: ?1 the
+// token's hash, ?2 device, ?3 now, ?4 the expiry, ?5 the account
+export const ACCOUNT_SESSION_MINT_SQL = "INSERT INTO account_sessions (token_hash, account_id, device, created_at, expires_at, revoked) SELECT ?1, a.id, ?2, ?3, ?4, 0 FROM accounts a " +
+  "WHERE a.id = ?5 AND a.pass_hash IS NOT NULL AND a.pass_hash = ?6 AND a.invited_org IS NULL AND NOT EXISTS (SELECT 1 FROM people p WHERE p.account_id = a.id AND (p.active = 1 OR p.pending = 1))";
+export const END_ACCOUNT_SESSION_SQL = "UPDATE account_sessions SET revoked = 1 WHERE token_hash = ?1 AND revoked = 0";
+// where an account session's person stands, ONE statement (?1 the account, ?2 its email): its seats (active or pending), whether
+// the operator's code signed it up (a used code: approved), and the org it founded (its path name)
+export const ACCOUNT_STANDING_SQL = "SELECT (SELECT COUNT(*) FROM people p WHERE p.account_id = ?1 AND (p.active = 1 OR p.pending = 1)) AS seats, " +
+  "EXISTS (SELECT 1 FROM signup_codes s WHERE s.email = ?2 AND s.used_at IS NOT NULL) AS coded, (SELECT o.slug FROM org o WHERE o.created_by_account = ?1) AS founded";
+// whether the account's email may found an org (?1 the email): a used operator's code, or an approved request
+export const MAY_FOUND_SQL = "SELECT (EXISTS (SELECT 1 FROM signup_codes WHERE email = ?1 AND used_at IS NOT NULL) " +
+  "OR EXISTS (SELECT 1 FROM access_requests INDEXED BY idx_access_requests_email WHERE email = ?1 AND status = 'approved')) AS ok";
+
+// newAccountToken() -> a fresh account session token (never one a request carried)
+const newAccountToken = () => ACCOUNT_SESSION_PREFIX + crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+const sessionExpiry = () => new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString();
+// accountSessionOf(env, token) -> { accountId, email } of a live account session, or null (any other token reads nothing here)
+export async function accountSessionOf(env, token) {
+  if (!isAccountSessionToken(token)) return null;
+  const row = await db(env).prepare(ACCOUNT_SESSION_SQL).bind(await sha256(String(token)), now()).first();
+  return row ? { accountId: String(row.account_id), email: String(row.email) } : null;
+}
+// openAccountSession(env, account, { device }) -> { token, expires } | null: the account (its id and the pass_hash just proven)
+export async function openAccountSession(env, account, { device = "web" } = {}) {
+  if (!account || !account.id || !account.pass_hash) return null;
+  const token = newAccountToken(), expires = sessionExpiry();
+  const r = await db(env).prepare(ACCOUNT_SESSION_MINT_SQL).bind(await sha256(token), String(device).slice(0, 80), now(), expires, String(account.id), String(account.pass_hash)).run();
+  return ((r && r.meta && r.meta.changes) || 0) >= 1 ? { token, expires } : null;
+}
+// endAccountSession(env, token) — sign-out of an account session (a token of any other form changes nothing)
+export async function endAccountSession(env, token) {
+  if (isAccountSessionToken(token)) await db(env).prepare(END_ACCOUNT_SESSION_SQL).bind(await sha256(String(token))).run();
+}
+// accountStanding(env, accountId, email) -> { seats, coded, founded }
+export async function accountStanding(env, accountId, email) {
+  const r = await db(env).prepare(ACCOUNT_STANDING_SQL).bind(String(accountId), normEmail(email)).first();
+  return { seats: Number((r && r.seats) || 0), coded: !!(r && Number(r.coded) === 1), founded: r && r.founded ? String(r.founded) : "" };
+}
+export async function mayFound(env, email) {
+  const r = await db(env).prepare(MAY_FOUND_SQL).bind(normEmail(email)).first();
+  return !!(r && Number(r.ok) === 1);
+}
+// accountHolds(env, email) -> true when an account answers the email (the join's one question: it files nothing for one that does)
+export async function accountHolds(env, email) {
+  return !!(await db(env).prepare(ACCOUNT_BY_EMAIL_SQL).bind(normEmail(email)).first());
+}
+
+// ---- the verification (POST /account/verify) ----
+// the open link (?1 the token's hash, ?2 now): an unverified request whose link is live
+export const VERIFY_OPEN_SQL = "SELECT id, email, name, company, role, team_size, pass_hash, pass_salt FROM access_requests WHERE verify_hash = ?1 AND status = 'unverified' AND verify_expires > ?2";
+// THE BATCH. 1 · the spend: the request verified (in line from now), the link and the passphrase's hash cleared — only while the
+// link is live and no verified request of its email stands. ?1 now, ?2 the request, ?3 the token's hash
+export const VERIFY_SPEND_SQL = "UPDATE access_requests SET status = 'open', verified_at = ?1, updated_at = ?1, verify_hash = NULL, verify_expires = NULL, pass_hash = NULL, pass_salt = NULL " +
+  "WHERE id = ?2 AND verify_hash = ?3 AND status = 'unverified' AND verify_expires > ?1 " +
+  "AND NOT EXISTS (SELECT 1 FROM access_requests v WHERE v.email = access_requests.email AND v.status <> 'unverified')";
+const SPENT = "EXISTS (SELECT 1 FROM access_requests r WHERE r.id = ?6 AND r.status = 'open' AND r.verified_at = ?5)";
+// 2 · the account takes the passphrase (made; an account with none takes it; one with its own keeps it) — only when THIS batch
+// spent the link. ?1 a new id, ?2 the email, ?3 the hash, ?4 the salt, ?5 now, ?6 the request
+export const VERIFY_ACCOUNT_SQL = `INSERT INTO accounts (id, email, pass_hash, pass_salt, created_at, updated_at) SELECT ?1, ?2, ?3, ?4, ?5, ?5 WHERE ${SPENT} ` +
+  "ON CONFLICT (email) DO UPDATE SET pass_hash = excluded.pass_hash, pass_salt = excluded.pass_salt, updated_at = excluded.updated_at WHERE accounts.pass_hash IS NULL";
+// 3 · the account session, only for an account that took THIS passphrase and holds no seat. ?1 the token's hash, ?2 device, ?3 the
+// expiry, ?4 the email, ?5 now, ?6 the request, ?7 the hash
+export const VERIFY_SESSION_SQL = `INSERT INTO account_sessions (token_hash, account_id, device, created_at, expires_at, revoked) SELECT ?1, a.id, ?2, ?5, ?3, 0 FROM accounts a WHERE a.email = ?4 AND a.pass_hash = ?7 ` +
+  `AND a.invited_org IS NULL AND NOT EXISTS (SELECT 1 FROM people p WHERE p.account_id = a.id AND (p.active = 1 OR p.pending = 1)) AND ${SPENT}`;
+// 4 · the email's other unverified joins (a stranger's, an older one of the person's own) go with it. ?1 the email, ?2 the request,
+// ?3 now
+export const VERIFY_DROP_OTHERS_SQL = "DELETE FROM access_requests WHERE email = ?1 AND status = 'unverified' AND id <> ?2 " +
+  "AND EXISTS (SELECT 1 FROM access_requests r WHERE r.id = ?2 AND r.status = 'open' AND r.verified_at = ?3)";
+// verifyOpen(env, tokenHash) -> the live link's request ({ id, email, name, … }), or null (expired, used, never sent)
+export const verifyOpen = (env, tokenHash) => db(env).prepare(VERIFY_OPEN_SQL).bind(String(tokenHash), now()).first();
+// verifyJoin(env, { tokenHash, password, client }) -> { verdict, request, session }
+//   verdict: "ok" (verified: the account holds the passphrase; session { token, expires } when it holds no seat, else null) ·
+//   "refused" (no live link, or a verified request of the email stands: nothing written) · "wrong" (the passphrase is not the
+//   join's: the attempt counted) · "locked" (the email's lockout: nothing compared)
+export async function verifyJoin(env, { tokenHash, password, client = "" } = {}) {
+  const row = await verifyOpen(env, tokenHash);
+  if (!row) return { verdict: "refused" };
+  const out = { email: String(row.email), org: HOME_ORG, account: null, seat: null, client: client ? String(client) : "" };
+  if (await lockOf(env, null, out.email, out.client)) return { verdict: "locked" };
+  if (!(await secretMatches(password, row))) { await countSignIn(env, out, false); return { verdict: "wrong" }; }
+  const at = now(), token = newAccountToken(), expires = sessionExpiry();
+  const res = await db(env).batch([
+    db(env).prepare(VERIFY_SPEND_SQL).bind(at, row.id, String(tokenHash)),
+    db(env).prepare(VERIFY_ACCOUNT_SQL).bind(hex(16), out.email, row.pass_hash, row.pass_salt, at, row.id),
+    db(env).prepare(VERIFY_SESSION_SQL).bind(await sha256(token), "web", expires, out.email, at, row.id, row.pass_hash),
+    db(env).prepare(VERIFY_DROP_OTHERS_SQL).bind(out.email, row.id, at),
+  ]);
+  const changed = (i) => ((res && res[i] && res[i].meta && res[i].meta.changes) || 0) >= 1;
+  if (!changed(0)) return { verdict: "refused" };
+  const account = await db(env).prepare(ACCOUNT_BY_EMAIL_SQL).bind(out.email).first();
+  await countSignIn(env, { ...out, account, vouched: true }, true);   // the mailbox and the passphrase proved it: it vouches
+  return { verdict: "ok", request: row, session: changed(2) ? { token, expires } : null };
+}
+
+// ---- the reset (POST /account/forgot, /account/reset) ----
+// RESET_MINUTES (src/mails.js): a link works 30 minutes, once
+export const RESET_INSERT_SQL = "INSERT INTO account_resets (token_hash, account_id, created_at, expires_at) SELECT ?1, a.id, ?2, ?3 FROM accounts a WHERE a.email = ?4";
+// the live link (?1 the token's hash, ?2 now), with its account
+export const RESET_OPEN_SQL = "SELECT r.account_id, a.email FROM account_resets r JOIN accounts a ON a.id = r.account_id WHERE r.token_hash = ?1 AND r.used_at IS NULL AND r.expires_at > ?2";
+// THE BATCH. 1 · the spend (?1 now, ?2 the token's hash)
+export const RESET_SPEND_SQL = "UPDATE account_resets SET used_at = ?1 WHERE token_hash = ?2 AND used_at IS NULL AND expires_at > ?1";
+const RESET_SPENT = "EXISTS (SELECT 1 FROM account_resets x WHERE x.token_hash = ?3 AND x.used_at = ?2 AND x.account_id = ?1)";
+// 2 · the passphrase (the invite mark ends: the link proves the email). ?1 the account, ?2 now, ?3 the token's hash, ?4 hash, ?5 salt
+export const RESET_ACCOUNT_SQL = `UPDATE accounts SET pass_hash = ?4, pass_salt = ?5, invited_org = NULL, updated_at = ?2 WHERE id = ?1 AND ${RESET_SPENT}`;
+// 3 · every org session of the account, in every org (its account sessions and each of its seats' own). ?1 ?2 ?3 as above
+export const RESET_END_TOKENS_SQL = `UPDATE tokens SET revoked = 1 WHERE revoked = 0 AND (account_id = ?1 OR person_id IN (SELECT id FROM people WHERE account_id = ?1)) AND ${RESET_SPENT}`;
+// 4 · its account sessions; 5 · its other open reset links
+export const RESET_END_ACCOUNT_SESSIONS_SQL = `UPDATE account_sessions SET revoked = 1 WHERE account_id = ?1 AND revoked = 0 AND ${RESET_SPENT}`;
+export const RESET_END_LINKS_SQL = `UPDATE account_resets SET used_at = ?2 WHERE account_id = ?1 AND used_at IS NULL AND ${RESET_SPENT}`;
+// startReset(env, email, tokenHash) -> true when a link was written for the email's account (none: no account answers it)
+export async function startReset(env, email, tokenHash) {
+  const at = now(), exp = new Date(Date.now() + RESET_MINUTES * 60 * 1000).toISOString();
+  const r = await db(env).prepare(RESET_INSERT_SQL).bind(String(tokenHash), at, exp, normEmail(email)).run();
+  return ((r && r.meta && r.meta.changes) || 0) >= 1;
+}
+export const resetOpen = (env, tokenHash) => db(env).prepare(RESET_OPEN_SQL).bind(String(tokenHash), now()).first();
+// finishReset(env, { tokenHash, password }) -> { verdict: "ok", r } | { verdict: "refused" }: r is a sign-in's answer for the
+// fresh session (src/index.js mints it: an org session on the account's chosen seat, or, with none, an account session)
+export async function finishReset(env, { tokenHash, password } = {}) {
+  const row = await resetOpen(env, tokenHash);
+  if (!row) return { verdict: "refused" };
+  const id = String(row.account_id), at = now(), salt = hex(16), ph = await pbkdf2(String(password), salt), th = String(tokenHash);
+  const res = await db(env).batch([
+    db(env).prepare(RESET_SPEND_SQL).bind(at, th),
+    db(env).prepare(RESET_ACCOUNT_SQL).bind(id, at, th, ph, salt),
+    db(env).prepare(RESET_END_TOKENS_SQL).bind(id, at, th),
+    db(env).prepare(RESET_END_ACCOUNT_SESSIONS_SQL).bind(id, at, th),
+    db(env).prepare(RESET_END_LINKS_SQL).bind(id, at, th),
+  ]);
+  if (((res && res[1] && res[1].meta && res[1].meta.changes) || 0) !== 1) return { verdict: "refused" };
+  // the connected apps of every seat end with the sessions (G2 M1's rule, as the operator's reset and a proven change on /profile)
+  for (const s of await accountSeatIds(env, id)) await revokeOAuthGrants(env, s);
+  const account = await db(env).prepare(ACCOUNT_BY_EMAIL_SQL).bind(String(row.email)).first();
+  const seats = await seatsOf(env, id), pending = await pendingOf(env, id);
+  const seat = seats[0] || pending[0] || null;
+  const r = { email: String(row.email), org: seat ? Number(seat.org) : HOME_ORG, account, seat, session: seat ? "account" : null, seatCount: seats.length,
+    pendingCount: pending.length, pendingOnly: !seats.length && !!pending.length, client: "", verdict: "ok" };
+  await countSignIn(env, { ...r, vouched: true }, true);   // the link proved the email: it vouches
+  return { verdict: "ok", r };
 }

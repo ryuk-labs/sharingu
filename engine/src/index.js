@@ -68,11 +68,14 @@ import { json, text, uid, now, sha256, TX_LANES, isEvalMark, evalView, crossSite
 import { countCall, installPlanNote, planNoteOf, planShownOf, setPlanReader, suspensionOf, suspendedAnswer } from "./plans.js";   // sprint 8, 8.2: every signed-in REST write is a call the org's plan counts; 8.4: Control shows the plan; 8.5: the suspension's one check
 import { handleStorage, handleLog } from "./reports.js";
 import { runControlAction } from "./admin.js";
-import { passphraseSignIn, countSignIn, openSession, landingOf, clientOf, NO_SEAT_HERE_WORDS, chooseOrgWords, PENDING_ONLY_WORDS, EMAIL_NOT_ASCII_WORDS, signUp, orgsOfAccount, answerSeat, SEAT_ANSWER_WORDS, PICKER_PATH, betaCount } from "./accounts.js";   // sprint 7, 7.1: one account per email, a seat per org; 7.2: sign-up
-import { renderSignup, renderInvite, signupProblem, SIGNUP_REFUSED_WORDS, SIGNUP_FIELD_WORDS } from "./signup.js";   // sprint 7, 7.2: sign-up by allowlist
+import { passphraseSignIn, countSignIn, openSession, landingOf, clientOf, NO_SEAT_HERE_WORDS, chooseOrgWords, PENDING_ONLY_WORDS, EMAIL_NOT_ASCII_WORDS, signUp, orgsOfAccount, answerSeat, SEAT_ANSWER_WORDS, PICKER_PATH, betaCount, normEmail, accountHolds, accountSessionOf, openAccountSession, endAccountSession, isAccountSessionToken, accountStanding, mayFound, verifyOpen, verifyJoin, startReset, resetOpen, finishReset } from "./accounts.js";   // sprint 7, 7.1: one account per email, a seat per org; 7.2: sign-up
+import { renderSignup, renderInvite, signupProblem, SIGNUP_REFUSED_WORDS, SIGNUP_FIELD_WORDS, EMAIL_RE } from "./signup.js";   // sprint 7, 7.2: sign-up by allowlist
 import { inviteSignup, isInviteBody, INVITE_HEADERS } from "./invite.js";   // sprint 12, 12.3: an org's invite link (src/accounts.js THE INVITE LINK)
-import { readRequest, trapped, fileRequest, requestByToken, placeInLine, approvedProfile, newRequestToken, REQUEST_FIELDS, REQUEST_TRAP, REQUEST_PATH, REQUEST_ASKED_PATH, REQUEST_CHECK_PATH } from "./requestaccess.js";   // sprint 21, 21.1: request access
-import { renderRequestAccess, renderRequestReceived, renderRequestAsked, renderRequestCheck, renderRequestMissing, REQUEST_FIELD_WORDS } from "./requestpage.js";
+import { readRequest, trapped, joinProblem, joinPass, fileRequest, pendingJoinOf, rotateVerify, verifiedRequestOf, placeInLine, approvedProfile, newLinkToken, verifyTokenHash, resetTokenHash, LINK_TOKEN_RE, REQUEST_FIELDS, REQUEST_TRAP, REQUEST_PATH, ACCOUNT_PATH, SENT_PATH, VERIFY_PATH, RESEND_PATH, FORGOT_PATH, RESET_PATH } from "./requestaccess.js";   // sprint 21, 21.1: request access; 21.4a: the account flow
+import { renderRequestAccess, REQUEST_FIELD_WORDS } from "./requestpage.js";
+import { renderSent, renderVerify, renderLinkDead, renderResend, renderForgot, renderForgotSent, renderReset, renderAccountStatus } from "./accountpage.js";   // sprint 21, 21.4a
+import { sendMail, mailerOf, mailPaused, TEAM_TO, TEAM_CC } from "./email.js";   // sprint 21, 21.4a: THE send, under the cap
+import { verifyMail, alreadyMail, resetMail, teamRequestMail } from "./mails.js";
 import { renderShowcase } from "./showcase.js";   // sprint 21, 21.3: `/` for a browser with no session
 import { createOrg, orgFields, orgFormProblem, ORG_FIELD_WORDS, ORG_WORDS, ORG_NAME_MAX } from "./orgs.js";   // sprint 7, 7.3: create an org
 import { renderOrgNew, renderOrgMade } from "./orgpage.js";
@@ -111,17 +114,26 @@ const CAPABILITIES = [
   { m:"GET",  p:"/assets/:path", auth:"none",   does:"the front door's pictures, self-hosted (sprint 21, 21.P; src/frontassets.js): the walkthrough's five posters (walkthrough/<n>-<name>.jpg, image/jpeg) and the connect page's two client logos (clients/claude.png, clients/chatgpt.png, image/png), the website's own files; cached a year as immutable (the page's URL carries ?v=<their hash>); answered before any auth or D1 read; any other path is 404" },
   { m:"GET",  p:"/favicon.svg",   auth:"none",   does:"the favicon: U-chan, the brand's own vector (src/ui.js FAVICON_SVG, the website's favicon.svg), image/svg+xml; with ?v=<its hash> (the pages' link) cached a year as immutable, bare a day; answered before any auth or D1 read" },
   { m:"GET",  p:"/.well-known/openai-apps-challenge", auth:"none", does:"OpenAI's domain verification (sprint 11, 11.3; src/wellknown.js): the token the operator stored for this deployment (tools/operator.mjs set-openai-challenge), as text/plain and nothing else; 404 not_found when none is stored. The platform's, never an org's: answered at the root before any sign-in, with no D1 read" },
-  { m:"POST", p:"/login",         auth:"none",   does:"email + password -> a 90-day token (sprint 7: one account per email, a seat per org; 7.4, the front door by path: the sign-in lives at the platform's root and CHOOSES the org — the org next names (/<org>/…) when your account holds a seat there, else your seat in org 1, else your first). Your ACCOUNT's passphrase signs in the chosen seat with an account session: a browser's cookie then reads, at any org's address /<org>/…, as your seat in that org. A seat's own secret (the key its admin gave you) signs in THAT seat only, with a seat session (its org alone). The token as a bearer is the seat it names. A form lands on next, else /<the chosen org>. A wrong or missing email or password is 401 invalid_login; your account's passphrase with no seat in any org is 403 no_seat_here (nothing signed in); 8 failures in 15 minutes on one account are 429 too_many_attempts" },
+  { m:"POST", p:"/login",         auth:"none",   does:"email + password -> a 90-day token (sprint 7: one account per email, a seat per org; 7.4, the front door by path: the sign-in lives at the platform's root and CHOOSES the org — the org next names (/<org>/…) when your account holds a seat there, else your seat in org 1, else your first). Your ACCOUNT's passphrase signs in the chosen seat with an account session: a browser's cookie then reads, at any org's address /<org>/…, as your seat in that org. A seat's own secret (the key its admin gave you) signs in THAT seat only, with a seat session (its org alone). The token as a bearer is the seat it names. A form lands on next, else /<the chosen org>. A wrong or missing email or password is 401 invalid_login; your account's passphrase with no seat in any org is 403 no_seat_here for a script, and for a form (sprint 21, 21.4a) an ACCOUNT session landing on /account (your request's status; it signs in to no org); an email whose only trace is an unverified join, with that join's passphrase, is 403 email_unverified (a form: check your inbox, with a resend); 8 failures in 15 minutes on one account are 429 too_many_attempts" },
   { m:"GET",  p:"/login",         auth:"none",   does:"the sign-in page, at the platform's root (?next=<same-origin path> is carried to the POST; an org's page sends you here with next=/<org>/<page>)" },
   { m:"POST", p:"/signup",        auth:"none",   does:"sign up by allowlist (sprint 7, 7.2; no email is ever sent): email + code (the one-time code the operator gave for THAT email, by hand) + password (+ confirm: equal when sent) -> the account's passphrase: a new account, an account with none (every migrated person) takes it, an account that has one is reset (every session of every seat of the account, in every org, ends, and their connected apps); the code is spent in the same write. Then a 90-day token for the account's seat in the org the sign-up chose (sprint 7, 7.4: its org-1 seat, else its first: the ACCOUNT's session, which a browser carries to any of the account's orgs at /<org>/…), or, with no seat in any org, signed up and signed in to nothing (a form, sprint 21, 21.2: 200 with the create-an-org page, its email as typed and, when the email the code proved has an approved request for a place, the org's name its company and your name its name; the passphrase is yours to type there). JSON {account: created|set|reset, signedIn, person?, role?, title?, token?, expiresAt?, note}. An email not allowed and a wrong, used, expired or revoked code are ONE answer, 401 invalid_signup, writing only the attempt (it counts in the account's lockout: 8 failures in 15 minutes, with the sign-in's, are 429 too_many_attempts); a missing or malformed field is 422 bad_signup {field}; a cross-site form is 403 cross_site_signup. Only the operator allows an email and mints its code (tools/operator.mjs, the deployment's credentials): no route of the door does. AN ORG'S INVITE LINK (sprint 12, 12.3; src/accounts.js THE INVITE LINK): {via: invite, invite (the link's token, the whole link taken too), password (+ confirm)} -> the invited seat's account takes the passphrase, only when it has none and no seat in another org (then marked with that org: it reaches that org alone, creates no org, and answers no other org's seat until the operator's code confirms the email), the link spent in the same write; then the ACCOUNT session on that seat (a form: 302 to the org's address /<slug>, its cookie set). JSON {account: invited, signedIn, org, person?, role?, title?, token?, expiresAt?, note}. 401 invalid_invite, ONE answer (no such open link, used, expired, replaced by a newer one, its seat removed, reissued or pending) and 409 account_stands (the email's account has its own passphrase or a seat in another org: sign in and accept the seat on /orgs), each writing NOTHING; 422 bad_invite {field: invite|passphrase|confirm}; the same-origin guard and the address's flood filter as above" },
   { m:"GET",  p:"/signup",        auth:"none",   does:"the sign-up page (sprint 7, 7.2): email, the one-time code the operator gave you by hand, a passphrase twice; ?via=invite is the page an org's invite link opens (sprint 12, 12.3: <origin>/signup?via=invite#<token> — the token rides the fragment, which no request carries; the page's script moves it into the form): the passphrase twice, no session set before it is" },
-  { m:"POST", p:"/request-access", auth:"none", does:"request access to the beta (sprint 21, 21.1; migrate-081; no session, no account, no org yet): name, email (your work email), company, role, team_size (1 | 2-10 | 11-50 | 51-200 | 201+) required; website, linkedin, x, github (each an http(s) address or that service's handle: the door stores the service's address it builds), ai_tools, use_case (one line) optional -> 303 to /request-access/<token>, your request's own private link (only its hash is kept). One open request per email, and the FIRST stands: a repeat for an email whose request is open changes nothing (no profile, no new link: the first link keeps working) and is a 303 to /request-access/asked, which says the email already asked. Nothing about accounts is read: an account's email with no open request files a request as any other. A request whose hidden field (trap) is filled is dropped with a new request's answer (its link opens nothing). 422 bad_request_access {field, note} before anything is written; 403 cross_site_request_access (a cross-site form, refused before the body is read); 429 too_many_attempts_ip (the address's flood filter, the budget POST /login and POST /signup spend). A form gets the page again with its values for a wrong field" },
-  { m:"GET",  p:"/request-access", auth:"none", does:"the request-access page (sprint 21, 21.1): the profile's form, the optional fields folded under one disclosure (open when one holds a value or is wrong), beside what the beta holds; a wrong field marked on itself; a link to sign in" },
-  { m:"GET",  p:"/request-access/:token", auth:"none", does:"your request's own page at its private link (sprint 21, 21.1 and 21.2), by its status. Open: you're in line — your name and company, your place in line (1 + the open requests that came before yours), the beta's places live from the database (N of 50 places taken; left out if it cannot be read), the request's steps (requested, in line, approved, signed up, your org), what comes next (the requests are reviewed in order; a sign-up code is emailed to your address when your place opens; with it, sign up: the org form comes filled in from this request), this page's own address to keep (Copy link) and a link to the walkthrough (the showcase's own section, /#walkthrough). Approved: your place is open, the code comes by email, a link to /signup. Declined: one sentence, the walkthrough and the website. A link that opens no request (wrong or malformed) is ONE 404 page. /request-access/asked (no token's shape) is the repeat's page: the email already asked, the first request's link shows your place, the beta's places and the walkthrough; it names nothing the request typed. /request-access/check (sprint 21, 21.P: Check my request) says the request's own link holds its place, and that a check by Google or by email is coming; it reads nothing" },
+  { m:"POST", p:"/request-access", auth:"none", does:"join the beta (sprint 21, 21.1 and 21.4a; migrate-081; no session, no account, no org yet): name, email (your work email), company, role, team_size (1 | 2-10 | 11-50 | 51-200 | 201+), password (your passphrase, at least 12 characters: you sign in with it) and confirm (the same again; checked when sent) required; website, linkedin, x, github (each an http(s) address or that service's handle: the door stores the service's address it builds), ai_tools, use_case (one line) optional -> ALWAYS a 303 to /account/sent, whatever the email: a new email files an UNVERIFIED request holding the passphrase's hash (no account yet) and is sent ONE verification email (its link works once, for 24 hours; only its hash is kept); an email that already holds an account files nothing and is sent at most a short \"you already have an account\" email (its passphrase never changes here); a filled hidden field (trap) files and sends nothing. An unverified request holds no place and is deleted after its 24 hours; the first VERIFIED request of an email stands. Every email to a person counts against the platform's cap (fewer than 2,900 in any 31 days) and three a day per address; at the cap nothing is sent and the page says email checks are paused. 422 bad_request_access {field, note} before anything is written; 403 cross_site_request_access (a cross-site form, refused before the body is read); 429 too_many_attempts_ip (the address's flood filter, the budget POST /login and POST /signup spend). A form gets the page again with its values (never the passphrase) for a wrong field" },
+  { m:"GET",  p:"/request-access", auth:"none", does:"the join form (sprint 21, 21.1; 21.4a): the profile and a passphrase twice, the optional fields folded under one disclosure (open when one holds a value or is wrong), beside what the beta holds; a wrong field marked on itself; a link to sign in" },
+  { m:"GET",  p:"/account", auth:"session", does:"your request's status (sprint 21, 21.4a), for an ACCOUNT session (the browser's session of an account that holds no seat yet: made by verifying your email, or by signing in before your org exists; it signs you in to no org, no /mcp and no API). In line: your place (1 + the open requests verified before yours), the beta's places live (N of 50 places taken; left out if it cannot be read), the request's steps and what comes next; approved: Create your org (-> /orgs/new, filled in from your request); declined: one sentence and a way on; your org made: sign in to it. No account session: the sign-in rule (a page navigation goes to /login)" },
+  { m:"GET",  p:"/account/sent", auth:"none", does:"check your inbox (sprint 21, 21.4a): the ONE answer of POST /request-access and POST /account/resend, the same for every email; at the email cap it says email checks are paused; a resend form beside it. It reads one aggregate (the cap's window)" },
+  { m:"GET",  p:"/account/verify/:token", auth:"none", does:"a verification link (sprint 21, 21.4a): a live link shows its email and asks for the passphrase you chose when you joined (it changes nothing: a mail scanner that follows the link spends nothing); an expired, used or wrong link is ONE 404 page with a resend form" },
+  { m:"POST", p:"/account/verify", auth:"none", does:"verify your email (sprint 21, 21.4a): {token (the link's), password (the join's passphrase)} -> in one write: the request verified (it takes its place in line by this moment), the account made with that passphrase (an account with none takes it; one with its own keeps it), its other unverified requests gone, and, for an account with no seat, an ACCOUNT session (a form: 303 to /account with the session cookie; JSON {verified, signedIn}); the team is told (company, role, team size: never your name or email). 404 invalid_link (expired, used, never sent, or a verified request of the email stands: nothing written); 401 wrong_passphrase (the attempt counts in the email's lockout: 8 in 15 minutes are 429 too_many_attempts); 403 cross_site_verify; 429 too_many_attempts_ip" },
+  { m:"GET",  p:"/account/resend", auth:"none", does:"the verification's resend form (sprint 21, 21.4a: the sign-in's \"Didn't get the email? Resend\")" },
+  { m:"POST", p:"/account/resend", auth:"none", does:"resend the verification (sprint 21, 21.4a): {email} -> ALWAYS a 303 to /account/sent; an email whose newest unverified request is live gets a NEW link (the old one stops working), within the three a day per address and the cap (a refused send keeps the old link). 422 bad_email; 403 cross_site_resend; 429 too_many_attempts_ip" },
+  { m:"GET",  p:"/account/forgot", auth:"none", does:"forgot your passphrase (sprint 21, 21.4a): the form, your email" },
+  { m:"POST", p:"/account/forgot", auth:"none", does:"ask for a reset link (sprint 21, 21.4a): {email} -> the SAME answer whether or not an account holds the email (a form: the page saying a link is on its way if one does; JSON {sent: true}); an account's email gets one link (single use, 30 minutes, only its hash kept), within the three a day per address and the cap. 422 bad_email; 403 cross_site_forgot; 429 too_many_attempts_ip" },
+  { m:"GET",  p:"/account/reset/:token", auth:"none", does:"a reset link (sprint 21, 21.4a): a live link asks for the new passphrase twice (it changes nothing); an expired, used or wrong one is ONE 404 page with the way to a new link" },
+  { m:"POST", p:"/account/reset", auth:"none", does:"set a new passphrase (sprint 21, 21.4a): {token, password (at least 12 characters), confirm} -> in one write: the account takes it (an org's invite mark ends: the link proves the email), EVERY session of the account ends — its org sessions in every org and its account sessions — with its other reset links and its seats' connected apps; then you are signed in fresh (a form: 303 to your org, the picker or /account, the new session's cookie set; JSON {reset, signedIn}). 404 invalid_link; 422 bad_reset {field}; 403 cross_site_reset; 429 too_many_attempts_ip" },
   { m:"GET",  p:"/orgs",          auth:"reader",   does:"your orgs (sprint 7, 7.4b): the browser's org picker at the platform's root. With an ACCOUNT session (signed in with your account's passphrase) whose account holds seats in several orgs: the page listing them (each org's name, its address and your role there), each a link to /<org>/home (or to the page ?to=<path> names, under that org). A one-org account and a SEAT session (signed in with a seat's own secret: that seat only) never see it: 302 straight to their org. No session: the sign-in rule (a page navigation goes to /login?next=…, a script 401 auth_required). It lists only your own account's seats; a bearer names one seat: 302 straight to its org" },
   { m:"POST", p:"/orgs/seat",     auth:"session",   does:"answer a seat that waits for your yes (sprint 7's review, A1): an org's admin who adds your email while your account already stands elsewhere (it holds your passphrase, or a seat in another org) makes a PENDING seat — it signs nothing in and counts nowhere until you accept it. Your org list (GET /orgs) shows it with Accept and Decline; each posts {seat, answer: accept|decline} here with your ACCOUNT session (signed in with your account's passphrase; a seat session answers nothing), same-origin only. accept: the seat becomes active (409 already_seated when your account already holds an active seat in that org); decline: it stays inactive. A form is sent back to /orgs; JSON {seat, answer: accepted|declined}. Any other seat, a seat no longer waiting, another account's: 404 not_yours, the same for every case; no session: the sign-in rule" },
-  { m:"GET",  p:"/orgs/new",      auth:"none",   does:"the create-an-org page (sprint 7, 7.3): your account's email and passphrase (the ACCOUNT's own, chosen at sign-up: never a key an org's admin gave you), the org's name, its address (its path name: a to z, 0 to 9 and single dashes, 2 to 40 characters, never a name the platform uses; sprint 21, 21.P: suggested from the org's name as you type, still yours to edit), its first project's short name (default: the address) and your name; the page belongs to the platform (the product's wordmark, no org's)" },
-  { m:"POST", p:"/orgs",          auth:"none",   does:"create an org (sprint 7, 7.3; the write new-org.sh did by SQL): {email, password (your ACCOUNT passphrase), name, slug (its address: a-z, 0-9 and single dashes, 2 to 40 characters, never a name the platform uses: every first segment of the door's routes and the platform's fixed words), project? (the first project's slug, 2 to 30, default the slug), projectName? (default the name), you? (your seat's name, default your email's first part)} -> in ONE write: the org (its name and address), your OWNER seat in it (a seat of your account) and its first project o<id>--<project>; 200 {org:{id, name, slug}, project:{key, name}, person:{id, name, email}, key, mcp, address, note} — key is your new seat's own secret (its sign-in and its API key), shown ONCE in this answer only; address is the org's own address (its pages at /<slug>/…, sprint 7, 7.4), and your AI reaches it at the one /mcp with the key as its bearer. A form (sprint 21, 21.P) gets the done page with the key, never a redirect, and is signed in at once: the session cookie POST /login sets, an account session on the new owner seat (a script's JSON answer sets none). Who may: an account holder proven by the ACCOUNT's passphrase (no seat needed; a seat's own secret never creates an org); an account creates at most ONE org (the beta's free tier). Refusals, nothing written but the proof's attempt: 422 bad_org {field: email|password|name|slug|project|you} and 409 org_name_reserved, both before anything is read; 401 invalid_account (one answer: no account, an account with no passphrase yet, a wrong one or a seat's secret; it counts in the account's lockout: 8 failures in 15 minutes, with the sign-in's, are 429 too_many_attempts); 409 org_limit (this account already created its org); 403 org_by_invite (sprint 12, 12.3: an account an org's invite link made creates no org — the waitlist; the operator's code confirms its email first); 409 org_name_taken; 429 too_many_attempts_ip (the address's flood filter, the budget POST /login and POST /signup spend); 403 cross_site_org (a cross-site form, refused before the body is read)" },
+  { m:"GET",  p:"/orgs/new",      auth:"none",   does:"the create-an-org page (sprint 7, 7.3): your account's email and passphrase (the ACCOUNT's own, chosen at sign-up: never a key an org's admin gave you), the org's name, its address (its path name: a to z, 0 to 9 and single dashes, 2 to 40 characters, never a name the platform uses; sprint 21, 21.P: suggested from the org's name as you type, still yours to edit), its first project's short name (default: the address) and your name; the page belongs to the platform (the product's wordmark, no org's). With an ACCOUNT session (sprint 21, 21.4a) whose request is approved it comes filled in from the request (your email, the company as the org's name and its suggested address, your name); one still in line is sent to /account" },
+  { m:"POST", p:"/orgs",          auth:"none",   does:"create an org (sprint 7, 7.3; the write new-org.sh did by SQL): {email, password (your ACCOUNT passphrase), name, slug (its address: a-z, 0-9 and single dashes, 2 to 40 characters, never a name the platform uses: every first segment of the door's routes and the platform's fixed words), project? (the first project's slug, 2 to 30, default the slug), projectName? (default the name), you? (your seat's name, default your email's first part)} -> in ONE write: the org (its name and address), your OWNER seat in it (a seat of your account) and its first project o<id>--<project>; 200 {org:{id, name, slug}, project:{key, name}, person:{id, name, email}, key, mcp, address, note} — key is your new seat's own secret (its sign-in and its API key), shown ONCE in this answer only; address is the org's own address (its pages at /<slug>/…, sprint 7, 7.4), and your AI reaches it at the one /mcp with the key as its bearer. A form (sprint 21, 21.P) gets the done page with the key, never a redirect, and is signed in at once: the session cookie POST /login sets, an account session on the new owner seat (a script's JSON answer sets none). Who may: an account holder proven by the ACCOUNT's passphrase (no seat needed; a seat's own secret never creates an org; signed in or not, the passphrase is asked again before an owner key is minted), whose email the operator approved; an account creates at most ONE org (the beta's free tier). Refusals, nothing written but the proof's attempt: 422 bad_org {field: email|password|name|slug|project|you} and 409 org_name_reserved, both before anything is read; 401 invalid_account (one answer: no account, an account with no passphrase yet, a wrong one or a seat's secret; it counts in the account's lockout: 8 failures in 15 minutes, with the sign-in's, are 429 too_many_attempts); 409 org_limit (this account already created its org); 403 org_by_invite (sprint 12, 12.3: an account an org's invite link made creates no org — the waitlist; the operator's code confirms its email first); 403 org_waiting (sprint 21, 21.4a: an account whose email holds neither a used operator's code nor an approved request — its request still in line); 409 org_name_taken; 429 too_many_attempts_ip (the address's flood filter, the budget POST /login and POST /signup spend); 403 cross_site_org (a cross-site form, refused before the body is read)" },
   { m:"GET",  p:"/install",       auth:"none",   does:"day-0 installer script for a terminal" },
   { m:"GET",  p:"/missing",      auth:"none", does:"What is missing (src/checklist.js, src/holes.js): the project's checklist, ONE standard for every project counted only in the areas the project has, the meter overall and per area, then each open item in the order a project needs it, with its first missing thing and the call that fills it (fill, fillPath: its preview); an item the reader may not fill names who fills it and offers no call; the public sees the standard only; at most four D1 statements; HTML for a browser, JSON otherwise — twin of the missing tool and brain://missing" },
   { m:"GET",  p:"/goals",         auth:"reader", does:"Goals (UI-B6a, M-ADR-020): the project's goal tree, one row per goal with its % (rolled up by weight), its dimensions, what fed it (filings per area) its standing counters and its checks (checks {total, passed, failed, ungraded}: the checks whose refs name the goal, by their latest grade); What fed the top goal (points per lane) and Blocked (open decisions on goals, goals with no feed), ?period=quarter|month|all (default all, UTC) &eval=1; ONE read (at most four D1 statements), HTML for a browser, JSON otherwise {declared, project, period, tree, nodes, globalId, globalPct, aligned, unaligned, noFeed, whatFed, blocked, budget?} (F1: a goal's budget and budgetSum, its own and with the goals below, one currency or mixed), live:'unreachable' when the ledger read fails; DERIVED from landed filings, never hand-typed — twin of the goals tool and brain://goals" },
@@ -169,7 +181,7 @@ const CAPABILITIES = [
   { m:"POST", p:"/control",       auth:"owner",  does:"the ONE admin write door (UI-B12a): a form action add-person (Invite: name, email, role member|partner or a typed role a script names, projectKey repeated for the seats, accessHat repeated for the access hats: none named, the typed role's; Invite's form sends seatsChosen=1 and seats exactly the projects ticked, none when none is; a script naming none seats a member on the org's sole project and a Partner nowhere; eval=1 from a script mints one of the suites' seats, eval-fixed-*; deliver=link — Invite's form sends it — makes a ONE-TIME INVITE LINK for the new seat in place of showing its key (sprint 12, 12.3: <origin>/signup?via=invite#<token>, 7 days, that seat and its email only, shown once; the invitee chooses their own passphrase; a seat that waits for its holder's yes gets none: its holder accepts it on /orgs), no deliver: the key, as before) · invite-link (personId: a new link for an active seat of YOUR org that was never used — never signed in, nothing filed, its account holding no passphrase of its own — any older open one of that seat revoked; a working seat: 'Nothing done', its secret reset with rotate-key or set-password; a seat of another org, a pending or removed one: nothing) · rotate-key (the new key shown once; that person's open sessions revoked in the same action) · set-role (role admin|member|partner; seated = member) · set-access-hats (personId, accessHat repeated: the WHOLE list of the hats that unlock briefings and cards for that person, migrate-045; none ticked: none; a hat outside the seven refused; an events row kind access) · add-project · archive-project · activate-project · grant-seat · revoke-seat · remove-person · clean-eval (the suites' marked rows, and an archived eval project swept of its seats, knowledge, derived rows and previews; its grades stay) (+ set-title · set-password kept for scripts); owner-only, refused to a seat 403 independently of the render; a read-only credential 403, a cross-origin cookie 403, a key in the address signs no one in (G2 M2); every answer is 200 + the page with its flash, a refusal 'Nothing done — …' (set-role never leaves the org with no real admin, the suites' eval-fixed owner never counted; add-person never mints an admin; remove-person never removes the last real admin); the one-time secret of add-person and rotate-key, and an invite link, ride the response body only, never a Location or a URL the server is sent (the link's token is its fragment)" },
   { m:"POST", p:"/respond",       auth:"bearer", does:"answer an open question with one of its options: {qid, option, provisional?} or {answers:[…]} — typed text is refused option_required, an absent option unknown_option, a qid this project has not filed unknown_qid, a ruled question not_open, nothing filed on any refusal; files the option's text (lane leader, kind answer, gapRefs q/<qid>) (QBDD22130). The owner's answer (not provisional) rules the question in the same request (ruled:true per answer); anyone else's waits with the owner, the question still open; a form is sent on to a same-origin next; no option is 422 option_required" },
   { m:"POST", p:"/round",         auth:"bearer", does:"the round is a filing (Q187911C3): {qid} adds a question to your round (lane leader, kind round, gapRefs q/<qid>); {export:true} banks your undecided answers and round filings as one rounds-format JSON artifact and returns {artifact, href, count}; a qid the project does not hold (or none) is 404 unknown_qid" },
-  { m:"GET",  p:"/logout",        auth:"none",   does:"clear the web session cookie and return to the login page (ADR-056)" },
+  { m:"GET",  p:"/logout",        auth:"none",   does:"clear the web session cookie and return to the login page (ADR-056): the session it carried ends, an org session or (sprint 21, 21.4a) an account session" },
   { m:"POST", p:"/project",       auth:"bearer", does:"set the active project for this session (ADR-100 §1: the picker/switcher stamp — key must be one of your seats; empty key = the org rollup view, owner only). Needs a session token (cookie or bearer); a call with no web session to stamp is 400 no_session" },
   { m:"GET",  p:"/profile",       auth:"bearer", does:"your own page — your avatar, name, title, role (Admin · Member · Partner), your hats (the seven: management · engineering · organization · gtm · finance · partner · quality, each with its one-line meaning), your seats, the STANDING trace-consent toggle (ADR-102: off · traces · traces+prompts; stored in THIS org's own databank, self-service only — the admin sees, never sets) and your secrets" },
   { m:"POST", p:"/profile",       auth:"bearer", does:"set your own trace consent (ADR-102, migrate-020; a body with no action and no consent of off, traces or traces+prompts is 422 bad_consent with the allowed values) — below-grade material at the door is STRIPPED with an honest note, never blocked; or, re-authenticated with your current passphrase, change your passphrase or rotate your key (shown once) — the self-service secrets, 2026-09-08; or action set-profile {hats:[<hat>…] (a form: hat repeated), avatar:{tone, initials} (a form: tone, initials)}: your own hats and avatar (migrate-044), 422 bad_hat for a hat outside the seven; your hats shape what Home shows you first and NEVER what you may read (the owner's MCQ of 2026-10-01, migrate-045: the visibility rule reads the access hats your admin sets on POST /control set-access-hats); the change is an events row (kind profile). Your own row only: never the read-only credential, a cross-origin session 403" },
@@ -290,6 +302,65 @@ async function addressFlooded(request, env) {
     catch (e) { console.warn("LOGIN_LIMIT unavailable — running unlimited", String(e && e.message || e)); }
   } else if (ipK) { console.warn("LOGIN_LIMIT binding absent — running unlimited"); }
   return over;
+}
+
+// ---- the account flow's helpers (sprint 21, 21.4a; the routes below POST /signup) ----
+// accountPage(html, status, extra) -> a front page of the account flow: never cached, no Referer (a link's token rides some paths)
+const accountPage = (html, status = 200, extra = {}) => new Response(html, { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "referrer-policy": "no-referrer", ...extra } });
+// formOrJson(request, fields) -> the body's fields (a form's named ones, or a JSON object), {} for anything else
+async function formOrJson(request, fields) {
+  if ((request.headers.get("content-type") || "").includes("form")) {
+    const fd = await request.formData().catch(() => null);
+    const out = {};
+    if (fd) for (const k of fields) { const v = fd.get(k); if (v != null) out[k] = typeof v === "string" ? v : ""; }
+    return out;
+  }
+  const b = await request.json().catch(() => ({}));
+  return b && typeof b === "object" && !Array.isArray(b) ? b : {};
+}
+// emailOf(v) -> the email as an account spells it, or "" when it is not one plain address
+const emailOf = (v) => { const e = normEmail(typeof v === "string" ? v.slice(0, 254) : ""); return EMAIL_RE.test(e) && /^[\x21-\x7e]+$/.test(e) ? e : ""; };
+// afterAnswer(c, work) — the work that differs by the email, run after the answer (the runtime's waitUntil), so the answer's time is
+// the same for every email; a failure is logged, never answered. Outside a runtime (no waitUntil) it is awaited.
+async function afterAnswer(c, work) {
+  const p = Promise.resolve().then(work).catch((e) => console.warn("account flow: the after-answer work failed", String((e && e.message) || e).slice(0, 200)));
+  if (c.ctx && typeof c.ctx.waitUntil === "function") c.ctx.waitUntil(p); else await p;
+}
+// joinMail(env, origin, request, pass) — a join's one email, its unverified request filed only when the email may go: any email gets
+// the request (holding the passphrase's hash); a new email its verification link; an account's email "you already have an account"
+// instead (its passphrase untouched) and a request whose link is sent to no one (its token dropped here: it can never be verified) —
+// so a later sign-in with the joined passphrase answers "check your inbox" for both, and the join never tells which emails hold an
+// account (src/accounts.js passphraseSignIn)
+async function joinMail(env, origin, r, pass) {
+  const held = await accountHolds(env, r.email), token = newLinkToken();
+  return sendMail(env, mailerOf(env), { to: r.email, build: async () => {
+    await fileRequest(env, r, { pass, tokenHash: await verifyTokenHash(held ? newLinkToken() : token) });
+    return held ? alreadyMail({ origin }) : verifyMail({ origin, link: `${origin}${VERIFY_PATH}/${token}`, name: r.name });
+  } });
+}
+// resendMail(env, origin, email) — a new verification link for the email's newest live unverified request (none: nothing); the
+// link is replaced only once the email may go, so a refused resend leaves the old link working
+async function resendMail(env, origin, email) {
+  // an account's email has no link to resend (its join got "you already have an account")
+  const join = await pendingJoinOf(env, email);
+  if (!join || await accountHolds(env, email)) return null;
+  const token = newLinkToken();
+  return sendMail(env, mailerOf(env), { to: email, build: async () => ((await rotateVerify(env, join.id, await verifyTokenHash(token)))
+    ? verifyMail({ origin, link: `${origin}${VERIFY_PATH}/${token}`, name: join.name }) : null) });
+}
+// forgotMail(env, origin, email) — a reset link for the email's account (none: nothing)
+async function forgotMail(env, origin, email) {
+  if (!(await accountHolds(env, email))) return null;
+  const token = newLinkToken();
+  return sendMail(env, mailerOf(env), { to: email, build: async () => ((await startReset(env, email, await resetTokenHash(token)))
+    ? resetMail({ origin, link: `${origin}${RESET_PATH}/${token}` }) : null) });
+}
+// orgPrefill(email, profile) -> the org form's values for an email a session or a code proved: the email and, from its approved
+// request (src/requestaccess.js approvedProfile), the org's name (its company), its address suggested from it (never a reserved or a
+// malformed one: 21.P D19) and your name
+function orgPrefill(email, p) {
+  const suggested = p ? suggestSlug(p.company, ORG_SLUG_MAX) : "";
+  return { email, ...(p ? { name: p.company.slice(0, ORG_NAME_MAX), you: p.name.slice(0, ORG_NAME_MAX), ...(orgSlugProblem(suggested, RESERVED_ORG_NAMES) ? {} : { slug: suggested }) } : {}) };
 }
 
 function sameOriginPath(candidate, origin) {
@@ -699,6 +770,8 @@ const ABOVE_ROUTES = [
       // cleared cookie whose token stayed live for 90 days was a sign-out in name only.
       const tok = sessionCookieToken(request);
       if (tok) { try { await db(env).prepare("UPDATE tokens SET revoked = 1 WHERE token_hash = ?").bind(await sha256(tok)).run(); } catch {} }
+      // (sprint 21, 21.4a) an ACCOUNT session (its own table) ends the same way
+      if (tok) { try { await endAccountSession(env, tok); } catch {} }
       return new Response(null, { status: 302, headers: { "location": to, "set-cookie": `${SESSION_COOKIE}=; ${SESSION_COOKIE_ATTRS}; Max-Age=0` } });
     },
   },
@@ -888,6 +961,19 @@ const ABOVE_ROUTES = [
       if (signin.verdict === "locked") return isWeb
         ? new Response(renderLogin({ error: "Too many attempts. Wait 15 minutes and try again.", next: body.next, brand: loginBrand }), { status: 429, headers: { "content-type": "text/html; charset=utf-8", "retry-after": "900" } })
         : json({ error: "too_many_attempts", retryAfterMinutes: 15 }, 429);
+      // (sprint 21, 21.4a: THE ACCOUNT FLOW) an email with no account whose newest join holds this passphrase: check your inbox (and
+      // its resend), nothing signed in, nothing counted
+      if (signin.verdict === "unverified") return isWeb
+        ? accountPage(renderSent({ brand: loginBrand, email: signin.email }), 403)
+        : json({ error: "email_unverified", note: "Verify your email first: open the link we sent (POST /account/resend sends a new one)." }, 403);
+      // a browser's sign-in by the account's passphrase, its account holding no seat: an ACCOUNT session, landing on its status page
+      if (signin.verdict === "no_seat_here" && isWeb) {
+        const opened = await openAccountSession(env, signin.account, { device: "web" });
+        if (opened) {
+          await countSignIn(env, { ...signin, session: "account" }, true);
+          return new Response(null, { status: 302, headers: { location: ACCOUNT_PATH, "set-cookie": sessionSetCookie(opened.token) } });
+        }
+      }
       if (signin.verdict === "no_seat_here") return isWeb
         ? new Response(renderLogin({ error: NO_SEAT_HERE_WORDS, next: body.next, brand: loginBrand }), { status: 403, headers: { "content-type": "text/html; charset=utf-8" } })
         : json({ error: "no_seat_here", note: NO_SEAT_HERE_WORDS }, 403);
@@ -1000,10 +1086,7 @@ const ABOVE_ROUTES = [
       // (its company) and your name. The code just proved that email (signUp's ok, r.email), which is what makes the read the
       // person's own; a failed read fills in only the email. Never the passphrase.
       if (isWeb && !token && !r.seat) {
-        const p = await approvedProfile(env, r.email).catch(() => null);
-        // 21.P D19: the address suggested from the company, as the form's own script suggests it (never a reserved or a malformed one)
-        const suggested = p ? suggestSlug(p.company, ORG_SLUG_MAX) : "";
-        const values = { email: typed, ...(p ? { name: p.company.slice(0, ORG_NAME_MAX), you: p.name.slice(0, ORG_NAME_MAX), ...(orgSlugProblem(suggested, RESERVED_ORG_NAMES) ? {} : { slug: suggested }) } : {}) };
+        const values = orgPrefill(typed, await approvedProfile(env, r.email).catch(() => null));
         return new Response(renderOrgNew({ host: url.host, values }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
       }
       if (isWeb) return token
@@ -1012,77 +1095,178 @@ const ABOVE_ROUTES = [
       return json({ account: r.how, signedIn: !!token, ...(token ? { person: r.seat.name, role: r.seat.role, title: r.seat.title, token, expiresAt: expires } : {}), note });
     },
   },
-    // ---- request access (sprint 21, 21.1; src/requestaccess.js, migrate-081): the beta's first step, before any account or org. Public
-    // (no session), at the platform's root only (src/orgpath.js PLATFORM_PATHS). A new request is answered with a 303 to its private
-    // link; a repeat for an email whose request is open changes nothing and is sent to the asked page (the owner's ruling,
-    // 2026-10-13: the first request stands; that an email asked is said, which the owner accepted); one the honeypot drops gets a
-    // link that opens nothing. Nothing reads accounts: an answer never says whether an email holds one ----
+    // ---- request access and THE ACCOUNT FLOW (sprint 21, 21.1 and 21.4a; src/requestaccess.js, src/accounts.js, migrate-081): the
+    // beta's first step, before any account or org. Public (no session), at the platform's root only (src/orgpath.js
+    // PLATFORM_PATHS). THE SAME ANSWER for every email (no enumeration): a join, a resend and a forgotten passphrase each answer one
+    // page, and the work that differs by the email (whether an account holds it, the email itself) runs AFTER the answer
+    // (afterAnswer: the runtime's waitUntil), so neither the page nor its time says which emails hold an account or asked before.
+    // Every email goes through src/email.js sendMail (the cap, the per-address limit). Each form's POST passes the same-origin
+    // guard and the address's flood filter first ----
   {
-    test: (path, method) => path === "/request-access" && method === "GET",
-    run: async (c) => new Response(renderRequestAccess({ brand: (await getTenantConfig(c.env)).brand }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }),
+    test: (path, method) => path === REQUEST_PATH && method === "GET",
+    run: async (c) => accountPage(renderRequestAccess({ brand: (await getTenantConfig(c.env)).brand })),
   },
   {
-    test: (path, method) => path === "/request-access" && method === "POST",
+    test: (path, method) => path === REQUEST_PATH && method === "POST",
     run: async (c) => {
       const { request, env, url } = c;
-      const ct = request.headers.get("content-type") || "";
-      const isForm = ct.includes("form");
-      const page = async (status, error, values = {}, extra = {}, field = "") => new Response(renderRequestAccess({ error, field, values, brand: (await getTenantConfig(env)).brand }),
-        { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...extra } });
+      const isForm = (request.headers.get("content-type") || "").includes("form");
+      const page = async (status, error, values = {}, extra = {}, field = "") => accountPage(renderRequestAccess({ error, field, values, brand: (await getTenantConfig(env)).brand }), status, extra);
       // the same-origin guard as POST /login and POST /signup (src/util.js crossSiteLogin), FIRST: a cross-site form is never read
       if (crossSiteLogin(request, url)) return isForm ? page(403, "Cross-site request refused.") : json({ error: "cross_site_request_access" }, 403);
-      let body = {};
-      if (isForm) {
-        const fd = await request.formData().catch(() => null);
-        if (fd) for (const k of REQUEST_FIELDS) body[k] = fd.get(k);
-      } else {
-        body = await request.json().catch(() => ({}));
-        if (!body || typeof body !== "object" || Array.isArray(body)) body = {};
-      }
+      const body = await formOrJson(request, REQUEST_FIELDS);
       const isWeb = isForm || !!body.web;
-      // what a form gets back when a field was wrong: the person's own strings (never the honeypot's), each cut short
-      const kept = Object.fromEntries(REQUEST_FIELDS.filter((k) => k !== REQUEST_TRAP && typeof body[k] === "string").map((k) => [k, body[k].slice(0, 300)]));
-      // the address's flood filter, the budget POST /login and POST /signup spend (addressFlooded)
+      // what a form gets back when a field was wrong: the person's own strings (never the honeypot's, never a passphrase), each cut short
+      const kept = Object.fromEntries(REQUEST_FIELDS.filter((k) => k !== REQUEST_TRAP && k !== "password" && k !== "confirm" && typeof body[k] === "string").map((k) => [k, body[k].slice(0, 300)]));
       if (await addressFlooded(request, env)) return isWeb
         ? page(429, "Too many attempts from this address. Wait a minute and try again.", kept, { "retry-after": "60" })
         : json({ error: "too_many_attempts_ip", retryAfterSeconds: 60 }, 429);
-      // the fields, before anything is written (src/requestaccess.js readRequest: nothing here depends on who asked before)
+      // the fields, before anything is read or written (nothing here depends on who asked before)
       const read = readRequest(body);
-      if (read.field) return isWeb ? page(422, REQUEST_FIELD_WORDS[read.field], kept, {}, read.field)
-        : json({ error: "bad_request_access", field: read.field, note: REQUEST_FIELD_WORDS[read.field] }, 422);
-      // the honeypot filled: a new request's answer, a link that opens nothing, nothing written; a repeat (null): the asked page
-      const token = trapped(body) ? newRequestToken() : await fileRequest(env, read.request);
-      return new Response(null, { status: 303, headers: { location: token ? `${REQUEST_PATH}/${token}` : REQUEST_ASKED_PATH, "cache-control": "no-store", "referrer-policy": "no-referrer" } });
+      const field = read.field || joinProblem({ password: body.password, confirm: isWeb ? (body.confirm ?? "") : body.confirm });
+      if (field) return isWeb ? page(422, REQUEST_FIELD_WORDS[field], kept, {}, field) : json({ error: "bad_request_access", field, note: REQUEST_FIELD_WORDS[field] }, 422);
+      // the passphrase hashed for every join, the honeypot's too, so the answer's time is one; the rest after the answer
+      const pass = await joinPass(body.password);
+      if (!trapped(body)) await afterAnswer(c, () => joinMail(env, url.origin, read.request, pass));
+      return new Response(null, { status: 303, headers: { location: SENT_PATH, "cache-control": "no-store", "referrer-policy": "no-referrer" } });
     },
   },
   {
-    // the repeat's page (a fixed path no token can be): it names nothing the request typed; the beta's count (sprint 21, 21.2:
-    // public numbers, two aggregate statements; a failed read leaves the count out, never a guess)
-    test: (path, method) => path === REQUEST_ASKED_PATH && method === "GET",
+    // check your inbox: the one answer (it reads the cap's window, one aggregate: at the cap it says email checks are paused)
+    test: (path, method) => path === SENT_PATH && method === "GET",
     run: async (c) => {
-      const [tenant, count] = await Promise.all([getTenantConfig(c.env), betaCount(c.env).catch(() => null)]);
-      return new Response(renderRequestAsked({ brand: tenant.brand, count }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+      const [tenant, paused] = await Promise.all([getTenantConfig(c.env), mailPaused(c.env).catch(() => false)]);
+      return accountPage(renderSent({ brand: tenant.brand, paused }));
     },
   },
   {
-    // the check page (sprint 21, 21.P: Check my request, beside Sign in): a fixed path no token can be; it reads nothing
-    test: (path, method) => path === REQUEST_CHECK_PATH && method === "GET",
-    run: async (c) => new Response(renderRequestCheck({ brand: (await getTenantConfig(c.env)).brand }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }),
-  },
-  {
-    test: (path, method) => path.startsWith("/request-access/") && method === "GET",
+    // a verification link: a live one shows the confirm page (a GET changes nothing); any other the one dead page
+    test: (path, method) => path.startsWith(VERIFY_PATH + "/") && method === "GET",
     run: async (c) => {
       const { env, path } = c;
       const brand = (await getTenantConfig(env)).brand;
-      // the link's token is the path's last segment: read by its hash; any link that opens no request is the one 404
-      const r = await requestByToken(env, path.slice("/request-access/".length));
-      const headers = { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "referrer-policy": "no-referrer" };
-      if (!r) return new Response(renderRequestMissing({ brand }), { status: 404, headers });
-      // sprint 21, 21.2: an OPEN request's place (one range count on the line index) and the beta's count (two aggregates), side
-      // by side; an approved or declined one reads nothing more. A failed count is left out, never a guess.
-      const [place, count] = r.status === "open" ? await Promise.all([placeInLine(env, r), betaCount(env).catch(() => null)]) : [null, null];
-      // the page's own address (the request's origin and path), to keep: its Copy link
-      return new Response(renderRequestReceived({ brand, request: r, place, count, url: c.url.origin + path }), { headers });
+      const token = path.slice(VERIFY_PATH.length + 1);
+      const row = LINK_TOKEN_RE.test(token) ? await verifyOpen(env, await verifyTokenHash(token)) : null;
+      return row ? accountPage(renderVerify({ brand, token, email: row.email })) : accountPage(renderLinkDead({ brand, kind: "verify" }), 404);
+    },
+  },
+  {
+    test: (path, method) => path === VERIFY_PATH && method === "POST",
+    run: async (c) => {
+      const { request, env, url } = c;
+      const isForm = (request.headers.get("content-type") || "").includes("form");
+      const brand = (await getTenantConfig(env)).brand;
+      if (crossSiteLogin(request, url)) return isForm ? accountPage(renderLinkDead({ brand }), 403) : json({ error: "cross_site_verify" }, 403);
+      const body = await formOrJson(request, ["token", "password", "web"]);
+      const isWeb = isForm || !!body.web;
+      const token = typeof body.token === "string" ? body.token.trim().toLowerCase() : "";
+      // the confirm page again with its words (its email read again by the link: a dead link has none)
+      const again = async (status, error) => {
+        if (!isWeb) return json({ error: status === 429 ? "too_many_attempts" : "wrong_passphrase" }, status);
+        const row = LINK_TOKEN_RE.test(token) ? await verifyOpen(env, await verifyTokenHash(token)) : null;
+        return accountPage(renderVerify({ brand, token, email: row ? row.email : "", error }), status);
+      };
+      if (await addressFlooded(request, env)) return isWeb ? again(429, "Too many attempts from this address. Wait a minute and try again.") : json({ error: "too_many_attempts_ip", retryAfterSeconds: 60 }, 429);
+      const r = LINK_TOKEN_RE.test(token) ? await verifyJoin(env, { tokenHash: await verifyTokenHash(token), password: body.password, client: await clientOf(request) }) : { verdict: "refused" };
+      if (r.verdict === "refused") return isWeb ? accountPage(renderLinkDead({ brand, kind: "verify" }), 404) : json({ error: "invalid_link" }, 404);
+      if (r.verdict === "locked") return again(429, "Too many attempts. Wait 15 minutes and try again.");
+      if (r.verdict === "wrong") return again(401, "That is not the passphrase this request chose. Type the one you chose when you asked to join.");
+      // the team's one alert for this request (uncounted: a verified destination): its company, role and team size, never the person
+      await afterAnswer(c, () => sendMail(env, mailerOf(env), { to: TEAM_TO, cc: TEAM_CC, counted: false, build: () => teamRequestMail({ origin: url.origin, request: r.request }) }));
+      if (!isWeb) return json({ verified: true, signedIn: !!r.session });
+      return r.session
+        ? new Response(null, { status: 303, headers: { location: ACCOUNT_PATH, "set-cookie": sessionSetCookie(r.session.token), "cache-control": "no-store" } })
+        : new Response(null, { status: 303, headers: { location: "/login", "cache-control": "no-store" } });
+    },
+  },
+  {
+    test: (path, method) => path === RESEND_PATH && method === "GET",
+    run: async (c) => accountPage(renderResend({ brand: (await getTenantConfig(c.env)).brand })),
+  },
+  {
+    test: (path, method) => path === RESEND_PATH && method === "POST",
+    run: async (c) => {
+      const { request, env, url } = c;
+      const isForm = (request.headers.get("content-type") || "").includes("form");
+      const page = async (status, error, email = "") => accountPage(renderResend({ brand: (await getTenantConfig(env)).brand, error, email }), status);
+      if (crossSiteLogin(request, url)) return isForm ? page(403, "Cross-site request refused.") : json({ error: "cross_site_resend" }, 403);
+      const body = await formOrJson(request, ["email", "web"]);
+      const isWeb = isForm || !!body.web;
+      if (await addressFlooded(request, env)) return isWeb ? page(429, "Too many attempts from this address. Wait a minute and try again.") : json({ error: "too_many_attempts_ip", retryAfterSeconds: 60 }, 429);
+      const e = emailOf(body.email);
+      if (!e) return isWeb ? page(422, "Type the email you asked with, as one plain address.") : json({ error: "bad_email" }, 422);
+      await afterAnswer(c, () => resendMail(env, url.origin, e));
+      return new Response(null, { status: 303, headers: { location: SENT_PATH, "cache-control": "no-store" } });
+    },
+  },
+  {
+    test: (path, method) => path === FORGOT_PATH && method === "GET",
+    run: async (c) => accountPage(renderForgot({ brand: (await getTenantConfig(c.env)).brand })),
+  },
+  {
+    test: (path, method) => path === FORGOT_PATH && method === "POST",
+    run: async (c) => {
+      const { request, env, url } = c;
+      const isForm = (request.headers.get("content-type") || "").includes("form");
+      const brand = (await getTenantConfig(env)).brand;
+      if (crossSiteLogin(request, url)) return isForm ? accountPage(renderForgot({ brand, error: "Cross-site request refused." }), 403) : json({ error: "cross_site_forgot" }, 403);
+      const body = await formOrJson(request, ["email", "web"]);
+      const isWeb = isForm || !!body.web;
+      if (await addressFlooded(request, env)) return isWeb ? accountPage(renderForgot({ brand, error: "Too many attempts from this address. Wait a minute and try again." }), 429) : json({ error: "too_many_attempts_ip", retryAfterSeconds: 60 }, 429);
+      const e = emailOf(body.email);
+      if (!e) return isWeb ? accountPage(renderForgot({ brand, error: "Type your account's email, as one plain address." }), 422) : json({ error: "bad_email" }, 422);
+      await afterAnswer(c, () => forgotMail(env, url.origin, e));
+      if (!isWeb) return json({ sent: true, note: "If an account holds that email, a reset link is on its way (single use, 30 minutes)." });
+      return accountPage(renderForgotSent({ brand, paused: await mailPaused(env).catch(() => false) }));
+    },
+  },
+  {
+    test: (path, method) => path.startsWith(RESET_PATH + "/") && method === "GET",
+    run: async (c) => {
+      const { env, path } = c;
+      const brand = (await getTenantConfig(env)).brand;
+      const token = path.slice(RESET_PATH.length + 1);
+      const row = LINK_TOKEN_RE.test(token) ? await resetOpen(env, await resetTokenHash(token)) : null;
+      return row ? accountPage(renderReset({ brand, token })) : accountPage(renderLinkDead({ brand, kind: "reset" }), 404);
+    },
+  },
+  {
+    test: (path, method) => path === RESET_PATH && method === "POST",
+    run: async (c) => {
+      const { request, env, url } = c;
+      const isForm = (request.headers.get("content-type") || "").includes("form");
+      const brand = (await getTenantConfig(env)).brand;
+      if (crossSiteLogin(request, url)) return isForm ? accountPage(renderLinkDead({ brand, kind: "reset" }), 403) : json({ error: "cross_site_reset" }, 403);
+      const body = await formOrJson(request, ["token", "password", "confirm", "web"]);
+      const isWeb = isForm || !!body.web;
+      const token = typeof body.token === "string" ? body.token.trim().toLowerCase() : "";
+      if (await addressFlooded(request, env)) return isWeb ? accountPage(renderReset({ brand, token, error: "Too many attempts from this address. Wait a minute and try again." }), 429) : json({ error: "too_many_attempts_ip", retryAfterSeconds: 60 }, 429);
+      if (!LINK_TOKEN_RE.test(token)) return isWeb ? accountPage(renderLinkDead({ brand, kind: "reset" }), 404) : json({ error: "invalid_link" }, 404);
+      const field = joinProblem({ password: body.password, confirm: isWeb ? (body.confirm ?? "") : body.confirm });
+      if (field) return isWeb ? accountPage(renderReset({ brand, token, error: REQUEST_FIELD_WORDS[field] }), 422) : json({ error: "bad_reset", field, note: REQUEST_FIELD_WORDS[field] }, 422);
+      const done = await finishReset(env, { tokenHash: await resetTokenHash(token), password: body.password });
+      if (done.verdict !== "ok") return isWeb ? accountPage(renderLinkDead({ brand, kind: "reset" }), 404) : json({ error: "invalid_link" }, 404);
+      // signed in fresh: an org session on the account's chosen seat (its landing), else, with no seat, an account session
+      const r = done.r;
+      const opened = r.seat ? await openSession(env, r, { device: isWeb ? "web" : "unknown" }) : await openAccountSession(env, r.account, { device: "web" });
+      if (!isWeb) return json({ reset: true, signedIn: false, note: "Passphrase set; every session of the account ended. Sign in with the new passphrase (POST /login)." });
+      if (!opened) return new Response(null, { status: 303, headers: { location: "/login", "cache-control": "no-store" } });
+      return new Response(null, { status: 303, headers: { location: r.seat ? await landingOf(env, r) : ACCOUNT_PATH, "set-cookie": sessionSetCookie(opened.token), "cache-control": "no-store" } });
+    },
+  },
+  {
+    // the account session's own page (src/accounts.js THE ACCOUNT SESSION): the person's request, by its status
+    test: (path, method) => path === ACCOUNT_PATH && method === "GET",
+    run: async (c) => {
+      const { request, env, url } = c;
+      const s = await accountSessionOf(env, sessionCookieToken(request));
+      if (!s) return signInOr401(request, url, ACCOUNT_PATH);
+      const standing = await accountStanding(env, s.accountId, s.email);
+      // a seat now (its org made, a seat accepted): its org's own session starts at the sign-in
+      if (standing.seats) return new Response(null, { status: 302, headers: { location: "/login", "cache-control": "private, no-store" } });
+      const req = await verifiedRequestOf(env, s.email);
+      const [place, count] = req && req.status === "open" ? await Promise.all([placeInLine(env, req), betaCount(env).catch(() => null)]) : [null, null];
+      return accountPage(renderAccountStatus({ brand: (await getTenantConfig(env)).brand, request: req, place, count, standing }), 200, { "cache-control": "private, no-store" });
     },
   },
     // ---- the org picker (sprint 7, 7.4b; docs/plan/PLATFORM.md §2 item 8: "sign-in lists the person's orgs"): the browser's
@@ -1134,8 +1318,13 @@ const ABOVE_ROUTES = [
   {
     test: (path, method) => path === "/orgs/new" && method === "GET",
     run: async (c) => {
-      const { url } = c;
-      return new Response(renderOrgNew({ host: url.host }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+      const { request, env, url } = c;
+      // (sprint 21, 21.4a) an ACCOUNT session (src/accounts.js THE ACCOUNT SESSION) gets the form filled in from its approved request
+      // — the email the session carries, never one typed; one whose request still waits goes to its status page
+      const s = await accountSessionOf(env, sessionCookieToken(request));
+      if (s && !(await mayFound(env, s.email))) return new Response(null, { status: 302, headers: { location: ACCOUNT_PATH, "cache-control": "private, no-store" } });
+      const values = s ? orgPrefill(s.email, await approvedProfile(env, s.email).catch(() => null)) : {};
+      return new Response(renderOrgNew({ host: url.host, values }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
     },
   },
   {
@@ -1180,6 +1369,8 @@ const ABOVE_ROUTES = [
       // never a redirect, never a URL), its one primary the org's address, now signed in. A script's JSON answer sets no cookie.
       if (isWeb) {
         const opened = await openSession(env, made.signin, { device: "web" });
+        // (sprint 21, 21.4a) the account session this browser carried, if any, ends: the org session replaces it
+        if (opened) await endAccountSession(env, sessionCookieToken(request));
         return new Response(renderOrgMade({ made, origin: url.origin, signedIn: !!opened }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store",
           ...(opened ? { "set-cookie": sessionSetCookie(opened.token) } : {}) } });
       }
@@ -2656,6 +2847,8 @@ const routeRequest = async (request, env, ctx) => {
             : PICKER_PATH + (asked ? "?to=" + encodeURIComponent(asked) : "");
           return new Response(null, { status: 302, headers: { location, "cache-control": "private, no-store" } });
         }
+        // (sprint 21, 21.4a) an ACCOUNT session at the platform's front page: its own status page (it reaches no org)
+        if (path === "/" && isAccountSessionToken(tok) && await accountSessionOf(env, tok)) return new Response(null, { status: 302, headers: { location: ACCOUNT_PATH, "cache-control": "private, no-store" } });
       }
     }
 
