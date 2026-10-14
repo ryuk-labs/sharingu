@@ -2,6 +2,7 @@
 -- 21.4; the owner's MCQs of 2026-10-13 and 2026-10-14: request access is a worker page writing D1, with a profile and a passphrase;
 -- ONE verification email; sign in with the passphrase; a reset link; every email under one cap; the data collection "approved as
 -- shown"; 21.4c, Google sign-in). UNSHIPPED until sprint 21's ship: edited in place.
+-- ORDER: BEFORE the code (the new code writes these tables; the old code names none of them).
 -- EXPAND ONLY (PLATFORM §5): six tables and their indexes added, one column on accounts and its index, one index on signup_codes, and migrate-072's two slug
 -- triggers re-created with one more reserved name; nothing renamed, no column or table dropped; the old code names none of it.
 --   1 · access_requests: ONE person's request for a place in the beta (a PLATFORM row: no org, as signup_codes). The profile as the
@@ -81,7 +82,6 @@
 -- WRITE COST on live: next to nothing (six empty tables and their indexes; the column NULL on every account and its partial index empty;
 -- idx_signup_used built over signup_codes' used rows, a few dozen; the
 -- triggers fire only on an org insert or an update to a NULL slug).
--- ORDER: BEFORE the code (the new code writes these tables; the old code names none of them).
 -- WRANGLER'S SPLITTER (engine/CLAUDE.md scars): the triggers as migrate-072 wrote them (no quoted two dashes, no "END)").
 -- A replay is refused at its FIRST statement, 10's one ALTER (SQLite has no ADD COLUMN IF NOT EXISTS: "duplicate column name", the
 -- already-applied shape the dry run's chain skips, tools/lib-migrate-chain.sh, as it skips 079 and 080), before anything else runs;
