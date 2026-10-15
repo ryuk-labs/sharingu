@@ -52,6 +52,23 @@
 //   R15 · THE CAP at the door: with 2,900 counted in the window a join answers the same 303, files nothing, sends nothing to the
 //        person; /account/sent says email checks are paused (no Google client stored: no button; tools/google-selftest.mjs G7 offers
 //        it); the team's cap alert is captured ONCE however many refusals
+//   R16 · THE ONE RULE (src/accounts.js ACCOUNT_HELD, the owner's MCQ of 2026-10-15): a seat holder with no passphrase and no subject
+//        (the world's org owner) joins -> the same 303, "you already have an account", nothing verifiable, a resend sends nothing; an
+//        OLD live link for it (filed under the old rule) opens nothing (GET and POST the dead page), its passphrase still none, no
+//        session, the request not in line, and the batch's spend and account upsert each refuse a held email on their own, as
+//        Google's join upsert does; the "already" email says why a seated person is not put in line; forgot -> reset sets its first
+//        passphrase, so the owner seat waits (R17): the picker says so and names the org, accepted there, then the passphrase signs
+//        in to the seat; a shell no one holds (its seat gone): forgot sends nothing, it joins as new and its verification sets its
+//        passphrase; a waiting seat and an invite mark hold too, and the waiting seat's holder's reset sets the passphrase, the seat
+//        still waiting (the picker)
+//   R17 · THE FIRST PASSPHRASE WAITS (the owner's MCQ, 2026-10-15): a reset that gives an account its first passphrase of its
+//        holder's own makes its active seats wait — (a) seated with none: waits, the picker; (b) an invite's: waits, the mark
+//        cleared; (c) its own passphrase: unchanged; (d) a waiting seat only: unchanged; (e) Google-linked: unchanged; the statement
+//        never revives an archived seat and moves nothing without its reset's spend
+//   R18 · THE DECLINE GUARD: the org's only real owner cannot decline its waiting seat (JSON 409 only_owner; the form back to the
+//        picker, which says so; the seat still waits), an eval seat is no real owner; a member's Decline, and an owner's while
+//        another real owner is active, work as before
+//   R19 · a waiting seat's sign-in never lands on its org's page: the picker, even when next names that org (landingFor)
 // And the MUTATION PROOF: each named mutant (a scratch copy of src/) must turn its case(s) red, by an assertion, never a crash.
 // Exit 1 on any failure. A gate step.
 import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync } from "node:fs";
@@ -469,6 +486,195 @@ const CASES = {
         `R15 · the team's cap alert captured ONCE for three refusals (${ms.length}); the count unmoved`],
     ];
   },
+  async R16() {
+    const A = await mod("accounts.js");
+    const W = await world();
+    const acct = (e) => W.one("SELECT id, pass_hash, invited_org, google_sub FROM accounts WHERE email = ?", e) || {};
+    const by = async (to) => (await W.mails()).filter((m) => m.to === to);
+    const ALREADY = "You already have a sharingu account";
+    // THE SEAT HOLDER: the world's org owner — an active owner seat, its account with no passphrase, no subject, no mark (it signs in
+    // by the seat's own secret), the live owner's shape
+    const OWNER = "owner@one.test", o0 = acct(OWNER);
+    const fresh = await W.join({ ...JOIN, email: "someone-new@one.test" });
+    const held = await W.join({ ...JOIN, email: OWNER });
+    const oMails = await by(OWNER);
+    const n0 = (await W.mails()).length;
+    await W.call("POST", "/account/resend", { form: { web: "1", email: OWNER } });
+    const resent = (await W.mails()).length - n0;
+    // AN OLD LIVE LINK (filed under the old rule, as the live owner's one unverified request is): the join's request given a live token
+    const T = "ab".repeat(24), H = sha(`sharingu-verify:v1:${T}`);
+    W.w.db.prepare("UPDATE access_requests SET verify_hash = ? WHERE email = ? AND status = 'unverified'").run(H, OWNER);
+    const oldReq = W.one("SELECT id FROM access_requests WHERE email = ?", OWNER);
+    const oldGet = await W.call("GET", `/account/verify/${T}`, { nav: true });
+    const oldPost = await W.call("POST", "/account/verify", { form: { web: "1", token: T, password: PASS } });
+    const afterOld = { a: acct(OWNER), reqs: W.q("SELECT status FROM access_requests WHERE email = ?", OWNER).map((r) => r.status).join(),
+      sessions: W.one("SELECT COUNT(*) AS n FROM account_sessions WHERE account_id = ?", o0.id).n };
+    // the batch's own guards, read directly (each a defense behind the open link's): the spend refuses a held email; the account's
+    // upsert never sets a held account's passphrase even under a spent request
+    const at = new Date().toISOString();
+    const spend = W.w.db.prepare(A.VERIFY_SPEND_SQL).run(at, oldReq.id, H).changes;
+    // Google's join takes no held account either (GOOGLE_JOIN_ACCOUNT_SQL's upsert, read directly: the seated shell keeps no subject)
+    const gjoin = W.w.db.prepare(A.GOOGLE_JOIN_ACCOUNT_SQL).run("acc-gjoin", OWNER, null, null, "sub-squat", at).changes;
+    const afterGJoin = acct(OWNER);
+    // FORGOT -> RESET -> SIGN IN: the seat holder sets a passphrase by the "already" email's advice; it lands in its seat
+    await W.call("POST", "/account/forgot", { form: { web: "1", email: OWNER } });
+    const rt = await W.lastLink(OWNER, "reset");
+    const NEW = "the-owner-sets-a-passphrase";
+    const reset = await W.call("POST", "/account/reset", { form: { web: "1", token: rt, password: NEW, confirm: NEW } });
+    const oSet = acct(OWNER), oWait = W.one("SELECT active, pending FROM people WHERE id = 'one-owner'");
+    // THE FIRST PASSPHRASE WAITS: the reset made the owner seat wait; the picker names the org with the reset's words; accepted there
+    const picker = await W.call("GET", "/orgs?seat=reset", { cookie: reset.cookie, nav: true });
+    const accept = await W.call("POST", "/orgs/seat", { form: { seat: "one-owner", answer: "accept" }, cookie: reset.cookie });
+    const login = await W.call("POST", "/login", { body: { email: OWNER, password: NEW } });
+    const seatOf = login.json && login.json.token ? (W.one("SELECT person_id FROM tokens WHERE token_hash = ?", sha(login.json.token)) || {}).person_id : null;
+    // A SHELL NO ONE HOLDS (seated once, its seat gone): forgot sends nothing; it joins as new, and its verification sets the passphrase
+    W.w.db.prepare("INSERT INTO people (id, name, email, role, key_hash, active, created_at, org) VALUES ('gone', 'Gone', 'gone@one.test', 'member', 'kh-gone', 1, ?, 1)").run(T0);
+    W.w.db.prepare("UPDATE people SET active = 0 WHERE id = 'gone'").run();
+    const g0 = acct("gone@one.test");
+    await W.call("POST", "/account/forgot", { form: { web: "1", email: "gone@one.test" } });
+    const goneForgot = (await by("gone@one.test")).length;
+    const gv = await W.verified({ email: "gone@one.test" });
+    const gMails = await by("gone@one.test"), g1 = acct("gone@one.test");
+    // A WAITING SEAT holds the account; so does an invite mark (the clause read alone: an account the mark alone holds)
+    W.w.db.prepare("INSERT INTO people (id, name, email, role, key_hash, active, pending, created_at, org) VALUES ('waits', 'Waits', 'waits@one.test', 'member', 'kh-waits', 0, 1, ?, 1)").run(T0);
+    W.w.db.prepare("INSERT INTO accounts (id, email, invited_org, created_at, updated_at) VALUES ('acc-marked', 'marked@one.test', 1, ?, ?)").run(T0, T0);
+    await W.join({ ...JOIN, email: "waits@one.test" });
+    await W.join({ ...JOIN, email: "marked@one.test" });
+    const wMails = await by("waits@one.test"), mMails = await by("marked@one.test");
+    // the waiting seat's holder resets too: the passphrase set, the seat still waiting, the session anchored there (the picker)
+    await W.call("POST", "/account/forgot", { form: { web: "1", email: "waits@one.test" } });
+    const wt = await W.lastLink("waits@one.test", "reset");
+    const wReset = await W.call("POST", "/account/reset", { form: { web: "1", token: wt, password: NEW, confirm: NEW } });
+    const wSeat = W.one("SELECT active, pending FROM people WHERE id = 'waits'"), wAcct = acct("waits@one.test");
+    // the account's upsert under a spent request (a request made 'open' by hand, as a spend that slipped through would leave it): a
+    // held account keeps its NULL passphrase
+    W.w.db.prepare("INSERT INTO access_requests (id, email, name, company, role, team_size, status, verified_at, created_at, updated_at) VALUES ('slipped', 'marked@one.test', 'M', 'C', 'Founder', '2-10', 'open', ?, ?, ?)").run(at, at, at);
+    W.w.db.prepare(A.VERIFY_ACCOUNT_SQL).run("acc-new-id", "marked@one.test", "h-slipped", "s-slipped", at, "slipped");
+    const marked = acct("marked@one.test");
+    return [
+      [!o0.pass_hash && !o0.google_sub && !o0.invited_org && W.shape(held) === W.shape(fresh),
+        `R16 · the seat holder (an owner seat, no passphrase, no subject): its join answers the same 303 as a new email's (${held.status})`],
+      [oMails.length === 1 && oMails[0].subject === ALREADY && !W.linkOf(oMails[0]) && oMails[0].text.includes("If an org gave you a seat, that seat is your account") && oMails[0].html.includes("If an org gave you a seat") && resent === 0 && W.q("SELECT status FROM access_requests WHERE email = ?", OWNER).map((r) => r.status).join() === "unverified",
+        `R16 · it gets "you already have an account", no link (${oMails.map((m) => m.subject).join(" | ")}); its request unverified, its link sent to no one; a resend sends nothing (${resent})`],
+      [oldGet.status === 404 && oldPost.status === 404 && !oldPost.cookie && !afterOld.a.pass_hash && afterOld.reqs === "unverified" && Number(afterOld.sessions) === 0,
+        `R16 · an OLD live link for it opens nothing: GET ${oldGet.status}, POST ${oldPost.status} (the dead page), its passphrase still none, no session, the request not in line (${afterOld.reqs})`],
+      [spend === 0, `R16 · the verification's spend refuses a held email inside the batch too (${spend} changed)`],
+      [gjoin === 0 && afterGJoin.google_sub === null && afterGJoin.id === o0.id, `R16 · Google's join upsert takes no seated shell (${gjoin} changed, subject ${afterGJoin.google_sub})`],
+      [!!rt && reset.status === 303 && !!reset.cookie && reset.location === "/orgs?seat=reset" && !!oSet.pass_hash && oSet.id === o0.id && oWait.active === 0 && oWait.pending === 1,
+        `R16 · forgot gives the seat holder a reset; the reset sets its FIRST passphrase, so its owner seat waits: the picker (${reset.status} -> ${reset.location})`],
+      [picker.status === 200 && picker.text.includes("Passphrase set. Your seats wait for your yes") && picker.text.includes(`data-pending="${W.slug()}"`) && accept.status === 303 && accept.location === "/orgs?seat=accepted",
+        `R16 · the picker says what happens next and names the org (${picker.status}); accepted there (${accept.status} -> ${accept.location})`],
+      [login.status === 200 && seatOf === "one-owner" && login.json.role === "owner",
+        `R16 · then the new passphrase signs in to the owner seat (${login.status}, ${seatOf})`],
+      [!!g0.id && !g0.pass_hash && goneForgot === 0 && gMails.length === 1 && /Verify your email/.test(gMails[0].subject) && gv.answer.status === 303 && g1.id === g0.id && !!g1.pass_hash
+        && W.one("SELECT status FROM access_requests WHERE email = 'gone@one.test'").status === "open",
+        `R16 · a shell no one holds (its seat gone): forgot sends nothing (${goneForgot}); it joins as new (${gMails.map((m) => m.subject).join(" | ")}), its verification sets the shell's passphrase, its request in line`],
+      [wMails.length === 1 && wMails[0].subject === ALREADY && mMails.length === 1 && mMails[0].subject === ALREADY,
+        `R16 · a waiting seat holds the account, and so does an invite mark: each join gets "you already have an account" (${wMails.length}, ${mMails.length})`],
+      [!!wt && wReset.status === 303 && wReset.location === "/orgs" && !!wAcct.pass_hash && wSeat.active === 0 && wSeat.pending === 1,
+        `R16 · the waiting seat's holder resets: the passphrase set, the seat still waiting for its yes, the picker (${wReset.status} -> ${wReset.location})`],
+      [marked.id === "acc-marked" && !marked.pass_hash, `R16 · the verification's account upsert never sets a held account's passphrase, even under a spent request (${marked.pass_hash})`],
+    ];
+  },
+  async R17() {
+    const A = await mod("accounts.js");
+    const W = await world();
+    const NEW = "a-first-passphrase-of-mine";
+    const seatRow = (id) => W.one("SELECT active, pending FROM people WHERE id = ?", id) || {};
+    const acct = (e) => W.one("SELECT id, pass_hash, invited_org, google_sub FROM accounts WHERE email = ?", e) || {};
+    const seat = (id, email, { active = 1, pending = 0 } = {}) =>
+      W.w.db.prepare("INSERT INTO people (id, name, email, role, key_hash, active, pending, created_at, org) VALUES (?, ?, ?, 'member', ?, ?, ?, ?, 1)").run(id, id, email, "kh-" + id, active, pending, T0);
+    const reset = async (email) => {
+      await W.call("POST", "/account/forgot", { form: { web: "1", email } });
+      const t = await W.lastLink(email, "reset");
+      return W.call("POST", "/account/reset", { form: { web: "1", token: t, password: NEW, confirm: NEW } });
+    };
+    // the shapes, each its own account: (a) seated, no passphrase · (b) an invite's passphrase and mark · (c) its own passphrase ·
+    // (d) a waiting seat only · (e) a Google subject, no passphrase
+    seat("s-none", "none@one.test");
+    seat("s-inv", "inv@one.test"); W.w.db.prepare("UPDATE accounts SET pass_hash = 'hi', pass_salt = 'si', invited_org = 1 WHERE email = 'inv@one.test'").run();
+    seat("s-own", "own@one.test"); W.w.db.prepare("UPDATE accounts SET pass_hash = 'ho', pass_salt = 'so' WHERE email = 'own@one.test'").run();
+    seat("s-pend", "pend@one.test", { active: 0, pending: 1 });
+    seat("s-goo", "goo@one.test"); W.w.db.prepare("UPDATE accounts SET google_sub = 'sub-goo' WHERE email = 'goo@one.test'").run();
+    const a = await reset("none@one.test"), b = await reset("inv@one.test"), c = await reset("own@one.test"), d = await reset("pend@one.test"), e = await reset("goo@one.test");
+    const slug = "/" + W.slug();
+    // the statement read directly: an archived seat is never revived, and nothing moves without THIS reset's spend
+    const at = new Date().toISOString();
+    seat("s-arch", "arch@one.test", { active: 0, pending: 0 });
+    const archId = acct("arch@one.test").id;
+    W.w.db.prepare("INSERT INTO account_resets (token_hash, account_id, created_at, expires_at, used_at) VALUES ('th-arch', ?, ?, ?, ?)").run(archId, at, at, at);
+    W.w.db.prepare(A.RESET_SEATS_WAIT_SQL).run(archId, at, "th-arch");
+    seat("s-unspent", "unspent@one.test");
+    const unspent = W.w.db.prepare(A.RESET_SEATS_WAIT_SQL).run(acct("unspent@one.test").id, at, "th-never-spent").changes;
+    return [
+      [a.status === 303 && a.location === "/orgs?seat=reset" && seatRow("s-none").active === 0 && seatRow("s-none").pending === 1 && !!acct("none@one.test").pass_hash,
+        `R17 · (a) seated, no passphrase: the reset's first passphrase makes the seat WAIT; the picker (${a.status} -> ${a.location})`],
+      [b.status === 303 && b.location === "/orgs?seat=reset" && seatRow("s-inv").pending === 1 && seatRow("s-inv").active === 0 && acct("inv@one.test").invited_org === null && acct("inv@one.test").pass_hash !== "hi",
+        `R17 · (b) an invite's passphrase: the seat waits, the mark cleared, the passphrase the holder's own (${b.status} -> ${b.location})`],
+      [c.status === 303 && c.location === slug && seatRow("s-own").active === 1 && seatRow("s-own").pending === 0,
+        `R17 · (c) its own passphrase before: unchanged, the seat active, its org (${c.status} -> ${c.location})`],
+      [d.status === 303 && d.location === "/orgs" && seatRow("s-pend").active === 0 && seatRow("s-pend").pending === 1,
+        `R17 · (d) a waiting seat only: unchanged, still waiting, the picker with no reset words (${d.status} -> ${d.location})`],
+      [e.status === 303 && e.location === slug && seatRow("s-goo").active === 1 && acct("goo@one.test").google_sub === null,
+        `R17 · (e) Google-linked, no passphrase: unchanged, the seat active, its org; the reset unlinks the subject (${e.status} -> ${e.location})`],
+      [seatRow("s-arch").active === 0 && seatRow("s-arch").pending === 0 && unspent === 0 && seatRow("s-unspent").active === 1,
+        `R17 · the wait never revives an archived seat, and moves nothing without this reset's spend (${unspent} changed)`],
+    ];
+  },
+  async R18() {
+    const { EVAL_SEAT_PREFIX } = await mod("util.js");
+    const W = await world();
+    const NEW = "a-first-passphrase-of-mine";
+    const row = (id) => W.one("SELECT active, pending FROM people WHERE id = ?", id) || {};
+    const reset = async (email) => {
+      await W.call("POST", "/account/forgot", { form: { web: "1", email } });
+      const t = await W.lastLink(email, "reset");
+      return (await W.call("POST", "/account/reset", { form: { web: "1", token: t, password: NEW, confirm: NEW } })).cookie;
+    };
+    const decline = (cookie, seat) => W.call("POST", "/orgs/seat", { form: { seat, answer: "decline" }, cookie });
+    // THE DECLINE GUARD: the org's only real owner, its seat waiting after its first passphrase (R16's shape)
+    const c1 = await reset("owner@one.test");
+    const json1 = await W.call("POST", "/orgs/seat", { body: { seat: "one-owner", answer: "decline" }, cookie: c1 });
+    const form1 = await decline(c1, "one-owner");
+    const page1 = await W.call("GET", "/orgs?seat=only_owner", { cookie: c1, nav: true });
+    const kept1 = row("one-owner");
+    // an eval seat is no real owner: still refused
+    W.w.db.prepare("INSERT INTO people (id, name, email, role, key_hash, active, created_at, org) VALUES (?, 'Eval Owner', 'eval-owner@one.test', 'owner', 'kh-eval', 1, ?, 1)").run(EVAL_SEAT_PREFIX + "owner", T0);
+    const form2 = await decline(c1, "one-owner"), kept2 = row("one-owner");
+    // a member's Decline works as before
+    W.w.db.prepare("INSERT INTO people (id, name, email, role, key_hash, active, created_at, org) VALUES ('mem', 'Mem', 'mem@one.test', 'member', 'kh-mem', 1, ?, 1)").run(T0);
+    const cm = await reset("mem@one.test");
+    const memWaited = row("mem").pending === 1;
+    const formM = await decline(cm, "mem"), memAfter = row("mem");
+    // an owner's Decline while ANOTHER real owner is active in the org works
+    W.w.db.prepare("INSERT INTO people (id, name, email, role, key_hash, active, created_at, org) VALUES ('co-owner', 'Co Owner', 'co@one.test', 'owner', 'kh-co', 1, ?, 1)").run(T0);
+    const form3 = await decline(c1, "one-owner"), after3 = row("one-owner");
+    return [
+      [json1.status === 409 && json1.json && json1.json.error === "only_owner" && form1.status === 303 && form1.location === "/orgs?seat=only_owner" && kept1.active === 0 && kept1.pending === 1,
+        `R18 · the org's ONLY owner cannot decline its waiting seat: JSON ${json1.status} ${json1.json && json1.json.error}, the form -> ${form1.location}; the seat still waits`],
+      [page1.status === 200 && /only owner: accept it, or leave it waiting/.test(page1.text),
+        `R18 · the picker says so in plain words (${page1.status})`],
+      [form2.location === "/orgs?seat=only_owner" && kept2.pending === 1, `R18 · an eval seat is no real owner: still refused (${form2.location})`],
+      [memWaited && formM.status === 303 && formM.location === "/orgs?seat=declined" && memAfter.active === 0 && memAfter.pending === 0,
+        `R18 · a member's waiting seat declines as before (${formM.location})`],
+      [form3.status === 303 && form3.location === "/orgs?seat=declined" && after3.active === 0 && after3.pending === 0,
+        `R18 · an owner's Decline while another real owner is active works (${form3.location})`],
+    ];
+  },
+  async R19() {
+    const W = await world();
+    const NEW = "a-first-passphrase-of-mine";
+    await W.call("POST", "/account/forgot", { form: { web: "1", email: "owner@one.test" } });
+    const t = await W.lastLink("owner@one.test", "reset");
+    await W.call("POST", "/account/reset", { form: { web: "1", token: t, password: NEW, confirm: NEW } });
+    // the owner seat waits (R16); a browser's sign-in whose next names that very org lands on the picker, never the org's page
+    const next = `/${W.slug()}/home`;
+    const web = await W.call("POST", "/login", { form: { web: "1", email: "owner@one.test", password: NEW, next } });
+    return [
+      [web.status === 302 && web.location === "/orgs" && W.one("SELECT pending FROM people WHERE id = 'one-owner'").pending === 1,
+        `R19 · a waiting seat's sign-in with next ${next} lands on the picker (${web.status} -> ${web.location})`],
+    ];
+  },
 };
 
 // ---- the mutants: each must turn its case(s) red ----
@@ -482,7 +688,7 @@ const MUTANTS = [
   { name: "the verification without the passphrase (the mailbox alone)", file: "src/accounts.js",
     from: "  if (!(await secretMatches(password, row))) { await countSignIn(env, out, false); return { verdict: \"wrong\" }; }\n", to: "", red: ["R7"] },
   { name: "an expired link still opens", file: "src/accounts.js",
-    from: "FROM access_requests WHERE verify_hash = ?1 AND status = 'unverified' AND verify_expires > ?2\";", to: "FROM access_requests WHERE verify_hash = ?1 AND status = 'unverified' AND ?2 IS NOT NULL\";", red: ["R7"] },
+    from: "FROM access_requests WHERE verify_hash = ?1 AND status = 'unverified' AND verify_expires > ?2 \" +", to: "FROM access_requests WHERE verify_hash = ?1 AND status = 'unverified' AND ?2 IS NOT NULL \" +", red: ["R7"] },
   { name: "the email's other joins kept", file: "src/accounts.js",
     from: "    db(env).prepare(VERIFY_DROP_OTHERS_SQL).bind(out.email, row.id, at),\n", to: "", red: ["R7"] },
   { name: "the team's email naming the person", file: "src/mails.js",
@@ -511,6 +717,46 @@ const MUTANTS = [
     from: "return taken >= cap ? `All ${cap} places taken` : `${taken} of ${cap} places taken`;", to: "return `${taken} of ${cap} places taken`;", red: ["R13"] },
   { name: "the approved requests holding no place", file: "src/beta.js",
     from: "WHERE r.status = 'approved' AND r.cleared_at IS NULL AND (?2 IS NULL OR r.email <> ?2) ", to: "WHERE r.status = 'never' AND r.cleared_at IS NULL AND (?2 IS NULL OR r.email <> ?2) ", red: ["R13"] },
+  // THE FIRST PASSPHRASE WAITS (R16, R17): the statement, each clause of its test, and its guards
+  { name: "a first-passphrase reset enters the seats silently (no wait)", file: "src/accounts.js",
+    from: "    db(env).prepare(RESET_SEATS_WAIT_SQL).bind(id, at, th),\n", to: "", red: ["R16", "R17"] },
+  { name: "a passphrase-less account's reset not a first passphrase", file: "src/accounts.js",
+    from: "(${u}.pass_hash IS NULL OR ${u}.invited_org IS NOT NULL)`;", to: "${u}.invited_org IS NOT NULL`;", red: ["R17"] },
+  { name: "an invite's passphrase taken as the holder's own", file: "src/accounts.js",
+    from: "(${u}.pass_hash IS NULL OR ${u}.invited_org IS NOT NULL)`;", to: "${u}.pass_hash IS NULL`;", red: ["R17"] },
+  { name: "a Google-linked account's seats made to wait", file: "src/accounts.js",
+    from: "`${u}.google_sub IS NULL AND (${u}.pass_hash IS NULL", to: "`(${u}.pass_hash IS NULL", red: ["R17"] },
+  { name: "the wait revives an archived seat", file: "src/accounts.js",
+    from: "WHERE account_id = ?1 AND active = 1 \" +\n  `AND EXISTS (SELECT 1 FROM accounts u WHERE u.id = ?1 AND ${FIRST_PASSPHRASE(\"u\")}) AND ${RESET_SPENT}`;",
+    to: "WHERE account_id = ?1 \" +\n  `AND EXISTS (SELECT 1 FROM accounts u WHERE u.id = ?1 AND ${FIRST_PASSPHRASE(\"u\")}) AND ${RESET_SPENT}`;", red: ["R17"] },
+  { name: "the wait without the reset's spend", file: "src/accounts.js",
+    from: "${FIRST_PASSPHRASE(\"u\")}) AND ${RESET_SPENT}`;", to: "${FIRST_PASSPHRASE(\"u\")}) AND ?2 IS NOT NULL AND ?3 IS NOT NULL`;", red: ["R17"] },
+  { name: "Google's join takes a held account", file: "src/accounts.js",
+    from: "  `WHERE NOT ${ACCOUNT_HELD(\"accounts\")}`;\n// the account THIS batch", to: "  `WHERE 1 = 1`;\n// the account THIS batch", red: ["R16"] },
+  { name: "the resend blind to a held account", file: "src/index.js",
+    from: "  if (!join || await accountHolds(env, email)) return null;", to: "  if (!join) return null;", red: ["R16"] },
+  // THE DECLINE GUARD (R18)
+  { name: "the only owner's Decline taken (no guard)", file: "src/accounts.js",
+    from: "INVITED_ELSEWHERE + \" AND \" + ANOTHER_REAL_OWNER;", to: "INVITED_ELSEWHERE;", red: ["R18"] },
+  { name: "an eval seat counted as another real owner", file: "src/accounts.js",
+    from: "o.id <> people.id\" + NOT_EVAL_SEAT_SQL(\"o.id\") + \"))\";", to: "o.id <> people.id))\";", red: ["R18"] },
+  { name: "the landing sends a waiting seat to its org's page", file: "src/index.js",
+    from: "signin.seat && !signin.pendingOnly && Number(signin.seat.org)", to: "signin.seat && Number(signin.seat.org)", red: ["R19"] },
+  // THE ONE RULE (R16): each clause of ACCOUNT_HELD, and each guard of the verification that reads it
+  { name: "the old rule: a seat holds no account (a seat holder with no passphrase joins as new)", file: "src/accounts.js",
+    from: "${a}.invited_org IS NOT NULL ` +\n  `OR EXISTS (SELECT 1 FROM people hp WHERE hp.account_id = ${a}.id AND (hp.active = 1 OR hp.pending = 1)))`;", to: "${a}.invited_org IS NOT NULL)`;", red: ["R16"] },
+  { name: "a waiting seat holds no account", file: "src/accounts.js",
+    from: "hp.account_id = ${a}.id AND (hp.active = 1 OR hp.pending = 1)))`;", to: "hp.account_id = ${a}.id AND hp.active = 1))`;", red: ["R16"] },
+  { name: "an invite mark holds no account", file: "src/accounts.js",
+    from: "${a}.google_sub IS NOT NULL OR ${a}.invited_org IS NOT NULL ` +", to: "${a}.google_sub IS NOT NULL ` +", red: ["R16"] },
+  { name: "every account held (a shell no one holds could never join)", file: "src/accounts.js",
+    from: "  return !!(r && Number(r.held) === 1);", to: "  return !!r;", red: ["R16"] },
+  { name: "a held email's link opens", file: "src/accounts.js",
+    from: "verify_expires > ?2 \" +\n  `AND NOT ${EMAIL_HELD(\"access_requests.email\")}`;", to: "verify_expires > ?2\";", red: ["R16"] },
+  { name: "the verification's spend blind to a held email", file: "src/accounts.js",
+    from: "v.status <> 'unverified') \" +\n  `AND NOT ${EMAIL_HELD(\"access_requests.email\")}`;", to: "v.status <> 'unverified')\";", red: ["R16"] },
+  { name: "the verification's upsert sets a held account's passphrase", file: "src/accounts.js",
+    from: "updated_at = excluded.updated_at WHERE NOT ${ACCOUNT_HELD(\"accounts\")}`;\n// 3 ·", to: "updated_at = excluded.updated_at`;\n// 3 ·", red: ["R16"] },
 ];
 
 let checks = 0, failed = 0;

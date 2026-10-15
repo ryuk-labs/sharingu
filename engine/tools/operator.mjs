@@ -145,7 +145,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { normEmail, signupCodeHash, SIGNUP_CODE_ALPHABET, SIGNUP_CODE_LENGTH } from "../src/accounts.js";
 import { BETA_ORG_CAP, BETA_ORGS_SQL, BETA_CODES_SQL, BETA_APPROVED_SQL, placesOf } from "../src/beta.js";   // sprint 21, 21.1: the beta's places, one source
-import { REQUEST_PLACE_SQL, TEAM_SIZES } from "../src/requestaccess.js";   // sprint 21, 21.2: the place the worker's page counts
+import { REQUEST_PLACE_SQL, TEAM_SIZES, clearSet } from "../src/requestaccess.js";   // sprint 21, 21.2: the place the worker's page counts
 import { REQUEST_ROW_SQL, APPROVE_REQUEST_SQL, DECLINE_REQUEST_SQL, REQUEST_ID_RE } from "../src/operatorread.js";   // sprint 21, 21.4b: the page's statements, one source
 import { readConfig, liveD1 } from "./org-undo.mjs";
 import { sendMail, captureMailer } from "../src/email.js";   // sprint 21, 21.4a: THE send, under the worker's own cap
@@ -180,6 +180,9 @@ export const REMOVE_ACCOUNT_SQL = [
   // sprint 21, 21.4a: its account sessions and its reset links (migrate-081)
   `DELETE FROM account_sessions WHERE account_id = ?1 AND ${FREE_GUARD}`,
   `DELETE FROM account_resets WHERE account_id = ?1 AND ${FREE_GUARD}`,
+  // its requests for a place cleared as the 90-day clearing clears them (src/requestaccess.js clearSet): an approved request holds
+  // a beta place while its row stands uncleared (src/beta.js BETA_APPROVED_SQL), and a removed account keeps no profile (A.5, 2026-10-15)
+  `UPDATE access_requests SET ${clearSet("?3")} WHERE email = ?2 AND cleared_at IS NULL AND ${FREE_GUARD}`,
   `DELETE FROM accounts WHERE id = ?1 AND email = ?2 AND ${FREE_GUARD}`,
 ];
 // the newest code of each email (its state), newest first; never the hash
@@ -323,10 +326,11 @@ export async function removeAccount(DB, email) {
   if (!a) return { refused: `${e} has no account on the platform: nothing to remove` };
   if (Number(a.active)) return { refused: `${e} holds ${a.active} active seat${Number(a.active) === 1 ? "" : "s"} in ${a.orgs} org${Number(a.orgs) === 1 ? "" : "s"}: remove ${Number(a.active) === 1 ? "that seat" : "those seats"} first (each org's admin, or that org's delete)` };
   if (Number(a.founded)) return { refused: `${e} founded an org that still stands: delete that org first (tools/org-undo.mjs export, then delete)` };
-  const res = await DB.batch(REMOVE_ACCOUNT_SQL.map((s) => (s.includes("?2") ? DB.prepare(s).bind(a.id, e) : DB.prepare(s).bind(a.id))));
+  const at = new Date().toISOString();
+  const res = await DB.batch(REMOVE_ACCOUNT_SQL.map((s) => (s.includes("?3") ? DB.prepare(s).bind(a.id, e, at) : s.includes("?2") ? DB.prepare(s).bind(a.id, e) : DB.prepare(s).bind(a.id))));
   const n = (i) => Number((res && res[i] && res[i].meta && res[i].meta.changes) || 0);
   if (n(REMOVE_ACCOUNT_SQL.length - 1) !== 1) return { refused: `${e}: the account was not removed (a seat or an org of it appeared since the check): nothing changed` };
-  return { email: e, detached: n(0), sessions: n(1) + n(4), attempts: n(2), codes: n(3) };
+  return { email: e, detached: n(0), sessions: n(1) + n(4), attempts: n(2), codes: n(3), requests: n(6) };
 }
 // listAllowed(DB, { email, at }) -> [{ email, state, how, created, expires, used, revoked, codes }]
 export async function listAllowed(DB, { email = null, at = new Date().toISOString() } = {}) {
@@ -589,15 +593,22 @@ export async function localMailBackend(persistDir, cfg) {
   const p = await localProxy(persistDir, { d1_databases: [{ binding: "DB", database_name: d1.database_name, database_id: d1.database_id }], kv_namespaces: [{ binding: "OAUTH_KV", id: ns.id }] });
   return { DB: p.env.DB, database: `local:${d1.database_name}`, mailer: captureMailer(p.env.OAUTH_KV), close: p.close };
 }
-// restMailer(env) -> a mailer over Cloudflare Email Service's REST send (POST …/accounts/<id>/email/sending/send), the message as the
-// worker's binding takes it ({ from, to, subject, html, text }), with CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID from the
-// environment (nothing here prints either). WRITTEN, NOT YET RUN, as liveD1 was: its first --live use is the owner's.
-export function restMailer(env = process.env) {
+// restBody(m) -> the REST send's body from the message as the worker's binding takes it: the binding's sender is { email, name },
+// the REST API's { address, name } (its first live run, 2026-10-15, answered 400 invalid_request_schema to `email` and 200 to
+// `address`); to, cc, subject, html and text pass as they are
+export function restBody(m) {
+  const f = m.from && typeof m.from === "object" ? { address: m.from.address || m.from.email, ...(m.from.name ? { name: m.from.name } : {}) } : m.from;
+  return { ...m, from: f };
+}
+// restMailer(env, fetchFn) -> a mailer over Cloudflare Email Service's REST send (POST …/accounts/<id>/email/sending/send), the
+// message as the worker's binding takes it ({ from, to, cc, subject, html, text }, sent as restBody shapes it), with
+// CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID from the environment (nothing here prints either)
+export function restMailer(env = process.env, fetchFn = fetch) {
   const token = env.CLOUDFLARE_API_TOKEN, account = env.CLOUDFLARE_ACCOUNT_ID;
   if (!token || !account) throw new Error("--live needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in the environment (source the deployment's credentials file)");
   const url = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/email/sending/send`;
   return { kind: "cloudflare", send: async (m) => {
-    const r = await fetch(url, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "user-agent": "sharingu-operator/1.0" }, body: JSON.stringify(m) });
+    const r = await fetchFn(url, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "user-agent": "sharingu-operator/1.0" }, body: JSON.stringify(restBody(m)) });
     const j = await r.json().catch(() => null);
     if (!r.ok || !j || j.success === false) throw Object.assign(new Error(`email send: HTTP ${r.status} ${JSON.stringify((j && j.errors) || "").slice(0, 300)}`), { code: String(r.status) });
   } };

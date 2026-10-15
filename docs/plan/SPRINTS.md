@@ -773,7 +773,8 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   googlemail.com, a Workspace `hd`), any other email's first link takes the account's passphrase (POST /auth/google/link); THE FIRST
   LINK IS A RESET (every session, reset link and connected app ends; an invite-set passphrase cleared, its seats waiting for the
   holder's yes); a reset unlinks Google; the team's alerts TO acie@ CC ryuk@ and counted in the cap (the cap's own alert past it,
-  once a day); an add-person shell is no one's (it joins, by email or Google); the operator page in a browser only; a wrong sign-in
+  once a day); an add-person shell is no one's (it joins, by email or Google; since the owner's MCQ of 2026-10-15 only one whose
+  seat is gone: a seated one is held, ACCOUNT_HELD); the operator page in a browser only; a wrong sign-in
   costs the same hashes whoever holds the email; the per-address limit by mailbox; a Google-only person seated elsewhere steps up
   by an org session; org_profile in the scoped-data gate; idx_signup_used; migrate-081's partial-run recovery; a cleared request's
   own words on /account; the sign-up code's words; the threat notes (engine/CLAUDE.md).
@@ -797,6 +798,17 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   the join flow; the full verify 246/246 at the push); live checked (4 links on the index, the redirect). The first real
   emails (HANDOFF A.5) wait for the owner's inbox.
 
+- [ ] **A.5's finds, `sprint-21-fix2`** (the owner's MCQs 2026-10-15): (1) WHO HOLDS AN ACCOUNT is one rule, `ACCOUNT_HELD`
+  (a passphrase, a Google subject, an invite mark, or an active or waiting seat): the owner's real ryuk@ (an owner seat, no
+  passphrase) had been treated as a shell and sent a verification link; now a seat holder's join gets "you already have an
+  account", never the beta line, and an old-rule link is the dead page. (2) THE FIRST PASSPHRASE WAITS: a reset or Google's
+  first link that sets an account's first passphrase makes its active seats wait for the holder's yes (no role exempt; the
+  operator's code exempt as its own act); an org's only real owner cannot decline its waiting seat (`only_owner`, 409).
+  (3) The operator's REST send: its first live run answered 400 `invalid_request_schema` (the binding's `{email, name}`
+  sender; the REST API takes `{address, name}`, proven by a live probe that delivered the real "You're in"): `restBody`.
+  (4) `remove-account` clears the email's requests as the 90-day clearing does, so a removed account holds no beta place.
+  Two independent reviews (no blocker; every finding folded). Proofs: request-access 130/130, google 107/107, operator
+  104/104, accounts 102/102, invite 77/77, signup 51/51, email 32/32; smoke 372/372; the gate green.
 ## Sprint 19 · The write door split (branch `sprint-19`, opened 2026-10-13; the owner's MCQs of the day) — SHIPPED 2026-10-13
 
 The spec: OpenAI's rescan after sprint 17 kept "operations that are not individually exposed" on `preview` and `file` and

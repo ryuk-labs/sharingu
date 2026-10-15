@@ -57,14 +57,36 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   place open with Create your org, closed), /orgs/new's prefill and /logout read it (`accountSessionOf`). A sign-in before verifying
   is "check your inbox" with a resend (/account/resend: three emails a day per mailbox — the address's +tag, and at Gmail its dots,
   dropped); /account/forgot answers the same for any
-  email, a reset link (`account_resets`, 30 minutes, once) sets the passphrase and ends EVERY session of the account. POST /orgs
+  email, a reset link (`account_resets`, 30 minutes, once) sets the passphrase and ends EVERY session of the account; THE FIRST
+  PASSPHRASE WAITS (the owner's MCQ of 2026-10-15, `src/accounts.js FIRST_PASSPHRASE`): a reset or Google's first link that gives an
+  account its first passphrase of its holder's own (none before, or only an invite's; no Google subject) makes its active seats wait
+  for the holder's yes, every role alike — the person lands on the picker (/orgs, the org named) and accepts there. POST /orgs
   still asks the passphrase (before an owner key is minted) and waits for the approval (`mayFound`: a used code or an approved
   request; else 403 org_waiting). The org form is filled in from the email's approved request (`approvedProfile`: only for an email a
-  session or a code proved). An add-person shell (an account an admin made by seating the email: no passphrase, no Google subject) is
-  no one's: its person joins as anyone does (`accountHolds`). THREAT NOTES (the sprint-21 review, recorded): a stranger's join with a
+  session or a code proved). WHO HOLDS AN ACCOUNT is ONE rule (`src/accounts.js ACCOUNT_HELD`, the owner's MCQ of 2026-10-15): a
+  passphrase, a Google subject, an invite mark, or a seat active or waiting in any org. A seat holder with no passphrase (a person an
+  admin seated, an org owner who signs in by the seat's own secret) is told "you already have an account" and sets a passphrase by
+  /account/forgot; only an add-person shell whose seat is gone joins as new (its verification, or Google's join, takes it). The join,
+  the resend, the forgot, the verification (its open link, its spend and its account upsert: a held email's link, one filed before
+  the rule, is the dead page and writes nothing) and Google's sign-in and join all read it (`accountHolds`, `EMAIL_HELD`).
+  THREAT NOTES (the sprint-21 review, recorded): a stranger's join with a
   victim's email spends that address's three emails of the day (the victim's own join or resend that day may then send nothing; the
   cap and the flood filter bound it, and it reaches no account); a distributed bot can still spend the 31-day cap (it then fails
-  safe: nothing is sent, the pages say so).
+  safe: nothing is sent, the pages say so). (2026-10-15, ACCOUNT_HELD and THE FIRST PASSPHRASE WAITS) /account/forgot is now a
+  door for a seated account with no passphrase: the mailbox's holder sets one by the emailed link. That opens a seat an org's admin
+  chose for that email — an add-person for a stranger's fresh email (no account yet, so the seat is active at once), or an invite
+  the admin redeemed themselves (the invite's passphrase and mark) — so the reset (and Google's first link, the same test) makes
+  every such active seat WAIT for the holder's yes: neither the squat nor the self-redeemed invite lands the stranger in the org
+  silently, and the picker names the org before anything is entered (no role exempt: an owner seat waits too, or an admin's
+  promotion would dodge it). While it waits the seat signs nothing in — its own key and grants answer 401 — until Accept. A
+  seated person is no longer put in the beta's line by a join, and a join filed before its email was seated cannot be verified
+  (its link is the dead page; a new join gets "already"). An account with its own passphrase or a Google subject resets as before
+  (its seats untouched). The operator's sign-up code is EXEMPT (the operator's own act, `SIGNUP_ACCOUNT_SQL`): a code minted for a
+  squatted email lands its holder in that seat. An invitee's own first reset makes their invited seat wait once too (the invite's
+  passphrase was the admin's link's, never the mailbox's): expected, one Accept. A waiting seat's Decline never leaves an org with no
+  owner: the org's only real owner cannot decline (`DECLINE_SEAT_SQL` guards itself; the picker says "accept it, or leave it
+  waiting"). A1 is unchanged: a seat added for an email whose account stands elsewhere (a passphrase, a subject, a seat in another
+  org) still waits for its holder's yes (`SEAT_CONSENT_SQL`).
   THE DATA (21.4b, the owner's approved data collection): the join's four consent boxes (`readConsent`: two required, each stored
   with the words' version `CONSENT_VERSION` and its time), the page that sent the person (`sourceOf`: a `?from=` tag, site · showcase
   · direct, never a cookie), the person's path on the request row (the account its verification made, the org it founded); the
@@ -86,8 +108,9 @@ at the repo root: `AGENTS.md`, then `docs/plan/`.
   token's `hd` naming the email's own domain: `identityOf`'s authoritative; any other address's first link takes the account's
   passphrase on the link page, POST `/auth/google/link`, `googleLinkByPassphrase`, and a new person joins by the emailed check) — and
   THE FIRST LINK IS A RESET (`linkGoogle`: every session, reset link and connected app of the account ends; a passphrase an invite
-  link set is cleared with its mark, that account's seats then waiting for its yes); a reset unlinks the subject. A join through
-  Google filed ALREADY VERIFIED (googleJoin, an add-person shell with no seat taken, never a 409; the form's email
+  link set is cleared with its mark, and that account's seats — or a passphrase-less account's — then wait for its yes: THE FIRST
+  PASSPHRASE WAITS); a reset unlinks the subject. A join through
+  Google filed ALREADY VERIFIED (googleJoin, an account no one holds taken — `ACCOUNT_HELD` — never a 409; the form's email
   is the join ticket's, `__Host-g_join`), creating the org takes the passphrase OR a Google sign-in under 10 minutes old (THE STEP-UP: `accountStepUp`, account_sessions'
   `proven_how`/`proven_at`, or for an org session — a Google-only person seated elsewhere — its proof in OAUTH_KV beside it,
   `putGoogleProof`; the web form only), the connect page's authorization completed as that account (`src/oauth.js connectByGoogle`;

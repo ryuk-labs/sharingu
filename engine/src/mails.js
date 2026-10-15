@@ -77,12 +77,15 @@ export const verifyMail = ({ origin, link, name }) => mail(origin, {
   link: { label: "Verify my email", href: link },
   after: [`The link works once, for ${VERIFY_HOURS} hours.`, "If you did not ask to join, ignore this email: nothing happens without the passphrase that was chosen."],
 });
-// alreadyMail({ origin }) — a join for an address that already holds an account: nothing changed
+// alreadyMail({ origin }) — a join for an address that already holds an account: nothing changed. ALREADY_SEATED_LINE: why a person an
+// org seated is not put in line (src/accounts.js ACCOUNT_HELD: the seat is their account), and what to do instead
+export const ALREADY_SEATED_LINE = "If an org gave you a seat, that seat is your account, so you are not put in line: sign in, or set a passphrase with the reset link below, then accept your org.";
 export const alreadyMail = ({ origin }) => mail(origin, {
   subject: "You already have a sharingu account",
   preheader: "Sign in, or reset your passphrase.",
   heading: "You already have an account",
-  paras: ["Someone asked to join the sharingu beta with this address, which already holds a sharingu account. Nothing changed."],
+  paras: ["Someone asked to join the sharingu beta with this address, which already holds a sharingu account. Nothing changed.",
+    ALREADY_SEATED_LINE],
   link: { label: "Sign in", href: `${origin}/login` },
   after: [`Forgot your passphrase? Reset it at ${origin}/account/forgot`, "If it was not you, ignore this email."],
 });
