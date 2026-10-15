@@ -230,8 +230,8 @@ export async function approvedProfile(env, email) {
 export const CLEAR_DAYS = 90;
 export const CLEAR_BATCH = 100;
 export const CLEAR_FIELDS = ["name", "company", "role", "email", "website", "linkedin", "x", "github", "ai_tools", "use_case", "account_id"];
-// copy: off-screen (a statement's text)
 // clearSet(p) -> the clearing's SET, its time the parameter p (tools/operator.mjs removeAccount clears a removed account's requests the same way)
+// copy: off-screen (a statement's text)
 export const clearSet = (p) => "name = '', company = '', role = '', email = 'cleared:' || id, website = NULL, linkedin = NULL, x = NULL, github = NULL, ai_tools = NULL, use_case = NULL, account_id = NULL, " +
   `cleared_at = ${p}, updated_at = ${p}`;
 const CLEAR_SET = clearSet("?2");

@@ -15952,7 +15952,7 @@
           "role": ""
         },
         {
-          "line": 239,
+          "line": 241,
           "name": "CLEAR_ABANDONED_SQL",
           "role": ""
         },
@@ -15967,7 +15967,7 @@
           "role": "rows of their kind), CLEAR_BATCH at most each, so a run reads and writes a bounded few; what is left waits for the next "
         },
         {
-          "line": 237,
+          "line": 239,
           "name": "CLEAR_DECLINED_SQL",
           "role": "?1 the line (90 days before now), ?2 now, ?3 the batch"
         },
@@ -15977,9 +15977,9 @@
           "role": ""
         },
         {
-          "line": 234,
+          "line": 237,
           "name": "CLEAR_SET",
-          "role": "copy: off-screen (a statement's text)"
+          "role": ""
         },
         {
           "line": 68,
@@ -16132,11 +16132,11 @@
           "sql": "<dynamic: APPROVED_PROFILE_SQL>"
         },
         {
-          "line": 243,
+          "line": 245,
           "sql": "<dynamic: CLEAR_DECLINED_SQL>"
         },
         {
-          "line": 243,
+          "line": 245,
           "sql": "<dynamic: CLEAR_ABANDONED_SQL>"
         }
       ],
@@ -16173,6 +16173,7 @@
         "VERIFY_PATH",
         "approvedProfile",
         "clearLine",
+        "clearSet",
         "clearStale",
         "fileRequest",
         "joinPass",
