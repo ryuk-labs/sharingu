@@ -40,8 +40,9 @@ A red line: stop, read its log, say so to the owner. Never "fix" live by hand; t
    (`make-reviewer-org.mjs --reissue` resets every code the forms hold).
 2. **Acie's fresh start — APPROVED 2026-10-15** (the owner's word): Acie re-joined with the Gmail (request 8c2db1e0…,
    "Acie Labs") and was approved ("You're in" sent); Acie signs in with Google and creates the org. acie@ryuklabs.io is a
-   ryuklabs MEMBER again (Google unlinked): its next Google sign-in is a first link, so its seat waits for Acie's Accept
-   on `/orgs` — the rule fix2 shipped. The operator page needs an admin of org 1: re-grant only on the owner's word.
+   ryuklabs ADMIN again (re-granted on the owner's word, 2026-10-15, for the operator page; Google unlinked): its next
+   Google sign-in is a first link, so its seat waits for Acie's Accept on `/orgs` (fix2's rule), then
+   `/ryuklabs/operator` opens.
    3. **hello@ → acie@:** when acie@ryuklabs.io becomes a verified Cloudflare destination (Acie clicks Cloudflare's mail,
    re-sent 2026-10-15), switch the one rule "hello@ to the team" from ryuk@ to acie@ (Email Routing API, the zone's rule;
    one destination a rule — Traps).
