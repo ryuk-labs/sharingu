@@ -4,7 +4,9 @@
 Live's DATA is at migrate-081 (applied 2026-10-14, verified); live's CODE is still sprint 20 (`850b262c` at 100%: the old
 code names none of 081's tables, so live is safe and unchanged for people). The code ship STOPPED RED: `ship.sh`'s
 cross-org suite on the preview found 0 leaks but ONE 500 ("Worker threw exception", Cloudflare 1101) on one of ~21,000
-calls; nothing was promoted. The owner's ruling (2026-10-14): INVESTIGATE FIRST, then re-run. Steps A.1–A.6 below.**
+calls; nothing was promoted. The owner's ruling (2026-10-14): INVESTIGATE FIRST, then re-run. A.1 DONE 2026-10-15: the
+500 does not reproduce (a platform transient), but the same run's 102 plan_limit answers are a real suite bug that
+fails every re-run — the fix comes first (A.1 (b)). Steps A.1–A.6 below.**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
 and must not trust its own memory over this file. Read, in order: `README.md` (the model, how we work) → this file →
@@ -24,18 +26,29 @@ migrate-081.sql` on live — its UNDO is `npx wrangler d1 time-travel restore ry
 --bookmark=00001040-00000000-00005104-0ccac1ab91be2c195274f064b1c6007f` (the WHOLE database: never without the owner);
 every 081 table, index, `accounts.google_sub` and the triggers verified on live; (4) live's slugs (ryuklabs, suites,
 sharingu-review) hold no reserved name, the grants check names only three old eval seats. What is left:
-   1. **The 500.** The suite's record: `engine/.runs/ship-xorg/1b31a817-6b13-4823-937a-a2c551678d85/` (`fivexx.json`: org
-      5's owner · MCP `changes {"eval":true,"projects":["desk","shop"]}` -> 500 at 2026-10-14T15:46:11Z on the preview
-      version `1b31a817-6b13-4823-937a-a2c551678d85`; both throwaway orgs deleted). `changesAnswer` (`src/extract.js`)
-      is UNCHANGED since sprint 20, and the same call passed in the local `attack-xorg --prove` (21,813 calls, 0 5xx) and
-      in sprint 20's ship. The Workers observability query API returned no events for that window (the token may lack
-      the read, or a preview's events are not kept) — so the exception is unknown. Investigate: reproduce the exact call
-      on the preview URL (`https://1b31a817-ryuklabs-agent-r.sharingu-meetings-media.workers.dev`, if the version still
-      answers) as an owner of a FRESH throwaway org with two projects and an eval-marked filing (`attack-xorg.mjs`'s own
-      fixtures show how; delete the org after: `node tools/attack-xorg.mjs --cleanup <run dir> --live --config
-      wrangler.jsonc`), with `npx wrangler tail ryuklabs-agent-r --format json` running to a local file to catch the
-      exception. A real bug: fix on a branch `sprint-21-fix`, smoke + gate, one PR, then step 2. A transient (D1/
-      platform): say so with the evidence and re-run.
+   1. **The 500 — INVESTIGATED 2026-10-15: not reproducible, no exception recorded; but the suite run had a SECOND red.**
+      (a) The 500 (`fivexx.json` under `engine/.runs/ship-xorg/1b31a817-…/`: org 5's owner · `changes
+      {"eval":true,"projects":["desk","shop"]}`, 2026-10-14T15:46:11Z). Without `org`, `changesAnswer` ignores `projects`:
+      the call is the plain `changes {eval:true}` that passed moments before in the same walk. Replayed on the same preview
+      on two fresh throwaway orgs built and seeded as the suite builds them, with the people plant (machine-local
+      `engine/.runs/repro-500/repro.mjs`): 340 `changes` calls (the exact one 60 times serially and 120 times eight at a
+      time, the single-project variants as both owners): 340 × 200, 0 5xx; both orgs and their four accounts removed by
+      `attack-xorg --cleanup` (0 left, checked on live). Cloudflare's analytics (GraphQL `workersInvocationsAdaptive`,
+      2026-10-14 12:00–20:00) count version 1b31a817 at 11,676 invocations, ALL `success`, 0 errors: the worker recorded
+      no exception. Read: a transient at the platform edge, not our code. (b) THE SECOND RED, missed on 10-14: the same run
+      had **102 `plan_limit` answers**, the first `POST /auth/google/start 429` — and `runPreview` fails on any. Sprint
+      21's `/auth/google/start` (GET, POST) and `/auth/google/link` spend the address's LOGIN_LIMIT budget first
+      (`addressFlooded`, src/index.js), but they are NOT in attack-xorg's `SKIP` (the account-flow routes are), so the
+      route walk spends the budget and every later flood-checked call answers 429. Only the preview mode counts a 429, so
+      local runs stayed green. A re-run as-is goes red again. THE FIX — BUILT AND PROVEN 2026-10-15 on `sprint-21-fix`, its
+      PR waiting on the owner's merge OK: `/auth/google/start` and `/auth/google/link` join `SKIP` (covered by smoke s69
+      and `tools/google-selftest.mjs`; the callback spends nothing and stays walked). The proof, the preview mode against
+      a LOCAL worker (`sh tools/r-local.sh up xorgfix --port 8850 --project shop=Shop`, then `node tools/attack-xorg.mjs
+      --url http://127.0.0.1:8850 --local ~/.sharingu/r-local/xorgfix/persist --config
+      ~/.sharingu/r-local/xorgfix/wrangler.local.jsonc`, 77 s): main's suite RED (240 plan_limit, the first `POST
+      /auth/google/link 429`, and 3 browser sign-ins refused for the spent budget); the fix GREEN (11,276 calls, 0
+      findings, 0 5xx, 0 plan_limit). Smoke 371/371, `sh gate.sh` green. After the merge (check its state, then `git
+      checkout main && git pull --ff-only`): step 2 on the new `main`.
    2. `sh tools/ship.sh ryuklabs` again (resumable by its record under `engine/.runs/ship/`), in the background with its
       output to `engine/.runs/ship-sprint21.log`, the load gated INSIDE the command, and `wrangler tail` beside it. Avoid
       a window crossing 03:00/15:00 UTC (the cron's backup heartbeat). 1–3 hours; a quiet log is not a stall (watch
@@ -177,10 +190,13 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   Then `sh tools/verify-live.sh --live`: if it SKIPs its authenticated checks on a transient Cloudflare read, run it
   again; 13/13 is not 28/28.
 
-- A 500 on the preview that reads "Worker threw exception" (Cloudflare 1101) is an uncaught throw with NO answer of
-  ours; the Workers observability query API (`POST /accounts/{id}/workers/observability/telemetry/query`) returned no
-  events at all for sprint 21's window, so run `npx wrangler tail ryuklabs-agent-r --format json > <file>` BESIDE a
-  ship to keep the exception.
+- A request to a VERSION PREVIEW URL is invisible to `wrangler tail` (with or without `--version-id`) AND to Workers Logs
+  (proven 2026-10-15: live's requests showed in both within seconds, the preview's never). A tail beside a ship catches
+  nothing of the preview's suite. What does see the preview: Cloudflare's GraphQL analytics, `workersInvocationsAdaptive`
+  by `scriptVersion` and `status` (`scriptThrewException` vs `success`); the machine-local query is
+  `engine/.runs/repro-500/gql.sh <from> <to>`. A 1101 the analytics never counted as an exception is the edge, not us.
+- `runPreview` fails on ANY 429 (counted as plan_limit): a new route that spends the address's LOGIN_LIMIT budget must
+  join attack-xorg's `SKIP` (or be paced), or the preview goes red while every local run stays green.
 - `wrangler kv key delete` takes the KEY FIRST (`npx wrangler kv key delete "<key>" --namespace-id <id> --remote`); a
   `--` before the key makes it fail with rc 1 and delete nothing.
 
@@ -225,6 +241,10 @@ change rides the same process: one sprint branch, vertical slices, a smoke per s
 end with the owner's OK. Clean all the way: no dead code, no dead docs; a finished brief is deleted.
 
 ## Ruled by the owner (the ones a builder must know)
+
+- **The forms wait for green (2026-10-15):** the owner submits the Claude connector and plugin forms only after block A
+  is done end to end: sprint 21 shipped green and A.3–A.6 finished. The plugin itself is ready (validate --strict
+  passes; `ryuk-labs/sharingu-plugin` at 0.1.16, equal to this tree).
 
 - The MCP is the only input; every write is previewed, then filed; the word is "contribution".
 - Screens are optional for work that touches no screen; ids are checked against the project's own Map; proof is a

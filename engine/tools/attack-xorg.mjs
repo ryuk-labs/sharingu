@@ -500,6 +500,9 @@ const SKIP = new Map([["/logout", "ends the session"], ["/mcp", "walked as the M
   ["/signup", "walked by the sign-up moves (its every call spends the address's sign-in budget, LOGIN_LIMIT, shared with /login)"],
   ["/request-access", "a platform door before any account or org (its every POST spends the address's sign-in budget, LOGIN_LIMIT, shared with /login): smoke s62 and tools/request-access-selftest.mjs"],
   ...["/account/verify", "/account/resend", "/account/forgot", "/account/reset"].map((p) => [p, "the account flow's platform door (sprint 21, 21.4a: its every POST spends the address's sign-in budget, LOGIN_LIMIT, shared with /login; an email it sends counts in the platform's cap): smoke s67 and tools/request-access-selftest.mjs"]),
+  // the sprint-21 ship's preview run (2026-10-14): walked, these two spent the budget and every later flood-checked call answered 429
+  // (runPreview counts each as plan_limit: 102, red); the callback spends nothing and stays walked
+  ...["/auth/google/start", "/auth/google/link"].map((p) => [p, "Google sign-in's platform door (sprint 21, 21.4c: its every call, GET and POST, spends the address's sign-in budget, LOGIN_LIMIT, shared with /login, before anything else): smoke s69 and tools/google-selftest.mjs"]),
   ["/favicon.svg", "static bytes"], ["/fonts/:file", "static bytes"], ["/install", "static page"], ["/health", "the platform's check, names no org"]]);
 
 // ---- the snapshot: every row of an org, table by table (count and content hash) ----
