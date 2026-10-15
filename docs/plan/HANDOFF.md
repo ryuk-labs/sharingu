@@ -40,10 +40,15 @@ sharingu-review) hold no reserved name, the grants check names only three old ev
       21's `/auth/google/start` (GET, POST) and `/auth/google/link` spend the address's LOGIN_LIMIT budget first
       (`addressFlooded`, src/index.js), but they are NOT in attack-xorg's `SKIP` (the account-flow routes are), so the
       route walk spends the budget and every later flood-checked call answers 429. Only the preview mode counts a 429, so
-      local runs stayed green. A re-run as-is goes red again. THE FIX (on `sprint-21-fix`): the Google routes join `SKIP`
-      with the account flow's reason (covered by smoke s69 and `tools/google-selftest.mjs`); proven by the preview mode
-      against a LOCAL worker (`attack-xorg --url http://127.0.0.1:<port> --local …`: 0 plan_limit), smoke + gate, one PR,
-      merge, then step 2.
+      local runs stayed green. A re-run as-is goes red again. THE FIX — BUILT AND PROVEN 2026-10-15 on `sprint-21-fix`, its
+      PR waiting on the owner's merge OK: `/auth/google/start` and `/auth/google/link` join `SKIP` (covered by smoke s69
+      and `tools/google-selftest.mjs`; the callback spends nothing and stays walked). The proof, the preview mode against
+      a LOCAL worker (`sh tools/r-local.sh up xorgfix --port 8850 --project shop=Shop`, then `node tools/attack-xorg.mjs
+      --url http://127.0.0.1:8850 --local ~/.sharingu/r-local/xorgfix/persist --config
+      ~/.sharingu/r-local/xorgfix/wrangler.local.jsonc`, 77 s): main's suite RED (240 plan_limit, the first `POST
+      /auth/google/link 429`, and 3 browser sign-ins refused for the spent budget); the fix GREEN (11,276 calls, 0
+      findings, 0 5xx, 0 plan_limit). Smoke 371/371, `sh gate.sh` green. After the merge (check its state, then `git
+      checkout main && git pull --ff-only`): step 2 on the new `main`.
    2. `sh tools/ship.sh ryuklabs` again (resumable by its record under `engine/.runs/ship/`), in the background with its
       output to `engine/.runs/ship-sprint21.log`, the load gated INSIDE the command, and `wrangler tail` beside it. Avoid
       a window crossing 03:00/15:00 UTC (the cron's backup heartbeat). 1–3 hours; a quiet log is not a stall (watch
@@ -236,6 +241,10 @@ change rides the same process: one sprint branch, vertical slices, a smoke per s
 end with the owner's OK. Clean all the way: no dead code, no dead docs; a finished brief is deleted.
 
 ## Ruled by the owner (the ones a builder must know)
+
+- **The forms wait for green (2026-10-15):** the owner submits the Claude connector and plugin forms only after block A
+  is done end to end: sprint 21 shipped green and A.3–A.6 finished. The plugin itself is ready (validate --strict
+  passes; `ryuk-labs/sharingu-plugin` at 0.1.16, equal to this tree).
 
 - The MCP is the only input; every write is previewed, then filed; the word is "contribution".
 - Screens are optional for work that touches no screen; ids are checked against the project's own Map; proof is a
