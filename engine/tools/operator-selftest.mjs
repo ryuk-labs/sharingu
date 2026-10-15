@@ -235,6 +235,9 @@ const cliOn = (db) => async (...argv) => {
   seat(db, "b1", "busy@example.org", 2); seat(db, "b0", "busy@example.org", 3, 0);
   db.prepare("INSERT INTO accounts (id, email, created_at, updated_at) VALUES ('acc-f', 'founder@example.org', '2026-10-01', '2026-10-01')").run();
   db.prepare("INSERT INTO org (id, name, created_at, updated_at, created_by_account) VALUES (7, 'Founded', '2026-10-01', '2026-10-01', 'acc-f')").run();
+  // A.5 (2026-10-15): gone@'s approved request holds a beta place until cleared; another email's request stays as it is
+  for (const [id, email] of [["rq-gone", "gone@example.org"], ["rq-other", "other@example.org"]])
+    db.prepare("INSERT INTO access_requests (id, email, name, company, role, team_size, status, created_at, updated_at, approved_at) VALUES (?, ?, 'N', 'C', 'R', '2-10', 'approved', '2026-10-01', '2026-10-01', '2026-10-02')").run(id, email);
   const before = allText(db);
   const refused = [await OP.removeAccount(DB, "nobody@example.org"), await OP.removeAccount(DB, "busy@example.org"), await OP.removeAccount(DB, "founder@example.org")];
   ok(refused.every((r) => r.refused) && /no account/.test(refused[0].refused) && /1 active seat in 1 org/.test(refused[1].refused) && /founded an org/.test(refused[2].refused) && allText(db) === before,
@@ -246,6 +249,9 @@ const cliOn = (db) => async (...argv) => {
     && count("SELECT COUNT(*) FROM tokens WHERE account_id = ?", gid) === 0 && count("SELECT COUNT(*) FROM login_attempts WHERE email = 'gone@example.org'") === 0
     && count("SELECT COUNT(*) FROM signup_codes WHERE email = 'gone@example.org'") === 0 && count("SELECT COUNT(*) FROM accounts WHERE email = 'busy@example.org'") === 1,
     `O10 · an account with only an inactive seat and a waiting one is removed with its session, its 2 sign-in attempts and its code; its inactive seat kept, detached, the waiting one declined and detached (${JSON.stringify(r)}); the others untouched`);
+  ok(r.requests === 1 && count("SELECT COUNT(*) FROM access_requests WHERE id = 'rq-gone' AND cleared_at IS NOT NULL AND email = 'cleared:rq-gone' AND name = '' AND company = ''") === 1
+    && count("SELECT COUNT(*) FROM access_requests WHERE id = 'rq-other' AND cleared_at IS NULL AND email = 'other@example.org'") === 1,
+    `O10 · its approved request is cleared as the 90-day clearing clears it (no beta place held, no profile kept); another email's request untouched (requests ${r.requests})`);
   // a seat appears between the check and the write: the guarded batch writes nothing
   seat(db, "r1", "race@example.org", 2, 0);
   const raceDB = { prepare: (q) => DB.prepare(q), batch: async (stmts) => { seat(db, "r2", "race@example.org", 3, 1); return DB.batch(stmts); } };
@@ -809,6 +815,20 @@ try {
       await RED.declineRequest({ prepare: (q) => { if (/^UPDATE access_requests SET status = 'declined'/.test(q)) mdb.prepare("UPDATE access_requests SET status = 'approved', approved_at = 'x' WHERE id = 'r-0'").run(); return MDB.prepare(q); } }, "r-0");
       ok(reqOf(mdb, "r-0").status === "declined", `O28 · RED: with the status guard removed an approved request is declined (${reqOf(mdb, "r-0").status})`);
     }
+  }
+  // O29 · the REST send's body (its first live run, 2026-10-15: Cloudflare answered 400 invalid_request_schema to the binding's
+  // { email, name } sender and 200 to { address, name }): restBody maps the sender, and the mailer sends exactly that body
+  {
+    const { MAIL_FROM } = await import(pathToFileURL(join(ENGINE, "src", "email.js")).href);
+    const b = OP.restBody({ from: MAIL_FROM, to: "a@example.com", cc: "b@example.com", subject: "s", html: "<p>h</p>", text: "t" });
+    ok(b.from && b.from.address === MAIL_FROM.email && b.from.name === MAIL_FROM.name && !("email" in b.from) && b.to === "a@example.com" && b.cc === "b@example.com" && b.subject === "s" && b.html === "<p>h</p>" && b.text === "t",
+      `O29 · restBody: the sender as { address, name } (${JSON.stringify(b.from)}), to, cc, subject, html and text as they are`);
+    ok(OP.restBody({ from: "x@example.com", to: "a@example.com" }).from === "x@example.com", "O29 · restBody: a plain-string sender passes as it is");
+    let sent = null;
+    const m = OP.restMailer({ CLOUDFLARE_API_TOKEN: "t", CLOUDFLARE_ACCOUNT_ID: "acc" }, async (url, init) => { sent = { url, body: JSON.parse(init.body) }; return { ok: true, status: 200, json: async () => ({ success: true, result: {} }) }; });
+    await m.send({ from: MAIL_FROM, to: "a@example.com", subject: "s", text: "t" });
+    ok(sent && /\/accounts\/acc\/email\/sending\/send$/.test(sent.url) && sent.body.from.address === MAIL_FROM.email && !("email" in sent.body.from),
+      `O29 · restMailer posts restBody's shape to the account's send endpoint (${sent && JSON.stringify(sent.body.from)})`);
   }
 } finally {
   rmSync(recDir, { recursive: true, force: true });

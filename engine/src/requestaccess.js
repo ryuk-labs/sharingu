@@ -231,8 +231,10 @@ export const CLEAR_DAYS = 90;
 export const CLEAR_BATCH = 100;
 export const CLEAR_FIELDS = ["name", "company", "role", "email", "website", "linkedin", "x", "github", "ai_tools", "use_case", "account_id"];
 // copy: off-screen (a statement's text)
-const CLEAR_SET = "name = '', company = '', role = '', email = 'cleared:' || id, website = NULL, linkedin = NULL, x = NULL, github = NULL, ai_tools = NULL, use_case = NULL, account_id = NULL, " +
-  "cleared_at = ?2, updated_at = ?2";
+// clearSet(p) -> the clearing's SET, its time the parameter p (tools/operator.mjs removeAccount clears a removed account's requests the same way)
+export const clearSet = (p) => "name = '', company = '', role = '', email = 'cleared:' || id, website = NULL, linkedin = NULL, x = NULL, github = NULL, ai_tools = NULL, use_case = NULL, account_id = NULL, " +
+  `cleared_at = ${p}, updated_at = ${p}`;
+const CLEAR_SET = clearSet("?2");
 // ?1 the line (90 days before now), ?2 now, ?3 the batch
 export const CLEAR_DECLINED_SQL = `UPDATE access_requests SET ${CLEAR_SET} WHERE id IN (SELECT id FROM access_requests INDEXED BY idx_access_requests_declined ` +
   "WHERE status = 'declined' AND cleared_at IS NULL AND declined_at <= ?1 LIMIT ?3)";
