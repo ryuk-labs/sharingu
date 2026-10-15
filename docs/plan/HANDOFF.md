@@ -262,6 +262,12 @@ end with the owner's OK. Clean all the way: no dead code, no dead docs; a finish
 
 ## Ruled by the owner (the ones a builder must know)
 
+- **Tests focused on the change's region (2026-10-15):** while building, the touched selftests and only the smoke cases a
+  change touches; the full smoke and the gate once before the sprint's PR; the cross-org suite stays whole on every code
+  ship (the wall's guard) but gets faster; no ship for a change to docs or the plugin alone. The tooling for it (a smoke
+  `--only` flag, the suite's bounded pool, the no-ship rule in `ship-plan.sh`) is the next sprint's first slice
+  (`PLATFORM.md` §3); until it lands, today's process stands (`AGENTS.md`).
+
 - **Acie operates the beta (MCQ 2026-10-15):** acie@ryuklabs.io's ryuklabs seat is an ADMIN (role owner, set through
   Control's set-role as Agent Ops), so Acie opens the operator page (`/ryuklabs/operator`, in a browser, signed in with
   Google) and approves or declines requests (Approve sends "You're in"). There is no narrower operator-only role: admin of
