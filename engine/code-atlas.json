@@ -3487,47 +3487,52 @@
     "connectcards.js": {
       "constants": [
         {
-          "line": 22,
+          "line": 23,
           "name": "CHATGPT_ADD",
           "role": ""
         },
         {
-          "line": 21,
+          "line": 22,
           "name": "CLAUDE_ADD",
           "role": "copy: off-screen (an href)"
         },
         {
-          "line": 62,
+          "line": 63,
           "name": "CLIENT_MARK_CSS",
           "role": "a client's mark (Control \u00b7 Connect's rows wear it too): a hairline tile, the logo filling it or sitting in it, the promp"
         },
         {
-          "line": 70,
+          "line": 18,
+          "name": "CONNECTOR_NAME",
+          "role": "each call naming its org, so one connection is the product's own name, the directory listing's)"
+        },
+        {
+          "line": 71,
           "name": "CONNECT_CARDS_CSS",
           "role": "button (ink: the view's one orange is the page's own primary), the mono lines with Copy, and the quiet foot"
         },
         {
-          "line": 98,
+          "line": 99,
           "name": "COPY_JS",
           "role": "a front page's copy (the shell's own script does it inside the app): the <code> beside the button, \"Copied\" for two seco"
         },
         {
-          "line": 28,
+          "line": 29,
           "name": "LOGOS",
           "role": "the two app logos the connect page shows too (src/oauth.js): chatgpt.png fills its tile, claude.png sits in it at its ow"
         },
         {
-          "line": 40,
+          "line": 41,
           "name": "NO_KEY",
           "role": ""
         },
         {
-          "line": 39,
+          "line": 40,
           "name": "SIGN_IN",
           "role": "copy: label (the two halves of each card's foot: where the sign-in happens, and what it spares)"
         },
         {
-          "line": 41,
+          "line": 42,
           "name": "TICK",
           "role": ""
         }
@@ -3537,13 +3542,13 @@
         "CHATGPT_ADD",
         "CLAUDE_ADD",
         "CLIENT_MARK_CSS",
+        "CONNECTOR_NAME",
         "CONNECT_CARDS_CSS",
         "COPY_JS",
         "claudeCodeLine",
         "clientMark",
         "codexLine",
         "connectCards",
-        "connectorName",
         "copyLine"
       ],
       "imports": [
@@ -11515,7 +11520,7 @@
     "login.js": {
       "constants": [
         {
-          "line": 199,
+          "line": 201,
           "name": "AUTH_CSS",
           "role": ""
         },
@@ -11525,12 +11530,12 @@
           "role": "ink text, a deep-orange lip) and the quiet one beside it, and the foot"
         },
         {
-          "line": 328,
+          "line": 330,
           "name": "JOIN_WORDS",
           "role": "(21.4a) the account's two other ways: a forgotten passphrase, a verification email that did not arrive"
         },
         {
-          "line": 332,
+          "line": 334,
           "name": "ORG_CHOICE_CSS",
           "role": "the OAuth form's org choice: one bordered list, a radio per org (its name, its address)"
         },

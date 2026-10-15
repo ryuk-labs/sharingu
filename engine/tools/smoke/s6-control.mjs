@@ -86,7 +86,7 @@ smoke("C1: Invite through POST /control seats a partner and a member on the proj
   const opened = (k) => new RegExp(`data-client-block="${k}"><details class="p-x" open>`).test(conn);
   expect(JSON.stringify(blocks) === JSON.stringify(["claude-connector", "chatgpt", "claude-plugin", "claude-code", "codex"]) && opened("claude-connector") && opened("chatgpt")
     && !["claude-plugin", "claude-code", "codex"].some(opened) && /data-mark="claude"[^>]*><img src="\/assets\/clients\/claude\.png\?v=/.test(row("claude-connector")) && /data-mark="chatgpt"[^>]*><img src="\/assets\/clients\/chatgpt\.png\?v=/.test(row("chatgpt"))
-    && !/First calls/.test(conn) && name && org
+    && !/First calls/.test(conn) && name === "sharingu" && org
     && away(claudeAdd, "add-to-claude", "Add to Claude").test(row("claude-connector")) && row("claude-connector").includes(`<code>${BASE}/mcp</code>`)
     && away("https://chatgpt.com/plugins", "add-to-chatgpt", "Add to ChatGPT").test(row("chatgpt")) && row("chatgpt").includes(steps) && row("chatgpt").includes(`<code>${BASE}/mcp</code>`),
     () => `Connect's app rows: blocks [${blocks.join(", ")}] (want claude-connector, chatgpt open with their logos, then claude-plugin, claude-code, codex; no "First calls"); Claude ${brief(row("claude-connector").replace(/<svg[\s\S]*?<\/svg>/g, "").slice(0, 600))} (want Add to Claude -> ${claudeAdd}); ChatGPT ${brief(row("chatgpt").replace(/<svg[\s\S]*?<\/svg>/g, "").slice(0, 700))} (want Add to ChatGPT -> https://chatgpt.com/plugins and ${steps})`);

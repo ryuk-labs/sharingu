@@ -28,7 +28,7 @@ import { HATS, hatOf, ROLE_WORDS } from "./hats.js";
 import { agoOf } from "./home.js";
 import { orgPath } from "./orgpath.js";   // sprint 7, 7.4: every URL under the org of its address
 import { projectSlug } from "./project.js";   // sprint 12: a project reads as its name, else its slug, never the org-prefixed key
-import { CLAUDE_ADD, CHATGPT_ADD, connectorName, clientMark, codexLine, CLIENT_MARK_CSS } from "./connectcards.js";   // sprint 21, 21.P E22: the two apps lead, beside their logos
+import { CLAUDE_ADD, CHATGPT_ADD, CONNECTOR_NAME, clientMark, codexLine, CLIENT_MARK_CSS } from "./connectcards.js";   // sprint 21, 21.P E22: the two apps lead, beside their logos
 import { LIMIT_ORDER, LIMIT_WORDS } from "./plans.js";   // sprint 8, 8.4: the plan and its usage (the read rides opts.plan)
 
 export const CONTROL_REGIONS = ["nav", "people", "workspaces", "connect", "keys", "this-org"];
@@ -213,7 +213,7 @@ const addrLine = (url) => callLine(url).replace(/<code>[\s\S]*?<\/code>/, () => 
 const away = (href, button, label, what) => `<a class="u-btn small" href="${esc(href)}" target="_blank" rel="noopener noreferrer" data-button="${button}" data-client="opens ${what}, in a new tab">${label}</a>`;
 function connectBlocks(origin, org) {
   const mcp = `${origin}/mcp`;
-  const name = connectorName(org);
+  const name = CONNECTOR_NAME;
   // D5: the first calls are the door's first-run guide (src/mcp.js instructionsFor), in its order
   const first = ["Starts with", FIRST_CALLS.map((t) => `<code>${t}</code>`).join(" · ")];
   const blocks = [

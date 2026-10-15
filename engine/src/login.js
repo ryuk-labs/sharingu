@@ -121,7 +121,8 @@ const FRONT_CSS = `
 `;
 // frontTop(wordmark, here) -> the top bar: the wordmark (authBrand's: the product, the org as secondary text) home to the
 // platform's own `/` (src/orgpath.js PLATFORM_ROOT: never an org's, so the not-here page's bytes stay one for every org), then
-// the website (wide screens: the foot carries it on a phone) and Sign in — the ONE door (sprint 21, 21.4a: a request is checked by
+// the Walkthrough (the site's docs.html#walkthrough: it opens signed in or not; on every width), the website (wide screens: the
+// foot carries it on a phone) and Sign in — the ONE door (sprint 21, 21.4a: a request is checked by
 // signing in). here: "login" on the sign-in (no Sign in on itself); "in", a page that has just signed its reader in (the org's done
 // page: no Sign in); "account", a page a signed-in browser reads (src/accountpage.js, an account session's; the org form, an account
 // or an org session's: Sign out in its place)
@@ -131,6 +132,7 @@ export function frontTop(wordmark, here = "") {
   return `<header class="front-top"><div class="front-bar">
     <a class="front-brand" href="${PLATFORM_ROOT}">${uchan({ size: 30 })}<span class="wordmark">${wordmark}</span></a>
     <nav class="front-nav" aria-label="sharingu">
+      <a href="${SITE_URL}docs.html#walkthrough" data-region="walkthrough-link">Walkthrough</a>
       <a class="front-site" href="${SITE_URL}" data-region="site-link">sharingu.xyz</a>
       ${door}
     </nav>

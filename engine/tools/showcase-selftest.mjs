@@ -278,5 +278,15 @@ for (const [name, mut, red] of MUTANTS) {
     `F6 · the client's logo only on its own host (claude.ai yes, attacker.example no, chatgpt.com yes, a loopback no) -> ${fake.lede} | ${fake.sub}`);
 }
 
+// F7 · the front pages' top bar names the Walkthrough, the site's docs.html#walkthrough (the owner's MCQ 2026-10-15: it opens signed in
+// or not), on every width (no front-site class: that one hides on a phone), before the website and the door
+{
+  const { frontTop, SITE_URL } = await import(new URL("../src/login.js", import.meta.url).href);
+  const bar = frontTop("sharingu"), out = frontTop("sharingu", "account");
+  const walk = `<a href="${SITE_URL}docs.html#walkthrough" data-region="walkthrough-link">Walkthrough</a>`;
+  ok(bar.includes(walk) && out.includes(walk) && bar.indexOf(walk) < bar.indexOf('data-region="site-link"') && bar.indexOf(walk) < bar.indexOf('data-region="sign-in-link"'),
+    "F7 · the top bar: Walkthrough (the site's docs.html#walkthrough, no class that hides it on a phone) before the website and Sign in, on a signed-in page too");
+}
+
 console.log(`${failed ? "✗" : "✓"} showcase selftest: ${passed} of ${passed + failed} checks passed`);
 process.exit(failed ? 1 : 0);
