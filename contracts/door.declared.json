@@ -1041,6 +1041,11 @@
    "nextAction": "Publish one of your own drafts (GET /broadcast lists them under mine), or file your own with FILING_ITEM_CALL. For a seat: answer it from your org list (GET /orgs), signed in with your account's passphrase.",
    "class": "not-allowed"
   },
+  "only_owner": {
+   "meaning": "POST /orgs/seat with answer decline (2026-10-15, THE FIRST PASSPHRASE WAITS): the waiting seat is its org's only real owner, so declining it would leave the org with no active owner. HTTP 409, nothing changed: the seat still waits.",
+   "nextAction": "Accept the seat from your org list (GET /orgs), or leave it waiting.",
+   "class": "not-allowed"
+  },
   "open_has_choice": {
    "meaning": "A knowledge question is open yet carries a choice. Nothing was written (it rides in invalid_ops).",
    "nextAction": "Send choice null, or (the owner) rule it with status decided."

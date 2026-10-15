@@ -61,7 +61,7 @@ export function renderOrgPicker(opts) {
   const list = (orgs || []).map((o) => `<li><a class="org-pick" href="${esc(orgAt(o.slug, to))}" data-org="${esc(o.slug)}">
         <span class="org-pick-text"><span class="org-pick-name">${esc(o.name)}</span><span class="org-pick-addr">${esc(host)}/${esc(o.slug)}</span></span>
         <span class="org-pick-role">${esc(roleWordOf(o.role))}</span>${GO}</a></li>`).join("\n      ");
-  const flash = !SEAT_ANSWER_WORDS[said] ? "" : said === "accepted" || said === "declined"
+  const flash = !SEAT_ANSWER_WORDS[said] ? "" : said === "accepted" || said === "declined" || said === "reset"
     ? `<p class="pick-said" data-said="${esc(said)}" role="status">${esc(SEAT_ANSWER_WORDS[said])}</p>`
     : errorState({ what: SEAT_ANSWER_WORDS[said] });
   const waiting = pending.length ? `<p class="pend-head">Waiting for your yes</p>

@@ -243,6 +243,16 @@ end with the owner's OK. Clean all the way: no dead code, no dead docs; a finish
 
 ## Ruled by the owner (the ones a builder must know)
 
+- **Who holds an account (MCQs 2026-10-15, A.5's find; branch `sprint-21-fix2`):** an email whose account has a passphrase,
+  a Google subject, an invite mark, or an ACTIVE or PENDING seat is told "you already have an account" on join — never put
+  in the beta line; only a shell whose seat is gone joins as new (`ACCOUNT_HELD`). A reset (or Google's first link) that
+  sets an account's FIRST passphrase makes its active seats WAIT for the holder's yes on /orgs (no owner exemption), so a
+  squat or a self-redeemed invite never lands a stranger silently. The owner's own ryuk@ (an owner seat, no passphrase)
+  sets its first passphrase through the operator's code instead (`allow --email`, then /signup), so org 1 never waits. The
+  live unverified ryuk@ request (filed 06:19Z under the old rule) is left to expire; nobody clicks its link.
+- **The site's old form (MCQ 2026-10-15, done):** the backend retired and the copy reworded (site `main` e9e904f); the
+  owner removes the Vercel intake variables and the Turnstile widget by hand; the Sheet's rows stay.
+
 - **After sprint 21's ship (MCQ 2026-10-15):** (1) A.5 runs twice: a join as ryuk@ryuklabs.io proves the "you already have
   an account" email (the owner's real account untouched, never removed), then a join as `ryuk+beta1@ryuklabs.io` proves
   verify → approve → "You're in" → its removal; (2) the site's old form backend RETIRES now (`api/inquiry.js`, `server/`,

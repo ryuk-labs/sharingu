@@ -103,7 +103,7 @@
 // answers the lock (its attempt counted).
 import { db, signInEnv, HOME_ORG } from "./data.js";
 import { SESSION_TOKEN_PREFIX } from "./tenant.js";
-import { uid, now, pbkdf2, sha256, hex } from "./util.js";
+import { uid, now, pbkdf2, sha256, hex, NOT_EVAL_SEAT_SQL } from "./util.js";
 import { revokeOAuthGrants } from "./oauthgrants.js";
 import { BETA_ORGS_SQL, BETA_CODES_SQL, BETA_APPROVED_SQL, placesOf } from "./beta.js";   // sprint 21, 21.1: the beta's places, one source with the operator's
 import { RESET_MINUTES } from "./mails.js";   // sprint 21, 21.4a: a reset link's life, said in its email too
@@ -219,8 +219,17 @@ export const SEAT_CONSENT_SQL = "SELECT (a.pass_hash IS NOT NULL OR a.google_sub
 const INVITED_ELSEWHERE = " AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.id = people.account_id AND a.invited_org IS NOT NULL AND a.invited_org <> people.org)";
 export const ACCEPT_SEAT_SQL = "UPDATE people SET active = 1, pending = 0 WHERE id = ?1 AND pending = 1 AND account_id = " +
   "(SELECT t.account_id FROM tokens t WHERE t.token_hash = ?2 AND t.revoked = 0 AND t.expires_at > ?3 AND t.account_id IS NOT NULL)" + INVITED_ELSEWHERE;
+// (THE FIRST PASSPHRASE WAITS' review) the org's ONLY real owner never declines its seat: an owner seat waits after its holder's
+// first passphrase, and its Decline would leave the org with no active owner (only operator SQL could mend it). The statement guards
+// itself (src/admin.js OTHER_REAL_ADMINS' pattern: another real owner, active in the seat's org, never an eval seat), never a read
+// then a write: an owner's Decline changes nothing then, and answerSeat says why (ONLY_OWNER_SQL)
+const ANOTHER_REAL_OWNER = "(people.role <> 'owner' OR EXISTS (SELECT 1 FROM people o WHERE o.org = people.org AND o.role = 'owner' AND o.active = 1 AND o.id <> people.id" + NOT_EVAL_SEAT_SQL("o.id") + "))";
 export const DECLINE_SEAT_SQL = "UPDATE people SET pending = 0 WHERE id = ?1 AND pending = 1 AND account_id = " +
-  "(SELECT t.account_id FROM tokens t WHERE t.token_hash = ?2 AND t.revoked = 0 AND t.expires_at > ?3 AND t.account_id IS NOT NULL)" + INVITED_ELSEWHERE;
+  "(SELECT t.account_id FROM tokens t WHERE t.token_hash = ?2 AND t.revoked = 0 AND t.expires_at > ?3 AND t.account_id IS NOT NULL)" + INVITED_ELSEWHERE + " AND " + ANOTHER_REAL_OWNER;
+// after a Decline that changed nothing: whether the seat is the session's OWN waiting owner seat (a yes or no, bound to the holder's
+// account session as the Decline is: no other account's seat is ever told apart from not_yours). Binds as DECLINE_SEAT_SQL
+export const ONLY_OWNER_SQL = "SELECT EXISTS (SELECT 1 FROM people WHERE id = ?1 AND pending = 1 AND role = 'owner' AND account_id = " +
+  "(SELECT t.account_id FROM tokens t WHERE t.token_hash = ?2 AND t.revoked = 0 AND t.expires_at > ?3 AND t.account_id IS NOT NULL)" + INVITED_ELSEWHERE + ") AS alone";
 
 // secretMatches(password, { pass_hash, pass_salt }) -> true when the password is that secret (an empty one never is)
 export async function secretMatches(password, row) {
@@ -533,8 +542,11 @@ export const SEAT_ANSWER_WORDS = {
   declined: "Seat declined: that org cannot sign you in, and nothing of yours reaches it.",
   not_yours: "No seat of yours waits under that id: nothing changed.",
   already_seated: "Your account already holds an active seat in that org: nothing changed.",
+  only_owner: "You are this org's only owner: accept it, or leave it waiting. Nothing changed.",
+  // (THE FIRST PASSPHRASE WAITS) the picker's words after a reset that made the account's seats wait
+  reset: "Passphrase set. Your seats wait for your yes: accept an org below to enter it.",
 };
-// answerSeat(env, token, seatId, word) -> { done: "accepted" | "declined" } | { error: "not_yours" | "already_seated" }: the
+// answerSeat(env, token, seatId, word) -> { done: "accepted" | "declined" } | { error: "not_yours" | "already_seated" | "only_owner" }: the
 // holder's answer to one of their pending seats, through their own ACCOUNT session (the cookie's token; ACCEPT_SEAT_SQL,
 // DECLINE_SEAT_SQL). Anything else — a seat that is not pending, another account's, a SEAT session, a dead one — changes nothing
 // and answers not_yours, the same for every case.
@@ -548,7 +560,10 @@ export async function answerSeat(env, token, seatId, word) {
     if (/UNIQUE|constraint/i.test(String((e && e.message) || e))) return { error: "already_seated" };
     throw e;
   }
-  return ((r && r.meta && r.meta.changes) || 0) === 1 ? { done: word === "accept" ? "accepted" : "declined" } : { error: "not_yours" };
+  if (((r && r.meta && r.meta.changes) || 0) === 1) return { done: word === "accept" ? "accepted" : "declined" };
+  // a Decline the guard refused: the holder's own waiting owner seat, the org's only real owner (ANOTHER_REAL_OWNER)
+  if (word === "decline" && Number(((await db(env).prepare(ONLY_OWNER_SQL).bind(String(seatId), hash, now()).first()) || {}).alone) === 1) return { error: "only_owner" };
+  return { error: "not_yours" };
 }
 
 // ---- the sign-up (sprint 7, 7.2; migrate-071): the operator's one-time code, bound to its email ----
@@ -742,9 +757,10 @@ export async function betaCount(env, at = now(), email = null) {
 // VERIFY (verifyJoin): the link's GET only shows the confirm page (an email scanner that follows links spends nothing); its POST
 // takes the link's token AND the passphrase — proof of the mailbox and of the join's own passphrase together, so a stranger's join
 // for this address cannot be completed by its owner's click (the pre-account takeover) — and in ONE batch: the request verified
-// (status open, verified_at: its place in line), the passphrase's hash cleared from it, the account made with it (an account
-// with no passphrase takes it, as the operator's code does; one that has its own keeps it), and, when the account holds no seat,
-// an ACCOUNT SESSION; (21.4b) the request then names that account and when (account_id, account_at: the person's path). The first verified request per email stands (migrate-081's idx_access_requests_verified, and the batch's
+// (status open, verified_at: its place in line), the passphrase's hash cleared from it, the account made with it (an account no
+// one holds — an add-person shell whose seat is gone, ACCOUNT_HELD — takes it), and, when the account holds no seat, an ACCOUNT
+// SESSION. A link for an email whose account someone holds (one filed before ACCOUNT_HELD counted a seat, or one whose email was
+// seated after its join) opens nothing and its batch writes nothing: the one dead-link page; (21.4b) the request then names that account and when (account_id, account_at: the person's path). The first verified request per email stands (migrate-081's idx_access_requests_verified, and the batch's
 // guard before it).
 // THE ACCOUNT SESSION (account_sessions): a browser session for an account that holds no seat — a person in line, approved, or
 // signed up by the operator's code and before their org. It is the same cookie as an org session (__Host-ar_session), its token
@@ -760,7 +776,9 @@ export async function betaCount(env, at = now(), email = null) {
 // RESET (startReset, finishReset): a link (account_resets: its hash, 30 minutes, single use) for an account the email names;
 // spending it sets the new passphrase (the account rules), clears an invite mark (the link proves the email, as the operator's
 // code does), ends EVERY session of the account — its org sessions in every org, its account sessions — its other reset links
-// and its seats' connected apps, then signs the person in fresh.
+// and its seats' connected apps, then signs the person in fresh. A reset that gives the account its FIRST passphrase of its holder's
+// own (none before, or an invite's) makes its active seats wait for the holder's yes first (THE FIRST PASSPHRASE WAITS): the
+// person lands on the picker, the org named, and accepts it there.
 // ORG CREATION waits for the approval (mayFound, read by accountProof): only an account whose email holds a USED operator's code
 // or an APPROVED request creates an org — a verified person in line holds a passphrase now, and the beta's orgs stay on the
 // waitlist.
@@ -821,27 +839,45 @@ export async function mayFound(env, email) {
   const r = await db(env).prepare(MAY_FOUND_SQL).bind(normEmail(email)).first();
   return !!(r && Number(r.ok) === 1);
 }
-// accountHolds(env, email) -> true when someone holds the email's account (the join's one question: it files nothing for one that
-// does): a passphrase or a Google subject. An add-person shell (an account an org's admin made by seating the email, neither set) is
-// no one's yet: its person joins as anyone does, and the verification gives it the joined passphrase (VERIFY_ACCOUNT_SQL)
+// WHO HOLDS AN ACCOUNT (the owner's MCQ, 2026-10-15): an account with none of the four below — an add-person shell whose seat is
+// gone — is no one's, and its email joins as new; any other is held (an org owner who signs in by the seat's own secret included).
+// The doors listed here read this one test, never a copy: the join's mail (accountHolds: "you already have an account", never a
+// link), the resend, the forgot, the verification (VERIFY_OPEN_SQL, VERIFY_SPEND_SQL, VERIFY_ACCOUNT_SQL), Google's sign-in
+// (googleSignIn's shell) and Google's join (GOOGLE_JOIN_ACCOUNT_SQL). Other statements keep their own tests ON PURPOSE, each asking
+// a different question: SEAT_CONSENT_SQL (whether a new seat waits: the account stands elsewhere), INVITE_SEAT_USE_SQL (whether an
+// invite may set a passphrase), ACCOUNT_SESSION_MINT_SQL and GOOGLE_SESSION_MINT_SQL (an account session only for an account with no
+// seat and no mark, holding the secret just proven), VERIFY_SESSION_SQL (the same, for the verification's passphrase).
+// ACCOUNT_HELD(a): someone holds the account aliased a — a passphrase, a Google subject, an invite mark, or a seat active or waiting
+export const ACCOUNT_HELD = (a) => `(${a}.pass_hash IS NOT NULL OR ${a}.google_sub IS NOT NULL OR ${a}.invited_org IS NOT NULL ` +
+  `OR EXISTS (SELECT 1 FROM people hp WHERE hp.account_id = ${a}.id AND (hp.active = 1 OR hp.pending = 1)))`;
+// EMAIL_HELD(e): ACCOUNT_HELD for the account the email e names (an SQL expression: the email's column or its bind)
+export const EMAIL_HELD = (e) => `EXISTS (SELECT 1 FROM accounts ha WHERE ha.email = ${e} AND ${ACCOUNT_HELD("ha")})`;
+// whether someone holds the email's account (?1 the email): one yes or no, its seats counted, never read
+export const ACCOUNT_HELD_SQL = `SELECT ${EMAIL_HELD("?1")} AS held`;
+// accountHolds(env, email) -> true when someone holds the email's account (ACCOUNT_HELD): the join files nothing verifiable for it
 export async function accountHolds(env, email) {
-  const a = await db(env).prepare(GOOGLE_ACCOUNT_SQL).bind(normEmail(email)).first();
-  return !!(a && (a.pass_hash != null || a.google_sub != null));
+  const r = await db(env).prepare(ACCOUNT_HELD_SQL).bind(normEmail(email)).first();
+  return !!(r && Number(r.held) === 1);
 }
 
 // ---- the verification (POST /account/verify) ----
-// the open link (?1 the token's hash, ?2 now): an unverified request whose link is live
-export const VERIFY_OPEN_SQL = "SELECT id, email, name, company, role, team_size, source, pass_hash, pass_salt FROM access_requests WHERE verify_hash = ?1 AND status = 'unverified' AND verify_expires > ?2";
+// the open link (?1 the token's hash, ?2 now): an unverified request whose link is live, its email's account held by no one
+// (ACCOUNT_HELD: a held email's link is the one dead page)
+export const VERIFY_OPEN_SQL = "SELECT id, email, name, company, role, team_size, source, pass_hash, pass_salt FROM access_requests WHERE verify_hash = ?1 AND status = 'unverified' AND verify_expires > ?2 " +
+  `AND NOT ${EMAIL_HELD("access_requests.email")}`;
 // THE BATCH. 1 · the spend: the request verified (in line from now), the link and the passphrase's hash cleared — only while the
-// link is live and no verified request of its email stands. ?1 now, ?2 the request, ?3 the token's hash
+// link is live, no verified request of its email stands and no one holds its email's account (ACCOUNT_HELD, read again inside the
+// batch: a seat added since the link opened refuses the whole verification). ?1 now, ?2 the request, ?3 the token's hash
 export const VERIFY_SPEND_SQL = "UPDATE access_requests SET status = 'open', verified_at = ?1, updated_at = ?1, verify_hash = NULL, verify_expires = NULL, pass_hash = NULL, pass_salt = NULL " +
   "WHERE id = ?2 AND verify_hash = ?3 AND status = 'unverified' AND verify_expires > ?1 " +
-  "AND NOT EXISTS (SELECT 1 FROM access_requests v WHERE v.email = access_requests.email AND v.status <> 'unverified')";
+  "AND NOT EXISTS (SELECT 1 FROM access_requests v WHERE v.email = access_requests.email AND v.status <> 'unverified') " +
+  `AND NOT ${EMAIL_HELD("access_requests.email")}`;
 const SPENT = "EXISTS (SELECT 1 FROM access_requests r WHERE r.id = ?6 AND r.status = 'open' AND r.verified_at = ?5)";
-// 2 · the account takes the passphrase (made; an account with neither a passphrase nor a Google subject takes it — an add-person
-// shell; one with its own keeps it) — only when THIS batch spent the link. ?1 a new id, ?2 the email, ?3 the hash, ?4 the salt, ?5 now, ?6 the request
+// 2 · the account takes the passphrase (made; an account no one holds takes it — an add-person shell whose seat is gone; a held one
+// never, ACCOUNT_HELD, though the spend has already refused its email) — only when THIS batch spent the link. ?1 a new id, ?2 the
+// email, ?3 the hash, ?4 the salt, ?5 now, ?6 the request
 export const VERIFY_ACCOUNT_SQL = `INSERT INTO accounts (id, email, pass_hash, pass_salt, created_at, updated_at) SELECT ?1, ?2, ?3, ?4, ?5, ?5 WHERE ${SPENT} ` +
-  "ON CONFLICT (email) DO UPDATE SET pass_hash = excluded.pass_hash, pass_salt = excluded.pass_salt, updated_at = excluded.updated_at WHERE accounts.pass_hash IS NULL AND accounts.google_sub IS NULL";
+  `ON CONFLICT (email) DO UPDATE SET pass_hash = excluded.pass_hash, pass_salt = excluded.pass_salt, updated_at = excluded.updated_at WHERE NOT ${ACCOUNT_HELD("accounts")}`;
 // 3 · the account session, only for an account that took THIS passphrase and holds no seat. ?1 the token's hash, ?2 device, ?3 the
 // expiry, ?4 the email, ?5 now, ?6 the request, ?7 the hash
 export const VERIFY_SESSION_SQL = `INSERT INTO account_sessions (token_hash, account_id, device, created_at, expires_at, revoked, proven_how, proven_at) SELECT ?1, a.id, ?2, ?5, ?3, 0, 'verify', ?5 FROM accounts a WHERE a.email = ?4 AND a.pass_hash = ?7 ` +
@@ -857,7 +893,7 @@ export const VERIFY_LINK_SQL = "UPDATE access_requests SET account_id = (SELECT 
 export const verifyOpen = (env, tokenHash) => db(env).prepare(VERIFY_OPEN_SQL).bind(String(tokenHash), now()).first();
 // verifyJoin(env, { tokenHash, password, client }) -> { verdict, request, session }
 //   verdict: "ok" (verified: the account holds the passphrase; session { token, expires } when it holds no seat, else null) ·
-//   "refused" (no live link, or a verified request of the email stands: nothing written) · "wrong" (the passphrase is not the
+//   "refused" (no live link, a verified request of the email stands, or someone holds its email's account: nothing written) · "wrong" (the passphrase is not the
 //   join's: the attempt counted) · "locked" (the email's lockout: nothing compared)
 export async function verifyJoin(env, { tokenHash, password, client = "" } = {}) {
   const row = await verifyOpen(env, tokenHash);
@@ -888,12 +924,22 @@ export const RESET_OPEN_SQL = "SELECT r.account_id, a.email FROM account_resets 
 // THE BATCH. 1 · the spend (?1 now, ?2 the token's hash)
 export const RESET_SPEND_SQL = "UPDATE account_resets SET used_at = ?1 WHERE token_hash = ?2 AND used_at IS NULL AND expires_at > ?1";
 const RESET_SPENT = "EXISTS (SELECT 1 FROM account_resets x WHERE x.token_hash = ?3 AND x.used_at = ?2 AND x.account_id = ?1)";
-// 2 · the passphrase (the invite mark ends: the link proves the email; the Google subject unlinked: the mailbox's holder may link it
+// THE FIRST PASSPHRASE WAITS (the owner's MCQ, 2026-10-15): a mailbox proof that gives an account its FIRST passphrase of its holder's
+// own — the account has none, or only one an org's invite link set (accounts.invited_org), and no Google subject — makes its ACTIVE
+// seats wait for that holder's yes (people.pending: the picker's Accept), every role alike (an owner too: SET_ADMIN_SQL could
+// otherwise promote a squatted seat out of the wait). So a seat an admin gave the email (add-person, or an invite the admin redeemed
+// themselves) is never entered silently by the mailbox's holder. A reset (RESET_SEATS_WAIT_SQL) and Google's first link
+// (GOOGLE_LINK_SEATS_WAIT_SQL) read this one test. FIRST_PASSPHRASE(u): on the account row aliased u
+export const FIRST_PASSPHRASE = (u) => `${u}.google_sub IS NULL AND (${u}.pass_hash IS NULL OR ${u}.invited_org IS NOT NULL)`;
+// 2 · the account's active seats wait (THE FIRST PASSPHRASE WAITS), read BEFORE the passphrase is set. ?1 ?2 ?3 as below
+export const RESET_SEATS_WAIT_SQL = "UPDATE people SET active = 0, pending = 1 WHERE account_id = ?1 AND active = 1 " +
+  `AND EXISTS (SELECT 1 FROM accounts u WHERE u.id = ?1 AND ${FIRST_PASSPHRASE("u")}) AND ${RESET_SPENT}`;
+// 3 · the passphrase (the invite mark ends: the link proves the email; the Google subject unlinked: the mailbox's holder may link it
 // again, THE FIRST LINK IS A RESET). ?1 the account, ?2 now, ?3 the token's hash, ?4 hash, ?5 salt
 export const RESET_ACCOUNT_SQL = `UPDATE accounts SET pass_hash = ?4, pass_salt = ?5, invited_org = NULL, google_sub = NULL, updated_at = ?2 WHERE id = ?1 AND ${RESET_SPENT}`;
-// 3 · every org session of the account, in every org (its account sessions and each of its seats' own). ?1 ?2 ?3 as above
+// 4 · every org session of the account, in every org (its account sessions and each of its seats' own). ?1 ?2 ?3 as above
 export const RESET_END_TOKENS_SQL = `UPDATE tokens SET revoked = 1 WHERE revoked = 0 AND (account_id = ?1 OR person_id IN (SELECT id FROM people WHERE account_id = ?1)) AND ${RESET_SPENT}`;
-// 4 · its account sessions; 5 · its other open reset links
+// 5 · its account sessions; 6 · its other open reset links
 export const RESET_END_ACCOUNT_SESSIONS_SQL = `UPDATE account_sessions SET revoked = 1 WHERE account_id = ?1 AND revoked = 0 AND ${RESET_SPENT}`;
 export const RESET_END_LINKS_SQL = `UPDATE account_resets SET used_at = ?2 WHERE account_id = ?1 AND used_at IS NULL AND ${RESET_SPENT}`;
 // startReset(env, email, tokenHash) -> true when a link was written for the email's account (none: no account answers it)
@@ -903,20 +949,23 @@ export async function startReset(env, email, tokenHash) {
   return ((r && r.meta && r.meta.changes) || 0) >= 1;
 }
 export const resetOpen = (env, tokenHash) => db(env).prepare(RESET_OPEN_SQL).bind(String(tokenHash), now()).first();
-// finishReset(env, { tokenHash, password }) -> { verdict: "ok", r } | { verdict: "refused" }: r is a sign-in's answer for the
-// fresh session (src/index.js mints it: an org session on the account's chosen seat, or, with none, an account session)
+// finishReset(env, { tokenHash, password }) -> { verdict: "ok", r, waited } | { verdict: "refused" }: r is a sign-in's answer for the
+// fresh session (src/index.js mints it: an org session on the account's chosen seat, or, with none, an account session — anchored
+// at a waiting seat: the picker); waited: how many active seats THIS reset made wait (THE FIRST PASSPHRASE WAITS)
 export async function finishReset(env, { tokenHash, password } = {}) {
   const row = await resetOpen(env, tokenHash);
   if (!row) return { verdict: "refused" };
   const id = String(row.account_id), at = now(), salt = hex(16), ph = await pbkdf2(String(password), salt), th = String(tokenHash);
   const res = await db(env).batch([
     db(env).prepare(RESET_SPEND_SQL).bind(at, th),
+    db(env).prepare(RESET_SEATS_WAIT_SQL).bind(id, at, th),
     db(env).prepare(RESET_ACCOUNT_SQL).bind(id, at, th, ph, salt),
     db(env).prepare(RESET_END_TOKENS_SQL).bind(id, at, th),
     db(env).prepare(RESET_END_ACCOUNT_SESSIONS_SQL).bind(id, at, th),
     db(env).prepare(RESET_END_LINKS_SQL).bind(id, at, th),
   ]);
-  if (((res && res[1] && res[1].meta && res[1].meta.changes) || 0) !== 1) return { verdict: "refused" };
+  const changes = (i) => (res && res[i] && res[i].meta && res[i].meta.changes) || 0;
+  if (changes(2) !== 1) return { verdict: "refused" };
   // the connected apps of every seat end with the sessions (G2 M1's rule, as the operator's reset and a proven change on /profile)
   for (const s of await accountSeatIds(env, id)) await revokeOAuthGrants(env, s);
   const account = await db(env).prepare(ACCOUNT_BY_EMAIL_SQL).bind(String(row.email)).first();
@@ -925,7 +974,7 @@ export async function finishReset(env, { tokenHash, password } = {}) {
   const r = { email: String(row.email), org: seat ? Number(seat.org) : HOME_ORG, account, seat, session: seat ? "account" : null, seatCount: seats.length,
     pendingCount: pending.length, pendingOnly: !seats.length && !!pending.length, client: "", verdict: "ok" };
   await countSignIn(env, { ...r, vouched: true }, true);   // the link proved the email: it vouches
-  return { verdict: "ok", r };
+  return { verdict: "ok", r, waited: changes(1) };
 }
 
 // ---- GOOGLE SIGN-IN (sprint 21, 21.4c; the owner's MCQs of 2026-10-14: matched by email, still behind the operator's approval;
@@ -948,7 +997,8 @@ export async function finishReset(env, { tokenHash, password } = {}) {
 // sessions in every org, its account sessions — and its open reset links, then its seats' connected apps, since whoever held the
 // account before its mailbox's owner came may hold those. An account an org's INVITE LINK set the passphrase of (accounts.invited_org:
 // a passphrase only that org's admin's link proved, never the mailbox) loses that passphrase and its mark, and its seats WAIT for its
-// holder's yes (people.pending): the mailbox's owner answers each on the picker, so no org that squatted the email is entered silently.
+// holder's yes (people.pending): the mailbox's owner answers each on the picker, so no org that squatted the email is entered silently;
+// so do the seats of an account with no passphrase at all (an admin's add-person: THE FIRST PASSPHRASE WAITS, as a reset's does).
 // A reset (RESET_ACCOUNT_SQL) unlinks the subject in turn: the reset's link proves the mailbox, and its holder may link Google again.
 // THE JOIN (googleJoin): an email no account holds, joined through Google's form, is filed ALREADY VERIFIED — no verification
 // email: ONE batch makes the account (its Google subject, and the passphrase only if the person chose one: an account may live by
@@ -958,14 +1008,12 @@ export async function finishReset(env, { tokenHash, password } = {}) {
 // The reviewer accounts (@review.sharingu.xyz: a domain Google cannot verify) keep their passphrase: nothing here names them.
 export const GOOGLE_ACCOUNT_SQL = "SELECT id, email, pass_hash, pass_salt, invited_org, google_sub FROM accounts WHERE email = ?1";
 export const GOOGLE_HOLDER_SQL = "SELECT id FROM accounts WHERE google_sub = ?1";
-// whether the account holds a seat, active or waiting (?1 the account): an account with no passphrase, no subject and no seat is no
-// one's (an add-person shell whose seat is gone): Google's sign-in treats it as none, its join takes it (GOOGLE_JOIN_ACCOUNT_SQL)
-export const ACCOUNT_SEATED_SQL = "SELECT EXISTS (SELECT 1 FROM people p WHERE p.account_id = ?1 AND (p.active = 1 OR p.pending = 1)) AS seated";
 // THE FIRST LINK's batch (linkGoogle): each statement only while the account has no subject (UNLINKED), the link LAST. ?1 the
-// account (each), ?2 now (4 and 5), ?3 the sub (5). 1 · an invite-made account's seats wait for its holder's yes
+// account (each), ?2 now (4 and 5), ?3 the sub (5). 1 · the seats of an account with no passphrase of its holder's own (none, or an
+// invite's) wait for its holder's yes (THE FIRST PASSPHRASE WAITS, above)
 const UNLINKED = "EXISTS (SELECT 1 FROM accounts u WHERE u.id = ?1 AND u.google_sub IS NULL)";
 export const GOOGLE_LINK_SEATS_WAIT_SQL = "UPDATE people SET active = 0, pending = 1 WHERE account_id = ?1 AND active = 1 " +
-  "AND EXISTS (SELECT 1 FROM accounts u WHERE u.id = ?1 AND u.google_sub IS NULL AND u.invited_org IS NOT NULL)";
+  `AND EXISTS (SELECT 1 FROM accounts u WHERE u.id = ?1 AND ${FIRST_PASSPHRASE("u")})`;
 // 2 · every org session of the account, in every org (its account sessions and each of its seats' own); 3 · its account sessions;
 // 4 · its open reset links
 export const GOOGLE_LINK_END_TOKENS_SQL = `UPDATE tokens SET revoked = 1 WHERE revoked = 0 AND (account_id = ?1 OR person_id IN (SELECT id FROM people WHERE account_id = ?1)) AND ${UNLINKED}`;
@@ -1001,7 +1049,7 @@ export async function googleSignIn(env, { email, sub, authoritative = false, pre
   if (holder && (!account || String(holder.id) !== String(account.id))) return { ...out, verdict: "linked_elsewhere" };
   if (!account) return { ...out, verdict: "none" };
   if (account.google_sub == null) {
-    if (account.pass_hash == null && !(await accountSeated(env, account.id))) return { ...out, verdict: "none" };   // a shell: the join takes it
+    if (account.pass_hash == null && !(await accountHolds(env, e))) return { ...out, verdict: "none" };   // no one holds it (ACCOUNT_HELD): a shell, the join takes it
     if (!authoritative) return { ...out, verdict: "needs_passphrase" };
     await linkGoogle(env, account.id, g);
     account = (await db(env).prepare(GOOGLE_ACCOUNT_SQL).bind(e).first()) || account;   // read again: the link's reset, or a concurrent first use that won
@@ -1010,7 +1058,6 @@ export async function googleSignIn(env, { email, sub, authoritative = false, pre
   const seats = await seatsOf(env, account.id, prefer);
   return accountSignedIn(env, { ...out, account, org: seats[0] ? Number(seats[0].org) : HOME_ORG }, account, seats, { prefer, want: normOrgArg(pick) });
 }
-const accountSeated = async (env, id) => Number(((await db(env).prepare(ACCOUNT_SEATED_SQL).bind(String(id)).first()) || {}).seated) === 1;
 // googleLinkByPassphrase(env, url, { email, sub, password, client }) -> { verdict }: the FIRST link of an account whose email Google
 // does not answer for, proven by the account's own passphrase (accountProof: the lockout, the attempt counted) — "ok" (linked: the
 // FIRST LINK IS A RESET) · "wrong" · "locked" · "invited" (a passphrase an org's invite link set proves no mailbox: refused) ·
@@ -1026,12 +1073,12 @@ export async function googleLinkByPassphrase(env, url, { email, sub, password, c
   return { verdict: (await linkGoogle(env, proof.account.id, g)) ? "ok" : "other_sub" };
 }
 // THE JOIN's batch. 1 · the account, only when no account holds the sub and no verified request of the email stands — made, or an
-// add-person shell with no seat taken (no passphrase, no subject, no mark: no one's, accountHolds): ?1 its id, ?2 the email, ?3 the
+// add-person shell no one holds (ACCOUNT_HELD: no passphrase, no subject, no mark, no seat active or waiting): ?1 its id, ?2 the email, ?3 the
 // hash (NULL: none), ?4 the salt, ?5 the sub, ?6 now
 export const GOOGLE_JOIN_ACCOUNT_SQL = "INSERT INTO accounts (id, email, pass_hash, pass_salt, google_sub, created_at, updated_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?6 " +
   "WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE google_sub = ?5) AND NOT EXISTS (SELECT 1 FROM access_requests WHERE email = ?2 AND status <> 'unverified') " +
   "ON CONFLICT (email) DO UPDATE SET pass_hash = excluded.pass_hash, pass_salt = excluded.pass_salt, google_sub = excluded.google_sub, updated_at = excluded.updated_at " +
-  "WHERE accounts.pass_hash IS NULL AND accounts.google_sub IS NULL AND accounts.invited_org IS NULL AND NOT EXISTS (SELECT 1 FROM people p WHERE p.account_id = accounts.id AND (p.active = 1 OR p.pending = 1))";
+  `WHERE NOT ${ACCOUNT_HELD("accounts")}`;
 // the account THIS batch made or took (?2 the email, ?20 the sub, ?13 now: the binds of the request below)
 const GOOGLE_MADE = "EXISTS (SELECT 1 FROM accounts m WHERE m.email = ?2 AND m.google_sub = ?20 AND m.updated_at = ?13)";
 // 2 · the request, open (verified now: in line from this moment) and naming its account: ?1 id, ?2 email, ?3 name, ?4 company, ?5 role,

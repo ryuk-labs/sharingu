@@ -13,10 +13,14 @@
 //     the request -> the org, its owner seat signed in
 //   · forgot -> the captured reset link -> a new passphrase -> every old session gone (the org session, the account session), the
 //     old passphrase refused, the new one signs in
+//   · THE SEAT HOLDER (src/accounts.js ACCOUNT_HELD, the owner's MCQ of 2026-10-15): a person an admin seated (no passphrase, no
+//     Google subject: the seat's own secret signs them in) joins -> "you already have an account" captured, no verification email,
+//     nothing in line; forgot -> the captured reset -> its FIRST passphrase, so the seat WAITS (src/accounts.js THE FIRST PASSPHRASE
+//     WAITS) -> 303 to the picker, which says so and names the org -> Accept -> the passphrase signs in to that seat
 //   · THE CAP: with the window set at 2,900 by SQL a join answers the same 303, files nothing and sends nothing to the person,
 //     /account/sent says email checks are paused, the team's cap alert captured once; the window emptied again after
 import { randomBytes, createHash } from "node:crypto";
-import { smoke, expect, brief, http as http0, d1rows as rows, operator as op, mails, mailFor, linkIn, orgSlug, BASE } from "./lib.mjs";
+import { smoke, expect, brief, http as http0, d1rows as rows, operator as op, mails, mailFor, linkIn, orgSlug, addPerson, BASE } from "./lib.mjs";
 
 const TAG = randomBytes(3).toString("hex");
 const q = (v) => `'${String(v).replace(/'/g, "''")}'`;
@@ -38,7 +42,7 @@ const S = { a: `s67a${TAG}@smoke.local`, b: `s67b${TAG}@smoke.local` };
 
 smoke("account flow · join with a passphrase: a new email, an existing account's email and the honeypot answer the SAME 303 to /account/sent", async () => {
   const fresh = await join(S.a);
-  const acct = (rows("SELECT email FROM accounts WHERE pass_hash IS NOT NULL ORDER BY created_at LIMIT 1")[0] || {}).email;   // a HELD account (a passphrase: B4 — an add-person shell joins like a new email)
+  const acct = (rows("SELECT email FROM accounts WHERE pass_hash IS NOT NULL ORDER BY created_at LIMIT 1")[0] || {}).email;   // a HELD account (a passphrase; a seat holds one too: the seat-holder case below)
   expect(acct, "no account on this worker (an earlier case makes several)");
   const held = await join(acct), trap = await join(`s67bot${TAG}@smoke.local`, "Bot", { trap: "https://spam.example.org" });
   expect(fresh.status === 303 && fresh.locationRaw === "/account/sent" && shape(held) === shape(fresh) && shape(trap) === shape(fresh),
@@ -125,6 +129,34 @@ smoke("account flow · forgot -> the captured reset -> a new passphrase -> every
   const old = await http("POST", "/login", { body: { email: S.a, password: PASS } }), fresh = await http("POST", "/login", { body: { email: S.a, password: NEW } });
   expect(old.status === 401 && fresh.status === 200 && fresh.json && fresh.json.token, () => `the old passphrase ${old.status}, the new ${fresh.status}`);
   return `the same answer for a stranger's email; the reset signed in fresh (${r.locationRaw}); the org session and both account sessions ended; old 401, new 200`;
+});
+
+smoke("account flow · a seat holder with no passphrase joins: \"you already have an account\", nothing verifiable; forgot -> reset -> the picker (its seat waits) -> Accept -> signed in to its seat", async () => {
+  const e = `s67seat${TAG}@smoke.local`;
+  const seat = await addPerson("S67 Seated", e);   // the admin's add-person: an active seat, its account with no passphrase
+  const a0 = rows(`SELECT pass_hash, google_sub, invited_org FROM accounts WHERE email = ${q(e)}`)[0] || {};
+  expect(a0 && a0.pass_hash === null && a0.google_sub === null && a0.invited_org === null, () => `the seated account: ${brief(a0)}`);
+  const j = await join(e);
+  const already = await mailFor(e, (m) => m.subject === "You already have a sharingu account");
+  const verify = (await mails({ to: e })).filter((m) => m.subject === "Verify your email");
+  const reqs = rows(`SELECT status FROM access_requests WHERE email = ${q(e)}`).map((r) => r.status).join();
+  expect(j.status === 303 && j.locationRaw === "/account/sent" && already && !linkIn(already) && verify.length === 0 && reqs === "unverified",
+    () => `the join: ${j.status} -> ${j.locationRaw}; already ${!!already}; ${verify.length} verification emails; requests ${reqs}`);
+  await http("POST", "/account/forgot", { form: { web: "1", email: e }, accept: "text/html" });
+  const t = linkIn(await mailFor(e, (m) => m.subject === "Reset your passphrase"), "reset");
+  expect(t, "no reset link in the capture for the seat holder");
+  const r = await http("POST", "/account/reset", { form: { web: "1", token: t, password: NEW, confirm: NEW }, accept: "text/html" });
+  const c = cookieOf(r), waits = rows(`SELECT active, pending FROM people WHERE id = ${q(seat.id)}`)[0] || {};
+  expect(r.status === 303 && r.locationRaw === "/orgs?seat=reset" && c && waits.active === 0 && waits.pending === 1, () => `the reset: ${r.status} -> ${r.locationRaw}; the seat ${brief(waits)}`);
+  const picker = await http("GET", "/orgs?seat=reset", { cookie: c, accept: "text/html", nav: true });
+  expect(picker.status === 200 && /Your seats wait for your yes/.test(picker.raw) && picker.raw.includes(`data-pending="${orgSlug(1)}"`), () => `the picker: ${picker.status}`);
+  const yes = await http("POST", "/orgs/seat", { cookie: c, form: { seat: seat.id, answer: "accept" }, accept: "text/html" });
+  const now = rows(`SELECT active, pending FROM people WHERE id = ${q(seat.id)}`)[0] || {};
+  expect(yes.status === 303 && yes.locationRaw === "/orgs?seat=accepted" && now.active === 1 && now.pending === 0, () => `Accept: ${yes.status} -> ${yes.locationRaw}; the seat ${brief(now)}`);
+  const s = await http("POST", "/login", { body: { email: e, password: NEW } });
+  const st = s.json && s.json.token ? rows(`SELECT person_id FROM tokens WHERE token_hash = ${q(sha(s.json.token))}`)[0] || {} : {};
+  expect(s.status === 200 && st.person_id === seat.id, () => `the sign-in with the new passphrase: ${s.status}; its seat ${brief(st)}`);
+  return `"already" captured, no verification email, its request never in line; the reset -> the picker (the seat waiting, the org named) -> Accept; the passphrase signs in to that seat`;
 });
 
 smoke("account flow · THE CAP: at 2,900 in the window a join answers the same, files and sends nothing; /account/sent says paused; the team's alert once", async () => {

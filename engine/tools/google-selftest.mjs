@@ -25,8 +25,9 @@
 //        ALREADY VERIFIED (open, in line, the account linked with its Google subject and no passphrase, the source), a stranger's
 //        unverified join for the email gone, NO verification email, the team's alert; 303 /account signed in; the ticket spent (410)
 //   G9 · SIGN-IN, an account in line (verified by email): an account session at /account, its Google subject linked
-//   G10 · SIGN-IN, a seated account: its org's session and landing; the same email by ANOTHER Google account refused (403), and that
-//        Google account refused for another account's email (linked elsewhere)
+//   G10 · SIGN-IN, a seated account with no passphrase: Google's first link makes its seat WAIT (THE FIRST PASSPHRASE WAITS) — the
+//        picker names the org, never next; accepted there, its org's page opens; the same email by ANOTHER Google account refused
+//        (403), and that Google account refused for another account's email (linked elsewhere)
 //   G11 · THE STATE'S BINDING: the same callback again (its cookie kept) refused, nothing signed in; in another browser (no cookie)
 //        refused; Google's error answer refused; the start under an org's address the one not-here 404
 //   G12 · A TOKEN REFUSED end to end: another aud, an unverified email, alg none — one plain page, no session cookie, nothing linked
@@ -34,6 +35,8 @@
 //   G14 · THE CONNECT PAGE: a client registered; its authorize page carries the Google form (no link); the start by GET refused, a
 //        cross-site POST refused; Google signs the owner in and the authorization completes: the client gets its code, which its
 //        token request redeems, and the token reads whoami as that seat
+//   G14b · THE FIRST PASSPHRASE WAITS from the connect page: a passphrase-less seated account's first Google link there sends no code
+//        to the client; the sign-in form says its seats wait (PENDING_ONLY_WORDS), the seat waits, the subject linked
 //   G15 · NOTHING CHANGES for an account Google never signed in (a reviewer's, @review.sharingu.xyz): its passphrase signs in, its
 //        subject stays none; a seat another org adds for a Google-linked email waits for its yes (SEAT_CONSENT_SQL), and its invite
 //        holds (INVITE_SEAT_USE_SQL)
@@ -54,9 +57,9 @@
 //        link set: accounts.invited_org) and signs in with it; the email's owner signs in by Google: the squatter's session revoked,
 //        that passphrase and its mark gone (it signs in nowhere now), the seat WAITING for the owner's yes (the picker, never the org
 //        entered), the account's open reset link spent; then a reset by email unlinks the Google subject
-//   G19 · AN ADD-PERSON SHELL is no one's: its email joins the beta as anyone's (the verification email, never "already"; its
-//        passphrase then the account's); a seatless shell joins through Google (the form Google filled in, the shell's own account
-//        linked: no 409)
+//   G19 · AN ADD-PERSON SHELL (the owner's MCQ of 2026-10-15, src/accounts.js ACCOUNT_HELD): a SEATED one is held — its email's
+//        join gets "you already have an account", no link, its passphrase still none; a seatless one is no one's and joins through
+//        Google (the form Google filled in, the shell's own account linked: no 409)
 // And the MUTATION PROOF: each named mutant (a scratch copy of src/) must turn its case(s) red, by an assertion, never a crash.
 // Exit 1 on any failure.
 import { mkdtempSync, cpSync, readFileSync, writeFileSync, rmSync, chmodSync } from "node:fs";
@@ -342,12 +345,22 @@ const CASES = {
     await W.verifiedByEmail("other@gee.test");
     const b = W.browser(), slug = W.slug();
     const g = await W.google(b, "signin", { sub: "sub-owner", email: "owner@one.test", email_verified: true, name: "Owner" }, { query: { next: `/${slug}/home` } });
+    // THE FIRST PASSPHRASE WAITS (the owner's MCQ, 2026-10-15): the owner's account had no passphrase of its own, so Google's first
+    // link makes its seat wait: the picker names the org; the holder accepts it there, then its page opens
+    const waiting = W.one("SELECT id, active, pending FROM people WHERE id = 'one-owner'");
+    const before = await b.call("GET", `/${slug}/home`, { nav: true });
+    const picker = await b.call("GET", "/orgs", { nav: true });
+    const accept = await b.call("POST", "/orgs/seat", { form: { seat: "one-owner", answer: "accept" } });
+    const after = W.one("SELECT active, pending FROM people WHERE id = 'one-owner'");
     const home = await b.call("GET", `/${slug}/home`, { nav: true });
     const b2 = W.browser(), wrong = await W.google(b2, "signin", { sub: "sub-intruder", email: "owner@one.test", email_verified: true, name: "Intruder" });
     const b3 = W.browser(), moved = await W.google(b3, "signin", { sub: "sub-owner", email: "other@gee.test", email_verified: true, name: "Owner" });
     return [
-      [g.cb && g.cb.status === 302 && g.cb.location === `/${slug}/home` && !!b.jar.get("__Host-ar_session") && home.status === 200 && /data-screen|<main/.test(home.text),
-        `G10 · a seated account: its org's session, landing on next (${g.cb && g.cb.status} ${g.cb && g.cb.location}; home ${home.status})`],
+      [g.cb && g.cb.status === 302 && g.cb.location === "/orgs" && !!b.jar.get("__Host-ar_session") && waiting.active === 0 && waiting.pending === 1 && before.status === 302
+        && picker.status === 200 && /data-region="org-pending"/.test(picker.text) && picker.text.includes(`data-pending="${slug}"`),
+        `G10 · a seated account with no passphrase: Google's first link makes its seat WAIT — the picker, the org named, never next (${g.cb && g.cb.status} ${g.cb && g.cb.location}; its page ${before.status})`],
+      [accept.status === 303 && after.active === 1 && after.pending === 0 && home.status === 200 && /data-screen|<main/.test(home.text),
+        `G10 · accepted on the picker (${accept.status} ${accept.location}), its org's page opens (${home.status})`],
       [W.one("SELECT google_sub FROM accounts WHERE email = 'owner@one.test'").google_sub === "sub-owner", "G10 · its Google subject linked"],
       [wrong.cb && wrong.cb.status === 403 && /data-why="other_sub"/.test(wrong.cb.text) && !b2.jar.has("__Host-ar_session") && W.one("SELECT google_sub FROM accounts WHERE email = 'owner@one.test'").google_sub === "sub-owner",
         `G10 · the same email by another Google account refused, nothing signed in, the link unchanged (${wrong.cb && wrong.cb.status})`],
@@ -399,8 +412,28 @@ const CASES = {
       [/data-google-join/.test(form.text) && form.text.includes('value="newbie@gee.test" readonly'), "G13 · Join the beta then opens the form Google filled in"],
     ];
   },
+  async G14b() {
+    // the connect page is a passphrase-less seated account's FIRST Google link (THE FIRST PASSPHRASE WAITS): no code reaches the client;
+    // the sign-in form says the seats wait (PENDING_ONLY_WORDS), the seat waits, the subject linked
+    const W = await world(), b = W.browser();
+    const reg = await W.w.fetch(new Request(O + "/oauth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ redirect_uris: ["https://client.example/cb"], client_name: "Test App", token_endpoint_auth_method: "none" }) }));
+    const client = await reg.json();
+    const challenge = createHash("sha256").update("w".repeat(50)).digest("base64url");
+    const authorize = `/oauth/authorize?${new URLSearchParams({ response_type: "code", client_id: client.client_id, redirect_uri: "https://client.example/cb", code_challenge: challenge, code_challenge_method: "S256", state: "s-b", scope: "mcp:read mcp:write" })}`;
+    const page = await b.call("GET", authorize, { nav: true });
+    const oauthReq = ((/<form method="POST" action="\/auth\/google\/start"[\s\S]*?name="oauth_req" value="([^"]+)"/.exec(page.text) || [])[1] || "");
+    const g = await W.google(b, "connect", { sub: "sub-owner", email: "owner@one.test", email_verified: true, name: "Owner" }, { form: { oauth_req: oauthReq } });
+    const seat = W.one("SELECT active, pending FROM people WHERE id = 'one-owner'"), sub = W.one("SELECT google_sub FROM accounts WHERE email = 'owner@one.test'").google_sub;
+    const location = (g.cb && g.cb.location) || "";
+    return [
+      [!!oauthReq && g.cb && g.cb.status === 401 && !/code=/.test(location) && /name="oauth_req"/.test(g.cb.text) && /seats wait for your yes/.test(g.cb.text) && seat.active === 0 && seat.pending === 1 && sub === "sub-owner",
+        `G14b · the connect page as the account's first Google link: no code, the sign-in form again with its words (${g.cb && g.cb.status}): the seats wait; the seat waits, the subject linked`],
+    ];
+  },
   async G14() {
     const W = await world(), b = W.browser();
+    // the owner's Google account linked before (its first link's wait is G10's): the connect walks an account Google already signs in
+    W.w.db.prepare("UPDATE accounts SET google_sub = 'sub-owner' WHERE email = 'owner@one.test'").run();
     const reg = await W.w.fetch(new Request(O + "/oauth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ redirect_uris: ["https://client.example/cb"], client_name: "Test App", token_endpoint_auth_method: "none" }) }));
     const client = await reg.json();
     const verifier = "v".repeat(50), challenge = createHash("sha256").update(verifier).digest("base64url");
@@ -582,15 +615,14 @@ const CASES = {
     await W.browser().call("POST", "/request-access", { form: { web: "1", name: "Shell A", email: "shella@gee.test", password: PASS, confirm: PASS, ...PROFILE } });
     const ms = (await W.mails()).filter((m) => m.to === "shella@gee.test");
     const t = (/\/account\/verify\/([0-9a-f]{48})/.exec(((ms[ms.length - 1]) || {}).text || "") || [])[1];
-    const v = await W.browser().call("POST", "/account/verify", { form: { web: "1", token: t, password: PASS } });
     const a = W.one("SELECT id, pass_hash FROM accounts WHERE email = 'shella@gee.test'");
     const b = W.browser(), id = { sub: "sub-shellb", email: "shellb@gee.test", email_verified: true, name: "Shell B" };
     const g = await W.google(b, "join", id);
     const post = await b.call("POST", "/request-access", { form: { web: "1", google: "1", name: "Shell B", ...PROFILE } });
     const bb = W.one("SELECT id, google_sub FROM accounts WHERE email = 'shellb@gee.test'"), req = W.one("SELECT status, account_id FROM access_requests WHERE email = 'shellb@gee.test'");
     return [
-      [ms.length === 1 && /Verify your email/.test(ms[0].subject) && !!t && v.status === 303 && a.id === shellA && !!a.pass_hash,
-        `G19 · a seated shell's email joins as anyone's: the verification email (${ms.map((m) => m.subject).join(" | ")}), then the passphrase the shell's own (${v.status})`],
+      [ms.length === 1 && ms[0].subject === "You already have a sharingu account" && !t && a.id === shellA && a.pass_hash === null,
+        `G19 · a seated shell is held: its email's join gets "you already have an account" (${ms.map((m) => m.subject).join(" | ")}), no link, its passphrase still none`],
       [g.cb && g.cb.status === 303 && g.cb.location === "/request-access" && post.status === 303 && bb.id === shellB && bb.google_sub === "sub-shellb" && req && req.status === "open" && req.account_id === shellB,
         `G19 · a seatless shell joins through Google: the shell's own account linked, its request open (${g.cb && g.cb.status}, ${post.status} ${post.location})`],
     ];
@@ -633,8 +665,12 @@ const MUTANTS = [
     from: "pass_hash = CASE WHEN invited_org IS NULL THEN pass_hash END, \" +\n  \"pass_salt = CASE WHEN invited_org IS NULL THEN pass_salt END, invited_org = NULL WHERE", to: "invited_org = NULL WHERE", red: ["G18"] },
   { name: "an invite-made account's seats entered silently", file: "src/accounts.js",
     from: "    db(env).prepare(GOOGLE_LINK_SEATS_WAIT_SQL).bind(id), ", to: "    ", red: ["G18"] },
+  { name: "Google's first link enters a passphrase-less account's seats silently (the invite's rule alone)", file: "src/accounts.js",
+    from: "${FIRST_PASSPHRASE(\"u\")})`;", to: "u.google_sub IS NULL AND u.invited_org IS NOT NULL)`;", red: ["G10", "G14b"] },
   { name: "a reset keeps the Google link", file: "src/accounts.js", from: "invited_org = NULL, google_sub = NULL, updated_at = ?2", to: "invited_org = NULL, updated_at = ?2", red: ["G18"] },
-  { name: "an add-person shell held as an account", file: "src/accounts.js", from: "  return !!(a && (a.pass_hash != null || a.google_sub != null));", to: "  return !!a;", red: ["G19"] },
+  { name: "a shell no one holds read as held", file: "src/accounts.js", from: "  return !!(r && Number(r.held) === 1);", to: "  return !!r;", red: ["G19"] },
+  { name: "the old rule: a seat holds no account", file: "src/accounts.js",
+    from: "${a}.invited_org IS NOT NULL ` +\n  `OR EXISTS (SELECT 1 FROM people hp WHERE hp.account_id = ${a}.id AND (hp.active = 1 OR hp.pending = 1)))`;", to: "${a}.invited_org IS NOT NULL)`;", red: ["G19"] },
   { name: "no Google proof on an org session", file: "src/index.js",
     from: "  if (!seatless && signin.session === \"account\") await putGoogleProof(env, opened.token, signin.account.id);\n", to: "", red: ["G16"] },
   { name: "the local IdP taken from any value", file: "src/google.js",

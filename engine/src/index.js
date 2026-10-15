@@ -282,7 +282,8 @@ async function landingFor(env, origin, signin, next) {
     const a = splitAddress(p.split(/[?#]/)[0].replace(/\/+$/, "") || "/");
     if (!a) return p;
     const row = await orgBySlug(env, a.seg);
-    if (row && signin && signin.seat && Number(signin.seat.org) === Number(row.id)) return p;
+    // (A1; THE FIRST PASSPHRASE WAITS) a seat that waits for its holder's yes reaches nothing: the picker, never its org's page
+    if (row && signin && signin.seat && !signin.pendingOnly && Number(signin.seat.org) === Number(row.id)) return p;
   }
   return landingOf(env, signin);
 }
@@ -338,8 +339,9 @@ async function afterAnswer(c, work) {
   if (c.ctx && typeof c.ctx.waitUntil === "function") c.ctx.waitUntil(p); else await p;
 }
 // joinMail(env, origin, request, pass) — a join's one email, its unverified request filed only when the email may go: any email gets
-// the request (holding the passphrase's hash); a new email its verification link; an account's email "you already have an account"
-// instead (its passphrase untouched) and a request whose link is sent to no one (its token dropped here: it can never be verified) —
+// the request (holding the passphrase's hash); a new email its verification link; the email of an account someone holds
+// (src/accounts.js ACCOUNT_HELD: a passphrase, a Google subject, an invite mark, or a seat active or waiting — an org owner who signs
+// in by the seat's secret included) "you already have an account" instead (its passphrase untouched) and a request whose link is sent to no one (its token dropped here: it can never be verified) —
 // so a later sign-in with the joined passphrase answers "check your inbox" for both, and the join never tells which emails hold an
 // account (src/accounts.js passphraseSignIn)
 // (21.4b) the request keeps its consent and its source (src/requestaccess.js readConsent, sourceOf)
@@ -360,7 +362,8 @@ async function resendMail(env, origin, email) {
   return sendMail(env, mailerOf(env), { to: email, build: async () => ((await rotateVerify(env, join.id, await verifyTokenHash(token)))
     ? verifyMail({ origin, link: `${origin}${VERIFY_PATH}/${token}`, name: join.name }) : null) });
 }
-// forgotMail(env, origin, email) — a reset link for the email's account (none: nothing)
+// forgotMail(env, origin, email) — a reset link for the email's account when someone holds it (ACCOUNT_HELD: a seated person with no
+// passphrase sets one here, as the "already" email advises); none, or a shell no one holds: nothing
 async function forgotMail(env, origin, email) {
   if (!(await accountHolds(env, email))) return null;
   const token = newLinkToken();
@@ -1343,12 +1346,15 @@ const ABOVE_ROUTES = [
       if (field) return isWeb ? accountPage(renderReset({ brand, token, error: REQUEST_FIELD_WORDS[field] }), 422) : json({ error: "bad_reset", field, note: REQUEST_FIELD_WORDS[field] }, 422);
       const done = await finishReset(env, { tokenHash: await resetTokenHash(token), password: body.password });
       if (done.verdict !== "ok") return isWeb ? accountPage(renderLinkDead({ brand, kind: "reset" }), 404) : json({ error: "invalid_link" }, 404);
-      // signed in fresh: an org session on the account's chosen seat (its landing), else, with no seat, an account session
-      const r = done.r;
+      // signed in fresh: an org session on the account's chosen seat (its landing), else, with no seat, an account session; a reset
+      // that gave the account its first passphrase made its seats wait (src/accounts.js THE FIRST PASSPHRASE WAITS): the picker, its
+      // words saying so, each waiting org named with Accept
+      const r = done.r, waited = done.waited > 0;
       const opened = r.seat ? await openSession(env, r, { device: isWeb ? "web" : "unknown" }) : await openAccountSession(env, r.account, { device: "web" });
-      if (!isWeb) return json({ reset: true, signedIn: false, note: "Passphrase set; every session of the account ended. Sign in with the new passphrase (POST /login)." });
+      if (!isWeb) return json({ reset: true, signedIn: false, seatsWaiting: waited, note: "Passphrase set; every session of the account ended. Sign in with the new passphrase (POST /login)." + (waited ? " " + PENDING_ONLY_WORDS : "") });
       if (!opened) return new Response(null, { status: 303, headers: { location: "/login", "cache-control": "no-store" } });
-      return new Response(null, { status: 303, headers: { location: r.seat ? await landingOf(env, r) : ACCOUNT_PATH, "set-cookie": sessionSetCookie(opened.token), "cache-control": "no-store" } });
+      const landing = r.seat ? await landingOf(env, r) : ACCOUNT_PATH;
+      return new Response(null, { status: 303, headers: { location: waited && landing === PICKER_PATH ? `${PICKER_PATH}?seat=reset` : landing, "set-cookie": sessionSetCookie(opened.token), "cache-control": "no-store" } });
     },
   },
     // ---- GOOGLE SIGN-IN (sprint 21, 21.4c; src/google.js the flow, src/accounts.js the match): the authorization code flow with PKCE,
@@ -1507,7 +1513,7 @@ const ABOVE_ROUTES = [
       if (!tok) return signInOr401(request, url, PICKER_PATH, { error: "auth_required", hint: "Accept or decline a seat from your org list: sign in at /login with your account's passphrase." });
       const r = await answerSeat(env, tok, seat.slice(0, 80), answer);
       if (isForm) return new Response(null, { status: 303, headers: { location: `${PICKER_PATH}?seat=${r.done || r.error}`, "cache-control": "private, no-store" } });
-      return r.done ? json({ seat, answer: r.done }) : json({ error: r.error, note: SEAT_ANSWER_WORDS[r.error] }, r.error === "already_seated" ? 409 : 404);
+      return r.done ? json({ seat, answer: r.done }) : json({ error: r.error, note: SEAT_ANSWER_WORDS[r.error] }, r.error === "already_seated" || r.error === "only_owner" ? 409 : 404);
     },
   },
     // ---- create an org (sprint 7, 7.3; docs/plan/PLATFORM.md §2 items 6, 8 and 9): an account holder, proven by the ACCOUNT's

@@ -773,7 +773,8 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   googlemail.com, a Workspace `hd`), any other email's first link takes the account's passphrase (POST /auth/google/link); THE FIRST
   LINK IS A RESET (every session, reset link and connected app ends; an invite-set passphrase cleared, its seats waiting for the
   holder's yes); a reset unlinks Google; the team's alerts TO acie@ CC ryuk@ and counted in the cap (the cap's own alert past it,
-  once a day); an add-person shell is no one's (it joins, by email or Google); the operator page in a browser only; a wrong sign-in
+  once a day); an add-person shell is no one's (it joins, by email or Google; since the owner's MCQ of 2026-10-15 only one whose
+  seat is gone: a seated one is held, ACCOUNT_HELD); the operator page in a browser only; a wrong sign-in
   costs the same hashes whoever holds the email; the per-address limit by mailbox; a Google-only person seated elsewhere steps up
   by an org session; org_profile in the scoped-data gate; idx_signup_used; migrate-081's partial-run recovery; a cleared request's
   own words on /account; the sign-up code's words; the threat notes (engine/CLAUDE.md).

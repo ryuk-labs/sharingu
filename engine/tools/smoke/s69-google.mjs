@@ -8,7 +8,8 @@
 //   · `operator set-google-client --file --origin <the worker>` (local: its config names no custom domain): the button on all four
 //   · join by Google: the callback 303 to the form Google filled in (the email locked), its POST filed already verified (in line,
 //     the account linked), no verification email captured, the team's alert captured; 303 /account signed in
-//   · sign-in by Google: that pending account to its status page; the seated owner to its org
+//   · sign-in by Google: that pending account to its status page; the seated owner (no passphrase of its own) — Google's first link
+//     makes its seats WAIT (src/accounts.js THE FIRST PASSPHRASE WAITS): the picker names org 1, Accept there, then its org opens
 //   · the same callback replayed (its state cookie kept) refused; a token for another aud refused; another Google account for the
 //     owner's linked email refused
 //   · THE STEP-UP (the owner's ruling, 2026-10-14): an approved Google-only account, its Google sign-in fresh, creates its org with no
@@ -20,7 +21,7 @@ import { mkdtempSync, writeFileSync, chmodSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomBytes, createHash } from "node:crypto";
-import { smoke, expect, d1rows as rows, operator as op, mails, mailFor, linkIn, orgSlug, patientFetch, BASE } from "./lib.mjs";
+import { smoke, expect, d1rows as rows, operator as op, mails, mailFor, linkIn, orgSlug, patientFetch, acceptWaiting, BASE } from "./lib.mjs";
 import { readConfig } from "../org-undo.mjs";
 import { startFakeGoogle } from "../fake-google.mjs";
 
@@ -135,13 +136,19 @@ smoke("google · join by Google: the form Google filled in (the email locked), f
     () => `the pending account's sign-in ${again.cb && again.cb.status} ${again.cb && again.cb.location}; /account ${status.status}`);
   S.owner = String(rows("SELECT email FROM people WHERE org = 1 AND role = 'owner' AND active = 1 ORDER BY created_at LIMIT 1")[0].email).toLowerCase();
   const slug = orgSlug(1), b3 = browser(), seated = await google(b3, "signin", { sub: `s69-owner-${TAG}`, email: S.owner, email_verified: true, name: "Owner" });
+  // the owner's account holds no passphrase of its own (s38: it signs in by its seat's secret), so Google's first link makes its seats
+  // WAIT for its yes: the picker names org 1; Accept there opens the org (any other org's seat accepted as s45 gives it, for the
+  // cases after this one: the owner key is a seat's, and a waiting seat signs nothing in)
+  const one = rows(`SELECT id, active, pending FROM people WHERE org = 1 AND role = 'owner' AND lower(email) = ${q(S.owner)}`)[0] || {};
+  const picker = await b3.call("GET", "/orgs", { nav: true });
+  const yes = await b3.call("POST", "/orgs/seat", { form: { seat: one.id, answer: "accept" } });
+  const rest = acceptWaiting(S.owner);
   const home = await b3.call("GET", `/${slug}/home`, { nav: true });
-  // its landing is the org, or the picker when the owner's account holds seats in several orgs (an earlier case may seat it): either way
-  // the account's session reads as its seat at the org's address
-  expect(seated.cb && seated.cb.status === 302 && [`/${slug}`, "/orgs"].includes(seated.cb.location) && home.status === 200 && !/data-screen="login"/.test(home.text),
-    () => `the owner's sign-in ${seated.cb && seated.cb.status} ${seated.cb && seated.cb.location}; /${slug}/home ${home.status}`);
+  expect(seated.cb && seated.cb.status === 302 && seated.cb.location === "/orgs" && one.active === 0 && one.pending === 1 && picker.status === 200 && picker.text.includes(`data-pending="${slug}"`)
+    && yes.status === 303 && home.status === 200 && !/data-screen="login"/.test(home.text),
+    () => `the owner's sign-in ${seated.cb && seated.cb.status} ${seated.cb && seated.cb.location}; org 1's seat ${JSON.stringify(one)}; the picker ${picker.status}; Accept ${yes.status} (${rest} more accepted); /${slug}/home ${home.status}`);
   S.back = seated.back; S.state = (seated.start.cookies.find((c) => c.startsWith("__Host-g_state=")) || "").split(";")[0].split("=")[1];
-  return `the form Google filled in -> filed open, in line, the account linked (no passphrase), no verification email, one team alert; the pending account -> /account; the owner -> /${slug}`;
+  return `the form Google filled in -> filed open, in line, the account linked (no passphrase), no verification email, one team alert; the pending account -> /account; the owner -> the picker (its seats waiting), Accept -> /${slug}`;
 });
 
 smoke("google · refused: the same callback replayed (its state cookie kept), a token for another aud, another Google account for the owner's linked email — one plain page each, nothing signed in", async () => {
