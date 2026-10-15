@@ -263,6 +263,11 @@ end with the owner's OK. Clean all the way: no dead code, no dead docs; a finish
 
 ## Ruled by the owner (the ones a builder must know)
 
+- **Acie operates the beta (MCQ 2026-10-15):** acie@ryuklabs.io's ryuklabs seat is an ADMIN (role owner, set through
+  Control's set-role as Agent Ops), so Acie opens the operator page (`/ryuklabs/operator`, in a browser, signed in with
+  Google) and approves or declines requests (Approve sends "You're in"). There is no narrower operator-only role: admin of
+  org 1 is the gate (`src/operatorread.js mayOperate`). Acie's own org "acie labs" (org 6) is a separate account, a Gmail.
+
 - **Before the forms (MCQs 2026-10-15, branch `sprint-21-fix3`):** the app's front pages gain "Walkthrough" in the top bar,
   linking to the site's `docs.html#walkthrough` (works signed in or not); the connector's suggested name is `sharingu`
   everywhere (Add to Claude, the Claude Code and Codex lines), not the org's slug — one `/mcp` serves every org; the join
