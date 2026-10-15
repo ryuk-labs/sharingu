@@ -634,7 +634,7 @@ The spec: in video 5's recording a smaller model previewed and filed a note in o
   form's definition (data pulled through connectors counts). presets 57/0, plugin-codex 129/129, plugin-sync 48/48,
   `claude plugin validate --strict` passes. The starter shelf's two presets follow at the next ship.
 
-## Sprint 21 · First-time onboarding (branch `sprint-21`; the owner's MCQs 2026-10-13)
+## Sprint 21 · First-time onboarding (branch `sprint-21`; the owner's MCQs 2026-10-13) — SHIPPED 2026-10-15
 
 The scope the owner ruled: a short splash (the owl, under 1.5 s, first visit only, skippable, off under reduced motion);
 request access with a profile (name, work email, company, role, team size; optional website, LinkedIn, X, GitHub, the
@@ -757,7 +757,7 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   "Connect an AI" until the first filing; Control > Connect leads with Claude and ChatGPT; the org's address suggested
   from its name). orgs 42/42, wire 428/428, showcase 32/32; smoke 355/355 (s65, s66). The adversarial read of the sign-in
   change rides the sprint-end review.
-- [ ] **The sprint end's fix list** (found in review, folded here so none is lost): the org form's top bar (DONE in the review's
+- [x] **The sprint end's fix list** (found in review, folded here so none is lost): the org form's top bar (DONE in the review's
   fixes: Sign out for an account or an org session, as every account page); the site's privacy page gains 21.4b's paragraph (in the site's `journey-polish` branch,
   shipped with the buttons): "When you join the beta we collect your name, work email, company, role and team size, and
   anything optional you add (website, LinkedIn, X, GitHub, the AI tools you use, one line on your use). We record which
@@ -767,7 +767,7 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   to set it up and improve the beta. Only you and the sharingu operator see this. If your request is declined, or
   approved but no org is created, we clear your profile 90 days later and keep only anonymous counts. To ask for
   deletion, email acie@ryuklabs.io."
-- [ ] **The sprint end's review fixes** (the independent review, 2026-10-14; the main session smokes and commits them): the gate's
+- [x] **The sprint end's review fixes** (the independent review, 2026-10-14; the main session smokes and commits them): the gate's
   four reds (parity's Google doors, the brand gate — the Google client's origins now ride the client in OAUTH_KV, from the config's
   custom domains — the code atlas, the cross-org suite's stale mutation); Google answers only for its own mailboxes (gmail.com,
   googlemail.com, a Workspace `hd`), any other email's first link takes the account's passphrase (POST /auth/google/link); THE FIRST
@@ -781,13 +781,21 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   (auth-coverage knows the operator page answers the one 404, a hidden door), sims 10/10, tabs-verify 40/40; the ONE
   independent review (no blocker; 5 should-fix and 12 nits, all fixed in 8639f6daa). The ship's preflight: live's slugs
   against `request-access` (the one new reserved name; `account`, `auth`, `assets`, `operator` reserved since sprint 7).
-- [ ] **The ship** (the owner's OK for all nine steps, 2026-10-14): merged as ryuk-labs/sharingu#8 (9680d5351);
-  migrate-081 applied on live and verified (bookmark 00001040-00000000-00005104-0ccac1ab91be2c195274f064b1c6007f); the
-  code's `ship.sh` STOPPED RED on the preview (`1b31a817`): the cross-org suite's one 500 (`changes` with eval and two
-  projects; 0 leaks), nothing promoted, live's code still 850b262c. The owner's ruling: investigate first (HANDOFF A.1).
-- [ ] **The sprint end.** The site's access buttons move to the worker's request page and the site's waitlist page redirects there,
-  merged right after the ship (live must answer the page first), together with the site's 21.P polish (branch
-  `journey-polish`, 29e6a17, verify 260/260; held by the owner, 2026-10-14).
+- [x] **The ship** (the owner's OK for all nine steps, 2026-10-14): merged as ryuk-labs/sharingu#8 (9680d5351);
+  migrate-081 applied on live and verified (bookmark 00001040-00000000-00005104-0ccac1ab91be2c195274f064b1c6007f). The
+  first `ship.sh` STOPPED RED on the preview (`1b31a817`): one 500 and 102 plan_limit answers, nothing promoted. A.1
+  (2026-10-15): the 500 a platform transient (340 replays 200; the analytics count 0 exceptions on that version); the 102
+  a suite bug (the Google doors spend LOGIN_LIMIT and were walked), fixed in ryuk-labs/sharingu#9 (080f1178f: attack-xorg's
+  SKIP; main red 240 / the fix green 0 on a local worker; smoke 371/371, the gate green). SHIPPED 2026-10-15
+  (03:38–05:49 UTC): `d5423ee3-e21f-4679-b276-c2b340e847a0` at 100% (tag 080f1178f); the cross-org suite 11,276 calls, 0
+  rows read or written across, 0 5xx, 0 plan_limit (5,790 s); the walk on the preview, the canary, production smoked.
+  Rollback: `sh tools/ship.sh rollback 850b262c-b788-4844-92f0-f023a2fd25d3`. After: the Google client stored (both
+  domains; `/auth/google/start` 302 to Google, the button on /login), the live walk 13/13, verify-live 28/28.
+- [x] **The sprint end.** The site's access buttons move to the worker's request page and the site's waitlist page redirects there,
+  merged right after the ship, together with the site's 21.P polish and 21.4b's privacy paragraph: the site's `main` at
+  72d8ebe (2026-10-15; waitlist.html and its form retired, `/waitlist` a 307 to `/request-access?from=site`, the docs tell
+  the join flow; the full verify 246/246 at the push); live checked (4 links on the index, the redirect). The first real
+  emails (HANDOFF A.5) wait for the owner's inbox.
 
 ## Sprint 19 · The write door split (branch `sprint-19`, opened 2026-10-13; the owner's MCQs of the day) — SHIPPED 2026-10-13
 
