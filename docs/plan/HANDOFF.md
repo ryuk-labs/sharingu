@@ -1,13 +1,10 @@
 # HANDOFF — where sharingu stands (rewritten at every stop; git holds the history)
 
-**As of 2026-10-13: sprint 20 is LIVE (the write tools file "a preview the person has seen and agreed to"); plugin
-0.1.16 clears the Claude directory's checks; the OpenAI submission is in review. Sprint 21 (onboarding) is BUILT AND PROVEN on branch `sprint-21` (14 commits, not pushed; smoke 371/371, the gate green,
-evals 42/42, sims 10/10, tabs-verify 40/40, the one review's findings fixed; `sh tools/ship-plan.sh ryuklabs --no-import`
-complete: migrate-081 BEFORE the code, no live org holds `request-access`). NEXT: the owner's OK, then the ship in the
-plan's order (push, ONE PR, merge; the dry run; migrate-081; the name and grant checks; `ship.sh`; store the Google
-client: `node tools/operator.mjs set-google-client --file ~/.sharingu/google-oauth.env --live --config wrangler.jsonc
---confirm-live ryuklabs-agent-r`; the walk and verify-live; the first real emails, to ryuk@ only; then the site's
-`journey-polish` with the buttons to `/request-access`). Live is still sprint 20.**
+**As of 2026-10-15: sprint 21 (onboarding) is MERGED to `main` (ryuk-labs/sharingu#8, 9680d5351) and HALF-SHIPPED.
+Live's DATA is at migrate-081 (applied 2026-10-14, verified); live's CODE is still sprint 20 (`850b262c` at 100%: the old
+code names none of 081's tables, so live is safe and unchanged for people). The code ship STOPPED RED: `ship.sh`'s
+cross-org suite on the preview found 0 leaks but ONE 500 ("Worker threw exception", Cloudflare 1101) on one of ~21,000
+calls; nothing was promoted. The owner's ruling (2026-10-14): INVESTIGATE FIRST, then re-run. Steps A.1–A.6 below.**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
 and must not trust its own memory over this file. Read, in order: `README.md` (the model, how we work) → this file →
@@ -16,9 +13,51 @@ the laws). `SPRINTS.md` holds every slice's record; `MARKETPLACE.md` the store r
 
 ## RESUME HERE — the order of work
 
-**0 · Orient (five minutes, read-only).** From the repo root: `git branch --show-current` (expect `sprint-21`),
-`git log --oneline -4`, `git status --short` (expect clean), `uptime` (load under 8 before anything heavy). Then tell
-the owner where things stand in two lines, then resume the first unticked slice of sprint 21 in `SPRINTS.md`.
+**0 · Orient (five minutes, read-only).** From the repo root: `git branch --show-current` (expect `main`; sprint 21 is
+merged, there is no open sprint branch), `git log --oneline -4`, `git status --short` (expect clean), `uptime` (load under
+8 before anything heavy: bunny's simulators share this Mini). Read `SPRINTS.md` sprint 21 (every ruling) and this
+block, then tell the owner where things stand in two lines.
+
+**A · Finish sprint 21's ship (the owner's OK for all nine steps was given 2026-10-14; the ruling on the red: investigate
+first).** Done so far: (1) PR #8 merged; (2) `cf-budget` and `migrate-dryrun --from 081` green; (3) `migrate.sh
+migrate-081.sql` on live — its UNDO is `npx wrangler d1 time-travel restore ryuklabs-agent-r
+--bookmark=00001040-00000000-00005104-0ccac1ab91be2c195274f064b1c6007f` (the WHOLE database: never without the owner);
+every 081 table, index, `accounts.google_sub` and the triggers verified on live; (4) live's slugs (ryuklabs, suites,
+sharingu-review) hold no reserved name, the grants check names only three old eval seats. What is left:
+   1. **The 500.** The suite's record: `engine/.runs/ship-xorg/1b31a817-6b13-4823-937a-a2c551678d85/` (`fivexx.json`: org
+      5's owner · MCP `changes {"eval":true,"projects":["desk","shop"]}` -> 500 at 2026-10-14T15:46:11Z on the preview
+      version `1b31a817-6b13-4823-937a-a2c551678d85`; both throwaway orgs deleted). `changesAnswer` (`src/extract.js`)
+      is UNCHANGED since sprint 20, and the same call passed in the local `attack-xorg --prove` (21,813 calls, 0 5xx) and
+      in sprint 20's ship. The Workers observability query API returned no events for that window (the token may lack
+      the read, or a preview's events are not kept) — so the exception is unknown. Investigate: reproduce the exact call
+      on the preview URL (`https://1b31a817-ryuklabs-agent-r.sharingu-meetings-media.workers.dev`, if the version still
+      answers) as an owner of a FRESH throwaway org with two projects and an eval-marked filing (`attack-xorg.mjs`'s own
+      fixtures show how; delete the org after: `node tools/attack-xorg.mjs --cleanup <run dir> --live --config
+      wrangler.jsonc`), with `npx wrangler tail ryuklabs-agent-r --format json` running to a local file to catch the
+      exception. A real bug: fix on a branch `sprint-21-fix`, smoke + gate, one PR, then step 2. A transient (D1/
+      platform): say so with the evidence and re-run.
+   2. `sh tools/ship.sh ryuklabs` again (resumable by its record under `engine/.runs/ship/`), in the background with its
+      output to `engine/.runs/ship-sprint21.log`, the load gated INSIDE the command, and `wrangler tail` beside it. Avoid
+      a window crossing 03:00/15:00 UTC (the cron's backup heartbeat). 1–3 hours; a quiet log is not a stall (watch
+      `attack-xorg.mjs`'s CPU time and its ESTABLISHED socket).
+   3. After "✓ SHIPPED": store the Google client — `cd engine && set -a; . ~/.sharingu/env-sharingu.sh; set +a; node
+      tools/operator.mjs set-google-client --file ~/.sharingu/google-oauth.env --live --config wrangler.jsonc
+      --confirm-live ryuklabs-agent-r` (it derives the allowed origins from wrangler.jsonc's routes; prints only "stored"
+      and the id's tail; never print the file).
+   4. The live walk (13/13) and `sh tools/verify-live.sh --live` (28/28) — the commands under Traps.
+   5. The first REAL emails, to ryuk@ryuklabs.io ONLY (verified as a Cloudflare destination): join the beta on
+      https://agent.sharingu.xyz/request-access as ryuk@ (the verify email arrives From hello@sharingu.xyz), approve that
+      request with `node tools/operator.mjs allow --request <id> --live …` (the operator's live REST send has NEVER run:
+      this is its first), see "You're in", then `decline --request` is not possible after approval: remove the test
+      account with the operator's `remove-account` (read its usage) so it holds no beta place. Check the new-request
+      alert reached acie@ (to) and ryuk@ (cc). About three emails.
+   6. The site: in `~/batcave_vm/sharingu_website` (repo RyukLabs/sharingu_web_fe, Vercel deploys `main`), branch
+      `journey-polish` (29e6a17 the polish, 46702a0 the privacy paragraph; both committed, NOT merged) PLUS the button
+      move: every "Join the beta" link -> `https://agent.sharingu.xyz/request-access?from=site` and `/waitlist` -> a
+      redirect there (vercel.json); then merge into `main` and push with `python3 scripts/with-env.py git push origin
+      main` (its pre-push hook runs the full Playwright verify: never beside another suite); check the live site.
+   Then record the ship in `SPRINTS.md` (sprint 21: the new version id, the rollback target 850b262c) and in this file,
+   commit on `main`, push — and tell the owner the Claude forms can be filled (step 3 below).
 
 **1 · Ship sprint 14 — DONE 2026-10-12** (`64aad029` at 100%; the steps below are the ship's recipe for the next one). What it ships: four tool descriptions that
 said "call this first" now say when a tool is useful (`whoami`, `updates`, `missing`, `impact`: the stores' reviewers
@@ -69,7 +108,16 @@ ChatGPT plugin. The stores' pages were re-read on 2026-10-12; re-read them again
 **4 · After M4:** M5 (answer reviewers, launch). The platform's hardening rows still marked S9 in `PLATFORM.md` §3 are
 the owner's to open; any time: the beta invites, the allowed emails, the go for the first outside org.
 
-## State (2026-10-12)
+## State (2026-10-15)
+
+- **Live (2026-10-15): CODE sprint 20, DATA migrate-081.** Sprint 21 is merged to `main` but its code is not live (block
+  A above). The bullets below that say "sprint 20" for the code still hold; D1 is at migrate-081, not 080.
+- **The owner's open items, outside the repo:** (a) acie@ryuklabs.io clicks Cloudflare's "verify email address" mail
+  (until then the new-application alert reaches only ryuk@ in cc and hello@'s forwarding cannot deliver to her);
+  (b) Cloudflare dashboard -> sharingu.xyz -> Email -> Email Routing -> Get started (accept its root MX/SPF records),
+  then Routing rules -> Custom addresses -> `hello` -> Send to an email -> acie@ryuklabs.io (the token has no Email
+  Routing permission); (c) YouTube Studio: turn off the automatic captions on the five walkthrough videos (they play
+  over our burned-in captions and misspell the names); (d) AFTER block A: the Claude connector and plugin forms (step 3).
 
 - **Live: sprint 20.** Worker `850b262c-b788-4844-92f0-f023a2fd25d3` (tag `a1297dfe9`) at 100% on
   https://agent.sharingu.xyz and https://agent.ryuklabs.io; D1 `ryuklabs-agent-r` at migrate-080 (no migration in 14–20).
@@ -128,6 +176,13 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
   https://agent.ryuklabs.io --creds $f --live --operator-config wrangler.jsonc --confirm-live ryuklabs-agent-r; rm -f $f`.
   Then `sh tools/verify-live.sh --live`: if it SKIPs its authenticated checks on a transient Cloudflare read, run it
   again; 13/13 is not 28/28.
+
+- A 500 on the preview that reads "Worker threw exception" (Cloudflare 1101) is an uncaught throw with NO answer of
+  ours; the Workers observability query API (`POST /accounts/{id}/workers/observability/telemetry/query`) returned no
+  events at all for sprint 21's window, so run `npx wrangler tail ryuklabs-agent-r --format json > <file>` BESIDE a
+  ship to keep the exception.
+- `wrangler kv key delete` takes the KEY FIRST (`npx wrangler kv key delete "<key>" --namespace-id <id> --remote`); a
+  `--` before the key makes it fail with rc 1 and delete nothing.
 
 **Secrets and codes**
 - Any tool that prints codes "once, on this terminal" prints them into the session's transcript: always redirect its

@@ -781,6 +781,10 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   (auth-coverage knows the operator page answers the one 404, a hidden door), sims 10/10, tabs-verify 40/40; the ONE
   independent review (no blocker; 5 should-fix and 12 nits, all fixed in 8639f6daa). The ship's preflight: live's slugs
   against `request-access` (the one new reserved name; `account`, `auth`, `assets`, `operator` reserved since sprint 7).
+- [ ] **The ship** (the owner's OK for all nine steps, 2026-10-14): merged as ryuk-labs/sharingu#8 (9680d5351);
+  migrate-081 applied on live and verified (bookmark 00001040-00000000-00005104-0ccac1ab91be2c195274f064b1c6007f); the
+  code's `ship.sh` STOPPED RED on the preview (`1b31a817`): the cross-org suite's one 500 (`changes` with eval and two
+  projects; 0 leaks), nothing promoted, live's code still 850b262c. The owner's ruling: investigate first (HANDOFF A.1).
 - [ ] **The sprint end.** The site's access buttons move to the worker's request page and the site's waitlist page redirects there,
   merged right after the ship (live must answer the page first), together with the site's 21.P polish (branch
   `journey-polish`, 29e6a17, verify 260/260; held by the owner, 2026-10-14).
