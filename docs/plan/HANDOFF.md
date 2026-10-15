@@ -243,6 +243,13 @@ end with the owner's OK. Clean all the way: no dead code, no dead docs; a finish
 
 ## Ruled by the owner (the ones a builder must know)
 
+- **Before the forms (MCQs 2026-10-15, branch `sprint-21-fix3`):** the app's front pages gain "Walkthrough" in the top bar,
+  linking to the site's `docs.html#walkthrough` (works signed in or not); the connector's suggested name is `sharingu`
+  everywhere (Add to Claude, the Claude Code and Codex lines), not the org's slug — one `/mcp` serves every org; the join
+  text is told one way everywhere (request page, email, approval). Video 1's footage shows the old join (the waitlist, a
+  code): the owner submits first, then its opening clips are re-recorded with the recorder (`engine/.runs/b12-videos`),
+  clips 3–5 kept, the owner uploads it.
+
 - **Who holds an account (MCQs 2026-10-15, A.5's find; branch `sprint-21-fix2`):** an email whose account has a passphrase,
   a Google subject, an invite mark, or an ACTIVE or PENDING seat is told "you already have an account" on join — never put
   in the beta line; only a shell whose seat is gone joins as new (`ACCOUNT_HELD`). A reset (or Google's first link) that
