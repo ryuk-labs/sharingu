@@ -1,9 +1,9 @@
 # HANDOFF — where sharingu stands (rewritten at every stop; git holds the history)
 
 **As of 2026-10-15 (afternoon IST): sprint 21 is LIVE and its CLOSE-OUT is under way (block B).** Live: sprint 21
-(`d5423ee3`, rollback `850b262c`), D1 at migrate-081; the walk 13/13, verify-live 28/28; the first real emails proven (verify,
-the team alert, "You're in"); the first outside org through the new flow ("acie labs", org 6). In flight: `sprint-21-fix2`
-(ryuk-labs/sharingu#10, merged 0366c54bc) SHIPPING; then `sprint-21-fix3` (the join text, the Walkthrough nav, the
+(`001aaf1d` with fix2, rollback `d5423ee3`), D1 at migrate-081; the walk 13/13, verify-live 28/28; the first real emails proven (verify,
+the team alert, "You're in"); the first outside org through the new flow ("acie labs", org 6). Done: `sprint-21-fix2`
+(ryuk-labs/sharingu#10) SHIPPED. In flight: `sprint-21-fix3` (the join text, the Walkthrough nav, the
 connector named sharingu, plugin 0.1.17), the reviewer walk on live, hello@'s routing. **The owner submits the Claude
 forms only after block B is done (their ruling).**
 
@@ -22,10 +22,9 @@ block, then tell the owner where things stand in two lines.
 **B · Sprint 21's close-out (the owner's go, 2026-10-15) — IN PROGRESS.** One step at a time, each only when the one
 before is green; the owner's OK covers the fix2 and fix3 ships (MCQs 2026-10-15). Avoid a ship window crossing 03:00 or
 15:00 UTC.
-   1. **fix2 ship** (`sprint-21-fix2`: ACCOUNT_HELD, THE FIRST PASSPHRASE WAITS, the only-owner Decline guard, the
-      operator's REST send, remove-account clears requests; `SPRINTS.md` sprint 21, "A.5's finds") — `ship.sh` running from
-      10:04 UTC, log `engine/.runs/ship-21fix2.log`. After "✓ SHIPPED": the live walk and verify-live (Traps), record the
-      version id here and in `SPRINTS.md`.
+   1. **fix2 — SHIPPED 2026-10-15** (10:04–11:50 UTC, `engine/.runs/ship-21fix2.log`): `001aaf1d-3a31-4d2e-b5a8-00dfa2a8be47`
+      at 100% (tag 0366c54bc), rollback `d5423ee3`; the cross-org suite 11,276 calls, 0 leaks, 0 5xx, 0 plan_limit; the walk
+      13/13, verify-live 28/28.
    2. **fix3** on branch `sprint-21-fix3` (cut from 0366c54bc). DONE: the join text everywhere (8921c79f5), the rulings
       (ae7f5a2c3). TO BUILD, after step 1 (nothing under `engine/` changes mid-ship): (a) "Walkthrough" in the front
       pages' top bar (`src/login.js frontTop`) → `https://www.sharingu.xyz/docs.html#walkthrough`; (b) `connectorName`
@@ -146,9 +145,9 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
 
 ## State (2026-10-15)
 
-- **Live (2026-10-15): sprint 21.** Worker `d5423ee3-e21f-4679-b276-c2b340e847a0` (tag `080f1178f`) at 100% on
+- **Live (2026-10-15): sprint 21 with fix2.** Worker `001aaf1d-3a31-4d2e-b5a8-00dfa2a8be47` (tag `0366c54bc`) at 100% on
   https://agent.sharingu.xyz and https://agent.ryuklabs.io; D1 at migrate-081. Undo: `sh engine/tools/ship.sh rollback
-  850b262c-b788-4844-92f0-f023a2fd25d3` (code); the 081 bookmark under block A (data; it restores EVERY org). Proofs: the
+  d5423ee3-e21f-4679-b276-c2b340e847a0` (code); the 081 bookmark under block A (data; it restores EVERY org). Proofs: the
   walk 13/13, verify-live 28/28. The Google client stored; the request page, the showcase and the account flow live.
 - **The owner's open items, outside the repo:** (a) acie@ryuklabs.io clicks Cloudflare's "verify email address" mail
   (re-sent 2026-10-15; until then the new-request alert reaches only ryuk@ in cc); (b) add Zone · Email Routing Rules: Edit

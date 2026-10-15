@@ -798,7 +798,7 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   the join flow; the full verify 246/246 at the push); live checked (4 links on the index, the redirect). The first real
   emails (HANDOFF A.5) wait for the owner's inbox.
 
-- [ ] **A.5's finds, `sprint-21-fix2`** (the owner's MCQs 2026-10-15): (1) WHO HOLDS AN ACCOUNT is one rule, `ACCOUNT_HELD`
+- [x] **A.5's finds, `sprint-21-fix2`** — SHIPPED 2026-10-15 as `001aaf1d` (ryuk-labs/sharingu#10, 0366c54bc; rollback `d5423ee3`; the walk 13/13, verify-live 28/28) (the owner's MCQs 2026-10-15): (1) WHO HOLDS AN ACCOUNT is one rule, `ACCOUNT_HELD`
   (a passphrase, a Google subject, an invite mark, or an active or waiting seat): the owner's real ryuk@ (an owner seat, no
   passphrase) had been treated as a shell and sent a verification link; now a seat holder's join gets "you already have an
   account", never the beta line, and an old-rule link is the dead page. (2) THE FIRST PASSPHRASE WAITS: a reset or Google's
