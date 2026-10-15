@@ -357,7 +357,7 @@ export function renderHome(s, opts = {}) {
   const firstRun = !down && ct.total != null && num(ct.total) === 0;
   const connect = firstRun ? card({ label: "Connect an AI", region: "connect-first", attrs: 'data-reveal="1"',
     action: `<a class="u-link" href="${orgPath("/control#ct-connect")}" data-button="all-clients" data-door="GET /control">Control · Connect</a>`,
-    body: connectCards(o.origin, sum.org || brand.org) }) : "";
+    body: connectCards(o.origin) }) : "";
 
   // ---- Needs you ----
   const rowsIn = Array.isArray(ny.rows) ? ny.rows : [];

@@ -4,17 +4,18 @@
 // app: Claude's own logo, Add to Claude), ChatGPT (its logo, Add to ChatGPT) and Claude Code and Codex (their one command each).
 // Each signs in on sharingu's own page (src/oauth.js), so no key is pasted anywhere here; the key-based rows stay on Control ·
 // Connect (src/controlpage.js), which leads with the same two apps. Pure: the address is the request's own origin, the connector's
-// name the org's (connectorName). The logos are the worker's own files (src/frontassets.js), never hotlinked.
+// name sharingu (CONNECTOR_NAME). The logos are the worker's own files (src/frontassets.js), never hotlinked.
 //
-// connectCards(origin, org) -> the markup · CONNECT_CARDS_CSS its rules (the shell's tokens: both frames carry them) ·
+// connectCards(origin) -> the markup · CONNECT_CARDS_CSS its rules (the shell's tokens: both frames carry them) ·
 // CLIENT_MARK_CSS the mark's alone · COPY_JS the copy for a page without the shell's script (the front frame; inside the shell, src/shell.js copies any [data-copy]
 // beside a <code>) · clientMark(kind, size) the client's mark (a logo tile, or the command line's) · CLAUDE_ADD, CHATGPT_ADD the
 // two stores' own pages (each ONE constant to swap when its listing is published).
 import { esc } from "./ui.js";
 import { frontAssetHref } from "./frontassets.js";
 
-// the connector's name, the org's (lower-case, dashes): the same name on every row of this org
-export const connectorName = (org) => String(org || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "sharingu";
+// the connector's name: sharingu for every org (the owner's MCQ 2026-10-15: one /mcp serves every org a person holds a seat in,
+// each call naming its org, so one connection is the product's own name, the directory listing's)
+export const CONNECTOR_NAME = "sharingu";
 // sprint 12, 12.1 (the buttons): Claude's documented install link for a custom connector, which prefills its "Add custom connector"
 // dialog with this connector's name and URL (the person confirms there); ChatGPT has no documented deep link, so its plugins page.
 // copy: off-screen (an href)
@@ -42,9 +43,9 @@ const TICK = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"
 const how = `<p class="cc-how"><span>${SIGN_IN}</span><span class="cc-nokey">${TICK}${NO_KEY}</span></p>`;
 const away = (href, button, label, what) => `<a class="cc-add" href="${esc(href)}" target="_blank" rel="noopener noreferrer" data-button="${button}" data-client="opens ${esc(what)}, in a new tab">${label}</a>`;
 
-export function connectCards(origin, org) {
+export function connectCards(origin) {
   const mcp = `${String(origin || "").replace(/\/+$/, "")}/mcp`;
-  const name = connectorName(org);
+  const name = CONNECTOR_NAME;
   const client = (kind, title, sub, action, extra = "") => `<li class="cc-client" data-connect-client="${kind}">
       <div class="cc-head">${clientMark(kind)}<div class="cc-name"><b>${esc(title)}</b><span>${esc(sub)}</span></div>${action}</div>${extra}${how}
     </li>`;

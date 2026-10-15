@@ -157,7 +157,7 @@ export function renderOrgMade(opts) {
   const host = String(origin).replace(/^https?:\/\//, "");
   const at = `/${esc(org.slug || "")}`;
   const body = `<div class="made" data-screen="org-made" data-region="org-made">
-      ${connectCards(origin, org.name)}
+      ${connectCards(origin)}
       <details class="key-fold" data-region="owner-key">
         <summary>Show the owner key</summary>
         <div class="key-body">

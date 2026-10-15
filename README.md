@@ -33,9 +33,10 @@ until a regrade.
 A new team starts in four steps ([`docs/INSTALL.md`](docs/INSTALL.md), the same on the site's docs page and in the
 plugin's README):
 
-1. **Join and connect** — the beta holds 50 orgs, through the waitlist: we approve each org and hand you a one-time
-   sign-up code by hand (nothing is mailed). Sign up at `https://agent.sharingu.xyz/signup`, create your org and its
-   first project at `/orgs/new`, then connect your AI to `https://agent.sharingu.xyz/mcp` (the table below).
+1. **Join and connect** — the beta holds 50 orgs: join at `https://agent.sharingu.xyz/request-access` (a profile and a
+   passphrase, or Google) and confirm your email; we approve each org and email you when you're in; sign in, create
+   your org and its first project at `/orgs/new` (filled in from your request), then connect your AI to
+   `https://agent.sharingu.xyz/mcp` (the table below).
 2. **Your org, its project, its people** — Control's Invite gives each person a one-time invite link (they choose their
    own passphrase); roles Admin, Member and Partner; seven hats.
 3. **Fill the product side** — your AI runs the skill `fill-the-product-side` over the code, docs and tickets.

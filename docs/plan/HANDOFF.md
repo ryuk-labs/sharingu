@@ -1,11 +1,11 @@
 # HANDOFF — where sharingu stands (rewritten at every stop; git holds the history)
 
-**As of 2026-10-15: sprint 21 (onboarding) is SHIPPED** — `d5423ee3-e21f-4679-b276-c2b340e847a0` at 100% (tag
-080f1178f; rollback target `850b262c`), D1 at migrate-081. The first ship's red was investigated (A.1: the 500 a platform
-transient; 102 plan_limit answers a suite bug, fixed in ryuk-labs/sharingu#9), the re-run went green, and A.3, A.4 and A.6
-are done (the Google client stored, the walk 13/13, verify-live 28/28, the site's buttons live). **Left: A.5, the first
-real emails, which needs the owner's inbox (the recipe below is corrected: ryuk@ryuklabs.io holds a REAL account). Then
-the owner submits the Claude forms (their ruling: only after block A is done).**
+**As of 2026-10-15 (afternoon IST): sprint 21 is LIVE and its CLOSE-OUT is under way (block B).** Live: sprint 21
+(`001aaf1d` with fix2, rollback `d5423ee3`), D1 at migrate-081; the walk 13/13, verify-live 28/28; the first real emails proven (verify,
+the team alert, "You're in"); the first outside org through the new flow ("acie labs", org 6). Done: `sprint-21-fix2`
+(ryuk-labs/sharingu#10) SHIPPED. In flight: `sprint-21-fix3` (the join text, the Walkthrough nav, the
+connector named sharingu, plugin 0.1.17), the reviewer walk on live, hello@'s routing. **The owner submits the Claude
+forms only after block B is done (their ruling).**
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
 and must not trust its own memory over this file. Read, in order: `README.md` (the model, how we work) → this file →
@@ -14,10 +14,36 @@ the laws). `SPRINTS.md` holds every slice's record; `MARKETPLACE.md` the store r
 
 ## RESUME HERE — the order of work
 
-**0 · Orient (five minutes, read-only).** From the repo root: `git branch --show-current` (expect `main`; sprint 21 is
-merged, there is no open sprint branch), `git log --oneline -4`, `git status --short` (expect clean), `uptime` (load under
+**0 · Orient (five minutes, read-only).** From the repo root: `git branch --show-current` (expect `main` or `sprint-21-fix3`,
+block B's open branch), `git log --oneline -4`, `git status --short` (expect clean), `uptime` (load under
 8 before anything heavy: bunny's simulators share this Mini). Read `SPRINTS.md` sprint 21 (every ruling) and this
 block, then tell the owner where things stand in two lines.
+
+**B · Sprint 21's close-out (the owner's go, 2026-10-15) — IN PROGRESS.** One step at a time, each only when the one
+before is green; the owner's OK covers the fix2 and fix3 ships (MCQs 2026-10-15). Avoid a ship window crossing 03:00 or
+15:00 UTC.
+   1. **fix2 — SHIPPED 2026-10-15** (10:04–11:50 UTC, `engine/.runs/ship-21fix2.log`): `001aaf1d-3a31-4d2e-b5a8-00dfa2a8be47`
+      at 100% (tag 0366c54bc), rollback `d5423ee3`; the cross-org suite 11,276 calls, 0 leaks, 0 5xx, 0 plan_limit; the walk
+      13/13, verify-live 28/28.
+   2. **fix3** on branch `sprint-21-fix3` (cut from 0366c54bc). DONE: the join text everywhere (8921c79f5), the rulings
+      (ae7f5a2c3). TO BUILD, after step 1 (nothing under `engine/` changes mid-ship): (a) "Walkthrough" in the front
+      pages' top bar (`src/login.js frontTop`) → `https://www.sharingu.xyz/docs.html#walkthrough`; (b) `connectorName`
+      (`src/connectcards.js`) → `sharingu` for every org (Add to Claude, the Claude Code and Codex lines); the tests that
+      pin either follow; (c) `node tools/make-plugin-skills.mjs` moves the plugin to 0.1.17 (the README changed);
+      `claude plugin validate --strict ./plugin`. Then smoke, gate, one PR, merge, `ship.sh`, the walk and verify-live,
+      and the plugin's public repo synced (the recipe: step 6 of `sh tools/ship-plan.sh ryuklabs --no-import`; check
+      0.1.17 installs on a clean config).
+   3. **The reviewer walk on live:** `node tools/listing-walk.mjs --url https://agent.sharingu.xyz --codes
+      ~/.sharingu/reviewer-credentials.txt` must be 8/8 (it files P3's and P5's notes, as a reviewer would). NEVER
+      `--reissue`: the codes go into the forms.
+   4. **hello@'s routing** (once the owner adds Zone · Email Routing Rules: Edit and Zone · Zone Settings: Edit for
+      sharingu.xyz to the deployment's token): enable Email Routing (the root MX/SPF), the rule hello@ → acie@ryuklabs.io,
+      a test reply. acie@ is re-added as a destination (2026-10-15, a fresh verify mail): forwarding reaches Acie once
+      Acie clicks it.
+   5. Record, push, and hand the owner the forms: the paste sheet is `engine/.runs/forms/claude-forms.md` (machine-local;
+      the codes stay in `~/.sharingu/reviewer-credentials.txt`).
+   6. AFTER the forms: video 1's opening re-recorded (`engine/.runs/b12-videos/record.mjs`: the site's Join the beta →
+      the request page → confirm → in line → You're in; clips 3–5 kept); the owner uploads it.
 
 **A · Finish sprint 21's ship (the owner's OK for all nine steps was given 2026-10-14; the ruling on the red: investigate
 first). DONE except step 5.** Done: (1) PR #8 merged; (2) `cf-budget` and `migrate-dryrun --from 081` green; (3) `migrate.sh
@@ -56,24 +82,17 @@ sharingu-review) hold no reserved name, the grants check names only three old ev
       --live --config wrangler.jsonc --confirm-live ryuklabs-agent-r`; never print the file); `/auth/google/start` 302s to
       accounts.google.com, /login shows the button.
    4. DONE: the live walk 13/13 on agent.ryuklabs.io, `sh tools/verify-live.sh --live` 28/28.
-   5. **OPEN — the first REAL emails (needs the owner's inbox; run as the owner's MCQ of 2026-10-15 says: ryuk@ first for
-      the "already" email, then the plus address).** CORRECTED 2026-10-15: ryuk@ryuklabs.io holds a REAL
-      live account with a seat (the owner's), so a join with it only gets "you already have an account", and
-      `remove-account` on it would delete the owner's account — NEVER. For the full flow use a fresh plus address on the same inbox
-      (ryuklabs.io is Google Workspace: `ryuk+beta1@ryuklabs.io` lands in ryuk@'s inbox; the per-mailbox limit counts it
-      as ryuk@: three a day). The owner joins on https://agent.sharingu.xyz/request-access with it (the verify email
-      From hello@sharingu.xyz), clicks the link and confirms with the passphrase; then `node tools/operator.mjs requests`
-      and `allow --request <id>` (both `--live --config wrangler.jsonc --confirm-live ryuklabs-agent-r`: the operator's
-      FIRST live REST send) → "You're in"; then `remove-account --email ryuk+beta1@ryuklabs.io` so it holds no beta
-      place. Check the new-request alert reached ryuk@ (cc; acie@ only once her destination is verified). If the verify
-      email never arrives, Cloudflare's sending may refuse an unverified recipient: check the send's answer before
-      anything else.
+   5. DONE 2026-10-15 — the first REAL emails: ryuk@'s join got its "already" email (that rule was wrong for a seated
+      owner: fixed by fix2, block B); a join as `ryuk+beta1@ryuklabs.io` proved verify → the team alert → approval; the
+      operator's "You're in" first failed (REST 400, fixed by fix2) and was delivered by a live probe; the test account
+      removed and its request cleared. The owner's ryuk@ got its first passphrase through the operator's code
+      (`~/.sharingu/ryuk-passphrase.txt`, mode 600). Acie's real request approved: org "acie labs" created.
    6. DONE: the site's `main` at 72d8ebe (journey-polish merged with A.6: every "Join the beta" →
       `https://agent.sharingu.xyz/request-access?from=site`, `/waitlist` a 307 there, waitlist.html and its form retired,
       the docs tell the join flow; the full verify 246/246 at the push); live checked. Left for the owner on the site:
       `api/inquiry.js` and `server/` now serve no page (retire or keep), leftover form CSS and two lines of copy (the
       consent card's "form contents", privacy's providers paragraph naming the retired intake) — the site's HANDOFF.
-   Recorded in `SPRINTS.md` sprint 21. After step 5: the owner submits the Claude forms (step 3 below).
+   Recorded in `SPRINTS.md` sprint 21. Block A is done; block B closes the sprint.
 
 **1 · Ship sprint 14 — DONE 2026-10-12** (`64aad029` at 100%; the steps below are the ship's recipe for the next one). What it ships: four tool descriptions that
 said "call this first" now say when a tool is useful (`whoami`, `updates`, `missing`, `impact`: the stores' reviewers
@@ -113,7 +132,7 @@ archived, private).
 **3 · The owner's, then M4.** In this order: (a) DONE 2026-10-12: the public plugin repo `ryuk-labs/sharingu-plugin` synced
 to 0.1.12 (6de6c0e; `--sync-check` green, 28 files; installs as 0.1.12 on a clean config; the recipe is step 6 of
 `sh tools/ship-plan.sh ryuklabs --no-import`); (b) connect `https://agent.sharingu.xyz/mcp` as a custom connector in Claude, run P1–P3, and check the
-Activity row of P1's filing reads "from Claude" (if it reads "another client", stop: the label needs a fix first);
+Activity row of P3's filing reads "from Claude" (if it reads "another client", stop: the label needs a fix first);
 (c) for ChatGPT: store the portal's domain token (`node tools/operator.mjs set-openai-challenge --token <it> --live
 --config wrangler.jsonc --confirm-live ryuklabs-agent-r`), record the ChatGPT demo video and put its URL in
 `listing/codex-listing.json` as `demoRecordingURL`, then regenerate (`node tools/make-plugin-skills.mjs`) and build the
@@ -126,16 +145,16 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
 
 ## State (2026-10-15)
 
-- **Live (2026-10-15): sprint 21.** Worker `d5423ee3-e21f-4679-b276-c2b340e847a0` (tag `080f1178f`) at 100% on
+- **Live (2026-10-15): sprint 21 with fix2.** Worker `001aaf1d-3a31-4d2e-b5a8-00dfa2a8be47` (tag `0366c54bc`) at 100% on
   https://agent.sharingu.xyz and https://agent.ryuklabs.io; D1 at migrate-081. Undo: `sh engine/tools/ship.sh rollback
-  850b262c-b788-4844-92f0-f023a2fd25d3` (code); the 081 bookmark under block A (data; it restores EVERY org). Proofs: the
+  d5423ee3-e21f-4679-b276-c2b340e847a0` (code); the 081 bookmark under block A (data; it restores EVERY org). Proofs: the
   walk 13/13, verify-live 28/28. The Google client stored; the request page, the showcase and the account flow live.
 - **The owner's open items, outside the repo:** (a) acie@ryuklabs.io clicks Cloudflare's "verify email address" mail
-  (until then the new-application alert reaches only ryuk@ in cc and hello@'s forwarding cannot deliver to her);
-  (b) Cloudflare dashboard -> sharingu.xyz -> Email -> Email Routing -> Get started (accept its root MX/SPF records),
-  then Routing rules -> Custom addresses -> `hello` -> Send to an email -> acie@ryuklabs.io (the token has no Email
-  Routing permission); (c) YouTube Studio: turn off the automatic captions on the five walkthrough videos (they play
-  over our burned-in captions and misspell the names); (d) A.5's emails (block A, step 5); (e) AFTER block A: the Claude connector and plugin forms (step 3).
+  (re-sent 2026-10-15; until then the new-request alert reaches only ryuk@ in cc); (b) add Zone · Email Routing Rules: Edit
+  and Zone · Zone Settings: Edit for sharingu.xyz to the deployment's Cloudflare token (block B step 4 does the rest);
+  (c) YouTube Studio: turn off the automatic captions on the five walkthrough videos; (d) AFTER block B: P1–P3 in Claude,
+  then the connector form, then the plugin form. DONE 2026-10-15: the site's Turnstile widget deleted and the 8 Vercel
+  intake variables removed (by the session, on the owner's word).
 
 - The OpenAI domain-verification token answers on both domains.
 - **The repo:** `ryuk-labs/sharingu` (private) from 2026-10-12, one root commit (6e6918541: the tree of the old repo's
@@ -242,6 +261,18 @@ change rides the same process: one sprint branch, vertical slices, a smoke per s
 end with the owner's OK. Clean all the way: no dead code, no dead docs; a finished brief is deleted.
 
 ## Ruled by the owner (the ones a builder must know)
+
+- **Acie operates the beta (MCQ 2026-10-15):** acie@ryuklabs.io's ryuklabs seat is an ADMIN (role owner, set through
+  Control's set-role as Agent Ops), so Acie opens the operator page (`/ryuklabs/operator`, in a browser, signed in with
+  Google) and approves or declines requests (Approve sends "You're in"). There is no narrower operator-only role: admin of
+  org 1 is the gate (`src/operatorread.js mayOperate`). Acie's own org "acie labs" (org 6) is a separate account, a Gmail.
+
+- **Before the forms (MCQs 2026-10-15, branch `sprint-21-fix3`):** the app's front pages gain "Walkthrough" in the top bar,
+  linking to the site's `docs.html#walkthrough` (works signed in or not); the connector's suggested name is `sharingu`
+  everywhere (Add to Claude, the Claude Code and Codex lines), not the org's slug — one `/mcp` serves every org; the join
+  text is told one way everywhere (request page, email, approval). Video 1's footage shows the old join (the waitlist, a
+  code): the owner submits first, then its opening clips are re-recorded with the recorder (`engine/.runs/b12-videos`),
+  clips 3–5 kept, the owner uploads it.
 
 - **Who holds an account (MCQs 2026-10-15, A.5's find; branch `sprint-21-fix2`):** an email whose account has a passphrase,
   a Google subject, an invite mark, or an ACTIVE or PENDING seat is told "you already have an account" on join — never put
