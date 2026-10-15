@@ -809,7 +809,7 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   (4) `remove-account` clears the email's requests as the 90-day clearing does, so a removed account holds no beta place.
   Two independent reviews (no blocker; every finding folded). Proofs: request-access 130/130, google 107/107, operator
   104/104, accounts 102/102, invite 77/77, signup 51/51, email 32/32; smoke 372/372; the gate green.
-- [ ] **The close-out, `sprint-21-fix3`** (the owner's MCQs 2026-10-15, before the forms): (1) the join told one way in
+- [x] **The close-out, `sprint-21-fix3`** — SHIPPED 2026-10-15 as `ab85fecb` (ryuk-labs/sharingu#11, 8e743f055; rollback `001aaf1d`; the walk 13/13, verify-live 28/28, the reviewer walk 8/8; plugin 0.1.17 public; hello@ routes) (the owner's MCQs 2026-10-15, before the forms): (1) the join told one way in
   every store-facing text (the plugin README the directory shows, README, INSTALL, BETA-NOTE, llms.txt, the kit) —
   done; (2) "Walkthrough" in the front pages' top bar, to the site's `docs.html#walkthrough`; (3) the connector's
   suggested name `sharingu` for every org (one `/mcp` serves them all); (4) plugin 0.1.17 and its public repo synced;

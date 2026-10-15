@@ -1,11 +1,10 @@
 # HANDOFF — where sharingu stands (rewritten at every stop; git holds the history)
 
-**As of 2026-10-15 (afternoon IST): sprint 21 is LIVE and its CLOSE-OUT is under way (block B).** Live: sprint 21
-(`001aaf1d` with fix2, rollback `d5423ee3`), D1 at migrate-081; the walk 13/13, verify-live 28/28; the first real emails proven (verify,
-the team alert, "You're in"); the first outside org through the new flow ("acie labs", org 6). Done: `sprint-21-fix2`
-(ryuk-labs/sharingu#10) SHIPPED. In flight: `sprint-21-fix3` (the join text, the Walkthrough nav, the
-connector named sharingu, plugin 0.1.17), the reviewer walk on live, hello@'s routing. **The owner submits the Claude
-forms only after block B is done (their ruling).**
+**As of 2026-10-15 (evening IST): sprint 21 is CLOSED and READY FOR THE FORMS.** Live: `ab85fecb` (sprint 21 + fix2 +
+fix3; rollback `001aaf1d`), D1 at migrate-081; the walk 13/13, verify-live 28/28, the reviewer walk 8/8 on live; plugin 0.1.17
+public; hello@ routes. **Next is the owner's:** P1–P3 in Claude, then the connector form, then the plugin form (the paste
+sheet: `engine/.runs/forms/claude-forms.md`). Then this session's next work: video 1's opening, and the next sprint's first
+slice (tests focused on the change's region, `PLATFORM.md` §3).
 
 This file is the whole memory. A session on any Claude account starts here, needs nothing from a previous session,
 and must not trust its own memory over this file. Read, in order: `README.md` (the model, how we work) → this file →
@@ -14,34 +13,27 @@ the laws). `SPRINTS.md` holds every slice's record; `MARKETPLACE.md` the store r
 
 ## RESUME HERE — the order of work
 
-**0 · Orient (five minutes, read-only).** From the repo root: `git branch --show-current` (expect `main` or `sprint-21-fix3`,
-block B's open branch), `git log --oneline -4`, `git status --short` (expect clean), `uptime` (load under
+**0 · Orient (five minutes, read-only).** From the repo root: `git branch --show-current` (expect `main`; no sprint
+branch is open), `git log --oneline -4`, `git status --short` (expect clean), `uptime` (load under
 8 before anything heavy: bunny's simulators share this Mini). Read `SPRINTS.md` sprint 21 (every ruling) and this
 block, then tell the owner where things stand in two lines.
 
-**B · Sprint 21's close-out (the owner's go, 2026-10-15) — IN PROGRESS.** One step at a time, each only when the one
-before is green; the owner's OK covers the fix2 and fix3 ships (MCQs 2026-10-15). Avoid a ship window crossing 03:00 or
-15:00 UTC.
-   1. **fix2 — SHIPPED 2026-10-15** (10:04–11:50 UTC, `engine/.runs/ship-21fix2.log`): `001aaf1d-3a31-4d2e-b5a8-00dfa2a8be47`
-      at 100% (tag 0366c54bc), rollback `d5423ee3`; the cross-org suite 11,276 calls, 0 leaks, 0 5xx, 0 plan_limit; the walk
-      13/13, verify-live 28/28.
-   2. **fix3** on branch `sprint-21-fix3` (cut from 0366c54bc). DONE: the join text everywhere (8921c79f5), the rulings
-      (ae7f5a2c3). TO BUILD, after step 1 (nothing under `engine/` changes mid-ship): (a) "Walkthrough" in the front
-      pages' top bar (`src/login.js frontTop`) → `https://www.sharingu.xyz/docs.html#walkthrough`; (b) `connectorName`
-      (`src/connectcards.js`) → `sharingu` for every org (Add to Claude, the Claude Code and Codex lines); the tests that
-      pin either follow; (c) `node tools/make-plugin-skills.mjs` moves the plugin to 0.1.17 (the README changed);
-      `claude plugin validate --strict ./plugin`. Then smoke, gate, one PR, merge, `ship.sh`, the walk and verify-live,
-      and the plugin's public repo synced (the recipe: step 6 of `sh tools/ship-plan.sh ryuklabs --no-import`; check
-      0.1.17 installs on a clean config).
-   3. **The reviewer walk on live:** `node tools/listing-walk.mjs --url https://agent.sharingu.xyz --codes
-      ~/.sharingu/reviewer-credentials.txt` must be 8/8 (it files P3's and P5's notes, as a reviewer would). NEVER
-      `--reissue`: the codes go into the forms.
-   4. **hello@'s routing** (once the owner adds Zone · Email Routing Rules: Edit and Zone · Zone Settings: Edit for
-      sharingu.xyz to the deployment's token): enable Email Routing (the root MX/SPF), the rule hello@ → acie@ryuklabs.io,
-      a test reply. acie@ is re-added as a destination (2026-10-15, a fresh verify mail): forwarding reaches Acie once
-      Acie clicks it.
-   5. Record, push, and hand the owner the forms: the paste sheet is `engine/.runs/forms/claude-forms.md` (machine-local;
-      the codes stay in `~/.sharingu/reviewer-credentials.txt`).
+**B · Sprint 21's close-out (the owner's go, 2026-10-15) — DONE but step 6.**
+   1. **fix2 — SHIPPED** (10:04–11:50 UTC): `001aaf1d`, ryuk-labs/sharingu#10; the cross-org suite 11,276 calls, 0 leaks,
+      0 5xx; the walk 13/13, verify-live 28/28.
+   2. **fix3 — SHIPPED** (12:16–14:39 UTC, `engine/.runs/ship-21fix3.log`): `ab85fecb-50ef-4d16-bb46-a019237b19b4` at 100%
+      (tag 8e743f055, ryuk-labs/sharingu#11), rollback `001aaf1d`: the join told one way everywhere, Walkthrough in the
+      front pages' top bar, the connector named sharingu, plugin 0.1.17 — its public repo synced (b34e0b7, `--sync-check`
+      in sync, installs as 0.1.17 on a clean config). The cross-org suite 11,276 calls, 0 leaks, 0 5xx (6,570 s: this
+      Mini's network was slow, ~1.2 s a call); the walk 13/13, verify-live 28/28.
+   3. **The reviewer walk on live — 8/8** (`node tools/listing-walk.mjs --url https://agent.sharingu.xyz --codes
+      ~/.sharingu/reviewer-credentials.txt`, after fix3). NEVER `--reissue` now: the codes go into the forms.
+   4. **hello@'s routing — ON.** Email Routing enabled on sharingu.xyz (root MX route1–3.mx.cloudflare.net, SPF
+      `include:_spf.mx.cloudflare.net`; the zone held no MX or root SPF before), the rule "hello@ to the team" forwards to
+      **ryuk@ryuklabs.io** (Cloudflare allows ONE destination per rule; the owner chose acie@ and ryuk@, so ryuk@ until
+      acie@ is a verified destination — then the rule's one action is switched to acie@). A test reached ryuk@'s inbox.
+   5. **Recorded; the forms are the owner's** (the paste sheet `engine/.runs/forms/claude-forms.md`, machine-local; the
+      codes stay in `~/.sharingu/reviewer-credentials.txt`).
    6. AFTER the forms: video 1's opening re-recorded (`engine/.runs/b12-videos/record.mjs`: the site's Join the beta →
       the request page → confirm → in line → You're in; clips 3–5 kept); the owner uploads it.
 
@@ -145,16 +137,14 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
 
 ## State (2026-10-15)
 
-- **Live (2026-10-15): sprint 21 with fix2.** Worker `001aaf1d-3a31-4d2e-b5a8-00dfa2a8be47` (tag `0366c54bc`) at 100% on
-  https://agent.sharingu.xyz and https://agent.ryuklabs.io; D1 at migrate-081. Undo: `sh engine/tools/ship.sh rollback
-  d5423ee3-e21f-4679-b276-c2b340e847a0` (code); the 081 bookmark under block A (data; it restores EVERY org). Proofs: the
+- **Live (2026-10-15): sprint 21 with fix2 and fix3.** Worker `ab85fecb-50ef-4d16-bb46-a019237b19b4` (tag `8e743f055`) at
+  100% on https://agent.sharingu.xyz and https://agent.ryuklabs.io; D1 at migrate-081. Undo: `sh engine/tools/ship.sh
+  rollback 001aaf1d-3a31-4d2e-b5a8-00dfa2a8be47` (code); the 081 bookmark under block A (data; it restores EVERY org). Proofs: the
   walk 13/13, verify-live 28/28. The Google client stored; the request page, the showcase and the account flow live.
 - **The owner's open items, outside the repo:** (a) acie@ryuklabs.io clicks Cloudflare's "verify email address" mail
-  (re-sent 2026-10-15; until then the new-request alert reaches only ryuk@ in cc); (b) add Zone · Email Routing Rules: Edit
-  and Zone · Zone Settings: Edit for sharingu.xyz to the deployment's Cloudflare token (block B step 4 does the rest);
-  (c) YouTube Studio: turn off the automatic captions on the five walkthrough videos; (d) AFTER block B: P1–P3 in Claude,
-  then the connector form, then the plugin form. DONE 2026-10-15: the site's Turnstile widget deleted and the 8 Vercel
-  intake variables removed (by the session, on the owner's word).
+  (re-sent 2026-10-15), then the session switches hello@'s rule to acie@; (b) YouTube Studio: turn off the automatic
+  captions on the five walkthrough videos; (c) NOW: P1–P3 in Claude, then the connector form, then the plugin form. DONE
+  2026-10-15: the site's Turnstile widget and the 8 Vercel intake variables removed; the token widened (Email Routing).
 
 - The OpenAI domain-verification token answers on both domains.
 - **The repo:** `ryuk-labs/sharingu` (private) from 2026-10-12, one root commit (6e6918541: the tree of the old repo's
@@ -220,6 +210,15 @@ the owner's to open; any time: the beta invites, the allowed emails, the go for 
 - `wrangler kv key delete` takes the KEY FIRST (`npx wrangler kv key delete "<key>" --namespace-id <id> --remote`); a
   `--` before the key makes it fail with rc 1 and delete nothing.
 
+**Email and Cloudflare (2026-10-15)**
+- Cloudflare Email Routing takes ONE destination per rule and ONE action per rule (the API refuses two of either): to reach
+  two people, forward to one and let that mailbox forward on (or an Email Worker). A destination must be VERIFIED by its
+  holder's click before forwarding reaches it.
+- The deployment's token reads and writes Email Routing (widened 2026-10-15) but has NO DNS read and NO zone analytics: check
+  records with `dig +short <name> @1.1.1.1` (this Mini's DoH lookups time out at times; IPv4 to Cloudflare can take ~16 s a
+  call while IPv6 takes ~1 s), and an email's delivery by sending a test to the mailbox you can read.
+- The binding sends `from: {email, name}`; Cloudflare's REST send takes `{address, name}` (`tools/operator.mjs restBody`).
+
 **Secrets and codes**
 - Any tool that prints codes "once, on this terminal" prints them into the session's transcript: always redirect its
   stdout to a mode-600 file and count lines; never `cat` it. Never print a key, a code or a token.
@@ -268,7 +267,12 @@ end with the owner's OK. Clean all the way: no dead code, no dead docs; a finish
   `--only` flag, the suite's bounded pool, the no-ship rule in `ship-plan.sh`) is the next sprint's first slice
   (`PLATFORM.md` §3); until it lands, today's process stands (`AGENTS.md`).
 
-- **Acie operates the beta (MCQ 2026-10-15):** acie@ryuklabs.io's ryuklabs seat is an ADMIN (role owner, set through
+- **Acie starts fresh (the owner, 2026-10-15, after the grant below):** both of Acie's accounts were reset after fix3's ship —
+  the Gmail account's org 6 "acie labs" exported (`~/.sharingu/exports/org6-acie-labs-20261015`, mode 700) and deleted, the
+  account removed, its request cleared; acie@ryuklabs.io's seat back to MEMBER, its Google subject unlinked, its sessions
+  ended (its next Google sign-in is a first link: its seat waits for its yes, fix2's rule). Acie re-joins with the Gmail;
+  the session approves that request when it lands. The admin grant below is undone until the owner re-grants it.
+- **Acie operates the beta (MCQ 2026-10-15; UNDONE by the reset above):** acie@ryuklabs.io's ryuklabs seat is an ADMIN (role owner, set through
   Control's set-role as Agent Ops), so Acie opens the operator page (`/ryuklabs/operator`, in a browser, signed in with
   Google) and approves or declines requests (Approve sends "You're in"). There is no narrower operator-only role: admin of
   org 1 is the gate (`src/operatorread.js mayOperate`). Acie's own org "acie labs" (org 6) is a separate account, a Gmail.
