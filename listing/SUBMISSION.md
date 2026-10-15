@@ -23,7 +23,7 @@ sample project). `--reissue` replaces them.
 | Company | Ryuk Labs · https://www.sharingu.xyz · contact acie@ryuklabs.io |
 | Icon | `listing/icon/` (64 × 64 under 5 KB, and 128, 256, 512; from the site's favicon) |
 | Reads or writes | Both: 18 read-only tools and 19 writes; 12 of the writes are destructive (`create_project`, `decide_contribution`, `equip`, `open_items`, `pick_up`, `regrade`, `remove_knowledge`, `respond`, `restore_version`, `rule_question`, `save_knowledge`, `submit_grade`), the other 7 only add; each tool has a title and its three hints (their reasons: the ChatGPT section) |
-| Prerequisites | A sharingu account (the beta is by invitation: the operator hands a one-time sign-up code) and an org |
+| Prerequisites | A sharingu account and an org: the beta is by request at https://agent.sharingu.xyz/request-access, each org approved |
 
 **Description (≤ 2,000):**
 
@@ -64,7 +64,7 @@ the call that fills it), then `preview` and the write tool each item names.
 8. **Test & launch:** paste "Reviewer access" below, with the seven accounts' emails and codes from the private file.
    Confirm every tool was run: the product's suites call every tool on every ship (the smoke, `s51` walks these test
    cases); the owner also connects once as a custom connector in Claude and runs P1–P3 before ticking it. While there,
-   open Activity after P1's filing: its row must read "from Claude" (13.1's label; a filing through Claude Desktop's
+   open Activity after P3's filing: its row must read "from Claude" (13.1's label; a filing through Claude Desktop's
    `mcp-remote` bridge reads "from another client", `docs/plan/PLATFORM.md` §3). If claude.ai's own row reads "another
    client" too, stop and fix the label before submitting.
    **Allowed link URIs** (optional, on the same form): `https://agent.sharingu.xyz` — the card's "Open in the app"
@@ -176,8 +176,8 @@ and files the form's Validate reads).
    > First public release of sharingu for ChatGPT. One MCP server (`https://agent.sharingu.xyz/mcp`, OAuth with dynamic
    > client registration) and 19 skills. Read a project's goals, decisions, open questions, docs and map; preview every
    > write before it lands and file it only on confirmation; questions go to the person who owns the decision. Each
-   > contribution records which AI tool filed it, as the tool names itself. Hosted beta: an account comes with a
-   > one-time sign-up code from the operator.
+   > contribution records which AI tool filed it, as the tool names itself. Hosted beta: join at
+   > https://agent.sharingu.xyz/request-access; each org is approved.
 
 ## The videos (the owner's, after the submissions are prepared)
 

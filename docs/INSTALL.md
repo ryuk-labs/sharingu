@@ -16,11 +16,11 @@ in the door's first-run guide:
 
 ## 1. Join and connect
 
-1. **The waitlist.** The beta holds 50 orgs, first come, first served, through the waitlist
-   (https://www.sharingu.xyz/waitlist). We approve each org and hand you a one-time sign-up code for your email, by hand.
-   Nothing is mailed, ever (`docs/BETA-NOTE.md`).
-2. **Sign up** at `https://agent.sharingu.xyz/signup`: your email, the code and a passphrase of at least 12 characters.
-   That is your account: one sign-in for every org you hold a seat in.
+1. **Join the beta.** The beta holds 50 orgs, first come, first served. Join at
+   `https://agent.sharingu.xyz/request-access`: a short profile and a passphrase of at least 12 characters (or Continue
+   with Google). Confirm the email we send from hello@sharingu.xyz; your request is then in line.
+2. **You're in.** We approve each org and email you when your place opens. That passphrase (or Google) is your account:
+   one sign-in for every org you hold a seat in. (The operator can still hand a one-time code for `/signup` by hand.)
 3. **Create your org** at `https://agent.sharingu.xyz/orgs/new`: your email and that passphrase, the org's name, its
    address (a to z, 0 to 9 and single dashes, 2 to 40 characters, never a name the platform uses) and its first
    project's short name. One write makes the org, your owner seat in it and its first project, and shows your owner key

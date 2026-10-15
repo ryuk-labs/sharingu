@@ -21,10 +21,11 @@ reaches every org your account has a seat in; with a seat's key, that seat alone
 
 ## The four steps
 
-1. **Join and connect.** The beta holds 50 orgs, first come, first served, through the waitlist
-   (https://www.sharingu.xyz/waitlist). We approve each org and hand you a one-time sign-up code by hand; nothing is
-   mailed. Sign up at `https://agent.sharingu.xyz/signup`, create your org and its first project in one form at
-   `https://agent.sharingu.xyz/orgs/new`, then connect: this plugin, or Add to Claude and Add to ChatGPT (the docs).
+1. **Join and connect.** The beta holds 50 orgs, first come, first served. Join at
+   https://agent.sharingu.xyz/request-access with a short profile and a passphrase (or Continue with Google), and
+   confirm your email. We approve each org and email you when you're in; then sign in and create your org and its
+   first project in one form, filled in from your request. Then connect: this plugin, or Add to Claude and Add to
+   ChatGPT (the docs).
 2. **Your org, its project, its people.** On Control, Invite gives each person a one-time invite link: they choose
    their own passphrase. Someone whose email already has an account accepts the seat on their org list. Roles: Admin,
    Member, Partner (only the projects they are seated on). Hats: Management, Engineering, Go-to-market, Quality,

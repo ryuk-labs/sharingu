@@ -113,7 +113,7 @@ archived, private).
 **3 · The owner's, then M4.** In this order: (a) DONE 2026-10-12: the public plugin repo `ryuk-labs/sharingu-plugin` synced
 to 0.1.12 (6de6c0e; `--sync-check` green, 28 files; installs as 0.1.12 on a clean config; the recipe is step 6 of
 `sh tools/ship-plan.sh ryuklabs --no-import`); (b) connect `https://agent.sharingu.xyz/mcp` as a custom connector in Claude, run P1–P3, and check the
-Activity row of P1's filing reads "from Claude" (if it reads "another client", stop: the label needs a fix first);
+Activity row of P3's filing reads "from Claude" (if it reads "another client", stop: the label needs a fix first);
 (c) for ChatGPT: store the portal's domain token (`node tools/operator.mjs set-openai-challenge --token <it> --live
 --config wrangler.jsonc --confirm-live ryuklabs-agent-r`), record the ChatGPT demo video and put its URL in
 `listing/codex-listing.json` as `demoRecordingURL`, then regenerate (`node tools/make-plugin-skills.mjs`) and build the

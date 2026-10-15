@@ -2,8 +2,8 @@
 
 You are being invited to sharingu's beta. One page, no surprises:
 
-- **What you get.** An org on the hosted platform, `https://agent.sharingu.xyz`. Sign-up is by allowlist: we allow your
-  email and hand you a one-time code by hand (nothing is mailed); you sign up, create your org at `/orgs/new` and
+- **What you get.** An org on the hosted platform, `https://agent.sharingu.xyz`. You join at `/request-access` and
+  confirm your email; we approve each org and email you when you're in; you sign in, create your org at `/orgs/new` and
   connect your AI at `/mcp` (`docs/INSTALL.md` §1). Your org is walled from every other: work across orgs runs
   only on the deployment's credentials, from the operator's machine, never through an app seat. A seat someone adds
   for an email that already holds an account waits for that holder's own yes on the org picker. sharingu is proprietary software

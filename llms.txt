@@ -8,8 +8,8 @@
 
 ## Connect and use
 
-- [INSTALL](docs/INSTALL.md): join an org (§1), start your own on the hosted platform (§2: sign-up by the operator's
-  allowlist and one-time code, then /orgs/new), connect a client (§3), run your own on your Cloudflare account (§4) or
+- [INSTALL](docs/INSTALL.md): join an org (§1), start your own on the hosted platform (§2: join at /request-access,
+  confirm your email, our approval, then /orgs/new), connect a client (§3), run your own on your Cloudflare account (§4) or
   your machine (§5). A seat's key is both its web passphrase and its bearer token; an account's passphrase signs in to
   every org it has a seat in.
 - [Door contract](contracts/door.json): all 35 MCP tools and their REST twins — shapes, refusals, annotations.
