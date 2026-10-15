@@ -216,9 +216,14 @@ org): the MCP greeting and Map · Arch name the org from it. The worker reads no
   account's passphrase is its holder's alone (set by the sign-up, or proven on `/profile`) and signs in to every seat
   of the account; a seat's own key (its admin hands it over and rotates it) opens that seat alone, and never creates
   an org. The lockout counts per account; an attempt counts in the org of the seat the sign-in chose.
-- **Sign-up by allowlist** (no email service): only an email the operator allowed signs up, with the one-time code the
-  operator hands over by hand (`tools/operator.mjs`, the deployment's credentials; single-use, expiring, revocable;
-  no route mints one). The sign-up makes the account, or gives a passphrase-less account its passphrase.
+- **Joining** (sprint 21): a new team requests access at `/request-access` (a profile and a passphrase, or Google),
+  confirms its email, waits in line, and is approved by the operator, whose approval emails "You're in"; every email
+  From hello@sharingu.xyz under the cap (`src/email.js`). Who holds an account is one rule (`ACCOUNT_HELD`), and a first
+  passphrase set by a reset or Google makes the account's seats wait for its yes (`engine/CLAUDE.md`).
+- **Sign-up by code** (the operator's own path and the reviewer accounts'): only an email the operator allowed signs
+  up, with the one-time code the operator hands over by hand (`tools/operator.mjs`, the deployment's credentials;
+  single-use, expiring, revocable; no route mints one). The sign-up makes the account, or gives a passphrase-less
+  account its passphrase.
 - **The address** (`src/orgpath.js`): every page of an org at `/<slug>/…`, the platform's own routes at the root
   (sign-in, sign-up, creating an org, the picker, `/mcp`, OAuth, health). Under an address only that org's people sign
   in (a bearer of its org, a browser session as its seat there); an unknown org, a platform path under an org and a

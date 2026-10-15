@@ -18,8 +18,8 @@ The brand's domain is **sharingu.xyz** (the owner, 2026-10-09; the site LIVE the
 
 A directory listing points every user at ONE address. Until 2026-10-06 every org had its own worker and address and
 M3 was parked (MCQs 2026-10-02 and 2026-10-05). On 2026-10-06 the owner made sharingu a hosted platform: one worker and
-one database for every org, each org at `agent.ryuklabs.io/<org>`, the AI at the one `/mcp` there, sign-up by an
-allowlist during the waitlist, payment after the beta succeeds. The design, the sprints and every open item:
+one database for every org, each org at `agent.ryuklabs.io/<org>`, the AI at the one `/mcp` there, joining by request
+and the operator's approval (sprint 21), payment after the beta succeeds. The design, the sprints and every open item:
 `PLATFORM.md`. The release ruled on 2026-10-05 stands: beta teams by GitHub collaborator invite with
 `docs/BETA-NOTE.md`. OVERTURNED 2026-10-09 by the owner: sharingu is PROPRIETARY (© Ryuk Labs) and the engine's repo stays PRIVATE for good — the plugin is distributed from its own small PUBLIC repo holding only the plugin folder (no engine code; synced from this repo). The plugin installs FREE; the SERVICE is the priced product (the platform's plans; prices at billing time). The beta is hosted-only.
 
@@ -31,8 +31,8 @@ allowlist during the waitlist, payment after the beta succeeds. The design, the 
 | M1 | The plugin (`PLATFORM.md` sprint 9) — shipped 2026-10-10; installs from ryuk-labs/sharingu-plugin | a plugin folder in the repo: the manifest, the skills generated from the starter pack, an MCP config on the one address (sign-in, no questions); a README; our own marketplace file so it installs from the repo first | installs in Claude Code from the repo on a clean machine; connects to a fresh org; the fill skill takes a new project to its first filed contribution |
 | M2 | The listing kit (`PLATFORM.md` sprint 9) — shipped 2026-10-10; the shots and the reviewer org live at M4 prep | the docs page, generated from `GET /capabilities` (every tool with its title, read or write, who may call it and how it fails; every route with who may call it); the privacy page, the support address and the icon from sharingu.xyz, a terms page; the screenshots; the reviewer org (the real sharingu project, a second sample project, three accounts: admin, member, partner); the test cases | every URL answers; a stranger follows the docs from zero to a filed contribution |
 | M3 | One address (the platform road, `PLATFORM.md` sprints 6–8) — shipped (sprints 6–8) | the hosted front door: sign up, your org minted, one MCP address that reaches it; budgets and backups per org | two orgs behind one address, each seeing only its own data, proven by the adversarial read |
-| M4 | Submit | the plugin to Anthropic's directory portal; the connector to the Claude directory; the app to the ChatGPT directory; each with reviewer notes | three submissions acknowledged |
-| M5 | Review and launch | answer the reviewers; fix what they find; the launch post, the second video, the waitlist told | listed and installable from each store |
+| M4 | Submit — the two Claude forms READY 2026-10-15 (the owner submits; the paste sheet `engine/.runs/forms/claude-forms.md`); ChatGPT after its recording | the plugin to Anthropic's directory portal; the connector to the Claude directory; the app to the ChatGPT directory; each with reviewer notes | three submissions acknowledged |
+| M5 | Review and launch | answer the reviewers; fix what they find; the launch post, the second video, the people in line told | listed and installable from each store |
 
 Order (owner MCQ, 2026-10-06): M0 is built; M3 comes first as `PLATFORM.md` sprints 6–8; M1 and M2 are sprint 9;
 then M4 and M5; billing after the beta succeeds.
@@ -41,7 +41,7 @@ then M4 and M5; billing after the beta succeeds.
 
 | # | What | Needed for | State (2026-10-10) |
 |---|---|---|---|
-| 1 | The address, the sign-up and the limits of hosted orgs | M3 | RULED: `agent.sharingu.xyz/<org>` (2026-10-09; agent.ryuklabs.io answers too); an allowlist with a one-time code, no email service; the limits proposed in `PLATFORM.md` sprint 8 (the owner may change any) |
+| 1 | The address, the sign-up and the limits of hosted orgs | M3 | RULED: `agent.sharingu.xyz/<org>` (2026-10-09; agent.ryuklabs.io answers too); joining by request, a checked email and the operator's approval (sprint 21, 2026-10-13/14; was: an allowlist with a one-time code, no email service); the limits proposed in `PLATFORM.md` sprint 8 (the owner may change any) |
 | 2 | The engine's release form and licence | M1 | RE-RULED 2026-10-09: proprietary, © Ryuk Labs, repo private; the plugin ships from its own public distribution repo (was: MIT public (`BETA.md` line 6) |
 | 3 | The legal name that publishes, a **terms of service**, and the **privacy policy** saying who can reach a hosted org's data (only the deployment credentials) | M4 (terms); the first outside org (privacy) | DONE 2026-10-09: live at www.sharingu.xyz — privacy.html, support.html, terms.html (each 200) |
 | 4 | A support and a security contact | M4 | RULED: the contact sharingu.xyz gives |
