@@ -56,9 +56,10 @@ sharingu-review) hold no reserved name, the grants check names only three old ev
       --live --config wrangler.jsonc --confirm-live ryuklabs-agent-r`; never print the file); `/auth/google/start` 302s to
       accounts.google.com, /login shows the button.
    4. DONE: the live walk 13/13 on agent.ryuklabs.io, `sh tools/verify-live.sh --live` 28/28.
-   5. **OPEN — the first REAL emails (needs the owner's inbox).** CORRECTED 2026-10-15: ryuk@ryuklabs.io holds a REAL
+   5. **OPEN — the first REAL emails (needs the owner's inbox; run as the owner's MCQ of 2026-10-15 says: ryuk@ first for
+      the "already" email, then the plus address).** CORRECTED 2026-10-15: ryuk@ryuklabs.io holds a REAL
       live account with a seat (the owner's), so a join with it only gets "you already have an account", and
-      `remove-account` on it would delete the owner's account — NEVER. Use a fresh plus address on the same inbox
+      `remove-account` on it would delete the owner's account — NEVER. For the full flow use a fresh plus address on the same inbox
       (ryuklabs.io is Google Workspace: `ryuk+beta1@ryuklabs.io` lands in ryuk@'s inbox; the per-mailbox limit counts it
       as ryuk@: three a day). The owner joins on https://agent.sharingu.xyz/request-access with it (the verify email
       From hello@sharingu.xyz), clicks the link and confirms with the passphrase; then `node tools/operator.mjs requests`
@@ -241,6 +242,13 @@ change rides the same process: one sprint branch, vertical slices, a smoke per s
 end with the owner's OK. Clean all the way: no dead code, no dead docs; a finished brief is deleted.
 
 ## Ruled by the owner (the ones a builder must know)
+
+- **After sprint 21's ship (MCQ 2026-10-15):** (1) A.5 runs twice: a join as ryuk@ryuklabs.io proves the "you already have
+  an account" email (the owner's real account untouched, never removed), then a join as `ryuk+beta1@ryuklabs.io` proves
+  verify → approve → "You're in" → its removal; (2) the site's old form backend RETIRES now (`api/inquiry.js`, `server/`,
+  their tests, the vercel `functions` entry, the form-only CSS); (3) the two leftover lines are reworded now (the consent
+  card's form line, privacy's providers paragraph), the owner approving the words before the push; (4) the forms go
+  connector first (the owner's P1–P3 and the "from Claude" check), then the plugin.
 
 - **The forms wait for green (2026-10-15):** the owner submits the Claude connector and plugin forms only after block A
   is done end to end: sprint 21 shipped green and A.3–A.6 finished. The plugin itself is ready (validate --strict
