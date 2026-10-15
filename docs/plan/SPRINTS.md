@@ -793,7 +793,7 @@ write, the screen, a smoke case; the old checks that pinned the replaced pages' 
   domains; `/auth/google/start` 302 to Google, the button on /login), the live walk 13/13, verify-live 28/28.
 - [x] **The sprint end.** The site's access buttons move to the worker's request page and the site's waitlist page redirects there,
   merged right after the ship, together with the site's 21.P polish and 21.4b's privacy paragraph: the site's `main` at
-  72d8ebe (2026-10-15; waitlist.html and its form retired, `/waitlist` a 307 to `/request-access?from=site`, the docs tell
+  72d8ebe (2026-10-15; waitlist.html and its form retired, the site's waitlist path a 307 to the request page (`?from=site`), the docs tell
   the join flow; the full verify 246/246 at the push); live checked (4 links on the index, the redirect). The first real
   emails (HANDOFF A.5) wait for the owner's inbox.
 
