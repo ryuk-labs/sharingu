@@ -55,7 +55,9 @@ A red line: stop, read its log, say so to the owner. Never "fix" live by hand; t
    --live --config wrangler.jsonc --confirm-live ryuklabs-agent-r`), the owner's ChatGPT recording as `demoRecordingURL` in
    `listing/codex-listing.json`, `node tools/make-plugin-skills.mjs`, the ZIP (`--openai-zip <out.zip>`), then the form.
    Re-read the stores' pages on the day (`MARKETPLACE.md`, Sources).
-6. **M5:** answer the reviewers, launch. The platform's hardening rows marked S9 in `PLATFORM.md` §3 are the owner's to
+6. **At each sprint's end:** regenerate the team board and sync it to `ryuk-labs/sharingu-board` (State · The team
+   board); a dev picking a gap from it works in this repo by `AGENTS.md`.
+7. **M5:** answer the reviewers, launch. The platform's hardening rows marked S9 in `PLATFORM.md` §3 are the owner's to
    open.
 
 ## State (2026-10-15)
@@ -93,6 +95,13 @@ A red line: stop, read its log, say so to the owner. Never "fix" live by hand; t
   beta → `https://agent.sharingu.xyz/request-access?from=site`, `/waitlist` a 307 there, the old form and its backend
   retired (no Vercel variables, no Turnstile widget left), the walkthrough at `docs.html#walkthrough` (five videos), the
   tools page at the engine's contract (`npm run check:mcp-tools`). Its own `HANDOFF.md` records its side.
+- **The team board (2026-10-16):** `docs/board/board.html`, one self-contained page for the internal devs (Start by role,
+  Product, Design, Build, Verify, Go-live, Gaps, Decisions, History), GENERATED from the repo's own sources by
+  `engine/tools/make-board.mjs` (`--shots` retakes its pictures on a local sample world; `--check` is a gate step and
+  refuses anything shaped like a key, a code, a token or an outside address). Its Gaps section is `PLATFORM.md` §3. It is
+  synced to the PRIVATE repo `ryuk-labs/sharingu-board` (board.html + its README) after each sprint: `node
+  tools/make-board.mjs`, copy `docs/board/board.html` into the clone (`engine/.runs/board-dist`, or a fresh clone), commit
+  as ryukdev, push.
 - **The listing kit:** `listing/SUBMISSION.md` (every form's fields), `listing/test-cases.md` (5 + 3), `listing/carousel/`
   (four card PNGs and their prompts), `listing/icon/`, `listing/videos/` (the walkthroughs; YouTube links in the kit).
 - **Outside setup:** the Google OAuth client lives only in `~/.sharingu/google-oauth.env` (mode 600; stored in the
@@ -262,7 +271,8 @@ owner's OK. Clean all the way: no dead code, no dead docs; a finished brief is d
   `python3 tools/code-atlas.py > code-atlas.json` · `python3 tools/check-boot-schema.py` ·
   `python3 tools/check-docs.py` · `node tools/make-arch-client.mjs --check` · `node tools/copy-check.mjs --check` · every
   `tools/*selftest*.mjs` the change touches · `sh tools/smoke.sh` (load under 8) · read the authority-relevant diff and
-  the shots · commit only that builder's files · `sh gate.sh` (its contract-drift check reads what is COMMITTED) · the
+  the shots · `node tools/make-board.mjs` when a board source moved (the plan docs, the contract, the atlas, boot.sql) ·
+  commit only that builder's files · `sh gate.sh` (its contract-drift and board checks read what is COMMITTED) · the
   shots to the owner.
 - A builder's "green" is a claim; a screenshot is not a signed-in user (`shots.mjs --cookie`); rows written are
   counted, never estimated.
