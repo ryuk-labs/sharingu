@@ -101,7 +101,9 @@ A red line: stop, read its log, say so to the owner. Never "fix" live by hand; t
   refuses anything shaped like a key, a code, a token or an outside address). Its Gaps section is `PLATFORM.md` §3. It is
   synced to the PRIVATE repo `ryuk-labs/sharingu-board` (board.html + its README) after each sprint: `node
   tools/make-board.mjs`, copy `docs/board/board.html` into the clone (`engine/.runs/board-dist`, or a fresh clone), commit
-  as ryukdev, push.
+  as ryukdev, push. The owner also has it as a PRIVATE claude.ai artifact, https://claude.ai/artifact/P3Z6mm8y24PCgpYsKBgBmy
+  (2026-10-16): republish to that URL (the Artifact tool with `url`) from a copy of board.html without its doctype, `html`,
+  `head`, `body`, charset and viewport tags (the viewer adds its own).
 - **The listing kit:** `listing/SUBMISSION.md` (every form's fields), `listing/test-cases.md` (5 + 3), `listing/carousel/`
   (four card PNGs and their prompts), `listing/icon/`, `listing/videos/` (the walkthroughs; YouTube links in the kit).
 - **Outside setup:** the Google OAuth client lives only in `~/.sharingu/google-oauth.env` (mode 600; stored in the
