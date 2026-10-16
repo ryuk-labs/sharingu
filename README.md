@@ -74,6 +74,19 @@ guide is served to every reader through the door. The repo-side references:
   refusals (never hand-edited; built by `engine/tools/make-door-contract.py`).
 - [`docs/RELEASE-NOTES.md`](docs/RELEASE-NOTES.md) — what changes for a connected client.
 
+## For the team: taking over and contributing
+
+New on the team? Read in this order:
+
+1. **[`docs/plan/HANDOFF.md`](docs/plan/HANDOFF.md)** — where sharingu stands today, what comes next, and a "validate in
+   ten minutes" table that proves live is healthy.
+2. **The team board** — [`docs/board/board.html`](docs/board/board.html) (open it in a browser; also in the private repo
+   [ryuk-labs/sharingu-board](https://github.com/ryuk-labs/sharingu-board)): start by role, the product, every screen, the code map, all 37 tools, the open
+   **gaps** to pick up, every decision and the sprint history. It is generated from this repo (`engine/tools/make-board.mjs`).
+3. **[`AGENTS.md`](AGENTS.md)** — how we build (one sprint branch, vertical slices, a smoke per slice, one review and one
+   ship with the owner's OK) and the laws.
+4. **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — your first day: setup, the local app, picking a gap, opening a PR.
+
 ## The repo
 
 | Path | What it is | Start reading |
@@ -81,6 +94,7 @@ guide is served to every reader through the door. The repo-side references:
 | `engine/` | the product: the worker (pages, API, MCP), its schema, scripts and tests | [`engine/README.md`](engine/README.md) |
 | `contracts/` | the door's contract; `door.json` is generated from the engine's own registries | [`contracts/README.md`](contracts/README.md) |
 | `docs/plan/` | the plan and the current state | [`docs/plan/README.md`](docs/plan/README.md) |
+| `docs/board/` | the team board, generated | [`docs/board/README.md`](docs/board/README.md) |
 | `docs/` · `orgs/` | install paths · where an org starts | [`docs/INSTALL.md`](docs/INSTALL.md) · [`orgs/README.md`](orgs/README.md) |
 
 Working on sharingu itself: an agent's session boot is [`CLAUDE.md`](CLAUDE.md), which imports
@@ -89,9 +103,11 @@ code, no dead docs).
 
 ## Status
 
-**Beta — the gate is green** ([`docs/plan/BETA.md`](docs/plan/BETA.md): every line with its proof on live). The hosted
-platform signs people up by the operator's allowlist; teams join by invite with the one-page
-[`docs/BETA-NOTE.md`](docs/BETA-NOTE.md), and the repo stays private until the Claude plugin. Next: limits and usage
-per org, then the plugin — [`docs/plan/PLATFORM.md`](docs/plan/PLATFORM.md).
+**Beta, live.** The beta gate is green ([`docs/plan/BETA.md`](docs/plan/BETA.md): every line with its proof). New teams
+join by request at `https://agent.sharingu.xyz/request-access` and the operator approves each org (50 in the beta). The
+Claude plugin is public at [ryuk-labs/sharingu-plugin](https://github.com/ryuk-labs/sharingu-plugin); the store submissions are under way
+([`docs/plan/MARKETPLACE.md`](docs/plan/MARKETPLACE.md)). The road and every open item:
+[`docs/plan/PLATFORM.md`](docs/plan/PLATFORM.md).
 
-MIT ([`LICENSE`](LICENSE)) · security reports: [`SECURITY.md`](SECURITY.md) · contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+Proprietary: © Ryuk Labs, all rights reserved ([`LICENSE`](LICENSE)); the repo is private · security reports:
+[`SECURITY.md`](SECURITY.md) · contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)

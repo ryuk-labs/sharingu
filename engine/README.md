@@ -1,7 +1,7 @@
 # engine/ — the worker
 
 One Cloudflare worker serves every org (each at its own address, `/<org>`): the app (eight tabs), the REST API and the
-MCP door, all from `src/index.js`. The hosted platform is `ryuklabs-agent-r` (`wrangler.jsonc`): https://agent.ryuklabs.io,
+MCP door, all from `src/index.js`. The hosted platform is `ryuklabs-agent-r` (`wrangler.jsonc`): https://agent.sharingu.xyz and https://agent.ryuklabs.io,
 with its workers.dev host as the fallback.
 
 | Read | For |

@@ -29,7 +29,7 @@
 
 ## Optional
 
-- [Beta note](docs/BETA-NOTE.md): what an invited beta team gets (MIT, as-is, no SLA).
+- [Beta note](docs/BETA-NOTE.md): what a beta team gets (hosted-only, proprietary, no SLA).
 - [The platform road](docs/plan/PLATFORM.md): next, limits and usage per org, then the plugin; the store listings:
   [MARKETPLACE](docs/plan/MARKETPLACE.md).
 - [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [License](LICENSE)

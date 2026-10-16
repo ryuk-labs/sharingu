@@ -88,7 +88,10 @@ A red line: stop, read its log, say so to the owner. Never "fix" live by hand; t
   config). The recipe to sync: step 6 of `sh tools/ship-plan.sh ryuklabs --no-import`.
 - **The repo:** `ryuk-labs/sharingu` (private), `main` the only branch in use; the old repo `ryukdev/sharingu` is the
   `archive` remote (fetched, never pushed to). Rein (`reindev3`) is a `ryuk-labs` org admin (the owner's call,
-  2026-10-12). `engine/.runs/` is machine-local (gitignored): ship logs, the video recorder (`engine/.runs/b12-videos/`),
+  2026-10-12). The team `sharingu-devs` (2026-10-16) has WRITE on `ryuk-labs/sharingu`, `ryuk-labs/sharingu-plugin` and
+  `ryuk-labs/sharingu-board`: a new dev joins by the owner's org invite into that team (inviting by email needs an
+  org-admin token this machine does not hold). Surendra (surendra@ryuklabs.io): invited by the owner (the org and the
+  team; the website repo `RyukLabs/sharingu_web_fe` as a collaborator). `engine/.runs/` is machine-local (gitignored): ship logs, the video recorder (`engine/.runs/b12-videos/`),
   the forms' paste sheet (`engine/.runs/forms/`), the day's probes (`engine/.runs/repro-500/`: `gql.sh` per-version
   analytics, `cf.sh` the Cloudflare API with the token never printed).
 - **The site** (www.sharingu.xyz, repo `RyukLabs/sharingu_web_fe`, Vercel deploys `main`): `main` at e9e904f — Join the

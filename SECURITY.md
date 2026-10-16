@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-**Email the owner directly: ryuk@ryuklabs.io.** This is a private repo under a personal account, so GitHub's
+**Email the owner directly: ryuk@ryuklabs.io.** This is a private repo in the `ryuk-labs` organisation; please use email, not GitHub's
 "Report a vulnerability" advisory form does not exist here. Please do not open a public issue for a security report.
 You will get an acknowledgement within 72 hours.
 
@@ -37,12 +37,16 @@ never synced, never committed.
   (the picker; `409 choose_org` for a JSON sign-in; the OAuth form asks) — and a seat WAITING for its holder's yes
   makes the JSON paths and the OAuth form ask too (the owner, 2026-10-09), so a possible squat is never signed into
   by default.
-- **Signing up is the operator's.** Only an email the operator allowed signs up, with a one-time code handed over by
-  hand (`engine/tools/operator.mjs`, on the deployment's credentials; no route of the worker mints one). Only the code's
-  hash is stored; it is single-use, expiring and revocable. No email is ever sent. An account then creates at most one
-  org, proven by its own passphrase (a seat's key never creates one).
+- **Joining is approved by the operator.** A new team requests access (`/request-access`: a profile and a passphrase,
+  or Google) and proves its mailbox by an emailed single-use link (only its hash kept); the operator approves each org,
+  and the approval emails "You're in". An email whose account is already held (a passphrase, a Google subject, an invite
+  mark, or a seat) gets "you already have an account" and never a second account; a first passphrase set by a reset or
+  Google's first link makes that account's seats wait for its holder's yes (`engine/CLAUDE.md`, the account flow). The
+  operator's one-time sign-up code remains for the operator's own and the reviewer accounts (only its hash stored;
+  single-use, expiring, revocable; no route mints one). An account creates at most one org, proven by its own
+  passphrase (a seat's key never creates one).
 - **CI is local.** No GitHub Actions workflow exists and no runner executes this repo's code. The suites run on the
-  developer's own machine. Collaborators are added with read access.
+  developer's own machine. The internal team (`sharingu-devs`) has write access; `main` changes only through a merged PR.
 
 ## Current posture (read before assessing)
 
